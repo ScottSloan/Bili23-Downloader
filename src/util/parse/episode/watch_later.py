@@ -10,12 +10,13 @@ class WatchLaterEpisodeParser(EpisodeParserBase):
         self.info_data = info_data["data"]
         self.category_name = category_name
 
-    def parse(self):
+    def parse(self, update_episode_list = True):
         self._init_episode_data()
 
         node = self.list_parser()
 
-        self.update_episode_list(node)
+        if update_episode_list:
+            self.update_episode_list(node)
 
         return node
 
@@ -77,3 +78,6 @@ class WatchLaterEpisodeParser(EpisodeParserBase):
             item.set_attribute(Attribute.VIDEO_BIT)
 
         item.set_attribute(Attribute.WATCH_LATER_BIT | Attribute.NEED_PARSE_BIT)
+
+    def get_node_title(self):
+        return ""

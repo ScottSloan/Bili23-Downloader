@@ -4,17 +4,17 @@
 <context>
     <name>ADDITIONAL_FILES_QUALIFIER</name>
     <message>
-        <location filename="../../util/common/translator.py" line="274"/>
+        <location filename="../../util/common/translator.py" line="275"/>
         <source>Danmaku</source>
         <translation>彈幕</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="275"/>
+        <location filename="../../util/common/translator.py" line="276"/>
         <source>Subtitles</source>
         <translation>字幕</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="276"/>
+        <location filename="../../util/common/translator.py" line="277"/>
         <source>Metadata</source>
         <translation>元數據</translation>
     </message>
@@ -154,57 +154,57 @@
         <translation>請選擇解析範圍與後續處理方式</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/auto_parse.py" line="27"/>
+        <location filename="../../gui/dialog/misc/auto_parse.py" line="28"/>
         <source>Parse all pages</source>
         <translation>解析全部分頁</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/auto_parse.py" line="29"/>
+        <location filename="../../gui/dialog/misc/auto_parse.py" line="30"/>
         <source>Parse only pages X to Y</source>
         <translation>僅解析第 X 頁至第 Y 頁</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/auto_parse.py" line="31"/>
+        <location filename="../../gui/dialog/misc/auto_parse.py" line="32"/>
         <source>From</source>
         <translation>從</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/auto_parse.py" line="32"/>
+        <location filename="../../gui/dialog/misc/auto_parse.py" line="33"/>
         <source>To</source>
         <translation>到</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/auto_parse.py" line="46"/>
+        <location filename="../../gui/dialog/misc/auto_parse.py" line="47"/>
         <source>Parsing Interval (seconds)</source>
         <translation>解析間隔 (秒)</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/auto_parse.py" line="54"/>
+        <location filename="../../gui/dialog/misc/auto_parse.py" line="56"/>
         <source>Automatically add to download list after parsing each page</source>
         <translation>解析每頁後自動加入下載清單</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/auto_parse.py" line="57"/>
+        <location filename="../../gui/dialog/misc/auto_parse.py" line="59"/>
         <source>Automatically show this dialog</source>
         <translation>自動顯示此對話方塊</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/auto_parse.py" line="60"/>
+        <location filename="../../gui/dialog/misc/auto_parse.py" line="62"/>
         <source>Warning: Due to Bilibili&apos;s anti-abuse mechanism, parsing too many pages and requesting too frequently may cause failure and IP ban. Use with caution.</source>
         <translation>警告：由於 Bilibili 風控機制，分頁過多、頻率過快可能導致解析失敗並封禁 IP，請謹慎使用</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/auto_parse.py" line="89"/>
+        <location filename="../../gui/dialog/misc/auto_parse.py" line="91"/>
         <source>Start Parsing</source>
         <translation>開始解析</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/auto_parse.py" line="101"/>
+        <location filename="../../gui/dialog/misc/auto_parse.py" line="103"/>
         <source>Invalid Range</source>
         <translation>無效範圍</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/auto_parse.py" line="101"/>
+        <location filename="../../gui/dialog/misc/auto_parse.py" line="103"/>
         <source>The starting page cannot be greater than the ending page</source>
         <translation>起始頁不能大於結束頁</translation>
     </message>
@@ -1680,7 +1680,7 @@ File name: {filename}</source>
 <context>
     <name>MEDIA_INFO_GUIDE</name>
     <message>
-        <location filename="../../util/common/translator.py" line="281"/>
+        <location filename="../../util/common/translator.py" line="282"/>
         <source>The media info shown here defaults to the first video in the parsed results. If multiple videos are available,
 this information may not exactly match the one you download—use it for reference only.
 
@@ -1980,7 +1980,7 @@ To get a single complete video file, please enable &quot;Merge video and audio&q
 <context>
     <name>NAMING_RULE_GUIDE</name>
     <message>
-        <location filename="../../util/common/translator.py" line="291"/>
+        <location filename="../../util/common/translator.py" line="292"/>
         <source>Customize the file name and folder structure using variables.
 
 Rules:
@@ -3075,7 +3075,7 @@ ISP：{isp}</translation>
 <context>
     <name>TERMS_OF_USE</name>
     <message>
-        <location filename="../../util/common/translator.py" line="308"/>
+        <location filename="../../util/common/translator.py" line="309"/>
         <source>&lt;html&gt;This software is intended solely for personal learning and research purposes. Any content downloaded through this project &lt;b&gt;is strictly limited to personal, non-commercial use and must not be used for any commercial purpose, public distribution, sharing, resale, or unlawful profit.&lt;/b&gt;
 &lt;br&gt;&lt;br&gt;
 This software operates exclusively based on the user&apos;s own legitimate account access rights and &lt;b&gt;does not bypass any paywalls, membership restrictions, or technical protection measures.&lt;/b&gt; You may only download content that you are authorized to access through your normal login on the target platform. If your account does not have permission to access certain content, this software must not be used to obtain it.
@@ -3170,8 +3170,13 @@ Under no circumstances shall the developer be liable for any direct, indirect, i
     </message>
     <message>
         <location filename="../../util/common/translator.py" line="267"/>
-        <source>Parsing node: {title}...</source>
+        <source>Parsing node: {title}</source>
         <translation>正在解析節點：{title}</translation>
+    </message>
+    <message>
+        <location filename="../../util/common/translator.py" line="268"/>
+        <source>Parsing page {page}, total {total_page} pages</source>
+        <translation>正在解析第 {page} 頁，共 {total_page} 頁</translation>
     </message>
     <message>
         <location filename="../../util/common/translator.py" line="255"/>
@@ -3622,13 +3627,6 @@ Under no circumstances shall the developer be liable for any direct, indirect, i
         <location filename="../../gui/component/setting/card.py" line="358"/>
         <source>Choose the action when closing the main window</source>
         <translation>選擇關閉主視窗時的操作</translation>
-    </message>
-</context>
-<context>
-    <name>WorkerBase</name>
-    <message>
-        <source>Invalid link format</source>
-        <translation type="vanished">無效的連結</translation>
     </message>
 </context>
 </TS>

@@ -10,19 +10,20 @@ class SpaceEpisodeParser(EpisodeParserBase):
         self.info_data = info_data["data"]
         self.category_name = category_name
 
-    def parse(self):
+    def parse(self, update_episode_list = True):
         self.episode_data_parser()
 
         node = self.vlist_parser()
 
-        self.update_episode_list(node)
+        if update_episode_list:
+            self.update_episode_list(node)
 
         return node
 
     def vlist_parser(self):
         node_data = {
             "number": Translator.EPISODE_TYPE("PROFILE"),
-            "title": self.info_data["info"]["name"]
+            "title": self.get_node_title()
         }
 
         root_node = TreeItem(node_data)
@@ -82,3 +83,6 @@ class SpaceEpisodeParser(EpisodeParserBase):
             item.set_attribute(Attribute.VIDEO_BIT)
 
         item.set_attribute(Attribute.SPACE_BIT | Attribute.NEED_PARSE_BIT)
+
+    def get_node_title(self):
+        return self.info_data["info"]["name"]

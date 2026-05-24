@@ -1,5 +1,6 @@
 from ...common.data.auto_parse import AutoParsePayload
 from ...common.signal_bus import signal_bus
+from ...common.translator import Translator
 from ...common.config import config
 
 from ..episode.dynamic import DynamicEpisodeParser
@@ -28,7 +29,6 @@ class DynamicParser(ParserBase):
     def parse(self):
         self.episode_parser = DynamicEpisodeParser(self.info_data.data, self.parser.get_category_name())
         self.episode_parser.init_episode_parser(self.parser_type)
-        self.episode_parser.init_root_node("")
 
         for page in range(self.start_page, self.end_page + 1):
             if self.stop_event.is_set():
@@ -44,7 +44,7 @@ class DynamicParser(ParserBase):
                 time.sleep(config.get(config.parse_interval))
 
     def _update_ui_progress(self, page: int):
-        self.update_progress(f"正在解析第 {page} 页，共 {self.end_page} 页")
+        self.update_progress(Translator.TIP_MESSAGES("PARSING_PAGE").format(page = page, total_page = self.end_page - self.start_page + 1))
 
         signal_bus.parse.update_parse_list_count.emit(self.get_category_name())
 

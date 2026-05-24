@@ -62,6 +62,7 @@ class InteractiveVideoParser(ParserBase):
         self.get_graph_version()
 
         self.episode_parser = DynamicEpisodeParser(self.info_data, self.get_category_name())
+        self.episode_parser.init_root_node(self.info_data["title"])
         self.episode_parser._video_episode_data_parser()
 
         self.parse_interactive_video_episodes()

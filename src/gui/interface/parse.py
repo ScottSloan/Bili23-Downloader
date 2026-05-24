@@ -2,14 +2,17 @@ from PySide6.QtWidgets import QFrame, QHBoxLayout, QVBoxLayout, QApplication
 from PySide6.QtCore import Qt, QTimer
 from PySide6.QtGui import QKeyEvent
 
-from qfluentwidgets import LineEdit, BodyLabel, FluentIcon, RoundMenu, Action, PrimaryPushButton
+from qfluentwidgets import (
+    LineEdit, BodyLabel, FluentIcon, RoundMenu, Action, PrimaryPushButton, TeachingTip, InfoBarIcon,
+    TeachingTipTailPosition
+)
 
 from gui.component.widget import (
     TransparentToolButton, SegmentedWidget, IndeterminateProgressPushButton, SeasonComboBox, ProgressTipWidget,
 )
 from gui.component.parse_list import ParseTreeView
 
-from util.common.enum import ToastNotificationCategory, NumberingType, ParserType
+from util.common.enum import ToastNotificationCategory, NumberingType
 from util.common.signal_bus import signal_bus, config
 from util.common.icon import ExtendedFluentIcon
 from util.common.translator import Translator
@@ -20,8 +23,8 @@ from util.parse.worker import ParseWorker, ProgressParseWorker
 from util.parse.preview.previewer import Previewer
 from util.parse.preview.info import PreviewerInfo
 
-from util.download.task.manager import task_manager
 from util.misc.history import history_manager
+from util.download.task.manager import task_manager
 from util.thread.pool import GlobalThreadPoolTask
 from util.thread.async_ import AsyncTask
 
@@ -40,8 +43,16 @@ class ParseBase(QFrame):
                 self.segmented_widget.show_pager(extra_data["pagination_data"])
 
                 # 具有分页信息，且总页数大于 1 时，根据设置弹出自动解析分页对话框
-                if extra_data["pagination_data"]["total_pages"] > 1 and config.get(config.show_auto_parse_dialog):
-                    QTimer.singleShot(0, self.on_auto_parse)                    
+                if extra_data["pagination_data"]["total_pages"] > 1:
+                    if not config.get(config.auto_parse_teaching_tip_shown):
+                        # 仅提示一次
+                        config.set(config.auto_parse_teaching_tip_shown, True)
+
+                        QTimer.singleShot(0, self.show_auto_parse_teaching_tip)
+
+                    if config.get(config.show_auto_parse_dialog):
+                        QTimer.singleShot(0, self.on_auto_parse)
+                    
             else:
                 self.segmented_widget.hide_pager()
 
@@ -158,6 +169,18 @@ class ParseBase(QFrame):
             self.segmented_widget.hide_pager()
             
             self.start_progress_parse_worker(dialog.payload)
+
+    def show_auto_parse_teaching_tip(self):
+        TeachingTip.create(
+            target = self.segmented_widget.pager_widget.menu_btn,
+            title = "自动解析分页",
+            content = "点击此处可进行自动解析分页操作",
+            icon = InfoBarIcon.INFORMATION,
+            tailPosition = TeachingTipTailPosition.BOTTOM,
+            isClosable = True,
+            duration = -1,
+            parent = self
+        )
 
 class ParseInterface(ParseBase):
     def __init__(self, parent = None):

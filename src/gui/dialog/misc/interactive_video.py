@@ -22,22 +22,20 @@ class InteractiveVideoDialog(DialogBase):
 
         self.auto_radio = RadioButton(self.tr("Automatically parse all nodes"), self)
         self.auto_radio.setChecked(True)
-        #self.manual_radio = RadioButton(self.tr("Manually select nodes"), self)
 
         radio_layout = QVBoxLayout()
         radio_layout.addWidget(self.auto_radio)
-        #radio_layout.addWidget(self.manual_radio)
         radio_layout.addStretch()
 
-        self.never_ask_check = CheckBox(self.tr("Don't ask again"), self)
+        #self.never_ask_check = CheckBox(self.tr("Don't ask again"), self)
 
         self.viewLayout.addWidget(caption_lab)
         self.viewLayout.addSpacing(10)
         self.viewLayout.addWidget(tip_lab)
         self.viewLayout.addSpacing(5)
         self.viewLayout.addLayout(radio_layout)
-        self.viewLayout.addSpacing(10)
-        self.viewLayout.addWidget(self.never_ask_check)
+        #self.viewLayout.addSpacing(10)
+        #self.viewLayout.addWidget(self.never_ask_check)
 
         self.widget.setMinimumWidth(350)
 

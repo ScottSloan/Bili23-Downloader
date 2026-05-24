@@ -10,17 +10,18 @@ class FavlistEpisodeParser(EpisodeParserBase):
         self.info_data = info_data["data"]
         self.category_name = category_name
 
-    def parse(self):
+    def parse(self, update_episode_list = True):
         self.episode_data_parser()
 
         node = self.medias_parser()
 
-        self.update_episode_list(node)
+        if update_episode_list:
+            self.update_episode_list(node)
 
         return node
 
     def medias_parser(self):
-        favlist_title = self.info_data["info"]["title"]
+        favlist_title = self.get_node_title()
         node_data = {
             "number": Translator.EPISODE_TYPE("FAVORITES"),
             "title": favlist_title
@@ -89,3 +90,6 @@ class FavlistEpisodeParser(EpisodeParserBase):
             item.set_attribute(Attribute.VIDEO_BIT)
 
         item.set_attribute(Attribute.FAVLIST_BIT | Attribute.NEED_PARSE_BIT)
+
+    def get_node_title(self):
+        return self.info_data["info"]["title"]

@@ -82,3 +82,6 @@ class HistoryEpisodeParser(EpisodeParserBase):
                 item.set_attribute(Attribute.CHEESE_BIT)
 
         item.set_attribute(Attribute.HISTORY_BIT | Attribute.NEED_PARSE_BIT)
+
+    def get_node_title(self):
+        return ""

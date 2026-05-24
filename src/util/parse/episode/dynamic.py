@@ -1,5 +1,9 @@
 from ...common.translator import Translator
 from ...common.enum import ParserType
+from ...common.config import config
+
+from ...download.task.manager import task_manager
+from ...thread.pool import GlobalThreadPoolTask
 
 from .tree import TreeItem, Attribute
 from .base import EpisodeParserBase
@@ -13,6 +17,7 @@ class DynamicEpisodeParser(EpisodeParserBase):
         self.category_name = category_name
 
         self.parser = None
+        self.root_node_initialized = False
 
     def init_root_node(self, title):
         node_data = {
@@ -26,11 +31,6 @@ class DynamicEpisodeParser(EpisodeParserBase):
         self.update_episode_list(self.root_node)
 
         return self.root_node
-
-    def _video_episode_data_parser(self):
-        self.init_root_node(self.info_data["title"])
-
-        super()._video_episode_data_parser()
 
     def init_episode_parser(self, parser_type: ParserType):
         # 根据不同的 parser_type 初始化对应的剧集数据解析器
@@ -62,7 +62,16 @@ class DynamicEpisodeParser(EpisodeParserBase):
     def update_page_node(self, info_data: dict):
         self.parser.info_data = info_data["data"]
 
-        node = self.parser.parse()
+        if not self.root_node_initialized:
+            self.init_root_node(self.parser.get_node_title())
+
+            self.root_node_initialized = True
+
+        node = self.parser.parse(update_episode_list = False)
+
+        # 根据设置决定是否自动添加到下载列表
+        if config.get(config.auto_add_to_download_list):
+            GlobalThreadPoolTask.run_func(task_manager.create, node.get_all_children(to_dict = True))
 
         # 去除 raw_node 最外层的根节点，直接返回其子节点列表
         for child in node.children:

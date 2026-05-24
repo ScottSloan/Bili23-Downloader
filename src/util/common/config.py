@@ -344,6 +344,8 @@ class APPConfig(QConfig):
     auto_add_to_download_list = ConfigItem("Misc", "auto_add_to_download_list", False, BoolValidator())
     parse_interval = ConfigItem("Misc", "parse_interval", 2.0)
 
+    auto_parse_teaching_tip_shown = ConfigItem("Misc", "auto_parse_teaching_tip_shown", False, BoolValidator())
+
 config = APPConfig()
 config.themeMode.value = Theme.AUTO
 
