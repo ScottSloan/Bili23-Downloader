@@ -10,12 +10,13 @@ class HistoryEpisodeParser(EpisodeParserBase):
         self.info_data = info_data["data"]
         self.category_name = category_name
 
-    def parse(self):
+    def parse(self, update_episode_list = True):
         self._init_episode_data()
 
         node = self.list_parser()
 
-        self.update_episode_list(node)
+        if update_episode_list:
+            self.update_episode_list(node)
 
         return node
 
@@ -28,13 +29,11 @@ class HistoryEpisodeParser(EpisodeParserBase):
         root_node = TreeItem(node_data)
         root_node.set_attribute(Attribute.TREE_NODE_BIT)
 
-        episode_count = 0
-
         if self.info_data.get("list") is None:
             return root_node
 
         for episode in self.info_data.get("list"):
-            episode_count += 1
+            self.episode_count += 1
 
             item_data = {
                 "badge": self.get_episode_badge(episode),
@@ -44,7 +43,7 @@ class HistoryEpisodeParser(EpisodeParserBase):
                 "duration": self.get_episode_duration(episode),
                 "ep_id": episode["history"]["epid"],
                 "episode_id": self.episode_id,
-                "number": episode_count,
+                "number": self.episode_count,
                 "viewtime": episode["view_at"],
                 "title": self.get_episode_title(episode),
                 "url": "https://www.bilibili.com/video/" + episode["history"]["bvid"],

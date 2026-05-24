@@ -1,8 +1,8 @@
+from ...common.data.auto_parse import AutoParsePayload
 from ...common.signal_bus import signal_bus
-from ...common.enum import ParserType
+from ...common.config import config
 
 from ..episode.dynamic import DynamicEpisodeParser
-from ..auto_parse import AutoParsePayload
 from .favlist import FavlistParser
 from .base import ParserBase
 
@@ -26,30 +26,22 @@ class DynamicParser(ParserBase):
         self.update_progress = update_progress_callback
 
     def parse(self):
-        self.episode_parser = DynamicEpisodeParser(self.info_data, self.parser.get_category_name())
+        self.episode_parser = DynamicEpisodeParser(self.info_data.data, self.parser.get_category_name())
+        self.episode_parser.init_episode_parser(self.parser_type)
         self.episode_parser.init_root_node("")
-        self._init_episode_data()
 
         for page in range(self.start_page, self.end_page + 1):
             if self.stop_event.is_set():
                 break
 
-            info_data = self.parser.parse(self.url, page)
+            parsed_data = self.parser.parse(self.url, page)
 
-            self.episode_parser.update_page_node(self.parser_type, info_data)
+            self.episode_parser.update_page_node(parsed_data)
 
             self._update_ui_progress(page)
 
             if page < self.end_page:
-                time.sleep(2)
-
-    def _init_episode_data(self):
-        match self.parser_type:
-            case ParserType.FAVLIST:
-                self.episode_parser._favlist_episode_data_parser()
-
-            case ParserType.SPACE:
-                self.episode_parser._space_episode_data_parser()
+                time.sleep(config.get(config.parse_interval))
 
     def _update_ui_progress(self, page: int):
         self.update_progress(f"正在解析第 {page} 页，共 {self.end_page} 页")

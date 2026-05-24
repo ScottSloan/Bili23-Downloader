@@ -144,57 +144,67 @@
 <context>
     <name>AutoParseDialog</name>
     <message>
-        <location filename="../../gui/dialog/misc/auto_parse.py" line="17"/>
+        <location filename="../../gui/dialog/misc/auto_parse.py" line="23"/>
         <source>Auto-parse Pagination</source>
         <translation>自動解析分頁</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/auto_parse.py" line="19"/>
+        <location filename="../../gui/dialog/misc/auto_parse.py" line="25"/>
         <source>Please select the parsing range and subsequent processing method</source>
         <translation>請選擇解析範圍與後續處理方式</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/auto_parse.py" line="21"/>
+        <location filename="../../gui/dialog/misc/auto_parse.py" line="27"/>
         <source>Parse all pages</source>
         <translation>解析全部分頁</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/auto_parse.py" line="23"/>
+        <location filename="../../gui/dialog/misc/auto_parse.py" line="29"/>
         <source>Parse only pages X to Y</source>
         <translation>僅解析第 X 頁至第 Y 頁</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/auto_parse.py" line="25"/>
+        <location filename="../../gui/dialog/misc/auto_parse.py" line="31"/>
         <source>From</source>
         <translation>從</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/auto_parse.py" line="26"/>
+        <location filename="../../gui/dialog/misc/auto_parse.py" line="32"/>
         <source>To</source>
         <translation>到</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/auto_parse.py" line="34"/>
+        <location filename="../../gui/dialog/misc/auto_parse.py" line="46"/>
+        <source>Parsing Interval (seconds)</source>
+        <translation>解析間隔 (秒)</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialog/misc/auto_parse.py" line="54"/>
         <source>Automatically add to download list after parsing each page</source>
         <translation>解析每頁後自動加入下載清單</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/auto_parse.py" line="36"/>
-        <source>Warning: Due to Bilibili&apos;s anti-abuse mechanism, parsing too many pages may cause failure and IP ban. Use with caution.</source>
-        <translation>警告：由於 Bilibili 風控機制，分頁過多可能導致解析失敗並封禁 IP，請謹慎使用</translation>
+        <location filename="../../gui/dialog/misc/auto_parse.py" line="57"/>
+        <source>Automatically show this dialog</source>
+        <translation>自動顯示此對話方塊</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/auto_parse.py" line="61"/>
+        <location filename="../../gui/dialog/misc/auto_parse.py" line="60"/>
+        <source>Warning: Due to Bilibili&apos;s anti-abuse mechanism, parsing too many pages and requesting too frequently may cause failure and IP ban. Use with caution.</source>
+        <translation>警告：由於 Bilibili 風控機制，分頁過多、頻率過快可能導致解析失敗並封禁 IP，請謹慎使用</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialog/misc/auto_parse.py" line="89"/>
         <source>Start Parsing</source>
         <translation>開始解析</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/auto_parse.py" line="71"/>
+        <location filename="../../gui/dialog/misc/auto_parse.py" line="101"/>
         <source>Invalid Range</source>
         <translation>無效範圍</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/auto_parse.py" line="71"/>
+        <location filename="../../gui/dialog/misc/auto_parse.py" line="101"/>
         <source>The starting page cannot be greater than the ending page</source>
         <translation>起始頁不能大於結束頁</translation>
     </message>
@@ -1554,17 +1564,17 @@ File name: {filename}</source>
 <context>
     <name>InteractiveVideoDialog</name>
     <message>
-        <location filename="../../gui/dialog/misc/interactive_video.py" line="16"/>
+        <location filename="../../gui/dialog/misc/interactive_video.py" line="19"/>
         <source>Interactive Video</source>
         <translation>互動影片</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/interactive_video.py" line="18"/>
+        <location filename="../../gui/dialog/misc/interactive_video.py" line="21"/>
         <source>Detection of interactive video, please select an operation</source>
         <translation>偵測到互動式影片，請選擇一項操作</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/interactive_video.py" line="20"/>
+        <location filename="../../gui/dialog/misc/interactive_video.py" line="23"/>
         <source>Automatically parse all nodes</source>
         <translation>自動解析所有節點</translation>
     </message>
@@ -1573,7 +1583,7 @@ File name: {filename}</source>
         <translation type="vanished">手動選擇節點</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/interactive_video.py" line="29"/>
+        <location filename="../../gui/dialog/misc/interactive_video.py" line="32"/>
         <source>Don&apos;t ask again</source>
         <translation>不再詢問</translation>
     </message>
@@ -2149,87 +2159,87 @@ For advanced usage, see the help documentation.</source>
 <context>
     <name>ParseInterface</name>
     <message>
-        <location filename="../../gui/interface/parse.py" line="179"/>
+        <location filename="../../gui/interface/parse.py" line="176"/>
         <source>Paste and Parse</source>
         <translation>貼上並解析</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="183"/>
+        <location filename="../../gui/interface/parse.py" line="180"/>
         <source>Link / av / BV / ep / ss / md / Favorites / Profile</source>
         <translation>連結 / av / BV / ep / ss / md / 收藏夾 / 個人空間</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="188"/>
+        <location filename="../../gui/interface/parse.py" line="185"/>
         <source>Parse</source>
         <translation>解析</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="199"/>
+        <location filename="../../gui/interface/parse.py" line="196"/>
         <source>Download Options</source>
         <translation>下載選項</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="203"/>
+        <location filename="../../gui/interface/parse.py" line="200"/>
         <source>More</source>
         <translation>更多</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="218"/>
+        <location filename="../../gui/interface/parse.py" line="215"/>
         <source>Download Selected Items</source>
         <translation>下載所選項目</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="324"/>
+        <location filename="../../gui/interface/parse.py" line="321"/>
         <source>Parse Failed</source>
         <translation>解析失敗</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="351"/>
+        <location filename="../../gui/interface/parse.py" line="348"/>
         <source>Added to download queue</source>
         <translation>已加入下載佇列</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="371"/>
+        <location filename="../../gui/interface/parse.py" line="368"/>
         <source>Search</source>
         <translation>搜尋</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="372"/>
+        <location filename="../../gui/interface/parse.py" line="369"/>
         <source>Batch select</source>
         <translation>批次選取</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="373"/>
+        <location filename="../../gui/interface/parse.py" line="370"/>
         <source>Parsing history</source>
         <translation>解析記錄</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="382"/>
+        <location filename="../../gui/interface/parse.py" line="379"/>
         <source>Jump to page</source>
         <translation>跳至頁面</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="383"/>
+        <location filename="../../gui/interface/parse.py" line="380"/>
         <source>Auto-parse pagination</source>
         <translation>自動解析分頁</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="412"/>
+        <location filename="../../gui/interface/parse.py" line="409"/>
         <source>{category_name} ({selected_count} selected, {total_count} total)</source>
         <translation>{category_name}（已選取 {selected_count} 項，共 {total_count} 項）</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="418"/>
+        <location filename="../../gui/interface/parse.py" line="415"/>
         <source>{category_name} ({total_count} total)</source>
         <translation>{category_name}（共 {total_count} 項）</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="455"/>
+        <location filename="../../gui/interface/parse.py" line="452"/>
         <source>Invalid page number</source>
         <translation>無效的頁碼</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="455"/>
+        <location filename="../../gui/interface/parse.py" line="452"/>
         <source>Please enter a number between 1 and {total_pages}</source>
         <translation>請輸入1到{total_pages}之間的一個數字</translation>
     </message>
@@ -3617,9 +3627,8 @@ Under no circumstances shall the developer be liable for any direct, indirect, i
 <context>
     <name>WorkerBase</name>
     <message>
-        <location filename="../../util/parse/worker.py" line="45"/>
         <source>Invalid link format</source>
-        <translation>無效的連結</translation>
+        <translation type="vanished">無效的連結</translation>
     </message>
 </context>
 </TS>

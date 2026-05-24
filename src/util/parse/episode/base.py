@@ -13,6 +13,8 @@ class EpisodeParserBase:
         self.target_episode_data_id: str = kwargs.get("target_episode_data_id")
         self.target_attribute: int = kwargs.get("target_attribute")
 
+        self.episode_count = 0
+
     def update_episode_list(self, node: TreeItem, current_episode_data: tuple = None):
         # 由于顶层 root_node 不可见，需要在外面再包一层，避免顶层节点信息丢失
 
@@ -40,7 +42,8 @@ class EpisodeParserBase:
             return 0
         
     def _init_episode_data(self):
-        self.episode_id = EpisodeData.add_episode()
+        if not self.episode_id:
+            self.episode_id = EpisodeData.add_episode()
 
         return EpisodeData.get_episode_data(self.episode_id)
     
@@ -60,18 +63,4 @@ class EpisodeParserBase:
         # UP 主信息
         episode_data["uploader"] = self.info_data["owner"]["name"]
         episode_data["uploader_uid"] = self.info_data["owner"]["mid"]
-        episode_data["uploader_face"] = self.info_data["owner"]["face"]
-
-    def _favlist_episode_data_parser(self):
-        episode_data = self._init_episode_data()
-
-        episode_data["favorites_name"] = self.info_data["info"]["title"]
-        episode_data["favorites_id"] = self.info_data["info"]["id"]
-        episode_data["favorites_owner"] = self.info_data["info"]["upper"]["name"]
-        episode_data["favorites_owner_id"] = self.info_data["info"]["upper"]["mid"]
-
-    def _space_episode_data_parser(self):
-        episode_data = self._init_episode_data()
-
-        episode_data["space_owner"] = self.info_data["info"]["name"]
-        episode_data["space_owner_id"] = self.info_data["info"]["mid"]
+        episode_data["uploader_face"] = self.info_data["owner"]["face"]        

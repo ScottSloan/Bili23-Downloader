@@ -38,6 +38,10 @@ class ParseBase(QFrame):
             # 判断是否显示分页组件
             if extra_data.get("pagination"):
                 self.segmented_widget.show_pager(extra_data["pagination_data"])
+
+                # 具有分页信息，且总页数大于 1 时，根据设置弹出自动解析分页对话框
+                if extra_data["pagination_data"]["total_pages"] > 1 and config.get(config.show_auto_parse_dialog):
+                    QTimer.singleShot(0, self.on_auto_parse)                    
             else:
                 self.segmented_widget.hide_pager()
 
@@ -150,6 +154,9 @@ class ParseBase(QFrame):
         dialog = AutoParseDialog(self.url_box.text(), self.pager.total_pages, self.pager.current_page, self.main_window)
 
         if dialog.exec():
+            # 开始解析前，隐藏分页组件
+            self.segmented_widget.hide_pager()
+            
             self.start_progress_parse_worker(dialog.payload)
 
 class ParseInterface(ParseBase):
@@ -294,14 +301,14 @@ class ParseInterface(ParseBase):
 
         self.on_item_check_state_changed(None)
 
+        self.parse_btn.setIndeterminateState(False)
+
         # 根据解析结果判断是否显示分页组件
         self.check_extra_data(extra_data)
 
         self.check_need_check_all()
 
         self.parse_list.search_keywords("")
-
-        self.parse_btn.setIndeterminateState(False)
 
     def on_parse_error(self, error_message: str):
         self.parse_btn.setIndeterminateState(False)

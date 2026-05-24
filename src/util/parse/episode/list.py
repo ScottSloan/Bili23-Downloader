@@ -25,17 +25,15 @@ class ListEpisodeParser(EpisodeParserBase):
         root_node = TreeItem(node_data)
         root_node.set_attribute(Attribute.TREE_NODE_BIT)
 
-        episode_count = 0
-
         for episode in self.info_data["archives"]:
-            episode_count += 1
+            self.episode_count += 1
 
             item_data = {
                 "aid": episode["aid"],
                 "bvid": episode["bvid"],
                 "cover" : episode["pic"],
                 "duration": self.get_episode_duration(episode),
-                "number": episode_count,
+                "number": self.episode_count,
                 "pubtime": episode["pubdate"],
                 "episode_id": self.episode_id,
                 "title": episode["title"],

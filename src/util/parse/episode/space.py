@@ -11,7 +11,7 @@ class SpaceEpisodeParser(EpisodeParserBase):
         self.category_name = category_name
 
     def parse(self):
-        self._space_episode_data_parser()
+        self.episode_data_parser()
 
         node = self.vlist_parser()
 
@@ -28,10 +28,8 @@ class SpaceEpisodeParser(EpisodeParserBase):
         root_node = TreeItem(node_data)
         root_node.set_attribute(Attribute.TREE_NODE_BIT)
 
-        episode_count = 0
-
         for episode in self.info_data["list"]["vlist"]:
-            episode_count += 1
+            self.episode_count += 1
 
             item_data = {
                 "aid": episode["aid"],
@@ -41,9 +39,10 @@ class SpaceEpisodeParser(EpisodeParserBase):
                 "duration": self.get_episode_duration(episode),
                 "ep_id": episode.get("season_id", 0),
                 "episode_id": self.episode_id,
-                "number": episode_count,
+                "number": self.episode_count,
                 "pubtime": episode["created"],
-                "title": episode["title"]
+                "title": episode["title"],
+                "url": "https://www.bilibili.com/video/" + episode["bvid"],
             }
 
             item = TreeItem(item_data)
@@ -53,6 +52,15 @@ class SpaceEpisodeParser(EpisodeParserBase):
             root_node.add_child(item)
 
         return root_node
+    
+    def episode_data_parser(self):
+        if self.episode_id:
+            return
+        
+        episode_data = self._init_episode_data()
+
+        episode_data["space_owner"] = self.info_data["info"]["name"]
+        episode_data["space_owner_id"] = self.info_data["info"]["mid"]
 
     def get_episode_badge(self, episode_data: dict):
         if episode_data["is_charging_arc"]:

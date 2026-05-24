@@ -28,13 +28,11 @@ class WatchLaterEpisodeParser(EpisodeParserBase):
         root_node = TreeItem(node_data)
         root_node.set_attribute(Attribute.TREE_NODE_BIT)
 
-        episode_count = 0
-
         if self.info_data.get("list") is None:
             return root_node
 
         for episode in self.info_data.get("list"):
-            episode_count += 1
+            self.episode_count += 1
 
             item_data = {
                 "aid": episode["aid"],
@@ -45,7 +43,7 @@ class WatchLaterEpisodeParser(EpisodeParserBase):
                 "duration": self.get_episode_duration(episode),
                 "ep_id": self.get_ep_id(episode),
                 "episode_id": self.episode_id,
-                "number": episode_count,
+                "number": self.episode_count,
                 "pubtime": episode["pubdate"],
                 "favtime": episode["add_at"],
                 "title": episode["title"],

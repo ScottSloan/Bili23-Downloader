@@ -336,10 +336,13 @@ class APPConfig(QConfig):
     # Misc
     target_naming_rule_id = None
     global_starting_number = 1
-    
     current_starting_number = None
-
+    
     main_window_ready = False
+
+    show_auto_parse_dialog = ConfigItem("Misc", "show_auto_parse_dialog", False, BoolValidator())
+    auto_add_to_download_list = ConfigItem("Misc", "auto_add_to_download_list", False, BoolValidator())
+    parse_interval = ConfigItem("Misc", "parse_interval", 2.0)
 
 config = APPConfig()
 config.themeMode.value = Theme.AUTO

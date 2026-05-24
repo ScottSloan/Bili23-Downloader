@@ -17,7 +17,7 @@ from ..common.translator import Translator
 from ..common.data import url_patterns
 from ..common.enum import ParserType
 from .episode.tree import EpisodeData
-from .auto_parse import AutoParsePayload
+from ..common.data.auto_parse import AutoParsePayload
 
 from threading import Event
 import logging

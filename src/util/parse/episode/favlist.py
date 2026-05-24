@@ -11,7 +11,7 @@ class FavlistEpisodeParser(EpisodeParserBase):
         self.category_name = category_name
 
     def parse(self):
-        self._favlist_episode_data_parser()
+        self.episode_data_parser()
 
         node = self.medias_parser()
 
@@ -29,13 +29,11 @@ class FavlistEpisodeParser(EpisodeParserBase):
         root_node = TreeItem(node_data)
         root_node.set_attribute(Attribute.TREE_NODE_BIT)
 
-        episode_count = 0
-
         if self.info_data.get("medias") is None:
             return root_node
 
         for episode in self.info_data.get("medias"):
-            episode_count += 1
+            self.episode_count += 1
 
             item_data = {
                 "badge": self.get_episode_badge(episode),
@@ -44,7 +42,7 @@ class FavlistEpisodeParser(EpisodeParserBase):
                 "duration": self.get_episode_duration(episode),
                 "ep_id": episode["id"],
                 "episode_id": self.episode_id,
-                "number": episode_count,
+                "number": self.episode_count,
                 "pubtime": episode["pubtime"],
                 "favtime": episode["fav_time"],
                 "title": self.get_episode_title(episode)
@@ -57,6 +55,17 @@ class FavlistEpisodeParser(EpisodeParserBase):
             root_node.add_child(item)
 
         return root_node
+    
+    def episode_data_parser(self):
+        if self.episode_id:
+            return
+        
+        episode_data = self._init_episode_data()
+
+        episode_data["favorites_name"] = self.info_data["info"]["title"]
+        episode_data["favorites_id"] = self.info_data["info"]["id"]
+        episode_data["favorites_owner"] = self.info_data["info"]["upper"]["name"]
+        episode_data["favorites_owner_id"] = self.info_data["info"]["upper"]["mid"]
 
     def get_episode_badge(self, episode_data: dict):
         if episode_data.get("ogv"):

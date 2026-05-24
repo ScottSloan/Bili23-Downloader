@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from ..common.enum import ParserType
+from ..enum import ParserType
 
 @dataclass(frozen = True)
 class AutoParsePayload:

@@ -4,7 +4,7 @@ from qfluentwidgets import SubtitleLabel, BodyLabel, RadioButton, CheckBox
 
 from gui.component.dialog import DialogBase
 
-from util.parse.auto_parse import AutoParsePayload
+from util.common.data.auto_parse import AutoParsePayload
 from util.common.enum import ParserType
 
 class InteractiveVideoDialog(DialogBase):

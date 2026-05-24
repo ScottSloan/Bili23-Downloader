@@ -2,11 +2,12 @@ from PySide6.QtWidgets import QVBoxLayout, QHBoxLayout
 
 from qfluentwidgets import BodyLabel, SubtitleLabel, RadioButton, CheckBox
 
-from gui.component.widget.spinbox import SpinBox
+from gui.component.widget.spinbox import SpinBox, DoubleSpinBox
 from gui.component.dialog import DialogBase
 
 from util.common.enum import ToastNotificationCategory, ParserType
-from util.parse.auto_parse import AutoParsePayload
+from util.common.data.auto_parse import AutoParsePayload
+from util.common.config import config
 
 class AutoParseDialog(DialogBase):
     def __init__(self, url: str, total_pages: int, current_page: int, parent = None):
@@ -22,6 +23,7 @@ class AutoParseDialog(DialogBase):
         self.caption_lab = SubtitleLabel(self.tr("Auto-parse Pagination"), self)
 
         tip_lab = BodyLabel(self.tr("Please select the parsing range and subsequent processing method"), self)
+        tip_lab.setWordWrap(True)
 
         self.auto_parse_all_radio = RadioButton(self.tr("Parse all pages"), self)
         self.auto_parse_all_radio.setChecked(True)
@@ -32,19 +34,32 @@ class AutoParseDialog(DialogBase):
 
         self.start_spin = SpinBox(parent = self)
         self.start_spin.setMinimum(1)
+        self.start_spin.setMaximum(self.total_pages)
         self.start_spin.setValue(self.current_page)
         self.start_spin.setEnabled(False)
         
         self.end_spin = SpinBox(parent = self)
         self.end_spin.setMinimum(1)
+        self.end_spin.setMaximum(self.total_pages)
         self.end_spin.setValue(self.total_pages)
         self.end_spin.setEnabled(False)
 
+        parse_interval_lab = BodyLabel(self.tr("Parsing Interval (seconds)"), self)
+
+        self.parse_interval_spin = DoubleSpinBox(parent = self)
+        self.parse_interval_spin.setRange(0.1, 10.0)
+        self.parse_interval_spin.setSingleStep(0.1)
+        self.parse_interval_spin.setDecimals(1)
+        self.parse_interval_spin.setValue(config.get(config.parse_interval))
+        self.parse_interval_spin.setFixedWidth(150)
+
         self.auto_add_to_download_list_check = CheckBox(self.tr("Automatically add to download list after parsing each page"), self)
+        self.auto_add_to_download_list_check.setChecked(config.get(config.auto_add_to_download_list))
 
-        #self.follow_up_action_check = CheckBox(self.tr("解析分页都自动弹出此对话框"), self)
+        self.auto_popup_check = CheckBox(self.tr("Automatically show this dialog"), self)
+        self.auto_popup_check.setChecked(config.get(config.show_auto_parse_dialog))
 
-        warn_lab = BodyLabel(self.tr("Warning: Due to Bilibili's anti-abuse mechanism, parsing too many pages may cause failure and IP ban. Use with caution."), self)
+        warn_lab = BodyLabel(self.tr("Warning: Due to Bilibili's anti-abuse mechanism, parsing too many pages and requesting too frequently may cause failure and IP ban. Use with caution."), self)
         warn_lab.setWordWrap(True)
 
         range_layout = QHBoxLayout()
@@ -64,8 +79,12 @@ class AutoParseDialog(DialogBase):
         self.viewLayout.addWidget(tip_lab)
         self.viewLayout.addSpacing(5)
         self.viewLayout.addLayout(radio_layout)
+        self.viewLayout.addSpacing(5)
+        self.viewLayout.addWidget(parse_interval_lab)
+        self.viewLayout.addWidget(self.parse_interval_spin)
         self.viewLayout.addSpacing(10)
         self.viewLayout.addWidget(self.auto_add_to_download_list_check)
+        self.viewLayout.addWidget(self.auto_popup_check)
         self.viewLayout.addSpacing(10)
         self.viewLayout.addWidget(warn_lab)
 
@@ -84,10 +103,25 @@ class AutoParseDialog(DialogBase):
                 self.show_top_toast_message(ToastNotificationCategory.ERROR, self.tr("Invalid Range"), self.tr("The starting page cannot be greater than the ending page"))
 
                 return
-            
+        
+        # 生成 payload
         self.payload = self.get_data()
 
+        # 保存设置
+        self.save_config()
+
         return super().accept()
+    
+    def reject(self):
+        # 保存设置
+        self.save_config()
+
+        return super().reject()
+    
+    def save_config(self):
+        config.set(config.show_auto_parse_dialog, self.auto_popup_check.isChecked())
+        config.set(config.auto_add_to_download_list, self.auto_add_to_download_list_check.isChecked())
+        config.set(config.parse_interval, self.parse_interval_spin.value())
 
     def get_data(self):
         if self.auto_parse_all_radio.isChecked():

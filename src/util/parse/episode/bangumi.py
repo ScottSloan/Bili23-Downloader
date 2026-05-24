@@ -38,8 +38,6 @@ class BangumiEpisodeParser(EpisodeParserBase):
         root_node = TreeItem(node_data)
         root_node.set_attribute(Attribute.TREE_NODE_BIT)
 
-        episode_count = 0
-
         for section in self.info_data["sections"]:
             section_title = section["title"]
             section_node_data = {
@@ -56,7 +54,7 @@ class BangumiEpisodeParser(EpisodeParserBase):
                     if episode.get("ep_id") != self.target_episode_info:
                         continue
 
-                episode_count += 1
+                self.episode_count += 1
 
                 episode_item_data = {
                     "aid": episode["aid"],
@@ -68,7 +66,7 @@ class BangumiEpisodeParser(EpisodeParserBase):
                     "cover": episode["cover"],
                     "duration": int(self.get_episode_duration(episode) / 1000),
                     "ep_id": episode["ep_id"],
-                    "number": episode_count,
+                    "number": self.episode_count,
                     "pubtime": episode["pub_time"],
                     "title": self.get_bangumi_title(episode),
                     "related_titles": {
