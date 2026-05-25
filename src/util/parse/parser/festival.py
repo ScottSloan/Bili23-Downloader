@@ -19,7 +19,7 @@ class FestivalParser(ParserBase):
             raise Exception("无效的链接")
 
     def get_festival_info(self):
-        request = SyncNetWorkRequest(self.url, response_type = ResponseType.TEXT)
+        request = SyncNetWorkRequest(self.url, response_type = ResponseType.TEXT, raise_for_status = self.raise_for_status)
         response: str = request.run()
 
         # 查找 window.__INITIAL_STATE__ = 后面的 JSON 数据

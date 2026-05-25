@@ -20,7 +20,7 @@ class FavlistParser(ParserBase):
             case "ml":
                 return self.find_str(r"ml(\d+)", self.url)
 
-    def parse(self, url: str, pn: int):
+    def parse(self, url: str, pn: int, get_info_data: bool = False):
         self.url = url
         self.pn = pn
 
@@ -28,7 +28,7 @@ class FavlistParser(ParserBase):
 
         self.get_favlist()
 
-        if self.auto_mode:
+        if get_info_data:
             return self.info_data
         
         episode_parser = FavlistEpisodeParser(self.info_data, self.get_category_name())

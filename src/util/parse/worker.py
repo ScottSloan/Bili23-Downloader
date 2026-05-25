@@ -154,7 +154,6 @@ class ProgressParseWorker(WorkerBase, QObject):
         parser_type = self.get_parser_type(self.data.url)
 
         base_parser: FavlistParser = self.parsers.get(parser_type)
-        base_parser.auto_mode = True
 
         return DynamicParser(self.data, base_parser, self._update_progress_callback, self.stop_event)
 

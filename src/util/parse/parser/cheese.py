@@ -35,7 +35,7 @@ class CheeseParser(ParserBase):
     def get_cheese_info(self, param: str):
         url = f"https://api.bilibili.com/pugv/view/web/season/v2?{param}"
 
-        request = SyncNetWorkRequest(url)
+        request = SyncNetWorkRequest(url, raise_for_status = self.raise_for_status)
         response = request.run()
 
         self.check_response(response)

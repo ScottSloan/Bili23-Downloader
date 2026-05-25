@@ -42,9 +42,11 @@ class Merger(QObject):
                 # 将 m4a 转换为 mp3
                 self.m4a_to_mp3()
             
-            else:
-                # 对 m4a 文件进行修复
-                self.fix_mp4_box()
+            # else:
+            #     # 对 m4a 文件进行修复
+            #     self.fix_mp4_box()
+
+            self.rename_output_file()
 
         else:
             self.rename_output_file()
@@ -115,6 +117,9 @@ class Merger(QObject):
                 self.add_file(self.final_mp4_video_file_name, clear = True)
 
             elif has_audio and not has_video:
+                if self._output_audio_file is None:
+                    self._output_audio_file = self.temp_audio_file_name
+
                 safe_rename(cwd, self._output_audio_file, self.final_audio_file_name)
                 self.add_file(self.final_audio_file_name, clear = True)
 

@@ -267,9 +267,9 @@ class ParseInterface(ParseBase):
         self.connect_signals()
 
     def connect_signals(self):
-        self.parse_btn.clicked.connect(self.on_parse)
-        self.segmented_widget.pager_widget.pageChanged.connect(self.on_parse)
-        self.url_box.returnPressed.connect(self.on_parse)
+        self.parse_btn.clicked.connect(lambda: self.on_parse())
+        self.segmented_widget.pager_widget.pageChanged.connect(lambda page: self.on_parse(page))
+        self.url_box.returnPressed.connect(lambda: self.on_parse())
 
         self.download_option_btn.clicked.connect(self.on_download_options)
         self.show_more_btn.clicked.connect(self.on_top_layout_show_more_menu)

@@ -82,7 +82,7 @@ class InteractiveVideoParser(ParserBase):
 
         url = f"https://api.bilibili.com/x/player/wbi/v2?{self.enc_wbi(params)}"
 
-        request = SyncNetWorkRequest(url)
+        request = SyncNetWorkRequest(url, raise_for_status = self.raise_for_status)
         response = request.run()
 
         self.check_response(response)
@@ -153,7 +153,7 @@ class InteractiveVideoParser(ParserBase):
 
         url = f"https://api.bilibili.com/x/stein/edgeinfo_v2?{self.enc_wbi(params)}"
 
-        request = SyncNetWorkRequest(url)
+        request = SyncNetWorkRequest(url, raise_for_status = self.raise_for_status)
         response = request.run()
 
         self.check_response(response)
@@ -258,7 +258,7 @@ class VideoParser(ParserBase):
 
         url = f"https://api.bilibili.com/x/web-interface/wbi/view?{self.enc_wbi(params)}"
 
-        request = SyncNetWorkRequest(url)
+        request = SyncNetWorkRequest(url, raise_for_status = self.raise_for_status)
         response = request.run()
 
         self.check_response(response)

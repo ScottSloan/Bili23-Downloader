@@ -20,7 +20,7 @@ class SpaceParser(ParserBase):
 
         return mid
 
-    def parse(self, url: str, pn: int):
+    def parse(self, url: str, pn: int, get_info_data: bool = False):
         self.url = url
         self.pn = pn
 
@@ -29,7 +29,7 @@ class SpaceParser(ParserBase):
         self.get_search_arc_info()
         self.get_uname()
 
-        if self.auto_mode:
+        if get_info_data:
             return self.info_data
 
         episode_parser = SpaceEpisodeParser(self.info_data.copy(), self.get_category_name())
@@ -56,7 +56,7 @@ class SpaceParser(ParserBase):
 
         url = f"https://api.bilibili.com/x/space/wbi/arc/search?{self.enc_wbi(params)}"
 
-        request = SyncNetWorkRequest(url)
+        request = SyncNetWorkRequest(url, raise_for_status = self.raise_for_status)
         response = request.run()
 
         self.check_response(response)
@@ -69,7 +69,7 @@ class SpaceParser(ParserBase):
 
         url = f"https://api.bilibili.com/x/web-interface/card?mid={self.mid}"
 
-        request = SyncNetWorkRequest(url)
+        request = SyncNetWorkRequest(url, raise_for_status = self.raise_for_status)
         response = request.run()
 
         self.check_response(response)

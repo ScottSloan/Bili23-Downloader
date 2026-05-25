@@ -8,12 +8,15 @@ class ListEpisodeParser(EpisodeParserBase):
         self.info_data = info_data["data"]
         self.category_name = category_name
 
-    def parse(self):
+    def parse(self, update_episode_list: bool = True):
         self.episode_data_parser()
 
         node = self.seasons_archives_list_parser()
 
-        self.update_episode_list(node)
+        if update_episode_list:
+            self.update_episode_list(node)
+
+        return node
 
     def seasons_archives_list_parser(self):
         collection_title = self.get_node_title()
@@ -49,6 +52,9 @@ class ListEpisodeParser(EpisodeParserBase):
     
     def episode_data_parser(self):
         # 创建 episode_id
+        if self.episode_id:
+            return
+        
         episode_data = self._init_episode_data()
 
         episode_data["collection_title"] = self.get_node_title()

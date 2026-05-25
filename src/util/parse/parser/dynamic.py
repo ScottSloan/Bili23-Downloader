@@ -34,7 +34,7 @@ class DynamicParser(ParserBase):
             if self.stop_event.is_set():
                 break
 
-            parsed_data = self.parser.parse(self.url, page)
+            parsed_data = self.parser.parse(self.url, page, get_info_data = True)
 
             self.episode_parser.update_page_node(parsed_data)
 

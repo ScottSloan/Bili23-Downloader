@@ -60,12 +60,8 @@ from PySide6.QtGui import QFont
 
 from qfluentwidgets import FluentTranslator
 
-from util.auth.cookie import cookie_manager
-from util.auth.user import user_manager
 from util.common.config import config
 import res.resources_rc
-
-from gui.interface.main_window import MainWindow
 
 INSTANCE_LOCK_NAME = "instance.lock"
 INSTANCE_LOCK_TIMEOUT_MS = 10_000
@@ -77,7 +73,7 @@ class Application(QApplication):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.window: MainWindow = None
+        self.window = None
         self.instance_server: QLocalServer = None
         self.pending_instance_activation = False
         self.aboutToQuit.connect(self.cleanup_instance_state)
@@ -187,6 +183,9 @@ class Application(QApplication):
 
     def bootstrap_startup_tasks(self):
         # 将登录态与用户信息初始化放到首屏之后，避免阻塞窗口展示
+        from util.auth.cookie import cookie_manager
+        from util.auth.user import user_manager
+
         cookie_manager.init_cookie_info()
         user_manager.init_user_info()
 
@@ -200,6 +199,8 @@ def _main():
     app = Application(sys.argv)
     app.setup_app()
     
+    from gui.interface.main_window import MainWindow
+
     app.window = MainWindow()
     app.process_pending_instance_activation()
 

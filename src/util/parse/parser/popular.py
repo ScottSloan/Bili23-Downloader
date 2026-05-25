@@ -30,7 +30,7 @@ class PopularParser(ParserBase):
 
         url = f"https://api.bilibili.com/x/web-interface/popular/series/one?{self.enc_wbi(params)}"
 
-        request = SyncNetWorkRequest(url)
+        request = SyncNetWorkRequest(url, raise_for_status = self.raise_for_status)
         response = request.run()
 
         self.check_response(response)

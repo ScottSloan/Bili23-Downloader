@@ -26,7 +26,7 @@ class BangumiParser(ParserBase):
 
         url = f"https://api.bilibili.com/pgc/review/user?media_id={media_id}"
 
-        request = SyncNetWorkRequest(url)
+        request = SyncNetWorkRequest(url, raise_for_status = self.raise_for_status)
         response = request.run()
 
         self.check_response(response)
@@ -56,7 +56,7 @@ class BangumiParser(ParserBase):
     def get_bangumi_info(self, param: str):
         url = f"https://api.bilibili.com/pgc/view/web/season?{param}"
 
-        request = SyncNetWorkRequest(url)
+        request = SyncNetWorkRequest(url, raise_for_status = self.raise_for_status)
         response = request.run()
 
         self.check_response(response)

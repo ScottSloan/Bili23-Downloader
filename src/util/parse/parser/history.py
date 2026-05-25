@@ -10,7 +10,9 @@ class HistoryParser(ParserBase):
     def __init__(self):
         super().__init__()
 
-    def parse(self, url: str, pn: int):
+        self.ps = 20
+
+    def parse(self, url: str, pn: int, get_info_data: bool = False):
         self.url = url
         self.pn = pn
 
@@ -18,7 +20,7 @@ class HistoryParser(ParserBase):
 
         self.get_history_info()
 
-        if self.auto_mode:
+        if get_info_data:
             return self.info_data
 
         episode_parser = HistoryEpisodeParser(self.info_data.copy(), self.get_category_name())
@@ -39,7 +41,7 @@ class HistoryParser(ParserBase):
 
         url = f"https://api.bilibili.com/x/web-interface/history/search?{urlencode(params)}"
 
-        request = SyncNetWorkRequest(url)
+        request = SyncNetWorkRequest(url, raise_for_status = self.raise_for_status)
         response = request.run()
 
         self.check_response(response)
@@ -55,7 +57,7 @@ class HistoryParser(ParserBase):
         return {
             "pagination": True,
             "pagination_data": {
-                "total_pages": math.ceil(count / 20),
+                "total_pages": math.ceil(count / self.ps),
                 "total_items": count,
                 "current_page": self.pn
             }

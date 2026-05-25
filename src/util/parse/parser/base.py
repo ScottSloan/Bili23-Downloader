@@ -7,6 +7,7 @@ from functools import reduce
 from hashlib import md5
 import urllib.parse
 import logging
+import json
 import time
 import re
 
@@ -23,9 +24,11 @@ class ParserBase:
     def __init__(self):
         self.url = ""
         self.info_data = {}
+
         # 停止标记，用于跳转链接时停止当前解析流程
         self.stop_flag = False
-        self.auto_mode = False
+        # 是否抛出异常
+        self.raise_for_status = True
 
         self.error_message = ""
 
@@ -68,6 +71,8 @@ class ParserBase:
             raise Exception(self.error_message)
         
         if response.get("code", -1) != 0:
+            logger.error("接口请求错误：\n{response}".format(response = json.dumps(response, ensure_ascii = False, indent = 4)))
+
             raise Exception(response.get("message", "未知错误"))
     
     def get_extra_data(self) -> dict:

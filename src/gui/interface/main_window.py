@@ -7,9 +7,6 @@ from qfluentwidgets import (
     FluentIcon, InfoBadge, qrouter
 )
 
-from gui.component.widget.avatar import NavigationLargeAvatarWidget
-from gui.component.widget.info_bar import InfoBar, InfoBarPosition
-
 from util.common.enum import ToastNotificationCategory, WhenClose
 from util.common.signal_bus import signal_bus, config
 from util.common.icon import ExtendedFluentIcon
@@ -37,6 +34,7 @@ class MainWindow(MSFluentWindow):
         
     def init_UI(self):
         from .parse import ParseInterface
+        from gui.component.widget.avatar import NavigationLargeAvatarWidget
 
         self.parse_interface = ParseInterface(self)
         self.parse_btn = self.addSubInterface(self.parse_interface, FluentIcon.SEARCH, self.tr("Parser"), position = NavigationItemPosition.TOP)
@@ -210,7 +208,7 @@ class MainWindow(MSFluentWindow):
                 dialog = ExitDialog(self)
 
                 if dialog.exec():
-                    if dialog.exit_radio.isChecked():
+                    if dialog.exit_checked:
                         return True
                     
                     else:
@@ -269,6 +267,8 @@ class MainWindow(MSFluentWindow):
         self.parse_interface.reparse(url)
 
     def show_toast_notification(self, category: ToastNotificationCategory, title: str, content: str):
+        from gui.component.widget.info_bar import InfoBar, InfoBarPosition
+
         match category:
             case ToastNotificationCategory.SUCCESS:
                 func = InfoBar.success
@@ -293,6 +293,8 @@ class MainWindow(MSFluentWindow):
         )
 
     def show_toast_notification_long_message(self, title: str, content: str):
+        from gui.component.widget.info_bar import InfoBar, InfoBarPosition
+
         InfoBar.error(
             title = title,
             content = content,

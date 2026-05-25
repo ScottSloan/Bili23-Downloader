@@ -57,6 +57,11 @@ class DynamicEpisodeParser(EpisodeParserBase):
 
                 parser = WatchLaterEpisodeParser(_empty_info_data, self.category_name)
 
+            case ParserType.COLLECTION_LIST:
+                from .list import ListEpisodeParser
+
+                parser = ListEpisodeParser(_empty_info_data, self.category_name)
+
         self.parser = parser
 
     def update_page_node(self, info_data: dict):
