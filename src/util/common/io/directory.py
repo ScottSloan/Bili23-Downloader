@@ -6,6 +6,7 @@ from shutil import disk_usage
 from pathlib import Path
 import subprocess
 import logging
+import psutil
 import ctypes
 import sys
 import os
@@ -160,3 +161,26 @@ class Directory:
         else:
             return Path.cwd()
         
+    @staticmethod
+    def get_filesystem_type(directory: str) -> str:
+        # 获取目录所在磁盘的文件系统类型（如 NTFS、FAT32、exFAT 等），如果无法获取则返回 None
+        try:
+            directory = os.path.abspath(directory)
+            directory_drive = os.path.splitdrive(directory)[0].lower()
+
+            psutil_disk_partitions = psutil.disk_partitions(all = True)
+            
+            for partition in psutil_disk_partitions:
+                partition_mountpoint = os.path.abspath(partition.mountpoint)
+                partition_drive = os.path.splitdrive(partition_mountpoint)[0].lower()
+
+                if directory_drive != partition_drive:
+                    continue
+
+                if os.path.commonpath([partition_mountpoint, directory]) == partition_mountpoint:
+                    return partition.fstype
+
+        except Exception as e:
+            logger.exception("获取目录 %s 的文件系统类型时发生错误: %s", directory, str(e))
+
+        return None

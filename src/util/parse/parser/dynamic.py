@@ -45,9 +45,9 @@ class DynamicParser(ParserBase):
 
                 parsed_data = self.parser.parse(self.url, page, get_info_data = True)
 
-                self.episode_parser.update_page_node(parsed_data)
+                episode_count = self.episode_parser.update_page_node(parsed_data)
 
-                self._update_ui_progress(page)
+                self._update_ui_progress(page, episode_count)
 
                 if page < self.end_page:
                     time.sleep(config.get(config.auto_parse_interval))
@@ -65,7 +65,7 @@ class DynamicParser(ParserBase):
                 Translator.ERROR_MESSAGES("PARSING_STOPPED_MESSAGE").format(page = page, error = str(e))
             )
 
-    def _update_ui_progress(self, page: int):
+    def _update_ui_progress(self, page: int, episode_count: int):
         total_page = self.end_page - self.start_page + 1
 
         self.update_progress(
@@ -76,7 +76,7 @@ class DynamicParser(ParserBase):
             )
         )
 
-        signal_bus.parse.update_parse_list_count.emit(self.get_category_name())
+        signal_bus.parse.update_parse_list_count.emit(self.get_category_name(), episode_count)
 
     def get_category_name(self):
         return self.parser.get_category_name()

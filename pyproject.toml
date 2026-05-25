@@ -9,8 +9,9 @@ dependencies = [
     "PySide6==6.10.3",
     "PySide6-Fluent-Widgets==1.11.2",
     "qrcode==8.2",
-    "protobuf==7.34.1",
+    "protobuf==7.35.0",
     "httpx==0.28.1",
+    "psutil==7.2.2",
 ]
 authors = [
     {name = "ScottSloan", email = "world1019@sina.com"},

@@ -17,7 +17,7 @@ class SignalBus:
 
     class Parse(QObject):
         update_parse_list = Signal(str, str, object, object)
-        update_parse_list_count = Signal(str)
+        update_parse_list_count = Signal(str, int)
 
         preview_init = Signal(dict)
         query_video_info = Signal(int, int, object)

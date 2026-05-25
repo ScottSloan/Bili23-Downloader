@@ -195,7 +195,7 @@ class InteractiveVideoParser(ParserBase):
 
         self.episode_parser.update(title, cid)
 
-        signal_bus.parse.update_parse_list_count.emit(self.get_category_name())
+        signal_bus.parse.update_parse_list_count.emit(self.get_category_name(), len(self.node_list))
 
 class VideoParser(ParserBase):
     def __init__(self):

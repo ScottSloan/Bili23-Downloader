@@ -84,6 +84,8 @@ class DynamicEpisodeParser(EpisodeParserBase):
 
         self.update_episode_list(self.root_node)
 
+        return self.parser.episode_count
+
     def update(self, title: str, cid: int):
         node_data = {
             "episode_id": self.episode_id,

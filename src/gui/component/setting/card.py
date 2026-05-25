@@ -2,7 +2,10 @@ from PySide6.QtCore import Signal
 from PySide6.QtGui import QColor
 from PySide6.QtCore import QTimer
 
-from qfluentwidgets import ExpandGroupSettingCard, PushButton, FluentIcon, PushSettingCard, qconfig, ColorDialog, PrimaryPushButton
+from qfluentwidgets import (
+    ExpandGroupSettingCard, PushButton, FluentIcon, PushSettingCard, qconfig, ColorDialog, PrimaryPushButton,
+    MessageBox
+)
 
 from .widget import SettingSwitchButton, SettingComboBox, SettingSlider
 
@@ -47,6 +50,7 @@ class PersonalizationCard(ExpandGroupSettingCard):
 
 class DownloadPathSettingCard(PushSettingCard):
     diskSpaceReady = Signal(str, object)
+    filesystemTypeReady = Signal(str, str)
 
     def __init__(self, parent_window, save = True, parent = None):
         super().__init__(self.tr("Choose folder"), FluentIcon.FOLDER, self.tr("Download Path"), "path", parent)
@@ -58,6 +62,8 @@ class DownloadPathSettingCard(PushSettingCard):
         self.set_path(config.get(config.download_path), update_space = False)
 
         self.diskSpaceReady.connect(self.on_disk_space_ready)
+        self.filesystemTypeReady.connect(self.on_filesystem_type_ready)
+        
         QTimer.singleShot(0, self.refresh_disk_space)
 
         self.clicked.connect(self.on_change_download_path)
@@ -66,15 +72,25 @@ class DownloadPathSettingCard(PushSettingCard):
         self.path = path
 
         if update_space:
+            # 获取磁盘可用空间
             self.refresh_disk_space()
+
+            # 检查文件系统类型
+            self.check_filesystem_type()
         else:
             self.setContent(path)
 
     def refresh_disk_space(self):
-        path = self.path
-
         def worker():
-            self.diskSpaceReady.emit(path, Directory.calc_disk_space(path))
+            self.diskSpaceReady.emit(self.path, Directory.calc_disk_space(self.path))
+
+        GlobalThreadPoolTask.run_func(worker)
+
+    def check_filesystem_type(self):
+        def worker():
+            filesystem_type = Directory.get_filesystem_type(self.path)
+
+            self.filesystemTypeReady.emit(self.path, filesystem_type)
 
         GlobalThreadPoolTask.run_func(worker)
 
@@ -91,6 +107,20 @@ class DownloadPathSettingCard(PushSettingCard):
             )
         else:
             self.setContent(self.path)
+
+    def on_filesystem_type_ready(self, path: str, filesystem_type: str):
+        if path != self.path or filesystem_type is None:
+            return
+
+        if filesystem_type.upper() in ["FAT32", "EXFAT", "VFAT", "MSDOS", "FAT", "FAT16", "FAT12", "MS-DOS"]:
+            dialog = MessageBox(
+                title = self.tr("所选路径的文件系统不支持稀疏文件"),
+                content = self.tr("当前选择的下载路径所在的文件系统类型为 {fs}，该文件系统不支持稀疏文件。\n\n如继续使用，请关闭预分配文件空间选项。（设置 → 行为 → 下载处理）").format(fs = filesystem_type),
+                parent = self.parent_window
+            )
+            dialog.hideCancelButton()
+
+            dialog.show()
         
     def on_change_download_path(self):
         path = Directory.browse_directory(self.parent_window, self.tr("Choose folder"), config.get(config.download_path))

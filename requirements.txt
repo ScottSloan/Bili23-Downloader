@@ -3,3 +3,4 @@ qrcode==8.2
 protobuf==7.35.0
 PySide6==6.10.3
 httpx==0.28.1
+psutil==7.2.2

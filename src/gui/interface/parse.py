@@ -153,11 +153,16 @@ class ParseBase(QFrame):
     def on_progress_update(self, message: str):
         self.progress_widget.update_text(message)
 
-    def on_update_parse_list_count(self, category_name: str):
+    def on_update_parse_list_count(self, category_name: str, count: int):
         # 更新解析结果总数的显示
         self.category_name = Translator.EPISODE_TYPE(category_name)
 
-        self.on_item_check_state_changed(None)
+        text_label = self.tr("{category_name} ({total_count} total)").format(
+            category_name = self.category_name,
+            total_count = count
+        )
+
+        self.item_count_label.setText(text_label)
 
     def on_auto_parse(self):
         from gui.dialog.misc.auto_parse import AutoParseDialog
