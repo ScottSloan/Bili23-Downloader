@@ -30,6 +30,11 @@ class MainWindow(MSFluentWindow):
 
         self.center_on_screen(not config.get(config.silent_start))
 
+        # 设置鼠标指针为等待状态，直到工具初始化完成
+        QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
+        
+        self.setMicaEffectEnabled(config.get(config.mica_effect))
+
         QTimer.singleShot(0, self.init_utils)
         
     def init_UI(self):
@@ -148,8 +153,6 @@ class MainWindow(MSFluentWindow):
         self.theme_listener = SystemThemeListener(self)
         self.theme_listener.start()
 
-        self.setMicaEffectEnabled(config.get(config.mica_effect))
-
         self.updater = Updater(self)
 
         signal_bus.update.check.connect(self.updater.request_update)
@@ -164,6 +167,9 @@ class MainWindow(MSFluentWindow):
         QTimer.singleShot(300, self.check_ffmpeg)
 
         signal_bus.emit_pending_signals()
+
+        # 初始化完成，恢复鼠标指针
+        QApplication.restoreOverrideCursor()
 
     def closeEvent(self, e):
         from util.thread.async_ import AsyncTask

@@ -173,8 +173,8 @@ class ParseBase(QFrame):
     def show_auto_parse_teaching_tip(self):
         TeachingTip.create(
             target = self.segmented_widget.pager_widget.menu_btn,
-            title = "自动解析分页",
-            content = "点击此处可进行自动解析分页操作",
+            title = self.tr("Auto-parse Pagination"),
+            content = self.tr("Click here to automatically parse all pages."),
             icon = InfoBarIcon.INFORMATION,
             tailPosition = TeachingTipTailPosition.BOTTOM,
             isClosable = True,

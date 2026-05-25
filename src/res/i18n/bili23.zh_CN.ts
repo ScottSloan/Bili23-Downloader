@@ -1414,27 +1414,27 @@ File name: {filename}</source>
 <context>
     <name>ExitDialog</name>
     <message>
-        <location filename="../../gui/dialog/misc/exit.py" line="17"/>
+        <location filename="../../gui/dialog/misc/exit.py" line="20"/>
         <source>Close the main window</source>
         <translation>关闭主窗口</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/exit.py" line="19"/>
+        <location filename="../../gui/dialog/misc/exit.py" line="22"/>
         <source>Choose an action</source>
         <translation>选择一个操作</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/exit.py" line="21"/>
+        <location filename="../../gui/dialog/misc/exit.py" line="24"/>
         <source>Exit the program</source>
         <translation>退出程序</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/exit.py" line="23"/>
+        <location filename="../../gui/dialog/misc/exit.py" line="26"/>
         <source>Minimize to system tray</source>
         <translation>最小化到系统托盘</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/exit.py" line="31"/>
+        <location filename="../../gui/dialog/misc/exit.py" line="34"/>
         <source>Don&apos;t ask again</source>
         <translation>不再询问</translation>
     </message>
@@ -1583,9 +1583,8 @@ File name: {filename}</source>
         <translation type="vanished">手动选择节点</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/interactive_video.py" line="32"/>
         <source>Don&apos;t ask again</source>
-        <translation>不再询问</translation>
+        <translation type="vanished">不再询问</translation>
     </message>
 </context>
 <context>
@@ -1700,57 +1699,57 @@ Note: Videos protected by DRM can only be downloaded up to 1080P; higher qualiti
 <context>
     <name>MainWindow</name>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="42"/>
+        <location filename="../../gui/interface/main_window.py" line="40"/>
         <source>Parser</source>
         <translation>解析</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="48"/>
+        <location filename="../../gui/interface/main_window.py" line="46"/>
         <source>Downloads</source>
         <translation>下载</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="59"/>
+        <location filename="../../gui/interface/main_window.py" line="57"/>
         <source>Favorites</source>
         <translation>收藏</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="68"/>
+        <location filename="../../gui/interface/main_window.py" line="66"/>
         <source>About</source>
         <translation>关于</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="86"/>
+        <location filename="../../gui/interface/main_window.py" line="84"/>
         <source>Settings</source>
         <translation>设置</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="376"/>
+        <location filename="../../gui/interface/main_window.py" line="378"/>
         <source>Download Directory Invalid</source>
         <translation>下载目录无效</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="377"/>
+        <location filename="../../gui/interface/main_window.py" line="379"/>
         <source>The current download directory is inaccessible or lacks write permissions. Please reset it.</source>
         <translation>当前下载目录无法访问或没有写入权限，请重新设置。</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="383"/>
+        <location filename="../../gui/interface/main_window.py" line="385"/>
         <source>FFmpeg Not Found</source>
         <translation>未找到 FFmpeg</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="384"/>
+        <location filename="../../gui/interface/main_window.py" line="386"/>
         <source>No FFmpeg executable found. Please ensure FFmpeg is installed and configured correctly.</source>
         <translation>未找到 FFmpeg 可执行文件。请确保已正确安装并配置 FFmpeg。</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="393"/>
+        <location filename="../../gui/interface/main_window.py" line="395"/>
         <source>Login Required</source>
         <translation>需要登录</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="394"/>
+        <location filename="../../gui/interface/main_window.py" line="396"/>
         <source>Please log in to your account first.</source>
         <translation>请先登录账号</translation>
     </message>
@@ -2114,6 +2113,19 @@ For advanced usage, see the help documentation.</source>
     </message>
 </context>
 <context>
+    <name>ParseBase</name>
+    <message>
+        <location filename="../../gui/interface/parse.py" line="176"/>
+        <source>Auto-parse Pagination</source>
+        <translation>自动解析分页</translation>
+    </message>
+    <message>
+        <location filename="../../gui/interface/parse.py" line="177"/>
+        <source>Click here to automatically parse all pages.</source>
+        <translation>点击此处可进行自动解析分页操作</translation>
+    </message>
+</context>
+<context>
     <name>ParseHistoryDialog</name>
     <message>
         <location filename="../../gui/dialog/misc/parse_history.py" line="25"/>
@@ -2159,87 +2171,87 @@ For advanced usage, see the help documentation.</source>
 <context>
     <name>ParseInterface</name>
     <message>
-        <location filename="../../gui/interface/parse.py" line="176"/>
+        <location filename="../../gui/interface/parse.py" line="199"/>
         <source>Paste and Parse</source>
         <translation>粘贴并解析</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="180"/>
+        <location filename="../../gui/interface/parse.py" line="203"/>
         <source>Link / av / BV / ep / ss / md / Favorites / Profile</source>
         <translation>链接 / av / BV / ep / ss / md / 收藏夹 / 个人空间</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="185"/>
+        <location filename="../../gui/interface/parse.py" line="208"/>
         <source>Parse</source>
         <translation>解析</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="196"/>
+        <location filename="../../gui/interface/parse.py" line="219"/>
         <source>Download Options</source>
         <translation>下载选项</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="200"/>
+        <location filename="../../gui/interface/parse.py" line="223"/>
         <source>More</source>
         <translation>更多</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="215"/>
+        <location filename="../../gui/interface/parse.py" line="238"/>
         <source>Download Selected Items</source>
         <translation>下载所选项目</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="321"/>
+        <location filename="../../gui/interface/parse.py" line="344"/>
         <source>Parse Failed</source>
         <translation>解析失败</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="348"/>
+        <location filename="../../gui/interface/parse.py" line="371"/>
         <source>Added to download queue</source>
         <translation>已加入到下载队列</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="368"/>
+        <location filename="../../gui/interface/parse.py" line="391"/>
         <source>Search</source>
         <translation>搜索</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="369"/>
+        <location filename="../../gui/interface/parse.py" line="392"/>
         <source>Batch select</source>
         <translation>批量选择</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="370"/>
+        <location filename="../../gui/interface/parse.py" line="393"/>
         <source>Parsing history</source>
         <translation>解析记录</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="379"/>
+        <location filename="../../gui/interface/parse.py" line="402"/>
         <source>Jump to page</source>
         <translation>跳转到页面</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="380"/>
+        <location filename="../../gui/interface/parse.py" line="403"/>
         <source>Auto-parse pagination</source>
         <translation>自动解析分页</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="409"/>
+        <location filename="../../gui/interface/parse.py" line="432"/>
         <source>{category_name} ({selected_count} selected, {total_count} total)</source>
         <translation>{category_name}（已选择 {selected_count} 项，共 {total_count} 项）</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="415"/>
+        <location filename="../../gui/interface/parse.py" line="438"/>
         <source>{category_name} ({total_count} total)</source>
         <translation>{category_name}（共 {total_count} 项）</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="452"/>
+        <location filename="../../gui/interface/parse.py" line="475"/>
         <source>Invalid page number</source>
         <translation>无效页码</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="452"/>
+        <location filename="../../gui/interface/parse.py" line="475"/>
         <source>Please enter a number between 1 and {total_pages}</source>
         <translation>请输入一个介于1和{total_pages}之间的数字</translation>
     </message>

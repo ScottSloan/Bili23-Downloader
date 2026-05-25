@@ -1,0 +1,22 @@
+name: Sync Release to Gitee
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - dev
+
+jobs:
+  get-version:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Sync GitHub Release to Gitee
+        uses: trustedinster/sync-release-gitee@v1.3
+        with:
+          gitee_owner: scott-sloan
+          gitee_repo: Bili23-Downloader
+          gitee_token: ${{ secrets.GITEE_TOKEN }}
+          github_owner: ScottSloan
+          github_repo: Bili23-Downloader
+          gitee_upload_retry_times: 3
+          debug: false
