@@ -44,14 +44,15 @@ class AutoParseDialog(DialogBase):
         self.end_spin.setValue(self.total_pages)
         self.end_spin.setEnabled(False)
 
-        parse_interval_lab = BodyLabel(self.tr("Parsing Interval (seconds)"), self)
+        parse_interval_lab = BodyLabel(self.tr("Parsing Interval"), self)
 
         self.parse_interval_spin = DoubleSpinBox(parent = self)
         self.parse_interval_spin.setRange(0.1, 10.0)
         self.parse_interval_spin.setSingleStep(0.1)
         self.parse_interval_spin.setDecimals(1)
-        self.parse_interval_spin.setValue(config.get(config.parse_interval))
-        self.parse_interval_spin.setFixedWidth(150)
+        self.parse_interval_spin.setValue(config.get(config.auto_parse_interval))
+
+        parse_interval_unit_lab = BodyLabel(self.tr("seconds"), self)
 
         self.auto_add_to_download_list_check = CheckBox(self.tr("Automatically add to download list after parsing each page"), self)
         self.auto_add_to_download_list_check.setChecked(config.get(config.auto_add_to_download_list))
@@ -74,6 +75,11 @@ class AutoParseDialog(DialogBase):
         radio_layout.addWidget(self.parse_specified_radio)
         radio_layout.addLayout(range_layout)
 
+        interval_layout = QHBoxLayout()
+        interval_layout.addWidget(self.parse_interval_spin)
+        interval_layout.addWidget(parse_interval_unit_lab)
+        interval_layout.addStretch()
+
         self.viewLayout.addWidget(self.caption_lab)
         self.viewLayout.addSpacing(10)
         self.viewLayout.addWidget(tip_lab)
@@ -81,7 +87,7 @@ class AutoParseDialog(DialogBase):
         self.viewLayout.addLayout(radio_layout)
         self.viewLayout.addSpacing(5)
         self.viewLayout.addWidget(parse_interval_lab)
-        self.viewLayout.addWidget(self.parse_interval_spin)
+        self.viewLayout.addLayout(interval_layout)
         self.viewLayout.addSpacing(10)
         self.viewLayout.addWidget(self.auto_add_to_download_list_check)
         self.viewLayout.addWidget(self.auto_popup_check)
@@ -121,7 +127,7 @@ class AutoParseDialog(DialogBase):
     def save_config(self):
         config.set(config.show_auto_parse_dialog, self.auto_popup_check.isChecked())
         config.set(config.auto_add_to_download_list, self.auto_add_to_download_list_check.isChecked())
-        config.set(config.parse_interval, self.parse_interval_spin.value())
+        config.set(config.auto_parse_interval, self.parse_interval_spin.value())
 
     def get_data(self):
         if self.auto_parse_all_radio.isChecked():

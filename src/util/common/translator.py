@@ -241,7 +241,9 @@ class Translator:
             "LOGIN_REQUIRED": translate("ERROR_MESSAGES", "Login Required"),
             "LOGIN_REQUIRED_MESSAGE": translate("ERROR_MESSAGES", "Please log in to your account first."),
             "B23_TV_URL_EXPIRED": translate("ERROR_MESSAGES", "The b23.tv short link is invalid or has expired."),
-            "INVALID_LINK": translate("ERROR_MESSAGES", "Invalid link format")
+            "INVALID_LINK": translate("ERROR_MESSAGES", "Invalid link format"),
+            "PARSING_STOPPED": translate("ERROR_MESSAGES", "Parsing stopped"),
+            "PARSING_STOPPED_MESSAGE": translate("ERROR_MESSAGES", "An error occurred during parsing, and the process has been stopped. Parsing was completed up to page {page}.\n\nReminder: Due to Bilibili's anti-abuse mechanism, parsing too many pages or at too high a frequency may result in failure and IP ban. Please use with caution!\n\n{error}")
         }
 
     @staticmethod
@@ -265,7 +267,7 @@ class Translator:
             "DOWNLOADING_COVER": translate("TIP_MESSAGES", "Downloading Cover..."),
             "SCRAPING_METADATA": translate("TIP_MESSAGES", "Scraping Metadata..."),
             "PARSING_INTERACTIVE_VIDEO_NODE": translate("TIP_MESSAGES", "Parsing node: {title}"),
-            "PARSING_PAGE": translate("TIP_MESSAGES", "Parsing page {page}, total {total_page} pages"),
+            "PARSING_PAGE": translate("TIP_MESSAGES", "Parsing page {page}, total {total_page} pages, progress: {progress}%"),
         }
 
     @staticmethod

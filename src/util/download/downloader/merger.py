@@ -1,6 +1,6 @@
 from PySide6.QtCore import QObject
 
-from ...common.enum import DownloadStatus, DownloadType
+from ...common.enum import DownloadStatus, DownloadType, ToastNotificationCategory
 from ...common.io.file import safe_remove, safe_rename
 from ...common.timestamp import get_timestamp
 from ...common.signal_bus import signal_bus
@@ -213,7 +213,12 @@ class Merger(QObject):
         self.task_info.Download.status = DownloadStatus.FFMPEG_FAILED
 
         signal_bus.download.update_downloading_item.emit(self.task_info)
-        signal_bus.toast.show_long_message.emit(short_message, description)
+        
+        signal_bus.toast.show_long_message.emit(
+            ToastNotificationCategory.ERROR,
+            short_message,
+            description
+        )
 
         logger.error(str(short_message) + ": \n" + description)
 

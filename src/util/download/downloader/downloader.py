@@ -1,7 +1,7 @@
 from PySide6.QtCore import QRunnable, QThreadPool, QObject, QTimer, Slot, QMetaObject, Q_ARG
 from PySide6.QtCore import Qt
 
-from ...common.enum import DownloadStatus, DownloadType, MediaType
+from ...common.enum import DownloadStatus, DownloadType, MediaType, ToastNotificationCategory
 from ...common.data import reversed_video_quality_map
 from ...common.io.directory import Directory
 from ...common.translator import Translator
@@ -336,6 +336,7 @@ class Downloader(QObject):
         signal_bus.download.auto_manage_concurrent_downloads.emit()
 
         signal_bus.toast.show_long_message.emit(
+            ToastNotificationCategory.ERROR,
             Translator.ERROR_MESSAGES("DOWNLOAD_FAILED"),
             error_message
         )
@@ -355,6 +356,7 @@ class Downloader(QObject):
         signal_bus.download.auto_manage_concurrent_downloads.emit()
 
         signal_bus.toast.show_long_message.emit(
+            ToastNotificationCategory.ERROR,
             Translator.ERROR_MESSAGES("DOWNLOAD_FAILED"),
             error_message
         )

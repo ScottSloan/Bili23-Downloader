@@ -7,6 +7,8 @@ from gui.component.widget import PivotItem
 
 from util.download.task.query_worker import QueryWorker
 from util.download.task.info import TaskInfo
+
+from util.common.enum import ToastNotificationCategory
 from util.common.signal_bus import signal_bus
 from util.thread.async_ import AsyncTask
 
@@ -103,4 +105,8 @@ class DownloadInterface(QFrame):
         self.downloading_list_view._endAddQueriedTasks()
 
     def on_query_error(self, error_message: str):
-        signal_bus.toast.show_long_message.emit(self.tr("Failed to query download tasks"), error_message)
+        signal_bus.toast.show_long_message.emit(
+            ToastNotificationCategory.ERROR,
+            self.tr("Failed to query download tasks"),
+            error_message
+        )

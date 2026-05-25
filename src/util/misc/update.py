@@ -37,7 +37,11 @@ class Updater(QObject):
 
     def request_update(self, manual: bool):
         def on_error(error_message: str):
-            signal_bus.toast.show_long_message.emit(Translator.ERROR_MESSAGES("CHECK_UPDATE_FAILED"), error_message)
+            signal_bus.toast.show_long_message.emit(
+                ToastNotificationCategory.ERROR,
+                Translator.ERROR_MESSAGES("CHECK_UPDATE_FAILED"),
+                error_message
+            )
 
         self.manual = manual
 

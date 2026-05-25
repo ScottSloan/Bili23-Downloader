@@ -11,7 +11,7 @@ class SignalBus:
         # 用于在 MainWindow 中显示 Toast 通知
         show = Signal(ToastNotificationCategory, str, str)
 
-        show_long_message = Signal(str, str)
+        show_long_message = Signal(ToastNotificationCategory, str, str)
 
         sys_show = Signal(ToastNotificationCategory, str, str)
 

@@ -32,7 +32,7 @@ class MainWindow(MSFluentWindow):
 
         # 设置鼠标指针为等待状态，直到工具初始化完成
         QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
-        
+
         self.setMicaEffectEnabled(config.get(config.mica_effect))
 
         QTimer.singleShot(0, self.init_utils)
@@ -272,8 +272,8 @@ class MainWindow(MSFluentWindow):
 
         self.parse_interface.reparse(url)
 
-    def show_toast_notification(self, category: ToastNotificationCategory, title: str, content: str):
-        from gui.component.widget.info_bar import InfoBar, InfoBarPosition
+    def _get_toast_function(self, category: ToastNotificationCategory):
+        from gui.component.widget.info_bar import InfoBar
 
         match category:
             case ToastNotificationCategory.SUCCESS:
@@ -288,6 +288,13 @@ class MainWindow(MSFluentWindow):
             case ToastNotificationCategory.INFO:
                 func = InfoBar.info
 
+        return func
+
+    def show_toast_notification(self, category: ToastNotificationCategory, title: str, content: str):
+        from gui.component.widget.info_bar import InfoBarPosition
+
+        func = self._get_toast_function(category)
+
         func(
             title = title,
             content = content,
@@ -298,10 +305,12 @@ class MainWindow(MSFluentWindow):
             parent = self
         )
 
-    def show_toast_notification_long_message(self, title: str, content: str):
-        from gui.component.widget.info_bar import InfoBar, InfoBarPosition
+    def show_toast_notification_long_message(self, category: ToastNotificationCategory, title: str, content: str):
+        from gui.component.widget.info_bar import InfoBarPosition
 
-        InfoBar.error(
+        func = self._get_toast_function(category)
+
+        func(
             title = title,
             content = content,
             orient = Qt.Orientation.Vertical,
@@ -381,6 +390,7 @@ class MainWindow(MSFluentWindow):
 
         if not accessible:
             signal_bus.toast.show_long_message.emit(
+                ToastNotificationCategory.ERROR,
                 self.tr("Download Directory Invalid"),
                 self.tr("The current download directory is inaccessible or lacks write permissions. Please reset it.") + f"\n\n{download_path}"
             )
@@ -388,6 +398,7 @@ class MainWindow(MSFluentWindow):
     def check_ffmpeg(self):
         if config.no_ffmpeg_available:
             signal_bus.toast.show_long_message.emit(
+                ToastNotificationCategory.ERROR,
                 self.tr("FFmpeg Not Found"),
                 self.tr("No FFmpeg executable found. Please ensure FFmpeg is installed and configured correctly.")
             )

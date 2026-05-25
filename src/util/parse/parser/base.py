@@ -1,6 +1,6 @@
+from ...common.enum import ParserType, ToastNotificationCategory
 from ...common.translator import Translator
 from ...common.signal_bus import signal_bus
-from ...common.enum import ParserType
 from ...common.config import config
 
 from functools import reduce
@@ -87,6 +87,7 @@ class ParserBase:
     def check_login(self):
         if not config.get(config.is_login) or config.is_expired:
             signal_bus.toast.show_long_message.emit(
+                ToastNotificationCategory.ERROR,
                 Translator.ERROR_MESSAGES("LOGIN_REQUIRED"),
                 Translator.ERROR_MESSAGES("LOGIN_REQUIRED_MESSAGE")
             )
