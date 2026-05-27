@@ -6,6 +6,12 @@ on:
     #   - dev
     tags:
       - "v*"
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: "Release tag or version name, for example v2.00.3 or v2.00.3-rc1"
+        required: true
+        type: string
 
 jobs:
   get-version:
@@ -18,9 +24,18 @@ jobs:
       - name: Set version
         id: set-version
         run: |
-          echo "VERSION=$(echo ${GITHUB_REF#refs/tags/v} | sed 's/-rc.*//')" >> $GITHUB_OUTPUT
-          echo "VERSION_NAME=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
-          if echo "${GITHUB_REF#refs/tags/v}" | grep -q -- '-rc'; then
+          if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
+            TAG_NAME="${{ inputs.release_tag }}"
+          else
+            TAG_NAME="${GITHUB_REF#refs/tags/}"
+          fi
+
+          TAG_NAME="${TAG_NAME#v}"
+
+          echo "VERSION=$(echo "$TAG_NAME" | sed 's/-rc.*//')" >> $GITHUB_OUTPUT
+          echo "VERSION_NAME=$TAG_NAME" >> $GITHUB_OUTPUT
+
+          if echo "$TAG_NAME" | grep -q -- '-rc'; then
             echo "IS_PRERELEASE=true" >> $GITHUB_OUTPUT
           else
             echo "IS_PRERELEASE=false" >> $GITHUB_OUTPUT
@@ -420,6 +435,7 @@ jobs:
           path: Bili23-Downloader_${{ env.VERSION_NAME }}_macos_${{ matrix.arch }}.dmg
   
   publish:
+    if: github.event_name != 'workflow_dispatch'
     needs: [windows-build, linux-build, macos-build]
     env:
       VERSION_NAME: ${{ needs.windows-build.outputs.VERSION_NAME }}
