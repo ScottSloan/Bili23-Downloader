@@ -2,8 +2,8 @@ name: Publish release
 
 on:
   push:
-    # branches:
-    #   - dev
+    branches:
+      - dev
     tags:
       - "v*"
   workflow_dispatch:
