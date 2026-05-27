@@ -42,6 +42,9 @@ class Captcha(AuthBase):
             CaptchaInfo.gt = response["data"]["geetest"]["gt"]
 
             if not self.server_running:
+                # 延迟启动服务器，确保在获取到验证码信息后才启动，避免不必要的资源占用
+                from .server import ServerManager
+
                 signal_bus.login.start_server.emit()
 
                 self.server_running = True
