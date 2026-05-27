@@ -1761,32 +1761,52 @@ Note: Videos protected by DRM can only be downloaded up to 1080P; higher qualiti
         <translation>设置</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="394"/>
+        <location filename="../../gui/interface/main_window.py" line="369"/>
+        <source>Welcome to Bili23 Downloader</source>
+        <translation>欢迎使用 Bili23 Downloader</translation>
+    </message>
+    <message>
+        <location filename="../../gui/interface/main_window.py" line="370"/>
+        <source>It is recommended to read the user guide and FAQs when using for the first time, to help you get started quickly and make full use of all features.</source>
+        <translation>首次使用时建议先查看使用说明和常见问题，帮助你更快上手并充分利用各项功能。</translation>
+    </message>
+    <message>
+        <location filename="../../gui/interface/main_window.py" line="373"/>
+        <source>View</source>
+        <translation>查看</translation>
+    </message>
+    <message>
+        <location filename="../../gui/interface/main_window.py" line="374"/>
+        <source>Skip</source>
+        <translation>跳过</translation>
+    </message>
+    <message>
+        <location filename="../../gui/interface/main_window.py" line="416"/>
         <source>Download Directory Invalid</source>
         <translation>下载目录无效</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="395"/>
+        <location filename="../../gui/interface/main_window.py" line="417"/>
         <source>The current download directory is inaccessible or lacks write permissions. Please reset it.</source>
         <translation>当前下载目录无法访问或没有写入权限，请重新设置。</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="402"/>
+        <location filename="../../gui/interface/main_window.py" line="424"/>
         <source>FFmpeg Not Found</source>
         <translation>未找到 FFmpeg</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="403"/>
+        <location filename="../../gui/interface/main_window.py" line="425"/>
         <source>No FFmpeg executable found. Please ensure FFmpeg is installed and configured correctly.</source>
         <translation>未找到 FFmpeg 可执行文件。请确保已正确安装并配置 FFmpeg。</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="412"/>
+        <location filename="../../gui/interface/main_window.py" line="434"/>
         <source>Login Required</source>
         <translation>需要登录</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="413"/>
+        <location filename="../../gui/interface/main_window.py" line="435"/>
         <source>Please log in to your account first.</source>
         <translation>请先登录账号</translation>
     </message>

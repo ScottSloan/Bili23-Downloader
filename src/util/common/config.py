@@ -346,6 +346,8 @@ class APPConfig(QConfig):
 
     auto_parse_teaching_tip_shown = ConfigItem("Misc", "auto_parse_teaching_tip_shown", False, BoolValidator())
 
+    tutorial_dialog_shown = ConfigItem("Misc", "tutorial_dialog_shown", False, BoolValidator())
+
 config = APPConfig()
 config.themeMode.value = Theme.AUTO
 

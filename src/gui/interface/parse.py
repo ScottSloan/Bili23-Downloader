@@ -3,8 +3,8 @@ from PySide6.QtCore import Qt, QTimer
 from PySide6.QtGui import QKeyEvent
 
 from qfluentwidgets import (
-    LineEdit, BodyLabel, FluentIcon, RoundMenu, Action, PrimaryPushButton, TeachingTip, InfoBarIcon,
-    TeachingTipTailPosition
+    LineEdit, BodyLabel, FluentIcon, RoundMenu, Action, PrimaryPushButton, InfoBarIcon,
+    TeachingTipTailPosition, TeachingTip
 )
 
 from gui.component.widget import (
@@ -184,7 +184,7 @@ class ParseBase(QFrame):
             tailPosition = TeachingTipTailPosition.BOTTOM,
             isClosable = True,
             duration = -1,
-            parent = self
+            parent = self.main_window
         )
 
 class ParseInterface(ParseBase):

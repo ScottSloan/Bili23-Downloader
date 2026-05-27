@@ -157,19 +157,28 @@ class MainWindow(MSFluentWindow):
 
         signal_bus.update.check.connect(self.updater.request_update)
 
-        if not config.get(config.accepted_terms):
-            QTimer.singleShot(300, self.show_terms_of_use)
-        
-        else:
-            signal_bus.update.check.emit(False)
-
-        QTimer.singleShot(300, self.check_download_path)
-        QTimer.singleShot(300, self.check_ffmpeg)
-
-        signal_bus.emit_pending_signals()
-
         # 初始化完成，恢复鼠标指针
         QApplication.restoreOverrideCursor()
+
+        if not config.get(config.accepted_terms):
+            QTimer.singleShot(0, self.show_terms_of_use)
+
+            return
+
+        self.run_post_terms_checks()
+
+    def run_post_terms_checks(self):
+        signal_bus.update.check.emit(False)
+
+        if not config.get(config.tutorial_dialog_shown):
+            QTimer.singleShot(0, self.show_tutorial_dialog)
+
+            config.set(config.tutorial_dialog_shown, True)
+
+        QTimer.singleShot(0, self.check_download_path)
+        QTimer.singleShot(0, self.check_ffmpeg)
+
+        signal_bus.emit_pending_signals()
 
     def closeEvent(self, e):
         from util.thread.async_ import AsyncTask
@@ -344,14 +353,34 @@ class MainWindow(MSFluentWindow):
             # 用户不接受使用协议，关闭程序
             self.close()
 
-        # 许可协议优先级最高，之后再显示更新等提示
-        signal_bus.update.check.emit(False)
+            return False
+
+        self.run_post_terms_checks()
+
+        return True
 
     def show_update_dialog(self, info: dict):
         from ..dialog.update import UpdateDialog
 
         dialog = UpdateDialog(info, self)
         dialog.exec()
+
+    def show_tutorial_dialog(self):
+        # 询问用户是否首次使用，建议用户查看文档，充分利用程序功能
+        from qfluentwidgets import MessageBox
+
+        dialog = MessageBox(
+            title = self.tr("Welcome to Bili23 Downloader"),
+            content = self.tr("It is recommended to read the user guide and FAQs when using for the first time, to help you get started quickly and make full use of all features."),
+            parent = self
+        )
+        dialog.yesButton.setText(self.tr("View"))
+        dialog.cancelButton.setText(self.tr("Skip"))
+
+        if dialog.exec():
+            import webbrowser
+
+            webbrowser.open("https://bili23.scott-sloan.cn/doc/introduction.html")
 
     def center_on_screen(self, show = True):
         from PySide6.QtWidgets import QApplication

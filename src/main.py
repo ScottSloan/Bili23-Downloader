@@ -95,8 +95,14 @@ class Application(QApplication):
         self.instance_lock.removeStaleLockFile()
 
         if not self.instance_lock.tryLock(0):
+            if self.wake_existing_instance():
+                sys.exit(0)
+
+            if self.force_take_over_existing_instance():
+                self.init_instance_server()
+                return
+
             logger.warning("无法获取实例锁，程序已在运行中")
-            self.wake_existing_instance()
             sys.exit(0)
 
         self.init_instance_server()
@@ -128,18 +134,74 @@ class Application(QApplication):
 
         self.activate_existing_instance()
 
-    def wake_existing_instance(self):
+    def wake_existing_instance(self) -> bool:
         socket = QLocalSocket()
         socket.connectToServer(INSTANCE_SERVER_NAME)
 
         if not socket.waitForConnected(500):
             logger.warning("无法唤醒已运行的实例")
-            return
+            return False
 
         socket.write(b"activate")
         socket.flush()
         socket.waitForBytesWritten(500)
         socket.disconnectFromServer()
+
+        return True
+
+    def force_take_over_existing_instance(self) -> bool:
+        import psutil
+        
+        try:
+            lock_pid, _, _ = self.instance_lock.getLockInfo()
+        except Exception as exc:
+            logger.warning("无法读取实例锁信息: %s", exc)
+            return False
+
+        if not lock_pid:
+            logger.warning("实例锁中没有有效的进程信息，无法强制接管")
+            return False
+
+        try:
+            process = psutil.Process(lock_pid)
+        except psutil.NoSuchProcess:
+            logger.warning("锁对应进程已不存在，尝试重新获取实例锁")
+            self.instance_lock.removeStaleLockFile()
+
+            return self.instance_lock.tryLock(0)
+
+        children = process.children(recursive = True)
+
+        for child in children:
+            try:
+                child.terminate()
+            except psutil.Error:
+                pass
+
+        try:
+            process.terminate()
+        except psutil.Error:
+            pass
+
+        _, alive = psutil.wait_procs([process, *children], timeout = 5)
+
+        for proc in alive:
+            try:
+                proc.kill()
+            except psutil.Error:
+                pass
+
+        if alive:
+            psutil.wait_procs(alive, timeout = 2)
+
+        self.instance_lock.removeStaleLockFile()
+
+        if self.instance_lock.tryLock(0):
+            logger.warning("原实例无法唤醒，已结束旧进程并接管实例")
+            return True
+
+        logger.warning("已结束旧进程，但仍无法重新获取实例锁")
+        return False
 
     def activate_existing_instance(self):
         if self.window is None:
