@@ -2,8 +2,8 @@ name: Publish release
 
 on:
   push:
-    branches:
-      - dev
+    # branches:
+    #   - dev
     tags:
       - "v*"
   workflow_dispatch:
@@ -24,25 +24,25 @@ jobs:
       - name: Set version
         id: set-version
         run: |
-          # if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
-          #   TAG_NAME="${{ inputs.release_tag }}"
-          # else
-          #   TAG_NAME="${GITHUB_REF#refs/tags/}"
-          # fi
+          if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
+            TAG_NAME="${{ inputs.release_tag }}"
+          else
+            TAG_NAME="${GITHUB_REF#refs/tags/}"
+          fi
 
-          # TAG_NAME="${TAG_NAME#v}"
+          TAG_NAME="${TAG_NAME#v}"
 
-          # echo "VERSION=$(echo "$TAG_NAME" | sed 's/-rc.*//')" >> $GITHUB_OUTPUT
-          # echo "VERSION_NAME=$TAG_NAME" >> $GITHUB_OUTPUT
+          echo "VERSION=$(echo "$TAG_NAME" | sed 's/-rc.*//')" >> $GITHUB_OUTPUT
+          echo "VERSION_NAME=$TAG_NAME" >> $GITHUB_OUTPUT
 
-          # if echo "$TAG_NAME" | grep -q -- '-rc'; then
-          #   echo "IS_PRERELEASE=true" >> $GITHUB_OUTPUT
-          # else
-          #   echo "IS_PRERELEASE=false" >> $GITHUB_OUTPUT
-          # fi
+          if echo "$TAG_NAME" | grep -q -- '-rc'; then
+            echo "IS_PRERELEASE=true" >> $GITHUB_OUTPUT
+          else
+            echo "IS_PRERELEASE=false" >> $GITHUB_OUTPUT
+          fi
 
-          echo "VERSION=2.00.5" >> $GITHUB_OUTPUT
-          echo "VERSION_NAME=2.00.5" >> $GITHUB_OUTPUT
+          # echo "VERSION=2.00.5" >> $GITHUB_OUTPUT
+          # echo "VERSION_NAME=2.00.5" >> $GITHUB_OUTPUT
 
   windows-build:
     needs: get-version
@@ -173,316 +173,316 @@ jobs:
           path: |
             Bili23-Downloader_${{ env.VERSION_NAME }}_windows_x64_for_win7.exe
   
-  # linux-build:
-  #   needs: get-version
-  #   env:
-  #     VERSION: ${{ needs.get-version.outputs.VERSION }}
-  #     VERSION_NAME: ${{ needs.get-version.outputs.VERSION_NAME }}
-  #   outputs:
-  #     VERSION: ${{ env.VERSION }}
-  #     VERSION_NAME: ${{ env.VERSION_NAME }}
-  #   strategy:
-  #     matrix:
-  #       include:
-  #         - arch: amd64
-  #           os: ubuntu-latest
-  #           python_arch: x64
+  linux-build:
+    needs: get-version
+    env:
+      VERSION: ${{ needs.get-version.outputs.VERSION }}
+      VERSION_NAME: ${{ needs.get-version.outputs.VERSION_NAME }}
+    outputs:
+      VERSION: ${{ env.VERSION }}
+      VERSION_NAME: ${{ env.VERSION_NAME }}
+    strategy:
+      matrix:
+        include:
+          - arch: amd64
+            os: ubuntu-latest
+            python_arch: x64
 
-  #         - arch: arm64
-  #           os: ubuntu-24.04-arm
-  #           python_arch: arm64
+          - arch: arm64
+            os: ubuntu-24.04-arm
+            python_arch: arm64
 
-  #   runs-on: ${{ matrix.os }}
-  #   steps:
-  #     - uses: actions/checkout@v6
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v6
 
-  #     - name: Clean up files
-  #       run: |
-  #         # 清理不需要的资源文件以减小安装包体积
-  #         rm -rf src\res\icon
-  #         rm -rf src\res\image
-  #         rm -rf src\res\i18n\bili23.zh_CN.ts
-  #         rm -rf src\res\i18n\bili23.zh_TW.ts
+      - name: Clean up files
+        run: |
+          # 清理不需要的资源文件以减小安装包体积
+          rm -rf src\res\icon
+          rm -rf src\res\image
+          rm -rf src\res\i18n\bili23.zh_CN.ts
+          rm -rf src\res\i18n\bili23.zh_TW.ts
 
-  #     - name: Setup Python
-  #       uses: actions/setup-python@v6
-  #       with:
-  #         python-version: 3.13
-  #         architecture: ${{ matrix.python_arch }}
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: 3.13
+          architecture: ${{ matrix.python_arch }}
 
-  #     - name: Install dependencies
-  #       run: |
-  #         pip install -r requirements.txt
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
 
-  #     - name: Prepare Linux runtime
-  #       run: |
-  #         # 下载 Python 静态运行时环境
-  #         wget https://github.com/ScottSloan/Python-Static/releases/download/v0.0.9/linux_${{ matrix.arch }}_runtime.zip
+      - name: Prepare Linux runtime
+        run: |
+          # 下载 Python 静态运行时环境
+          wget https://github.com/ScottSloan/Python-Static/releases/download/v0.0.9/linux_${{ matrix.arch }}_runtime.zip
 
-  #         unzip linux_${{ matrix.arch }}_runtime.zip -d Bili23-Downloader
+          unzip linux_${{ matrix.arch }}_runtime.zip -d Bili23-Downloader
 
-  #         chmod +x Bili23-Downloader/bili23-downloader
-  #         chmod +x Bili23-Downloader/bundle/ffmpeg
+          chmod +x Bili23-Downloader/bili23-downloader
+          chmod +x Bili23-Downloader/bundle/ffmpeg
 
-  #         mkdir -p Bili23-Downloader/script
+          mkdir -p Bili23-Downloader/script
 
-  #         cp -r src/* Bili23-Downloader/script/
+          cp -r src/* Bili23-Downloader/script/
 
-  #         python -m compileall Bili23-Downloader
+          python -m compileall Bili23-Downloader
 
-  #     - name: Package Linux version
-  #       run: |
-  #         # 便携版：直接打包为 tar.gz
-  #         tar -czvf Bili23-Downloader_${{ env.VERSION_NAME }}_linux_${{ matrix.arch }}_portable.tar.gz Bili23-Downloader
+      - name: Package Linux version
+        run: |
+          # 便携版：直接打包为 tar.gz
+          tar -czvf Bili23-Downloader_${{ env.VERSION_NAME }}_linux_${{ matrix.arch }}_portable.tar.gz Bili23-Downloader
 
-  #         # deb 包：需要创建 deb 包结构
-  #         mkdir -p buildroot/DEBIAN
-  #         mkdir -p buildroot/usr/local/bin
-  #         mkdir -p buildroot/usr/share/applications
-  #         mkdir -p buildroot/usr/share/icons/hicolor/scalable/apps
-  #         mkdir -p buildroot/opt/Bili23-Downloader
+          # deb 包：需要创建 deb 包结构
+          mkdir -p buildroot/DEBIAN
+          mkdir -p buildroot/usr/local/bin
+          mkdir -p buildroot/usr/share/applications
+          mkdir -p buildroot/usr/share/icons/hicolor/scalable/apps
+          mkdir -p buildroot/opt/Bili23-Downloader
 
-  #         cp -r Bili23-Downloader buildroot/opt/
-  #         cp src/res/icon/app.svg buildroot/usr/share/icons/hicolor/scalable/apps/bili23-downloader.svg
+          cp -r Bili23-Downloader buildroot/opt/
+          cp src/res/icon/app.svg buildroot/usr/share/icons/hicolor/scalable/apps/bili23-downloader.svg
 
-  #         export GLIBC_VERSION=${{ matrix.arch == 'amd64' && '2.31' || '2.39' }}
+          export GLIBC_VERSION=${{ matrix.arch == 'amd64' && '2.31' || '2.39' }}
 
-  #         # control 文件
-  #         cat << EOF > buildroot/DEBIAN/control
-  #         Package: bili23-downloader
-  #         Version: ${{ env.VERSION_NAME }}
-  #         Architecture: ${{ matrix.arch }}
-  #         Section: utils
-  #         Priority: optional
-  #         Maintainer: Scott Sloan <world1019@sina.com>
-  #         Description: A cross-platform video downloader for Bilibili
-  #         Depends: libc6 (>= ${GLIBC_VERSION}), libxcb-cursor0
-  #         Homepage: https://bili23.scott-sloan.cn
-  #         License: GPL-3.0
-  #         Installed-Size: $(du -s Bili23-Downloader | cut -f1)
-  #         EOF
+          # control 文件
+          cat << EOF > buildroot/DEBIAN/control
+          Package: bili23-downloader
+          Version: ${{ env.VERSION_NAME }}
+          Architecture: ${{ matrix.arch }}
+          Section: utils
+          Priority: optional
+          Maintainer: Scott Sloan <world1019@sina.com>
+          Description: A cross-platform video downloader for Bilibili
+          Depends: libc6 (>= ${GLIBC_VERSION}), libxcb-cursor0
+          Homepage: https://bili23.scott-sloan.cn
+          License: GPL-3.0
+          Installed-Size: $(du -s Bili23-Downloader | cut -f1)
+          EOF
 
-  #         # preinst 文件
-  #         cat << 'EOF' > buildroot/DEBIAN/preinst
-  #         #!/bin/bash
-  #         # 清空旧版本可能残留的文件
-  #         rm -rf /opt/Bili23-Downloader
-  #         EOF
+          # preinst 文件
+          cat << 'EOF' > buildroot/DEBIAN/preinst
+          #!/bin/bash
+          # 清空旧版本可能残留的文件
+          rm -rf /opt/Bili23-Downloader
+          EOF
 
-  #         # postrm 文件
-  #         cat << 'EOF' > buildroot/DEBIAN/postrm
-  #         #!/bin/bash
-  #         # 卸载后删除残留文件
-  #         rm -rf /opt/Bili23-Downloader
-  #         EOF
+          # postrm 文件
+          cat << 'EOF' > buildroot/DEBIAN/postrm
+          #!/bin/bash
+          # 卸载后删除残留文件
+          rm -rf /opt/Bili23-Downloader
+          EOF
 
-  #         # desktop 文件
-  #         cat << 'EOF' > buildroot/usr/share/applications/bili23-downloader.desktop
-  #         [Desktop Entry]
-  #         Type=Application
-  #         Name=Bili23 Downloader
-  #         Exec=/usr/local/bin/bili23-downloader
-  #         Icon=bili23-downloader
-  #         Categories=Utility;
-  #         Terminal=false
-  #         Comment=A cross-platform video downloader for Bilibili
-  #         EOF
+          # desktop 文件
+          cat << 'EOF' > buildroot/usr/share/applications/bili23-downloader.desktop
+          [Desktop Entry]
+          Type=Application
+          Name=Bili23 Downloader
+          Exec=/usr/local/bin/bili23-downloader
+          Icon=bili23-downloader
+          Categories=Utility;
+          Terminal=false
+          Comment=A cross-platform video downloader for Bilibili
+          EOF
 
-  #         # 入口文件
-  #         cat << 'EOF' > buildroot/usr/local/bin/bili23-downloader
-  #         #!/bin/bash
-  #         cd /opt/Bili23-Downloader
-  #         exec ./bili23-downloader "$@"
-  #         EOF
+          # 入口文件
+          cat << 'EOF' > buildroot/usr/local/bin/bili23-downloader
+          #!/bin/bash
+          cd /opt/Bili23-Downloader
+          exec ./bili23-downloader "$@"
+          EOF
 
-  #         chmod +x buildroot/usr/local/bin/bili23-downloader
-  #         chmod +x buildroot/DEBIAN/preinst
-  #         chmod +x buildroot/DEBIAN/postrm
+          chmod +x buildroot/usr/local/bin/bili23-downloader
+          chmod +x buildroot/DEBIAN/preinst
+          chmod +x buildroot/DEBIAN/postrm
 
-  #         dpkg-deb --build buildroot Bili23-Downloader_${{ env.VERSION_NAME }}_linux_${{ matrix.arch }}.deb
+          dpkg-deb --build buildroot Bili23-Downloader_${{ env.VERSION_NAME }}_linux_${{ matrix.arch }}.deb
 
-  #     - name: Upload Linux artifacts
-  #       uses: actions/upload-artifact@v6
-  #       with:
-  #         name: linux-${{ matrix.arch }}-artifacts
-  #         path: |
-  #           Bili23-Downloader_${{ env.VERSION_NAME }}_linux_${{ matrix.arch }}_portable.tar.gz
-  #           Bili23-Downloader_${{ env.VERSION_NAME }}_linux_${{ matrix.arch }}.deb
+      - name: Upload Linux artifacts
+        uses: actions/upload-artifact@v6
+        with:
+          name: linux-${{ matrix.arch }}-artifacts
+          path: |
+            Bili23-Downloader_${{ env.VERSION_NAME }}_linux_${{ matrix.arch }}_portable.tar.gz
+            Bili23-Downloader_${{ env.VERSION_NAME }}_linux_${{ matrix.arch }}.deb
 
-  # macos-build:
-  #   needs: get-version
-  #   env:
-  #     VERSION: ${{ needs.get-version.outputs.VERSION }}
-  #     VERSION_NAME: ${{ needs.get-version.outputs.VERSION_NAME }}
-  #   outputs:
-  #     VERSION: ${{ env.VERSION }}
-  #     VERSION_NAME: ${{ env.VERSION_NAME }}
-  #   strategy:
-  #     matrix:
-  #       include:
-  #         - arch: x86_64
-  #           os: macos-15-intel
-  #           python_arch: x64
+  macos-build:
+    needs: get-version
+    env:
+      VERSION: ${{ needs.get-version.outputs.VERSION }}
+      VERSION_NAME: ${{ needs.get-version.outputs.VERSION_NAME }}
+    outputs:
+      VERSION: ${{ env.VERSION }}
+      VERSION_NAME: ${{ env.VERSION_NAME }}
+    strategy:
+      matrix:
+        include:
+          - arch: x86_64
+            os: macos-15-intel
+            python_arch: x64
             
-  #         - arch: aarch64
-  #           os: macos-latest
-  #           python_arch: arm64
+          - arch: aarch64
+            os: macos-latest
+            python_arch: arm64
 
-  #   runs-on: ${{ matrix.os }}
-  #   steps:
-  #     - uses: actions/checkout@v6
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v6
 
-  #     - name: Clean up files
-  #       run: |
-  #         # 清理不需要的资源文件以减小安装包体积
-  #         rm -rf src\res\icon
-  #         rm -rf src\res\image
-  #         rm -rf src\res\i18n\bili23.zh_CN.ts
-  #         rm -rf src\res\i18n\bili23.zh_TW.ts
+      - name: Clean up files
+        run: |
+          # 清理不需要的资源文件以减小安装包体积
+          rm -rf src\res\icon
+          rm -rf src\res\image
+          rm -rf src\res\i18n\bili23.zh_CN.ts
+          rm -rf src\res\i18n\bili23.zh_TW.ts
 
-  #     - name: Setup Python
-  #       uses: actions/setup-python@v6
-  #       with:
-  #         python-version: 3.13
-  #         architecture: ${{ matrix.python_arch }}
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: 3.13
+          architecture: ${{ matrix.python_arch }}
 
-  #     - name: Install dependencies
-  #       run: |
-  #         brew install create-dmg
-  #         pip install -r requirements.txt
+      - name: Install dependencies
+        run: |
+          brew install create-dmg
+          pip install -r requirements.txt
 
-  #     - name: Prepare macOS runtime
-  #       run: |
-  #         # 下载 Python 静态运行时环境
-  #         wget https://github.com/ScottSloan/Python-Static/releases/download/v0.0.9/macos_${{ matrix.arch }}_runtime.zip
+      - name: Prepare macOS runtime
+        run: |
+          # 下载 Python 静态运行时环境
+          wget https://github.com/ScottSloan/Python-Static/releases/download/v0.0.9/macos_${{ matrix.arch }}_runtime.zip
 
-  #         unzip macos_${{ matrix.arch }}_runtime.zip -d Bili23-Downloader
+          unzip macos_${{ matrix.arch }}_runtime.zip -d Bili23-Downloader
 
-  #         chmod +x Bili23-Downloader/bili23-downloader
-  #         chmod +x Bili23-Downloader/bundle/ffmpeg
+          chmod +x Bili23-Downloader/bili23-downloader
+          chmod +x Bili23-Downloader/bundle/ffmpeg
 
-  #         mkdir -p Bili23-Downloader/script
+          mkdir -p Bili23-Downloader/script
 
-  #         cp -r src/* Bili23-Downloader/script/
+          cp -r src/* Bili23-Downloader/script/
 
-  #         python -m compileall Bili23-Downloader
+          python -m compileall Bili23-Downloader
 
-  #     - name: Package macOS version
-  #       run: |
-  #         # 先打包为 .app
-  #         mkdir -p dmg_build/Bili23-Downloader.app/Contents/{MacOS,Resources}
+      - name: Package macOS version
+        run: |
+          # 先打包为 .app
+          mkdir -p dmg_build/Bili23-Downloader.app/Contents/{MacOS,Resources}
 
-  #         cp -r Bili23-Downloader/* dmg_build/Bili23-Downloader.app/Contents/Resources/
-  #         cp assets/app.icns dmg_build/Bili23-Downloader.app/Contents/Resources/app.icns
+          cp -r Bili23-Downloader/* dmg_build/Bili23-Downloader.app/Contents/Resources/
+          cp assets/app.icns dmg_build/Bili23-Downloader.app/Contents/Resources/app.icns
 
-  #         # Info.plist 文件
-  #         cat << 'EOF' > dmg_build/Bili23-Downloader.app/Contents/Info.plist
-  #         <?xml version="1.0" encoding="UTF-8"?>
-  #         <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-  #         <plist version="1.0">
-  #         <dict>
-  #           <key>CFBundleExecutable</key>
-  #           <string>main</string>
-  #           <key>CFBundleIdentifier</key>
-  #           <string>com.scottsloan.bili23</string>
-  #           <key>CFBundleName</key>
-  #           <string>Bili23 Downloader</string>
-  #           <key>CFBundleIconFile</key>
-  #           <string>app.icns</string>
-  #           <key>CFBundleVersion</key>
-  #           <string>${{ env.VERSION }}</string>
-  #           <key>CFBundleShortVersionString</key>
-  #           <string>${{ env.VERSION_NAME }}</string>
-  #           <key>CFBundlePackageType</key>
-  #           <string>APPL</string>
-  #           <key>LSMinimumSystemVersion</key>
-  #           <string>12.0</string>
-  #           <key>NSHighResolutionCapable</key>
-  #           <true/>
-  #           <key>LSUIElement</key>
-  #           <true/>
-  #         </dict>
-  #         </plist>
-  #         EOF
+          # Info.plist 文件
+          cat << 'EOF' > dmg_build/Bili23-Downloader.app/Contents/Info.plist
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>CFBundleExecutable</key>
+            <string>main</string>
+            <key>CFBundleIdentifier</key>
+            <string>com.scottsloan.bili23</string>
+            <key>CFBundleName</key>
+            <string>Bili23 Downloader</string>
+            <key>CFBundleIconFile</key>
+            <string>app.icns</string>
+            <key>CFBundleVersion</key>
+            <string>${{ env.VERSION }}</string>
+            <key>CFBundleShortVersionString</key>
+            <string>${{ env.VERSION_NAME }}</string>
+            <key>CFBundlePackageType</key>
+            <string>APPL</string>
+            <key>LSMinimumSystemVersion</key>
+            <string>12.0</string>
+            <key>NSHighResolutionCapable</key>
+            <true/>
+            <key>LSUIElement</key>
+            <true/>
+          </dict>
+          </plist>
+          EOF
 
-  #         # 入口文件
-  #         cat << 'EOF' > dmg_build/Bili23-Downloader.app/Contents/MacOS/main
-  #         #!/bin/bash
-  #         SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-  #         APP_RESOURCES="$SCRIPT_DIR/../Resources"
-  #         cd "$APP_RESOURCES"
-  #         exec ./bili23-downloader
-  #         EOF
+          # 入口文件
+          cat << 'EOF' > dmg_build/Bili23-Downloader.app/Contents/MacOS/main
+          #!/bin/bash
+          SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+          APP_RESOURCES="$SCRIPT_DIR/../Resources"
+          cd "$APP_RESOURCES"
+          exec ./bili23-downloader
+          EOF
 
-  #         chmod +x dmg_build/Bili23-Downloader.app/Contents/MacOS/main
+          chmod +x dmg_build/Bili23-Downloader.app/Contents/MacOS/main
 
-  #         # 再打包为 dmg
-  #         create-dmg \
-  #           --volname "Bili23 Downloader Installer" \
-  #           --window-pos 400 200 \
-  #           --window-size 660 400 \
-  #           --icon-size 80 \
-  #           --icon "Bili23-Downloader.app" 160 160 \
-  #           --hide-extension "Bili23-Downloader.app" \
-  #           --app-drop-link 500 160 \
-  #           "Bili23-Downloader_${{ env.VERSION_NAME }}_macos_${{ matrix.arch }}.dmg" \
-  #           "dmg_build/Bili23-Downloader.app/"
+          # 再打包为 dmg
+          create-dmg \
+            --volname "Bili23 Downloader Installer" \
+            --window-pos 400 200 \
+            --window-size 660 400 \
+            --icon-size 80 \
+            --icon "Bili23-Downloader.app" 160 160 \
+            --hide-extension "Bili23-Downloader.app" \
+            --app-drop-link 500 160 \
+            "Bili23-Downloader_${{ env.VERSION_NAME }}_macos_${{ matrix.arch }}.dmg" \
+            "dmg_build/Bili23-Downloader.app/"
 
-  #     - name: Upload macOS artifact
-  #       uses: actions/upload-artifact@v6
-  #       with:
-  #         name: macos-${{ matrix.arch }}-artifact
-  #         path: Bili23-Downloader_${{ env.VERSION_NAME }}_macos_${{ matrix.arch }}.dmg
+      - name: Upload macOS artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: macos-${{ matrix.arch }}-artifact
+          path: Bili23-Downloader_${{ env.VERSION_NAME }}_macos_${{ matrix.arch }}.dmg
   
-  # publish:
-  #   if: github.event_name != 'workflow_dispatch'
-  #   needs: [windows-build, linux-build, macos-build]
-  #   env:
-  #     VERSION_NAME: ${{ needs.windows-build.outputs.VERSION_NAME }}
-  #     IS_PRERELEASE: ${{ needs.windows-build.outputs.IS_PRERELEASE }}
-  #   runs-on: ubuntu-latest
-  #   permissions:
-  #     contents: write
-  #     discussions: write
-  #   steps:
-  #     - name: Checkout repository
-  #       uses: actions/checkout@v6
+  publish:
+    if: github.event_name != 'workflow_dispatch'
+    needs: [windows-build, linux-build, macos-build]
+    env:
+      VERSION_NAME: ${{ needs.windows-build.outputs.VERSION_NAME }}
+      IS_PRERELEASE: ${{ needs.windows-build.outputs.IS_PRERELEASE }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      discussions: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
 
-  #     - name: Download all artifacts
-  #       uses: actions/download-artifact@v8
-  #       with:
-  #         pattern: '*-artifact*'
-  #         path: release-artifacts
-  #         merge-multiple: true
+      - name: Download all artifacts
+        uses: actions/download-artifact@v8
+        with:
+          pattern: '*-artifact*'
+          path: release-artifacts
+          merge-multiple: true
 
-  #     - name: List downloaded artifacts
-  #       run: |
-  #         ls -la release-artifacts
+      - name: List downloaded artifacts
+        run: |
+          ls -la release-artifacts
 
-  #     - name: Update CHANGELOG.md
-  #       run: |
-  #         # 在原有的 CHANGELOG.md 基础上，添加安全提示
-  #         echo "" >> CHANGELOG.md
-  #         echo "> [!CAUTION]" >> CHANGELOG.md
-  #         echo "> 强烈建议仅通过官方 GitHub 链接（即本页面下方的链接）下载本软件。 从第三方网站、网盘论坛或他人私下分享渠道获取的安装包，极有可能被二次篡改或植入病毒/木马。对于因下载、运行非官方渠道安装包所导致的任何设备损坏、隐私泄露或财产损失，开发者概不负责。" >> CHANGELOG.md
+      - name: Update CHANGELOG.md
+        run: |
+          # 在原有的 CHANGELOG.md 基础上，添加安全提示
+          echo "" >> CHANGELOG.md
+          echo "> [!CAUTION]" >> CHANGELOG.md
+          echo "> 强烈建议仅通过官方 GitHub 链接（即本页面下方的链接）下载本软件。 从第三方网站、网盘论坛或他人私下分享渠道获取的安装包，极有可能被二次篡改或植入病毒/木马。对于因下载、运行非官方渠道安装包所导致的任何设备损坏、隐私泄露或财产损失，开发者概不负责。" >> CHANGELOG.md
 
-  #         echo "" >> CHANGELOG.md
+          echo "" >> CHANGELOG.md
 
-  #         echo "> [!TIP]" >> CHANGELOG.md
-  #         echo "> Windows 7 用户请下载 win7 专用版（带有 for_win7 字样）" >> CHANGELOG.md
-  #         echo "> 其他问题请参考 [常见问题(FAQ)](https://bili23.scott-sloan.cn/doc/faq.html)" >> CHANGELOG.md
+          echo "> [!TIP]" >> CHANGELOG.md
+          echo "> Windows 7 用户请下载 win7 专用版（带有 for_win7 字样）" >> CHANGELOG.md
+          echo "> 其他问题请参考 [常见问题(FAQ)](https://bili23.scott-sloan.cn/doc/faq.html)" >> CHANGELOG.md
 
-  #     - name: Upload to Release
-  #       uses: softprops/action-gh-release@v2
-  #       env:
-  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  #       with:
-  #         name: v${{ env.VERSION_NAME }}
-  #         body_path: CHANGELOG.md
-  #         make_latest: ${{ env.IS_PRERELEASE != 'true' }}
-  #         draft: false
-  #         prerelease: ${{ env.IS_PRERELEASE == 'true' }}
-  #         generate_release_notes: false
-  #         discussion_category_name: announcements
-  #         files: |
-  #           release-artifacts/*
+      - name: Upload to Release
+        uses: softprops/action-gh-release@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          name: v${{ env.VERSION_NAME }}
+          body_path: CHANGELOG.md
+          make_latest: ${{ env.IS_PRERELEASE != 'true' }}
+          draft: false
+          prerelease: ${{ env.IS_PRERELEASE == 'true' }}
+          generate_release_notes: false
+          discussion_category_name: announcements
+          files: |
+            release-artifacts/*
