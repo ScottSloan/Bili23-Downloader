@@ -52,7 +52,7 @@ class Directory:
         except (OSError, FileNotFoundError):
             logger.exception("无法获取路径 %s 的磁盘空间信息", directory)
             
-            return False
+            return None
         
     @staticmethod
     def has_enough_space(path: str, required_space: int) -> bool:

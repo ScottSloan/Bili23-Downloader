@@ -26,7 +26,7 @@ class ProgressTipWidget(QWidget):
 
         self.setLayout(layout)
 
-        self.stop_btn.clicked.connect(self._trigger_stop_callback)
+        self.stop_btn.clicked.connect(lambda: self._trigger_stop_callback())
 
     def show_tip(self):
         self.progress_ring.start()

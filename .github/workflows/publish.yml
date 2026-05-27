@@ -43,10 +43,18 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
+      - name: Clean up files
+        run: |
+          # 清理不需要的资源文件以减小安装包体积
+          Remove-Item -Path src\res\icon -Recurse -Force
+          Remove-Item -Path src\res\image -Recurse -Force
+          Remove-Item -Path src\res\i18n\bili23.zh_CN.ts -Force
+          Remove-Item -Path src\res\i18n\bili23.zh_TW.ts -Force
+
       - name: Setup Python
         uses: actions/setup-python@v6
         with:
-          python-version: 3.12
+          python-version: 3.13
           architecture: x64
 
       - name: Install dependencies
@@ -80,7 +88,7 @@ jobs:
       - name: Prepare Windows 10/11 runtime
         run: |
           # 下载 Python 静态运行时环境
-          Invoke-WebRequest -Uri "https://github.com/ScottSloan/Python-Static/releases/download/v0.0.7/windows_x64_runtime.zip" -OutFile windows_x64_runtime.zip
+          Invoke-WebRequest -Uri "https://github.com/ScottSloan/Python-Static/releases/download/v0.0.9/windows_x64_runtime.zip" -OutFile windows_x64_runtime.zip
           
           Expand-Archive windows_x64_runtime.zip -DestinationPath Bili23-Downloader
 
@@ -121,7 +129,7 @@ jobs:
       - name: Prepare Windows 7 runtime
         run: |
           # 下载 Python 静态运行时环境
-          Invoke-WebRequest -Uri "https://github.com/ScottSloan/Python-Static/releases/download/v0.0.7/windows_x64_runtime_for_win7.zip" -OutFile windows_x64_runtime_for_win7.zip
+          Invoke-WebRequest -Uri "https://github.com/ScottSloan/Python-Static/releases/download/v0.0.9/windows_x64_runtime_for_win7.zip" -OutFile windows_x64_runtime_for_win7.zip
           
           Expand-Archive windows_x64_runtime_for_win7.zip -DestinationPath Bili23-Downloader
 
@@ -173,10 +181,18 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
+      - name: Clean up files
+        run: |
+          # 清理不需要的资源文件以减小安装包体积
+          rm -rf src\res\icon
+          rm -rf src\res\image
+          rm -rf src\res\i18n\bili23.zh_CN.ts
+          rm -rf src\res\i18n\bili23.zh_TW.ts
+
       - name: Setup Python
         uses: actions/setup-python@v6
         with:
-          python-version: 3.12
+          python-version: 3.13
           architecture: ${{ matrix.python_arch }}
 
       - name: Install dependencies
@@ -186,7 +202,7 @@ jobs:
       - name: Prepare Linux runtime
         run: |
           # 下载 Python 静态运行时环境
-          wget https://github.com/ScottSloan/Python-Static/releases/download/v0.0.7/linux_${{ matrix.arch }}_runtime.zip
+          wget https://github.com/ScottSloan/Python-Static/releases/download/v0.0.9/linux_${{ matrix.arch }}_runtime.zip
 
           unzip linux_${{ matrix.arch }}_runtime.zip -d Bili23-Downloader
 
@@ -301,10 +317,18 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
+      - name: Clean up files
+        run: |
+          # 清理不需要的资源文件以减小安装包体积
+          rm -rf src\res\icon
+          rm -rf src\res\image
+          rm -rf src\res\i18n\bili23.zh_CN.ts
+          rm -rf src\res\i18n\bili23.zh_TW.ts
+
       - name: Setup Python
         uses: actions/setup-python@v6
         with:
-          python-version: 3.12
+          python-version: 3.13
           architecture: ${{ matrix.python_arch }}
 
       - name: Install dependencies
@@ -315,7 +339,7 @@ jobs:
       - name: Prepare macOS runtime
         run: |
           # 下载 Python 静态运行时环境
-          wget https://github.com/ScottSloan/Python-Static/releases/download/v0.0.7/macos_${{ matrix.arch }}_runtime.zip
+          wget https://github.com/ScottSloan/Python-Static/releases/download/v0.0.9/macos_${{ matrix.arch }}_runtime.zip
 
           unzip macos_${{ matrix.arch }}_runtime.zip -d Bili23-Downloader
 

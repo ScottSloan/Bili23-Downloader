@@ -94,7 +94,7 @@ class DownloadPathSettingCard(PushSettingCard):
 
         GlobalThreadPoolTask.run_func(worker)
 
-    def on_disk_space_ready(self, path: str, disk_space_info):
+    def on_disk_space_ready(self, path: str, disk_space_info: dict = None):
         if path != self.path:
             return
 
@@ -114,8 +114,8 @@ class DownloadPathSettingCard(PushSettingCard):
 
         if filesystem_type.upper() in ["FAT32", "EXFAT", "VFAT", "MSDOS", "FAT", "FAT16", "FAT12", "MS-DOS"]:
             dialog = MessageBox(
-                title = self.tr("所选路径的文件系统不支持稀疏文件"),
-                content = self.tr("当前选择的下载路径所在的文件系统类型为 {fs}，该文件系统不支持稀疏文件。\n\n如继续使用，请关闭预分配文件空间选项。（设置 → 行为 → 下载处理）").format(fs = filesystem_type),
+                title = self.tr("The file system of the selected path does not support sparse files"),
+                content = self.tr('The file system type of the currently selected download path is {fs}, which does not support sparse files.\n\nIf you continue, please disable the "Preallocate file space" option. (Settings → Behavior → Download Handling)').format(fs = filesystem_type),
                 parent = self.parent_window
             )
             dialog.hideCancelButton()
