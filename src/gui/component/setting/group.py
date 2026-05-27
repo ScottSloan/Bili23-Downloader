@@ -7,7 +7,8 @@ from qfluentwidgets import BodyLabel, CheckBox, ComboBox, ColorPickerButton
 from gui.component.widget import SpinBox, DoubleSpinBox
 
 from util.common.data import subtitles_alignment_map
-from util.common import Translator, Color
+from util.common.translator import Translator
+from util.common.color import Color
 
 class FontGroup(QWidget):
     def __init__(self, parent = None):

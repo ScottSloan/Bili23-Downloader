@@ -1,4 +1,4 @@
-from .tree import TreeItem, EpisodeData, Attribute
+from .tree import TreeItem, Attribute
 from .base import EpisodeParserBase
 
 class ListEpisodeParser(EpisodeParserBase):
@@ -8,12 +8,15 @@ class ListEpisodeParser(EpisodeParserBase):
         self.info_data = info_data["data"]
         self.category_name = category_name
 
-    def parse(self):
+    def parse(self, update_episode_list: bool = True):
         self.episode_data_parser()
 
         node = self.seasons_archives_list_parser()
 
-        self.update_episode_list(node)
+        if update_episode_list:
+            self.update_episode_list(node)
+
+        return node
 
     def seasons_archives_list_parser(self):
         collection_title = self.get_node_title()
@@ -25,17 +28,15 @@ class ListEpisodeParser(EpisodeParserBase):
         root_node = TreeItem(node_data)
         root_node.set_attribute(Attribute.TREE_NODE_BIT)
 
-        episode_count = 0
-
         for episode in self.info_data["archives"]:
-            episode_count += 1
+            self.episode_count += 1
 
             item_data = {
                 "aid": episode["aid"],
                 "bvid": episode["bvid"],
                 "cover" : episode["pic"],
                 "duration": self.get_episode_duration(episode),
-                "number": episode_count,
+                "number": self.episode_count,
                 "pubtime": episode["pubdate"],
                 "episode_id": self.episode_id,
                 "title": episode["title"],
@@ -51,8 +52,10 @@ class ListEpisodeParser(EpisodeParserBase):
     
     def episode_data_parser(self):
         # 创建 episode_id
-        self.episode_id = EpisodeData.add_episode()
-        episode_data = EpisodeData.get_episode_data(self.episode_id)
+        if self.episode_id:
+            return
+        
+        episode_data = self._init_episode_data()
 
         episode_data["collection_title"] = self.get_node_title()
 

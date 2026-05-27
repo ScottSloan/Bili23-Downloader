@@ -1,7 +1,8 @@
-from util.network import SyncNetWorkRequest
-
+from ...common.enum import ParserType
+from ...network.request import SyncNetWorkRequest
 from ..episode.space import SpaceEpisodeParser
 from .base import ParserBase
+
 
 import math
 
@@ -19,7 +20,7 @@ class SpaceParser(ParserBase):
 
         return mid
 
-    def parse(self, url: str, pn: int):
+    def parse(self, url: str, pn: int, get_info_data: bool = False):
         self.url = url
         self.pn = pn
 
@@ -27,6 +28,9 @@ class SpaceParser(ParserBase):
 
         self.get_search_arc_info()
         self.get_uname()
+
+        if get_info_data:
+            return self.info_data
 
         episode_parser = SpaceEpisodeParser(self.info_data.copy(), self.get_category_name())
         episode_parser.parse()
@@ -52,7 +56,7 @@ class SpaceParser(ParserBase):
 
         url = f"https://api.bilibili.com/x/space/wbi/arc/search?{self.enc_wbi(params)}"
 
-        request = SyncNetWorkRequest(url)
+        request = SyncNetWorkRequest(url, raise_for_status = self.raise_for_status)
         response = request.run()
 
         self.check_response(response)
@@ -65,7 +69,7 @@ class SpaceParser(ParserBase):
 
         url = f"https://api.bilibili.com/x/web-interface/card?mid={self.mid}"
 
-        request = SyncNetWorkRequest(url)
+        request = SyncNetWorkRequest(url, raise_for_status = self.raise_for_status)
         response = request.run()
 
         self.check_response(response)
@@ -79,10 +83,9 @@ class SpaceParser(ParserBase):
             "name": Data.uname_map.get(self.mid, ""),
             "mid": self.mid
         }
-
-    def get_category_name(self):
-        # 个人空间
-        return "PROFILE"
+    
+    def get_parser_type(self):
+        return ParserType.SPACE
     
     def get_extra_data(self):
         count = self.info_data["data"]["page"]["count"]

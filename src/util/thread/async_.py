@@ -1,8 +1,8 @@
 from PySide6.QtCore import QThread
 
-from functools import partial
-
 from .worker_base import WorkerBase
+
+from functools import partial
 
 thread_queue: list[tuple[QThread, WorkerBase]] = []
 

@@ -123,3 +123,17 @@ class DownloadType(IntFlag):
 class VideoContainer(Enum):
     MP4 = "mp4"
     MKV = "mkv"
+
+class ParserType(Enum):
+    VIDEO = "USER_UPLOADS"
+    INTERACTIVE_VIDEO = "INTERACTIVE_VIDEO"
+    BANGUMI = "BANGUMI"
+    CHEESE = "COURSE"
+    SPACE = "PROFILE"
+    FAVLIST = "FAVORITES"
+    POPULAR = "WEEKLY"
+    COLLECTION_LIST = "COLLECTION_LIST"
+    HISTORY = "HISTORY"
+    WATCH_LATER = "WATCH_LATER"
+    DYNAMIC = "DYNAMIC"
+    UNKNOWN = "UNKNOWN"

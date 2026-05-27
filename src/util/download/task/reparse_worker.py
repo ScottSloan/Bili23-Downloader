@@ -1,14 +1,15 @@
 from PySide6.QtCore import QRunnable
 
-from util.parse.episode.bangumi import BangumiEpisodeParser
-from util.parse.episode.cheese import CheeseEpisodeParser
-from util.parse.episode.video import VideoEpisodeParser
+from ...parse.episode.bangumi import BangumiEpisodeParser
+from ...parse.episode.cheese import CheeseEpisodeParser
+from ...parse.episode.video import VideoEpisodeParser
+from ...parse.episode.tree import EpisodeData, Attribute
+from ...parse.parser.base import ParserBase
 
-from util.parse.episode.tree import EpisodeData, Attribute
-from util.common.data.bangumi_type import bangumi_type_map
-from util.parse.parser.base import ParserBase
-from util.network import SyncNetWorkRequest
-from util.common import signal_bus
+from ...common.data.bangumi_type import bangumi_type_map
+from ...common.signal_bus import signal_bus
+
+from ...network.request import SyncNetWorkRequest
 
 class ReparseWorker(QRunnable, ParserBase):
     def __init__(self, episode_info: dict):

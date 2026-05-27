@@ -1,13 +1,17 @@
 from PySide6.QtWidgets import QFileDialog, QWidget
 
-from util.format import Units
+from ...format.units import Units
 
 from shutil import disk_usage
 from pathlib import Path
 import subprocess
+import logging
+import psutil
 import ctypes
 import sys
 import os
+
+logger = logging.getLogger(__name__)
 
 class Directory:
     @staticmethod
@@ -46,6 +50,33 @@ class Directory:
             }
 
         except (OSError, FileNotFoundError):
+            logger.exception("无法获取路径 %s 的磁盘空间信息", directory)
+            
+            return None
+        
+    @staticmethod
+    def has_enough_space(path: str, required_space: int) -> bool:
+        if required_space <= 0:
+            return True
+
+        try:
+            total, used, free = disk_usage(Path(path))
+
+            if free < required_space:
+                logger.error("路径 %s 可用空间不足: %d bytes 可用, 需要 %d bytes", path, free, required_space)
+
+            return free >= required_space
+        
+        except PermissionError:
+            logger.error("无权访问路径：%s", path)
+            return False
+
+        except FileNotFoundError:
+            logger.error("路径不存在：%s", path)
+            return False
+
+        except OSError:
+            logger.error("检查路径 %s 可用空间时出错", path)
             return False
         
     @staticmethod
@@ -130,3 +161,26 @@ class Directory:
         else:
             return Path.cwd()
         
+    @staticmethod
+    def get_filesystem_type(directory: str) -> str:
+        # 获取目录所在磁盘的文件系统类型（如 NTFS、FAT32、exFAT 等），如果无法获取则返回 None
+        try:
+            directory = os.path.abspath(directory)
+            directory_drive = os.path.splitdrive(directory)[0].lower()
+
+            psutil_disk_partitions = psutil.disk_partitions(all = True)
+            
+            for partition in psutil_disk_partitions:
+                partition_mountpoint = os.path.abspath(partition.mountpoint)
+                partition_drive = os.path.splitdrive(partition_mountpoint)[0].lower()
+
+                if directory_drive != partition_drive:
+                    continue
+
+                if os.path.commonpath([partition_mountpoint, directory]) == partition_mountpoint:
+                    return partition.fstype
+
+        except Exception as e:
+            logger.exception("获取目录 %s 的文件系统类型时发生错误: %s", directory, str(e))
+
+        return None

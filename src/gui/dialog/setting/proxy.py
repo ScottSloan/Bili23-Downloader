@@ -6,9 +6,9 @@ from qfluentwidgets import SubtitleLabel, BodyLabel, LineEdit, PushButton, Messa
 from gui.component.setting import SettingComboBox
 from gui.component.dialog import DialogBase
 
-from util.network import NetworkRequestWorker, Proxy
-from util.thread import AsyncTask
-from util.common import config
+from util.network.request import NetworkRequestWorker
+from util.thread.async_ import AsyncTask
+from util.common.config import config
 
 from typing import Dict, Any
 import logging
@@ -78,6 +78,8 @@ class ProxyDialog(DialogBase):
         self.test_btn.clicked.connect(self.on_test)
 
     def on_test(self):
+        from util.network.proxy import Proxy
+        
         url = "https://api.bilibili.com/x/web-interface/zone"
 
         worker = NetworkRequestWorker(url)

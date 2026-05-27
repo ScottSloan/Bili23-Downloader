@@ -5,7 +5,8 @@ from qfluentwidgets import BodyLabel, SubtitleLabel, PushButton, PrimaryPushButt
 
 from gui.component.dialog import FluentDialogBase
 
-from util.common import StyleSheet, config
+from util.common.style_sheet import StyleSheet
+from util.common.config import config
 
 import webbrowser
 import sys

@@ -1,5 +1,4 @@
-from util.common import signal_bus
-
+from ..common.signal_bus import signal_bus
 from .captcha import CaptchaInfo
 
 from http.server import HTTPServer, BaseHTTPRequestHandler

@@ -6,7 +6,7 @@ from gui.component.setting import FontGroup, BorderGroup, ColorGroup, MarginGrou
 from gui.component.dialog import DialogBase
 from gui.component.widget import ScrollArea
 
-from util.common import config
+from util.common.config import config
 
 class ContentWidget(ScrollArea):
     def __init__(self, parent = None):

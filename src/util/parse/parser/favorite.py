@@ -1,8 +1,7 @@
-from util.network import NetworkRequestWorker
-from util.thread import AsyncTask
-from util.common import config
-
+from ...network.request import NetworkRequestWorker
 from ...download.cover.manager import cover_manager
+from ...thread.async_ import AsyncTask
+from ...common.config import config
 from .base import ParserBase
 
 from urllib.parse import urlencode
@@ -34,7 +33,7 @@ class FavoriteParser(ParserBase):
     def get_favorite_list(self):
         url = "https://api.bilibili.com/x/v3/fav/folder/created/list-all?up_mid={uid}".format(uid = config.user_uid)
 
-        worker = NetworkRequestWorker(url)
+        worker = NetworkRequestWorker(url, raise_for_status = self.raise_for_status)
         worker.success.connect(self.on_get_favorite_list_success)
         worker.error.connect(self.on_error)
 
@@ -51,7 +50,7 @@ class FavoriteParser(ParserBase):
 
         url = f"https://api.bilibili.com/x/v3/fav/folder/collected/list?{urlencode(param)}"
 
-        worker = NetworkRequestWorker(url)
+        worker = NetworkRequestWorker(url, raise_for_status = self.raise_for_status)
         worker.success.connect(self.on_get_subscription_list_success)
         worker.error.connect(self.on_error)
 
@@ -70,7 +69,7 @@ class FavoriteParser(ParserBase):
 
         url = f"https://api.bilibili.com/x/space/bangumi/follow/list?{self.enc_wbi(params)}"
         
-        worker = NetworkRequestWorker(url)
+        worker = NetworkRequestWorker(url, raise_for_status = self.raise_for_status)
         worker.success.connect(self.on_get_follow_list_success)
         worker.error.connect(self.on_error)
         

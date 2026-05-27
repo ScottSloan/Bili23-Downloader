@@ -1,4 +1,4 @@
-from util.common import Translator
+from ...common.translator import Translator
 
 from .tree import TreeItem, EpisodeData, Attribute
 from .base import EpisodeParserBase
@@ -34,8 +34,6 @@ class CheeseEpisodeParser(EpisodeParserBase):
         root_node = TreeItem(node_data)
         root_node.set_attribute(Attribute.TREE_NODE_BIT)
 
-        episode_count = 0
-
         for section in self.info_data["sections"]:
             if section["episodes"]:
                 section_title = section["title"]
@@ -48,7 +46,7 @@ class CheeseEpisodeParser(EpisodeParserBase):
                 section_node.set_attribute(Attribute.TREE_NODE_BIT)
                 
                 for episode in section["episodes"]:
-                    episode_count += 1
+                    self.episode_count += 1
 
                     episode_item_data = {
                         "aid": episode["aid"],
@@ -59,8 +57,8 @@ class CheeseEpisodeParser(EpisodeParserBase):
                         "ep_id": episode["id"],
                         "episode_id": self.episode_id,
                         "episode_plot": "{} · {}".format(episode["play_way_subtitle"], episode["subtitle"]),
-                        "number": episode_count,
-                        "episode_number": episode_count,
+                        "number": self.episode_count,
+                        "episode_number": self.episode_count,
                         "pubtime": episode["release_date"],
                         "title": episode["title"],
                         "related_titles": {
@@ -83,8 +81,7 @@ class CheeseEpisodeParser(EpisodeParserBase):
         return root_node
     
     def episode_data_parser(self):
-        self.episode_id = EpisodeData.add_episode()
-        episode_data = EpisodeData.get_episode_data(self.episode_id)
+        episode_data = self._init_episode_data()
 
         if self.target_episode_data_id:
             data = EpisodeData.get_episode_data(self.target_episode_data_id)
@@ -100,6 +97,7 @@ class CheeseEpisodeParser(EpisodeParserBase):
         # 发布者信息
         episode_data["uploader"] = self.info_data["up_info"]["uname"]
         episode_data["uploader_uid"] = self.info_data["up_info"]["mid"]
+        episode_data["uploader_face"] = self.info_data["up_info"]["avatar"]
 
     def get_episode_badge(self, episode_data: dict):
         if "label" in episode_data:

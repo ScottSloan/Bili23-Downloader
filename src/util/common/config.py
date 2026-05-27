@@ -209,8 +209,8 @@ class DefaultValue:
 class APPConfig(QConfig):
     # APP
     app_name = "Bili23 Downloader"
-    app_version = "2.00.4"
-    app_comparable_version = "2.00.4"
+    app_version = "2.00.5"
+    app_comparable_version = "2.00.5"
 
     # Interface
     language = OptionsConfigItem("Interface", "language", Language.AUTO, OptionsValidator(Language), LanguageSerializer(), restart = True)
@@ -227,6 +227,7 @@ class APPConfig(QConfig):
     parse_history = ConfigItem("Behavior", "parse_history", True, BoolValidator())
     show_download_options_dialog = ConfigItem("Behavior", "show_download_options_dialog", True, BoolValidator())
     when_close_window = OptionsConfigItem("Behavior", "when_close_window", WhenClose.ALWAYS_ASK, OptionsValidator(WhenClose), EnumSerializer(WhenClose))
+    preallocate_file_space = ConfigItem("Behavior", "preallocate_file_space", True, BoolValidator())
     file_conflict_resolution = OptionsConfigItem("Behavior", "file_conflict_resolution", FileConflictResolution.AUTO_RENAME, OptionsValidator(FileConflictResolution), EnumSerializer(FileConflictResolution))
 
     # Download
@@ -268,7 +269,7 @@ class APPConfig(QConfig):
     starting_number = ConfigItem("File Naming", "starting_number", 1)
 
     # Advanced
-    prefer_cdn_server_provider = ConfigItem("Advanced", "prefer_cdn_server_provider", False, BoolValidator())
+    prefer_cdn_server_provider = ConfigItem("Advanced", "prefer_cdn_server", True, BoolValidator())
     cdn_server_list = ConfigItem("Advanced", "cdn_server_list", DefaultValue.cdn_server_list)
 
     ffmpeg_source = OptionsConfigItem("Advanced", "ffmpeg_source", FFmpegSource.BUNDLED, OptionsValidator(FFmpegSource), EnumSerializer(FFmpegSource), restart = True)
@@ -335,10 +336,17 @@ class APPConfig(QConfig):
     # Misc
     target_naming_rule_id = None
     global_starting_number = 1
-    
     current_starting_number = None
-
+    
     main_window_ready = False
+
+    show_auto_parse_dialog = ConfigItem("Misc", "show_auto_parse_dialog", False, BoolValidator())
+    auto_add_to_download_list = ConfigItem("Misc", "auto_add_to_download_list", False, BoolValidator())
+    auto_parse_interval = ConfigItem("Misc", "auto_parse_interval", 2.0)
+
+    auto_parse_teaching_tip_shown = ConfigItem("Misc", "auto_parse_teaching_tip_shown", False, BoolValidator())
+
+    tutorial_dialog_shown = ConfigItem("Misc", "tutorial_dialog_shown", False, BoolValidator())
 
 config = APPConfig()
 config.themeMode.value = Theme.AUTO

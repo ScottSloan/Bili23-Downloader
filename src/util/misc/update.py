@@ -1,9 +1,11 @@
 from PySide6.QtCore import QObject
 
-from util.network import NetworkRequestWorker, RequestType
-from util.common.enum import ToastNotificationCategory
-from util.common import signal_bus, config, Translator
-from util.thread import AsyncTask
+from ..network.request import NetworkRequestWorker, RequestType
+from ..common.enum import ToastNotificationCategory
+from ..common.signal_bus import signal_bus
+from ..common.translator import Translator
+from ..thread.async_ import AsyncTask
+from ..common.config import config
 
 class Updater(QObject):
     def __init__(self, parent = None):
@@ -35,7 +37,11 @@ class Updater(QObject):
 
     def request_update(self, manual: bool):
         def on_error(error_message: str):
-            signal_bus.toast.show_long_message.emit(Translator.ERROR_MESSAGES("CHECK_UPDATE_FAILED"), error_message)
+            signal_bus.toast.show_long_message.emit(
+                ToastNotificationCategory.ERROR,
+                Translator.ERROR_MESSAGES("CHECK_UPDATE_FAILED"),
+                error_message
+            )
 
         self.manual = manual
 

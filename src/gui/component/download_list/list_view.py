@@ -7,11 +7,13 @@ from .item_delegate import DownloadItemDelegate
 from .model import DownloadListModel
 from .proxy_model import DownloadListProxyModel
 
-from util.common.enum import DownloadStatus, ToastNotificationCategory
 from util.download.downloader.manager import downloader_manager
-from util.common import signal_bus, ExtendedFluentIcon, config
+from util.download.task.info import TaskInfo
 
-from util.download import TaskInfo
+from util.common.enum import DownloadStatus, ToastNotificationCategory
+from util.common.icon import ExtendedFluentIcon
+from util.common.signal_bus import signal_bus
+from util.common.config import config
 
 from typing import List
 

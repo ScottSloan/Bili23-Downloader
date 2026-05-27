@@ -1,9 +1,9 @@
 from PySide6.QtWidgets import QWidget, QHBoxLayout
 from PySide6.QtCore import QSize, Signal
 
-from qfluentwidgets import TransparentToolButton, FluentIcon
+from qfluentwidgets import FluentIcon, BodyLabel
 
-from .button import PagerNumberButton
+from .button import PagerNumberButton, TransparentToolButton, ToolButton
 
 from typing import List
 
@@ -25,8 +25,16 @@ class Pager(QWidget):
     def init_UI(self):
         self.prev_btn = TransparentToolButton(FluentIcon.CARE_LEFT_SOLID)
         self.prev_btn.setIconSize(QSize(9, 9))
+        self.prev_btn.setToolTip(self.tr("Previous page"))
+
         self.next_btn = TransparentToolButton(FluentIcon.CARE_RIGHT_SOLID)
         self.next_btn.setIconSize(QSize(9, 9))
+        self.next_btn.setToolTip(self.tr("Next page"))
+
+        self.count_label = BodyLabel(parent = self)
+
+        self.menu_btn = ToolButton(FluentIcon.MORE)
+        self.menu_btn.setFixedSize(28, 28)
 
         self.num_layout = QHBoxLayout()
         self.num_layout.setContentsMargins(0, 0, 0, 0)
@@ -39,6 +47,10 @@ class Pager(QWidget):
         self.main_layout.addWidget(self.prev_btn)
         self.main_layout.addLayout(self.num_layout)
         self.main_layout.addWidget(self.next_btn)
+        self.main_layout.addSpacing(10)
+        self.main_layout.addWidget(self.count_label)
+        self.main_layout.addSpacing(5)
+        self.main_layout.addWidget(self.menu_btn)
         self.main_layout.addStretch()
 
         self.prev_btn.clicked.connect(lambda: self.on_change_page(self.current_page - 1))
@@ -126,5 +138,10 @@ class Pager(QWidget):
 
         if current_page := data.get("current_page", 1):
             self.current_page = current_page
+
+        self.count_label.setText(self.tr("{total_pages} total / {total_items} items").format(
+            total_pages = self.total_pages,
+            total_items = data.get("total_items", 0)
+        ))
 
         self.update_buttons()

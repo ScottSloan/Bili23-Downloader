@@ -6,6 +6,12 @@ on:
     #   - dev
     tags:
       - "v*"
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: "Release tag or version name, for example v2.00.3 or v2.00.3-rc1"
+        required: true
+        type: string
 
 jobs:
   get-version:
@@ -18,16 +24,25 @@ jobs:
       - name: Set version
         id: set-version
         run: |
-          echo "VERSION=$(echo ${GITHUB_REF#refs/tags/v} | sed 's/-rc.*//')" >> $GITHUB_OUTPUT
-          echo "VERSION_NAME=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
-          if echo "${GITHUB_REF#refs/tags/v}" | grep -q -- '-rc'; then
+          if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
+            TAG_NAME="${{ inputs.release_tag }}"
+          else
+            TAG_NAME="${GITHUB_REF#refs/tags/}"
+          fi
+
+          TAG_NAME="${TAG_NAME#v}"
+
+          echo "VERSION=$(echo "$TAG_NAME" | sed 's/-rc.*//')" >> $GITHUB_OUTPUT
+          echo "VERSION_NAME=$TAG_NAME" >> $GITHUB_OUTPUT
+
+          if echo "$TAG_NAME" | grep -q -- '-rc'; then
             echo "IS_PRERELEASE=true" >> $GITHUB_OUTPUT
           else
             echo "IS_PRERELEASE=false" >> $GITHUB_OUTPUT
           fi
 
-          # echo "VERSION=2.00.3" >> $GITHUB_OUTPUT
-          # echo "VERSION_NAME=2.00.3" >> $GITHUB_OUTPUT
+          # echo "VERSION=2.00.5" >> $GITHUB_OUTPUT
+          # echo "VERSION_NAME=2.00.5" >> $GITHUB_OUTPUT
 
   windows-build:
     needs: get-version
@@ -42,6 +57,24 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v6
+
+      - name: Clean up files
+        run: |
+          # 清理不需要的资源文件以减小安装包体积
+          Remove-Item -Path src\res\icon -Recurse -Force
+          Remove-Item -Path src\res\image -Recurse -Force
+          Remove-Item -Path src\res\i18n\bili23.zh_CN.ts -Force
+          Remove-Item -Path src\res\i18n\bili23.zh_TW.ts -Force
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: 3.13
+          architecture: x64
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
 
       - name: Update Inno Setup script with version
         run: |
@@ -70,7 +103,7 @@ jobs:
       - name: Prepare Windows 10/11 runtime
         run: |
           # 下载 Python 静态运行时环境
-          Invoke-WebRequest -Uri "https://github.com/ScottSloan/Python-Static/releases/download/v0.0.7/windows_x64_runtime.zip" -OutFile windows_x64_runtime.zip
+          Invoke-WebRequest -Uri "https://github.com/ScottSloan/Python-Static/releases/download/v0.0.9/windows_x64_runtime.zip" -OutFile windows_x64_runtime.zip
           
           Expand-Archive windows_x64_runtime.zip -DestinationPath Bili23-Downloader
 
@@ -78,10 +111,12 @@ jobs:
 
           Copy-Item -Path "src\*" -Destination "Bili23-Downloader\script" -Recurse
 
+          python -m compileall Bili23-Downloader
+
       - name: Package Windows version
         run: |
           # 便携版：直接打包为 zip
-          Compress-Archive -Path Bili23-Downloader\* -DestinationPath Bili23-Downloader_${{ env.VERSION_NAME }}_windows_x64_portable.zip
+          7z a -tzip -mx=9 Bili23-Downloader_${{ env.VERSION_NAME }}_windows_x64_portable.zip Bili23-Downloader\*
 
           # 安装版：使用 Inno Setup 创建安装程序
           Copy-Item -Path "assets\setup.iss" -Destination ".\"
@@ -109,13 +144,15 @@ jobs:
       - name: Prepare Windows 7 runtime
         run: |
           # 下载 Python 静态运行时环境
-          Invoke-WebRequest -Uri "https://github.com/ScottSloan/Python-Static/releases/download/v0.0.7/windows_x64_runtime_for_win7.zip" -OutFile windows_x64_runtime_for_win7.zip
+          Invoke-WebRequest -Uri "https://github.com/ScottSloan/Python-Static/releases/download/v0.0.9/windows_x64_runtime_for_win7.zip" -OutFile windows_x64_runtime_for_win7.zip
           
           Expand-Archive windows_x64_runtime_for_win7.zip -DestinationPath Bili23-Downloader
 
           New-Item -ItemType Directory -Force -Path Bili23-Downloader\script
 
           Copy-Item -Path "src\*" -Destination "Bili23-Downloader\script" -Recurse
+
+          python -m compileall Bili23-Downloader
 
       - name: Package Windows 7 version
         run: |
@@ -149,20 +186,38 @@ jobs:
         include:
           - arch: amd64
             os: ubuntu-latest
-            arch_suffix: x86_64
+            python_arch: x64
 
           - arch: arm64
             os: ubuntu-24.04-arm
-            arch_suffix: aarch64
+            python_arch: arm64
 
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v6
 
+      - name: Clean up files
+        run: |
+          # 清理不需要的资源文件以减小安装包体积
+          rm -rf src\res\icon
+          rm -rf src\res\image
+          rm -rf src\res\i18n\bili23.zh_CN.ts
+          rm -rf src\res\i18n\bili23.zh_TW.ts
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: 3.13
+          architecture: ${{ matrix.python_arch }}
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+
       - name: Prepare Linux runtime
         run: |
           # 下载 Python 静态运行时环境
-          wget https://github.com/ScottSloan/Python-Static/releases/download/v0.0.7/linux_${{ matrix.arch }}_runtime.zip
+          wget https://github.com/ScottSloan/Python-Static/releases/download/v0.0.9/linux_${{ matrix.arch }}_runtime.zip
 
           unzip linux_${{ matrix.arch }}_runtime.zip -d Bili23-Downloader
 
@@ -172,6 +227,8 @@ jobs:
           mkdir -p Bili23-Downloader/script
 
           cp -r src/* Bili23-Downloader/script/
+
+          python -m compileall Bili23-Downloader
 
       - name: Package Linux version
         run: |
@@ -275,14 +332,29 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
+      - name: Clean up files
+        run: |
+          # 清理不需要的资源文件以减小安装包体积
+          rm -rf src\res\icon
+          rm -rf src\res\image
+          rm -rf src\res\i18n\bili23.zh_CN.ts
+          rm -rf src\res\i18n\bili23.zh_TW.ts
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: 3.13
+          architecture: ${{ matrix.python_arch }}
+
       - name: Install dependencies
         run: |
           brew install create-dmg
+          pip install -r requirements.txt
 
       - name: Prepare macOS runtime
         run: |
           # 下载 Python 静态运行时环境
-          wget https://github.com/ScottSloan/Python-Static/releases/download/v0.0.7/macos_${{ matrix.arch }}_runtime.zip
+          wget https://github.com/ScottSloan/Python-Static/releases/download/v0.0.9/macos_${{ matrix.arch }}_runtime.zip
 
           unzip macos_${{ matrix.arch }}_runtime.zip -d Bili23-Downloader
 
@@ -292,6 +364,8 @@ jobs:
           mkdir -p Bili23-Downloader/script
 
           cp -r src/* Bili23-Downloader/script/
+
+          python -m compileall Bili23-Downloader
 
       - name: Package macOS version
         run: |
@@ -361,6 +435,7 @@ jobs:
           path: Bili23-Downloader_${{ env.VERSION_NAME }}_macos_${{ matrix.arch }}.dmg
   
   publish:
+    if: github.event_name != 'workflow_dispatch'
     needs: [windows-build, linux-build, macos-build]
     env:
       VERSION_NAME: ${{ needs.windows-build.outputs.VERSION_NAME }}

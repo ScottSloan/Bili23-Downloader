@@ -7,7 +7,9 @@ from gui.component.setting import EditActionWidget
 from gui.component.widget import DragTreeWidget
 from gui.component.dialog import DialogBase
 
-from util.common import Translator, config, ExtendedFluentIcon, DefaultValue
+from util.common.config import config, DefaultValue
+from util.common.icon import ExtendedFluentIcon
+from util.common.translator import Translator
 
 class CDNServerDialog(DialogBase):
     def __init__(self, parent = None):

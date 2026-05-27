@@ -6,7 +6,7 @@ from qfluentwidgets import SubtitleLabel, BodyLabel, TransparentPushButton, Flue
 from gui.dialog.misc import TermsOfUseDialog
 from gui.component.dialog import DialogBase
 
-from util.common import config
+from util.common.config import config
 
 from datetime import datetime
 import webbrowser

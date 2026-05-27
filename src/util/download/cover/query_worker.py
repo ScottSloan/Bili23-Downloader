@@ -1,7 +1,7 @@
 from PySide6.QtCore import QRunnable, Qt, QBuffer, QMetaObject, Q_ARG, QSize
 from PySide6.QtGui import QImage
 
-from util.network import SyncNetWorkRequest, ResponseType
+from ...network.request import SyncNetWorkRequest, ResponseType
 
 from urllib.parse import urlencode
 import base64
@@ -21,7 +21,7 @@ class CoverQueryWorker(QRunnable):
         self.query_param = query_param
 
     def run(self):
-        from util.download.cover.manager import cover_manager
+        from ..cover.manager import cover_manager
 
         if self.query_param:
             try:
@@ -90,7 +90,7 @@ class CoverQueryWorker(QRunnable):
         return image, base64_data
 
     def query_url(self):
-        from util.download.cover.manager import cover_manager
+        from ..cover.manager import cover_manager
 
         api_url = self.query_param.get("api_url")
         params = self.query_param.get("params")

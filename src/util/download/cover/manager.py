@@ -6,7 +6,6 @@ from .db import CoverDatabase
 from .cache import CoverCache
 
 from functools import lru_cache
-from hashlib import md5
 
 class CoverManager:
     def __init__(self):
@@ -20,6 +19,8 @@ class CoverManager:
 
     @lru_cache(maxsize = None)
     def arrange_cover_id(self, cover_url: str):
+        from hashlib import md5
+
         # 使用 cover_url 的 md5 作为 cover_id
         hash = md5(cover_url.encode("utf-8")).hexdigest()
 

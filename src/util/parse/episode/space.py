@@ -1,6 +1,6 @@
-from util.common import Translator
+from ...common.translator import Translator
 
-from .tree import TreeItem, EpisodeData, Attribute
+from .tree import TreeItem, Attribute
 from .base import EpisodeParserBase
 
 class SpaceEpisodeParser(EpisodeParserBase):
@@ -10,26 +10,27 @@ class SpaceEpisodeParser(EpisodeParserBase):
         self.info_data = info_data["data"]
         self.category_name = category_name
 
-    def parse(self):
+    def parse(self, update_episode_list = True):
         self.episode_data_parser()
 
         node = self.vlist_parser()
 
-        self.update_episode_list(node)
+        if update_episode_list:
+            self.update_episode_list(node)
+
+        return node
 
     def vlist_parser(self):
         node_data = {
             "number": Translator.EPISODE_TYPE("PROFILE"),
-            "title": self.info_data["info"]["name"]
+            "title": self.get_node_title()
         }
 
         root_node = TreeItem(node_data)
         root_node.set_attribute(Attribute.TREE_NODE_BIT)
 
-        episode_count = 0
-
         for episode in self.info_data["list"]["vlist"]:
-            episode_count += 1
+            self.episode_count += 1
 
             item_data = {
                 "aid": episode["aid"],
@@ -39,9 +40,10 @@ class SpaceEpisodeParser(EpisodeParserBase):
                 "duration": self.get_episode_duration(episode),
                 "ep_id": episode.get("season_id", 0),
                 "episode_id": self.episode_id,
-                "number": episode_count,
+                "number": self.episode_count,
                 "pubtime": episode["created"],
-                "title": episode["title"]
+                "title": episode["title"],
+                "url": "https://www.bilibili.com/video/" + episode["bvid"],
             }
 
             item = TreeItem(item_data)
@@ -53,8 +55,10 @@ class SpaceEpisodeParser(EpisodeParserBase):
         return root_node
     
     def episode_data_parser(self):
-        self.episode_id = EpisodeData.add_episode()
-        episode_data = EpisodeData.get_episode_data(self.episode_id)
+        if self.episode_id:
+            return
+        
+        episode_data = self._init_episode_data()
 
         episode_data["space_owner"] = self.info_data["info"]["name"]
         episode_data["space_owner_id"] = self.info_data["info"]["mid"]
@@ -79,3 +83,6 @@ class SpaceEpisodeParser(EpisodeParserBase):
             item.set_attribute(Attribute.VIDEO_BIT)
 
         item.set_attribute(Attribute.SPACE_BIT | Attribute.NEED_PARSE_BIT)
+
+    def get_node_title(self):
+        return self.info_data["info"]["name"]

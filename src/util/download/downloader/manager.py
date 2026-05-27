@@ -1,8 +1,8 @@
-from util.common.enum import ToastNotificationCategory
-from util.common import signal_bus, Translator
+from ...common.enum import ToastNotificationCategory
+from ...common.signal_bus import signal_bus
+from ...common.translator import Translator
 
 from ..task.info import TaskInfo
-
 from .downloader import Downloader
 
 class DownloaderManager:

@@ -1,5 +1,5 @@
-from util.network import SyncNetWorkRequest
-
+from ...common.enum import ParserType
+from ...network.request import SyncNetWorkRequest
 from ..episode.history import HistoryEpisodeParser
 from .base import ParserBase
 
@@ -10,13 +10,18 @@ class HistoryParser(ParserBase):
     def __init__(self):
         super().__init__()
 
-    def parse(self, url: str, pn: int):
+        self.ps = 20
+
+    def parse(self, url: str, pn: int, get_info_data: bool = False):
         self.url = url
         self.pn = pn
 
         self.check_login()
 
         self.get_history_info()
+
+        if get_info_data:
+            return self.info_data
 
         episode_parser = HistoryEpisodeParser(self.info_data.copy(), self.get_category_name())
         episode_parser.parse()
@@ -36,23 +41,23 @@ class HistoryParser(ParserBase):
 
         url = f"https://api.bilibili.com/x/web-interface/history/search?{urlencode(params)}"
 
-        request = SyncNetWorkRequest(url)
+        request = SyncNetWorkRequest(url, raise_for_status = self.raise_for_status)
         response = request.run()
 
         self.check_response(response)
 
         self.info_data = response
-
-    def get_category_name(self):
-        return "HISTORY"
     
+    def get_parser_type(self):
+        return ParserType.HISTORY
+
     def get_extra_data(self):
         count = self.info_data["data"]["page"]["total"]
 
         return {
             "pagination": True,
             "pagination_data": {
-                "total_pages": math.ceil(count / 20),
+                "total_pages": math.ceil(count / self.ps),
                 "total_items": count,
                 "current_page": self.pn
             }

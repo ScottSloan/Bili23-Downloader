@@ -1,8 +1,14 @@
 from PySide6.QtCore import QObject
 
-from util.common import signal_bus, config, Translator, safe_remove, safe_rename, get_timestamp
-from util.common.enum import DownloadStatus, DownloadType
-from util.ffmpeg import FFmpegCommand, FFmpegRunner
+from ...common.enum import DownloadStatus, DownloadType, ToastNotificationCategory
+from ...common.io.file import safe_remove, safe_rename
+from ...common.timestamp import get_timestamp
+from ...common.signal_bus import signal_bus
+from ...common.translator import Translator
+from ...common.config import config
+
+from ...ffmpeg.command import FFmpegCommand
+from ...ffmpeg.runner import FFmpegRunner
 
 from ..task.manager import task_manager
 from ..task.info import TaskInfo
@@ -36,9 +42,11 @@ class Merger(QObject):
                 # 将 m4a 转换为 mp3
                 self.m4a_to_mp3()
             
-            else:
-                # 对 m4a 文件进行修复
-                self.fix_mp4_box()
+            # else:
+            #     # 对 m4a 文件进行修复
+            #     self.fix_mp4_box()
+
+            self.rename_output_file()
 
         else:
             self.rename_output_file()
@@ -109,6 +117,9 @@ class Merger(QObject):
                 self.add_file(self.final_mp4_video_file_name, clear = True)
 
             elif has_audio and not has_video:
+                if self._output_audio_file is None:
+                    self._output_audio_file = self.temp_audio_file_name
+
                 safe_rename(cwd, self._output_audio_file, self.final_audio_file_name)
                 self.add_file(self.final_audio_file_name, clear = True)
 
@@ -202,7 +213,12 @@ class Merger(QObject):
         self.task_info.Download.status = DownloadStatus.FFMPEG_FAILED
 
         signal_bus.download.update_downloading_item.emit(self.task_info)
-        signal_bus.toast.show_long_message.emit(short_message, description)
+        
+        signal_bus.toast.show_long_message.emit(
+            ToastNotificationCategory.ERROR,
+            short_message,
+            description
+        )
 
         logger.error(str(short_message) + ": \n" + description)
 

@@ -5,13 +5,16 @@ from qfluentwidgets import SubtitleLabel, BodyLabel, RadioButton, CheckBox
 from gui.component.dialog import DialogBase
 
 from util.common.enum import WhenClose
-from util.common import config
+from util.common.config import config
 
 class ExitDialog(DialogBase):
     def __init__(self, parent = None):
         super().__init__(parent)
 
         self.init_UI()
+
+        self.exit_checked = True
+        self.minimize_checked = False
 
     def init_UI(self):
         caption_lab = SubtitleLabel(self.tr("Close the main window"), self)
@@ -28,7 +31,7 @@ class ExitDialog(DialogBase):
         radio_layout.addWidget(self.minimize_radio)
         radio_layout.addStretch()
 
-        self.never_ask_check = CheckBox(self.tr("Don’t ask again"), self)
+        self.never_ask_check = CheckBox(self.tr("Don't ask again"), self)
 
         self.viewLayout.addWidget(caption_lab)
         self.viewLayout.addSpacing(10)
@@ -41,11 +44,14 @@ class ExitDialog(DialogBase):
         self.widget.setMinimumWidth(350)
 
     def accept(self):
+        self.exit_checked = self.exit_radio.isChecked()
+        self.minimize_checked = self.minimize_radio.isChecked()
+
         if self.never_ask_check.isChecked():
-            if self.exit_radio.isChecked():
+            if self.exit_checked:
                 config.set(config.when_close_window, WhenClose.EXIT)
 
-            elif self.minimize_radio.isChecked():
+            elif self.minimize_checked:
                 config.set(config.when_close_window, WhenClose.MINIMIZE)
 
         return super().accept()

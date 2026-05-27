@@ -8,7 +8,7 @@ from qfluentwidgets import (
 
 from gui.component.widget import TransparentToolButton
 
-from util.common import config
+from util.common.config import config
 
 class SettingSwitchButton(SwitchButton):
     def __init__(self, config_item: ConfigItem, parent = None):

@@ -5,9 +5,12 @@ from qfluentwidgets import SubtitleLabel, Pivot, PopUpAniStackedWidget
 from gui.component.download_list import TopStackedWidget, DownloadListView
 from gui.component.widget import PivotItem
 
-from util.download import TaskInfo, QueryWorker
-from util.common import signal_bus
-from util.thread import AsyncTask
+from util.download.task.query_worker import QueryWorker
+from util.download.task.info import TaskInfo
+
+from util.common.enum import ToastNotificationCategory
+from util.common.signal_bus import signal_bus
+from util.thread.async_ import AsyncTask
 
 class DownloadInterface(QFrame):
     def __init__(self, parent = None):
@@ -102,4 +105,8 @@ class DownloadInterface(QFrame):
         self.downloading_list_view._endAddQueriedTasks()
 
     def on_query_error(self, error_message: str):
-        signal_bus.toast.show_long_message.emit(self.tr("Failed to query download tasks"), error_message)
+        signal_bus.toast.show_long_message.emit(
+            ToastNotificationCategory.ERROR,
+            self.tr("Failed to query download tasks"),
+            error_message
+        )

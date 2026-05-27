@@ -2,7 +2,7 @@ from qfluentwidgets import SubtitleLabel, DoubleSpinBox, SwitchButton, BodyLabel
 
 from gui.component.dialog import DialogBase
 
-from util.common import config
+from util.common.config import config
 
 class SpeedLimitSettingDialog(DialogBase):
     def __init__(self, parent = None):

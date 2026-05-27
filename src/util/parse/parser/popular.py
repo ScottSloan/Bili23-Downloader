@@ -1,5 +1,5 @@
-from util.network import SyncNetWorkRequest
-
+from ...common.enum import ParserType
+from ...network.request import SyncNetWorkRequest
 from ..episode.popular import PopularEpisodeParser
 from .base import ParserBase
 
@@ -30,14 +30,13 @@ class PopularParser(ParserBase):
 
         url = f"https://api.bilibili.com/x/web-interface/popular/series/one?{self.enc_wbi(params)}"
 
-        request = SyncNetWorkRequest(url)
+        request = SyncNetWorkRequest(url, raise_for_status = self.raise_for_status)
         response = request.run()
 
         self.check_response(response)
 
         self.info_data = response
 
-    def get_category_name(self):
-        # 每周必看
-        return "WEEKLY"
+    def get_parser_type(self):
+        return ParserType.POPULAR
     

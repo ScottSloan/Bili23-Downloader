@@ -1,4 +1,4 @@
-from .tree import TreeItem, EpisodeData, Attribute
+from .tree import TreeItem, Attribute
 from .base import EpisodeParserBase
 
 class PopularEpisodeParser(EpisodeParserBase):
@@ -9,7 +9,7 @@ class PopularEpisodeParser(EpisodeParserBase):
         self.category_name = category_name
 
     def parse(self):
-        self.episode_parser()
+        self._init_episode_data()
 
         node = self.list_parser()
 
@@ -25,10 +25,8 @@ class PopularEpisodeParser(EpisodeParserBase):
         root_node = TreeItem(node_data)
         root_node.set_attribute(Attribute.TREE_NODE_BIT)
 
-        episode_count = 0
-
         for episode in self.info_data["list"]:
-            episode_count += 1
+            self.episode_count += 1
 
             item_data = {
                 "aid": episode["aid"],
@@ -36,7 +34,7 @@ class PopularEpisodeParser(EpisodeParserBase):
                 "cid": episode["cid"],
                 "cover": episode["pic"],
                 "duration": self.get_episode_duration(episode),
-                "number": episode_count,
+                "number": self.episode_count,
                 "pubtime": episode["pubdate"],
                 "episode_id": self.episode_id,
                 "title": episode["title"],
@@ -52,6 +50,3 @@ class PopularEpisodeParser(EpisodeParserBase):
             root_node.add_child(item)
 
         return root_node
-
-    def episode_parser(self):
-        self.episode_id = EpisodeData.add_episode()

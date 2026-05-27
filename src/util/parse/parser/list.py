@@ -1,5 +1,5 @@
-from util.network import SyncNetWorkRequest
-
+from ...common.enum import ParserType
+from ...network.request import SyncNetWorkRequest
 from ..episode.list import ListEpisodeParser
 from .base import ParserBase
 
@@ -9,6 +9,8 @@ import math
 class ListParser(ParserBase):
     def __init__(self):
         super().__init__()
+
+        self.ps = 30
 
     def get_mid(self):
         mid = self.find_str(r"/([0-9]+)", self.url)
@@ -30,7 +32,7 @@ class ListParser(ParserBase):
 
         return sid
 
-    def parse(self, url: str, pn: int):
+    def parse(self, url: str, pn: int, get_info_data: bool = False):
         self.url = url
         self.pn = pn
 
@@ -58,6 +60,9 @@ class ListParser(ParserBase):
 
         else:
             raise ValueError("无效的链接")
+        
+        if get_info_data:
+            return self.info_data
 
         episode_parser = ListEpisodeParser(self.info_data.copy(), self.get_category_name())
         episode_parser.parse()
@@ -69,7 +74,7 @@ class ListParser(ParserBase):
             "mid": self.mid,
             "season_id": self.season_id,
             "sort_reverse": "false",
-            "page_size": 30,
+            "page_size": self.ps,
             "page_num": self.pn,
             "web_location": "333.1387",
         }
@@ -88,17 +93,18 @@ class ListParser(ParserBase):
         # 形如 https://space.bilibili.com/{mid}/lists/{series_id}?type=series
         params = {
             "mid": self.mid,
+            "current_mid": 0,
             "series_id": self.series_id,
             "only_normal": "true",
             "sort": "desc",
-            "ps": 30,
+            "ps": self.ps,
             "pn": self.pn,
             "web_location": "333.1387",
         }
 
         url = f"https://api.bilibili.com/x/series/archives?{urlencode(params)}"
 
-        request = SyncNetWorkRequest(url)
+        request = SyncNetWorkRequest(url, raise_for_status = self.raise_for_status)
         response = request.run()
 
         self.check_response(response)
@@ -114,16 +120,15 @@ class ListParser(ParserBase):
 
         url = f"https://api.bilibili.com/x/series/series?{urlencode(params)}"
 
-        request = SyncNetWorkRequest(url)
+        request = SyncNetWorkRequest(url, raise_for_status = self.raise_for_status)
         response = request.run()
 
         self.check_response(response)
 
         self.info_data["data"]["meta"] = response["data"]["meta"].copy()
 
-    def get_category_name(self):
-        # 合集列表
-        return "COLLECTION_LIST"
+    def get_parser_type(self):
+        return ParserType.COLLECTION_LIST
     
     def get_extra_data(self):
         count = self.info_data["data"]["page"]["total"]
@@ -131,7 +136,7 @@ class ListParser(ParserBase):
         return {
             "pagination": True,
             "pagination_data": {
-                "total_pages": math.ceil(count / 30),
+                "total_pages": math.ceil(count / self.ps),
                 "total_items": count,
                 "current_page": self.pn
             }

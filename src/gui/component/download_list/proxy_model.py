@@ -1,11 +1,10 @@
 from PySide6.QtCore import QModelIndex, Qt, QSortFilterProxyModel
 from PySide6.QtWidgets import QAbstractItemView
 
-from util.download import TaskInfo
-from util.common import signal_bus
+from util.download.task.info import TaskInfo
+from util.common.signal_bus import signal_bus
 
 from .model import DownloadListModel
-
 
 class DownloadListProxyModel(QSortFilterProxyModel):
     def __init__(self, parent = None):

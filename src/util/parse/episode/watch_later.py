@@ -1,6 +1,6 @@
-from util.common import Translator
+from ...common.translator import Translator
 
-from .tree import TreeItem, EpisodeData, Attribute
+from .tree import TreeItem, Attribute
 from .base import EpisodeParserBase
 
 class WatchLaterEpisodeParser(EpisodeParserBase):
@@ -10,12 +10,15 @@ class WatchLaterEpisodeParser(EpisodeParserBase):
         self.info_data = info_data["data"]
         self.category_name = category_name
 
-    def parse(self):
-        self.episode_data_parser()
+    def parse(self, update_episode_list = True):
+        self._init_episode_data()
 
         node = self.list_parser()
 
-        self.update_episode_list(node)
+        if update_episode_list:
+            self.update_episode_list(node)
+
+        return node
 
     def list_parser(self):
         node_data = {
@@ -26,13 +29,11 @@ class WatchLaterEpisodeParser(EpisodeParserBase):
         root_node = TreeItem(node_data)
         root_node.set_attribute(Attribute.TREE_NODE_BIT)
 
-        episode_count = 0
-
         if self.info_data.get("list") is None:
             return root_node
 
         for episode in self.info_data.get("list"):
-            episode_count += 1
+            self.episode_count += 1
 
             item_data = {
                 "aid": episode["aid"],
@@ -43,7 +44,7 @@ class WatchLaterEpisodeParser(EpisodeParserBase):
                 "duration": self.get_episode_duration(episode),
                 "ep_id": self.get_ep_id(episode),
                 "episode_id": self.episode_id,
-                "number": episode_count,
+                "number": self.episode_count,
                 "pubtime": episode["pubdate"],
                 "favtime": episode["add_at"],
                 "title": episode["title"],
@@ -57,9 +58,6 @@ class WatchLaterEpisodeParser(EpisodeParserBase):
             root_node.add_child(item)
 
         return root_node
-            
-    def episode_data_parser(self):
-        self.episode_id = EpisodeData.add_episode()
 
     def get_episode_badge(self, episode_data: dict):
         if episode_data.get("bangumi"):
@@ -80,3 +78,6 @@ class WatchLaterEpisodeParser(EpisodeParserBase):
             item.set_attribute(Attribute.VIDEO_BIT)
 
         item.set_attribute(Attribute.WATCH_LATER_BIT | Attribute.NEED_PARSE_BIT)
+
+    def get_node_title(self):
+        return ""

@@ -1,5 +1,6 @@
-from util.common.data import bangumi_type_map
-from util.network import SyncNetWorkRequest
+from ...network.request import SyncNetWorkRequest
+from ...common.data import bangumi_type_map
+from ...common.enum import ParserType
 
 from ..episode.bangumi import BangumiEpisodeParser
 from .base import ParserBase
@@ -25,7 +26,7 @@ class BangumiParser(ParserBase):
 
         url = f"https://api.bilibili.com/pgc/review/user?media_id={media_id}"
 
-        request = SyncNetWorkRequest(url)
+        request = SyncNetWorkRequest(url, raise_for_status = self.raise_for_status)
         response = request.run()
 
         self.check_response(response)
@@ -55,7 +56,7 @@ class BangumiParser(ParserBase):
     def get_bangumi_info(self, param: str):
         url = f"https://api.bilibili.com/pgc/view/web/season?{param}"
 
-        request = SyncNetWorkRequest(url)
+        request = SyncNetWorkRequest(url, raise_for_status = self.raise_for_status)
         response = request.run()
 
         self.check_response(response)
@@ -67,6 +68,9 @@ class BangumiParser(ParserBase):
 
     def get_category_name(self):
         return bangumi_type_map.get(self.info_data["result"]["type"])
+    
+    def get_parser_type(self):
+        return ParserType.BANGUMI
     
     def get_extra_data(self):
         return {

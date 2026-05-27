@@ -11,12 +11,13 @@ class SignalBus:
         # 用于在 MainWindow 中显示 Toast 通知
         show = Signal(ToastNotificationCategory, str, str)
 
-        show_long_message = Signal(str, str)
+        show_long_message = Signal(ToastNotificationCategory, str, str)
 
         sys_show = Signal(ToastNotificationCategory, str, str)
 
     class Parse(QObject):
         update_parse_list = Signal(str, str, object, object)
+        update_parse_list_count = Signal(str, int)
 
         preview_init = Signal(dict)
         query_video_info = Signal(int, int, object)
@@ -28,6 +29,8 @@ class SignalBus:
         parse_url = Signal(str)
 
         search_keyword = Signal(str)
+
+        show_interactive_video_dialog = Signal(dict)
 
     class Download(QObject):
         create_task = Signal(list)

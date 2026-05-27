@@ -7,8 +7,10 @@ from gui.component.widget import ColumnTreeWidget
 from gui.dialog.setting import EditRuleDialog
 from gui.component.dialog import DialogBase
 
-from util.common import config, Translator, ExtendedFluentIcon, DefaultValue
 from util.common.data import reversed_convention_type_map
+from util.common.config import config, DefaultValue
+from util.common.translator import Translator
+from util.common.icon import ExtendedFluentIcon
 
 from uuid import uuid4
 import webbrowser

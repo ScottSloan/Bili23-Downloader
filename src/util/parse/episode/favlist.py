@@ -1,6 +1,6 @@
-from util.common import Translator
+from ...common.translator import Translator
 
-from .tree import TreeItem, EpisodeData, Attribute
+from .tree import TreeItem, Attribute
 from .base import EpisodeParserBase
 
 class FavlistEpisodeParser(EpisodeParserBase):
@@ -10,15 +10,18 @@ class FavlistEpisodeParser(EpisodeParserBase):
         self.info_data = info_data["data"]
         self.category_name = category_name
 
-    def parse(self):
+    def parse(self, update_episode_list = True):
         self.episode_data_parser()
 
         node = self.medias_parser()
 
-        self.update_episode_list(node)
+        if update_episode_list:
+            self.update_episode_list(node)
+
+        return node
 
     def medias_parser(self):
-        favlist_title = self.info_data["info"]["title"]
+        favlist_title = self.get_node_title()
         node_data = {
             "number": Translator.EPISODE_TYPE("FAVORITES"),
             "title": favlist_title
@@ -27,13 +30,11 @@ class FavlistEpisodeParser(EpisodeParserBase):
         root_node = TreeItem(node_data)
         root_node.set_attribute(Attribute.TREE_NODE_BIT)
 
-        episode_count = 0
-
         if self.info_data.get("medias") is None:
             return root_node
 
         for episode in self.info_data.get("medias"):
-            episode_count += 1
+            self.episode_count += 1
 
             item_data = {
                 "badge": self.get_episode_badge(episode),
@@ -42,7 +43,7 @@ class FavlistEpisodeParser(EpisodeParserBase):
                 "duration": self.get_episode_duration(episode),
                 "ep_id": episode["id"],
                 "episode_id": self.episode_id,
-                "number": episode_count,
+                "number": self.episode_count,
                 "pubtime": episode["pubtime"],
                 "favtime": episode["fav_time"],
                 "title": self.get_episode_title(episode)
@@ -55,10 +56,12 @@ class FavlistEpisodeParser(EpisodeParserBase):
             root_node.add_child(item)
 
         return root_node
-
+    
     def episode_data_parser(self):
-        self.episode_id = EpisodeData.add_episode()
-        episode_data = EpisodeData.get_episode_data(self.episode_id)
+        if self.episode_id:
+            return
+        
+        episode_data = self._init_episode_data()
 
         episode_data["favorites_name"] = self.info_data["info"]["title"]
         episode_data["favorites_id"] = self.info_data["info"]["id"]
@@ -87,3 +90,6 @@ class FavlistEpisodeParser(EpisodeParserBase):
             item.set_attribute(Attribute.VIDEO_BIT)
 
         item.set_attribute(Attribute.FAVLIST_BIT | Attribute.NEED_PARSE_BIT)
+
+    def get_node_title(self):
+        return self.info_data["info"]["title"]

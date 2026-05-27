@@ -1,5 +1,5 @@
-from util.network import SyncNetWorkRequest
-
+from ...common.enum import ParserType
+from ...network.request import SyncNetWorkRequest
 from ..episode.favlist import FavlistEpisodeParser
 from .base import ParserBase
 
@@ -20,7 +20,7 @@ class FavlistParser(ParserBase):
             case "ml":
                 return self.find_str(r"ml(\d+)", self.url)
 
-    def parse(self, url: str, pn: int):
+    def parse(self, url: str, pn: int, get_info_data: bool = False):
         self.url = url
         self.pn = pn
 
@@ -28,6 +28,9 @@ class FavlistParser(ParserBase):
 
         self.get_favlist()
 
+        if get_info_data:
+            return self.info_data
+        
         episode_parser = FavlistEpisodeParser(self.info_data, self.get_category_name())
         episode_parser.parse()
 
@@ -52,10 +55,9 @@ class FavlistParser(ParserBase):
         self.check_response(response)
 
         self.info_data = response
-
-    def get_category_name(self):
-        # 收藏夹
-        return "FAVORITES"
+    
+    def get_parser_type(self):
+        return ParserType.FAVLIST
     
     def get_extra_data(self):
         count = self.info_data["data"]["info"]["media_count"]

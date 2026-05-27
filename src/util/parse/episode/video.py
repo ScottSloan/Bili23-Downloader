@@ -1,5 +1,5 @@
-from util.common.data import badge_map
-from util.common import Translator
+from ...common.translator import Translator
+from ...common.data import badge_map
 
 from .tree import TreeItem, EpisodeData, Attribute
 from .base import EpisodeParserBase
@@ -112,7 +112,6 @@ class VideoEpisodeParser(EpisodeParserBase):
 
         sections = self.info_data["ugc_season"]["sections"]
 
-        episode_count = 0
         section_count = len(sections)    # 统计章节数量
 
         for section in sections:
@@ -143,7 +142,7 @@ class VideoEpisodeParser(EpisodeParserBase):
                     page_node.set_attribute(Attribute.TREE_NODE_BIT)
 
                     for page in episode["pages"]:
-                        episode_count += 1
+                        self.episode_count += 1
 
                         item_data = {
                             "episode_id": self.episode_id,
@@ -153,7 +152,7 @@ class VideoEpisodeParser(EpisodeParserBase):
                             "cid": page["cid"],
                             "cover": episode["arc"]["pic"],
                             "duration": self.get_episode_duration(page),
-                            "number": episode_count,
+                            "number": self.episode_count,
                             "pubtime": episode["arc"]["pubdate"],
                             "part_number": page["page"],
                             "title": page["part"],
@@ -177,7 +176,7 @@ class VideoEpisodeParser(EpisodeParserBase):
                         root_node.add_child(page_node)
 
                 else:
-                    episode_count += 1
+                    self.episode_count += 1
 
                     item_data = {
                         "episode_id": self.episode_id,
@@ -187,7 +186,7 @@ class VideoEpisodeParser(EpisodeParserBase):
                         "cid": episode["cid"],
                         "cover": episode["arc"]["pic"],
                         "duration": self.get_episode_duration(episode),
-                        "number": episode_count,
+                        "number": self.episode_count,
                         "pubtime": episode["arc"]["pubdate"],
                         "title": episode["title"],
                         "related_titles": {
@@ -213,8 +212,7 @@ class VideoEpisodeParser(EpisodeParserBase):
 
     def episode_data_parser(self):
         # 创建 episode_id
-        self.episode_id = EpisodeData.add_episode()
-        episode_data = EpisodeData.get_episode_data(self.episode_id)
+        episode_data = self._init_episode_data()
 
         if self.target_episode_data_id:
             data = EpisodeData.get_episode_data(self.target_episode_data_id)
@@ -229,6 +227,7 @@ class VideoEpisodeParser(EpisodeParserBase):
         # UP 主信息
         episode_data["uploader"] = self.info_data["owner"]["name"]
         episode_data["uploader_uid"] = self.info_data["owner"]["mid"]
+        episode_data["uploader_face"] = self.info_data["owner"]["face"]
 
     def get_episode_badge(self, episode_data: dict):
         attribute = episode_data.get("attribute", 0)

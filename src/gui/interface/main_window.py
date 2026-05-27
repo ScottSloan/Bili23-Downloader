@@ -1,24 +1,16 @@
-from PySide6.QtCore import Qt, QTimer, QPoint
-from PySide6.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication, QWidget
 from PySide6.QtGui import QIcon, QPixmap
+from PySide6.QtCore import Qt, QTimer
 
 from qfluentwidgets import (
-    MSFluentWindow, SystemThemeListener, NavigationItemPosition, TeachingTip,
-    TeachingTipTailPosition, Flyout, FlyoutAnimationType, FluentIcon, InfoBadge, MessageBox,
-    FlyoutAnimationManager
+    MSFluentWindow, SystemThemeListener, NavigationItemPosition,
+    FluentIcon, InfoBadge, qrouter
 )
 
-from gui.component.widget import NavigationLargeAvatarWidget, FavoriteFlyoutWidget, InfoBar, InfoBarPosition
-from gui.interface import DownloadInterface, SettingInterface, ParseInterface
-from gui.dialog.misc import AboutDialog, ExitDialog, TermsOfUseDialog
-from gui.component import SystemTrayIcon, ProfileCard
-from gui.dialog import LoginDialog, UpdateDialog
-
-from util.common import signal_bus, config, Directory, ExtendedFluentIcon
 from util.common.enum import ToastNotificationCategory, WhenClose
-from util.auth import user_manager
-from util.thread import AsyncTask
-from util.misc import Updater
+from util.common.signal_bus import signal_bus, config
+from util.common.icon import ExtendedFluentIcon
+from util.common.config import config
 
 class MainWindow(MSFluentWindow):
     def __init__(self):
@@ -36,18 +28,30 @@ class MainWindow(MSFluentWindow):
 
         self.init_UI()
 
-        self.init_utils()
-
         self.center_on_screen(not config.get(config.silent_start))
 
-    def init_UI(self):
-        self.parse_interface = ParseInterface(self)
-        self.download_interface = DownloadInterface(self)
-        self.setting_interface = SettingInterface(self)
+        # 设置鼠标指针为等待状态，直到工具初始化完成
+        QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
 
+        self.setMicaEffectEnabled(config.get(config.mica_effect))
+
+        QTimer.singleShot(0, self.init_utils)
+        
+    def init_UI(self):
+        from .parse import ParseInterface
+        from gui.component.widget.avatar import NavigationLargeAvatarWidget
+
+        self.parse_interface = ParseInterface(self)
         self.parse_btn = self.addSubInterface(self.parse_interface, FluentIcon.SEARCH, self.tr("Parser"), position = NavigationItemPosition.TOP)
 
-        self.download_btn = self.addSubInterface(self.download_interface, FluentIcon.DOWNLOAD, self.tr("Downloads"), position = NavigationItemPosition.TOP)
+        # 先创建导航栏按钮，后续再添加界面
+        self.download_btn = self.navigationInterface.addItem(
+            "DownloadInterface",
+            FluentIcon.DOWNLOAD,
+            self.tr("Downloads"),
+            selectable = True,
+            position = NavigationItemPosition.TOP
+        )
 
         self.download_info_badge = InfoBadge.error("99+", parent = self, target = self.download_btn)
         self.download_info_badge.hide()
@@ -79,13 +83,39 @@ class MainWindow(MSFluentWindow):
             position = NavigationItemPosition.BOTTOM
         )
 
-        self.setting_btn = self.addSubInterface(self.setting_interface, FluentIcon.SETTING, self.tr("Settings"), position = NavigationItemPosition.BOTTOM)
+        self.setting_btn = self.navigationInterface.addItem(
+            "SettingInterface",
+            FluentIcon.SETTING,
+            self.tr("Settings"),
+            selectable = True,
+            position = NavigationItemPosition.BOTTOM
+        )
 
-        # 托盘图标
+        self.connect_signals()
+
+        if config.get(config.stay_on_top):
+            self.setStayOnTop(False)
+
+    def init_deferred_ui(self):
+        from gui.component.widget.flyout import FavoriteFlyoutWidget
+        from gui.component.sys_tray import SystemTrayIcon
+        
+        from qfluentwidgets import Flyout
+
+        from .download import DownloadInterface
+        from .setting import SettingInterface
+
+        self.download_interface = DownloadInterface(self)
+        self.setting_interface = SettingInterface(self)
+
+        self._addSubInterface(self.download_interface)
+        self._addSubInterface(self.setting_interface)
+
         self.system_tray_icon = SystemTrayIcon(self)
         self.system_tray_icon.show()
 
-        # Flyout 弹出组件
+        signal_bus.toast.sys_show.connect(self.system_tray_icon.show_message)
+
         self.flyout_widget = FavoriteFlyoutWidget(self)
 
         self.flyout = Flyout.make(
@@ -97,12 +127,9 @@ class MainWindow(MSFluentWindow):
         self.flyout_widget.closed.connect(self.flyout.fadeOut)
         self.flyout.closed.connect(self.reset_route_key)
 
-        self.connect_signals()
-
     def connect_signals(self):
         signal_bus.toast.show.connect(self.show_toast_notification)
         signal_bus.toast.show_long_message.connect(self.show_toast_notification_long_message)
-        signal_bus.toast.sys_show.connect(self.system_tray_icon.show_message)
 
         signal_bus.login.update_avatar.connect(self.on_update_avatar)
         signal_bus.download.update_downloading_count.connect(self.update_download_btn_badge_info)
@@ -116,28 +143,46 @@ class MainWindow(MSFluentWindow):
         self.setting_btn.clicked.connect(lambda: self.update_route_key("SettingInterface"))
 
     def init_utils(self):
+        QApplication.processEvents()
+
+        self.init_deferred_ui()
+
+        from util.misc.update import Updater
+
         # 监听系统主题变化
         self.theme_listener = SystemThemeListener(self)
         self.theme_listener.start()
-
-        self.setMicaEffectEnabled(config.get(config.mica_effect))
 
         self.updater = Updater(self)
 
         signal_bus.update.check.connect(self.updater.request_update)
 
-        if not config.get(config.accepted_terms):
-            QTimer.singleShot(300, self.show_terms_of_use)
-        
-        else:
-            signal_bus.update.check.emit(False)
+        # 初始化完成，恢复鼠标指针
+        QApplication.restoreOverrideCursor()
 
-        QTimer.singleShot(300, self.check_download_path)
-        QTimer.singleShot(300, self.check_ffmpeg)
+        if not config.get(config.accepted_terms):
+            QTimer.singleShot(0, self.show_terms_of_use)
+
+            return
+
+        self.run_post_terms_checks()
+
+    def run_post_terms_checks(self):
+        signal_bus.update.check.emit(False)
+
+        if not config.get(config.tutorial_dialog_shown):
+            QTimer.singleShot(0, self.show_tutorial_dialog)
+
+            config.set(config.tutorial_dialog_shown, True)
+
+        QTimer.singleShot(0, self.check_download_path)
+        QTimer.singleShot(0, self.check_ffmpeg)
 
         signal_bus.emit_pending_signals()
 
     def closeEvent(self, e):
+        from util.thread.async_ import AsyncTask
+
         if not self.on_close():
             e.ignore()
             return
@@ -173,10 +218,12 @@ class MainWindow(MSFluentWindow):
                 return False
             
             case WhenClose.ALWAYS_ASK:
+                from ..dialog.misc import ExitDialog
+
                 dialog = ExitDialog(self)
 
                 if dialog.exec():
-                    if dialog.exit_radio.isChecked():
+                    if dialog.exit_checked:
                         return True
                     
                     else:
@@ -191,18 +238,26 @@ class MainWindow(MSFluentWindow):
                 return True
 
     def on_about_click(self):
+        from ..dialog.misc.about import AboutDialog
+
         dialog = AboutDialog(self)
         dialog.exec()
 
     def on_avatar_click(self):
         if not config.get(config.is_login) or config.is_expired:
             # 未登录，点击头像显示登录界面
+            from ..dialog.login import LoginDialog
+            from util.auth.user import user_manager
+
             dialog = LoginDialog(self)
 
             if dialog.exec():
                 user_manager.get_user_info()
         else:
             # 已登录，点击头像显示用户信息
+            from ..component.profile import ProfileCard
+            from qfluentwidgets import Flyout, FlyoutAnimationType
+
             Flyout.make(
                 view = ProfileCard(self),
                 target = self.avatar_widget,
@@ -226,7 +281,9 @@ class MainWindow(MSFluentWindow):
 
         self.parse_interface.reparse(url)
 
-    def show_toast_notification(self, category: ToastNotificationCategory, title: str, content: str):
+    def _get_toast_function(self, category: ToastNotificationCategory):
+        from gui.component.widget.info_bar import InfoBar
+
         match category:
             case ToastNotificationCategory.SUCCESS:
                 func = InfoBar.success
@@ -240,6 +297,13 @@ class MainWindow(MSFluentWindow):
             case ToastNotificationCategory.INFO:
                 func = InfoBar.info
 
+        return func
+
+    def show_toast_notification(self, category: ToastNotificationCategory, title: str, content: str):
+        from gui.component.widget.info_bar import InfoBarPosition
+
+        func = self._get_toast_function(category)
+
         func(
             title = title,
             content = content,
@@ -250,8 +314,12 @@ class MainWindow(MSFluentWindow):
             parent = self
         )
 
-    def show_toast_notification_long_message(self, title: str, content: str):
-        InfoBar.error(
+    def show_toast_notification_long_message(self, category: ToastNotificationCategory, title: str, content: str):
+        from gui.component.widget.info_bar import InfoBarPosition
+
+        func = self._get_toast_function(category)
+
+        func(
             title = title,
             content = content,
             orient = Qt.Orientation.Vertical,
@@ -263,6 +331,8 @@ class MainWindow(MSFluentWindow):
         )
 
     def show_teaching_tip(self):
+        from qfluentwidgets import TeachingTip, TeachingTipTailPosition
+
         TeachingTip.create(
             target = self.avatar_widget,
             title = "登录",
@@ -275,20 +345,46 @@ class MainWindow(MSFluentWindow):
         )
 
     def show_terms_of_use(self):
+        from ..dialog.misc import TermsOfUseDialog
+
         dialog = TermsOfUseDialog(self)
 
         if not dialog.exec():
             # 用户不接受使用协议，关闭程序
             self.close()
 
-        # 许可协议优先级最高，之后再显示更新等提示
-        signal_bus.update.check.emit(False)
+            return False
+
+        self.run_post_terms_checks()
+
+        return True
 
     def show_update_dialog(self, info: dict):
+        from ..dialog.update import UpdateDialog
+
         dialog = UpdateDialog(info, self)
         dialog.exec()
 
+    def show_tutorial_dialog(self):
+        # 询问用户是否首次使用，建议用户查看文档，充分利用程序功能
+        from qfluentwidgets import MessageBox
+
+        dialog = MessageBox(
+            title = self.tr("Welcome to Bili23 Downloader"),
+            content = self.tr("It is recommended to read the user guide and FAQs when using for the first time, to help you get started quickly and make full use of all features."),
+            parent = self
+        )
+        dialog.yesButton.setText(self.tr("View"))
+        dialog.cancelButton.setText(self.tr("Skip"))
+
+        if dialog.exec():
+            import webbrowser
+
+            webbrowser.open("https://bili23.scott-sloan.cn/doc/introduction.html")
+
     def center_on_screen(self, show = True):
+        from PySide6.QtWidgets import QApplication
+
         desktop = QApplication.screens()[0].availableGeometry()
         w, h = desktop.width(), desktop.height()
 
@@ -315,12 +411,15 @@ class MainWindow(MSFluentWindow):
         self.download_info_badge.move(self.download_btn.width() - 4, 111)
 
     def check_download_path(self):
+        from util.common.io.directory import Directory
+
         download_path = config.get(config.download_path)
 
         accessible = Directory.ensure_directory_accessible(download_path)
 
         if not accessible:
             signal_bus.toast.show_long_message.emit(
+                ToastNotificationCategory.ERROR,
                 self.tr("Download Directory Invalid"),
                 self.tr("The current download directory is inaccessible or lacks write permissions. Please reset it.") + f"\n\n{download_path}"
             )
@@ -328,11 +427,15 @@ class MainWindow(MSFluentWindow):
     def check_ffmpeg(self):
         if config.no_ffmpeg_available:
             signal_bus.toast.show_long_message.emit(
+                ToastNotificationCategory.ERROR,
                 self.tr("FFmpeg Not Found"),
                 self.tr("No FFmpeg executable found. Please ensure FFmpeg is installed and configured correctly.")
             )
 
     def show_favorites_flyout_menu(self):
+        from qfluentwidgets import FlyoutAnimationType, FlyoutAnimationManager, MessageBox
+        from PySide6.QtCore import QPoint
+
         if not config.get(config.is_login) or config.is_expired:
             dialog = MessageBox(
                 title = self.tr("Login Required"),
@@ -384,3 +487,18 @@ class MainWindow(MSFluentWindow):
 
         self.raise_()
         self.activateWindow()
+    
+    def _addSubInterface(self, interface: QWidget):
+        interface.setProperty("isStackedTransparent", False)
+        self.stackedWidget.addWidget(interface)
+
+        routeKey = interface.objectName()
+
+        self.navigationInterface.items[routeKey].clicked.connect(lambda: self.switchTo(interface))
+        
+        if self.stackedWidget.count() == 1:
+            self.stackedWidget.currentChanged.connect(self._onCurrentInterfaceChanged)
+            self.navigationInterface.setCurrentItem(routeKey)
+            qrouter.setDefaultRouteKey(self.stackedWidget, routeKey)
+
+        self._updateStackedBackground()

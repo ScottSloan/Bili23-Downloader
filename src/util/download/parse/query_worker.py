@@ -1,4 +1,5 @@
-from util.network import RequestType, ResponseType, SyncNetWorkRequest, CDN
+from ...network.request import RequestType, ResponseType, SyncNetWorkRequest
+from ...network.cdn import CDN
 
 class QueryWorker:
     def __init__(self, media_info: dict):

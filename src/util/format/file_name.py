@@ -1,9 +1,10 @@
-from util.parse.episode.tree import Attribute
-from util.common.enum import ConventionType
-from util.common import config
-from util.format.time import Time
-
+from ..parse.episode.tree import Attribute
 from ..download.task.info import TaskInfo
+
+from ..common.enum import ConventionType
+from ..common.config import config
+
+from .time import Time
 
 from pathlib import Path
 from typing import List
@@ -49,16 +50,37 @@ class FileNameFormatter:
             if self.attribute:
                 self.rule = self.get_special_rule()
 
-            return self.rule.format(**self.variable_data)
+            return self.__normalize_path(self.rule.format(**self.variable_data))
         
         except Exception as e:
             logger.exception(f"格式化文件名时发生错误")
 
             return None
 
+    def __normalize_path(self, path_str: str):
+        if not path_str:
+            return path_str
+
+        path = Path(path_str)
+        normalized_parts = []
+
+        for part in path.parts:
+            cleaned_part = part.strip(" .")
+
+            if cleaned_part:
+                normalized_parts.append(cleaned_part)
+
+        if not normalized_parts:
+            return "_"
+
+        return str(Path(*normalized_parts))
+
     def get_special_rule(self):
         # 判断是否为特殊类型的视频：互动视频、每周必看、收藏夹、个人空间
         # 这些类型不支持自定义，直接使用内部预设规则
+
+        if self.rule is None:
+            self.rule = ""
 
         rule_map = {
             Attribute.DOWNLOAD_AS_SINGLE_VIDEO_BIT: "{leaf_title}",

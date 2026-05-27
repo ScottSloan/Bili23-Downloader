@@ -1,7 +1,8 @@
 from PySide6.QtWidgets import QApplication
 from PySide6.QtGui import QFontMetrics
-from util.format.time import Time
-from util.common import config
+
+from ....common.config import config
+from ....format.time import Time
 
 from typing import List, Tuple, Optional
 

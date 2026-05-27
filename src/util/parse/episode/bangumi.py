@@ -1,5 +1,5 @@
-from util.common import Translator
-from util.format.time import Time
+from ...common.translator import Translator
+from ...format.time import Time
 
 from .tree import TreeItem, Attribute, EpisodeData
 from .base import EpisodeParserBase
@@ -38,8 +38,6 @@ class BangumiEpisodeParser(EpisodeParserBase):
         root_node = TreeItem(node_data)
         root_node.set_attribute(Attribute.TREE_NODE_BIT)
 
-        episode_count = 0
-
         for section in self.info_data["sections"]:
             section_title = section["title"]
             section_node_data = {
@@ -56,7 +54,7 @@ class BangumiEpisodeParser(EpisodeParserBase):
                     if episode.get("ep_id") != self.target_episode_info:
                         continue
 
-                episode_count += 1
+                self.episode_count += 1
 
                 episode_item_data = {
                     "aid": episode["aid"],
@@ -68,7 +66,7 @@ class BangumiEpisodeParser(EpisodeParserBase):
                     "cover": episode["cover"],
                     "duration": int(self.get_episode_duration(episode) / 1000),
                     "ep_id": episode["ep_id"],
-                    "number": episode_count,
+                    "number": self.episode_count,
                     "pubtime": episode["pub_time"],
                     "title": self.get_bangumi_title(episode),
                     "related_titles": {
@@ -121,8 +119,7 @@ class BangumiEpisodeParser(EpisodeParserBase):
         ]
 
     def episode_data_parser(self):
-        self.episode_id = EpisodeData.add_episode()
-        episode_data = EpisodeData.get_episode_data(self.episode_id)
+        episode_data = self._init_episode_data()
 
         if self.target_episode_data_id:
             data = EpisodeData.get_episode_data(self.target_episode_data_id)
@@ -152,10 +149,12 @@ class BangumiEpisodeParser(EpisodeParserBase):
         # 评分
         if self.info_data.get("rating"):
             episode_data["rating"] = self.info_data["rating"]["score"]
+            episode_data["rating_votes"] = self.info_data["rating"]["count"]
 
         if self.info_data.get("up_info"):
             episode_data["uploader"] = self.info_data["up_info"]["uname"]
             episode_data["uploader_uid"] = self.info_data["up_info"]["mid"]
+            episode_data["uploader_face"] = self.info_data["up_info"]["avatar"]
 
     def determine_season_number(self):
         season_id = self.info_data["season_id"]

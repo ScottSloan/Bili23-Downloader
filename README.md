@@ -14,8 +14,8 @@
 
 <p align="center">
     <img src="https://img.shields.io/github/v/release/ScottSloan/Bili23-Downloader?style=flat-square" alt="Version"/>
-    <img src="https://img.shields.io/badge/Python-3.12.10-green?style=flat-square" alt="Python"/>
-    <img src="https://img.shields.io/badge/PySide6-6.10.2-green?style=flat-square" alt="PySide6"/>
+    <img src="https://img.shields.io/badge/Python-3.13.13-green?style=flat-square" alt="Python"/>
+    <img src="https://img.shields.io/badge/PySide6-6.10.3-green?style=flat-square" alt="PySide6"/>
 </p>
 
 <p align="center">

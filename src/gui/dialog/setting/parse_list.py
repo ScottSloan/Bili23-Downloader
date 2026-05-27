@@ -5,7 +5,9 @@ from qfluentwidgets import SubtitleLabel, BodyLabel, SwitchButton
 from gui.component.widget import CheckableDragListWidget
 from gui.component.dialog import DialogBase
 
-from util.common import config, signal_bus, Translator
+from util.common.signal_bus import signal_bus
+from util.common.translator import Translator
+from util.common.config import config
 
 class ParseListSettingsDialog(DialogBase):
     def __init__(self, parent = None):

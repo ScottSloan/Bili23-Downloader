@@ -1,10 +1,11 @@
-from util.parse.episode.tree import Attribute
-from util.format.time import Time
-
 from ....download.task.info import TaskInfo
+from ....format.time import Time
+
+from ...episode.tree import Attribute
 
 from pathlib import Path
 from typing import List
+import textwrap
 import math
 
 video_base = """<?xml version="1.0" encoding="UTF-8"?>
@@ -14,8 +15,15 @@ video_base = """<?xml version="1.0" encoding="UTF-8"?>
     <runtime>{runtime}</runtime>
     <premiered>{premiered:%Y-%m-%d}</premiered>
     <year>{year}</year>
-    <director>{director}</director>
+    <actor>
+        <name>{uploader}</name>
+        <role>UP主</role>
+        <profile>https://space.bilibili.com/{uploader_uid}</profile>
+        <thumb>{uploader_face}</thumb>
+    </actor>
     {tag}
+    <thumb>{thumb}</thumb>
+    <uniqueid type="bvid">{bvid}</uniqueid>
 </movie>
 """
 
@@ -29,6 +37,10 @@ tvshow_base = """<?xml version="1.0" encoding="UTF-8"?>
     <director>{director}</director>
     {genre}
     {country}
+    {rating}
+    {status}
+    <thumb aspect="poster">{thumb}</thumb>
+    <uniqueid type="season_id">{season_id}</uniqueid>
 </tvshow>
 """
 
@@ -44,6 +56,8 @@ episode_base = """<?xml version="1.0" encoding="UTF-8"?>
     <director>{director}</director>
     {genre}
     {country}
+    <thumb>{thumb}</thumb>
+    <uniqueid type="ep_id">{ep_id}</uniqueid>
 </episodedetails>
 """
 
@@ -89,8 +103,12 @@ class MetadataNFO:
             runtime = math.ceil(self.task_info.Episode.duration / 60),
             premiered = pubtime,
             year = pubtime.year,
-            director = self.task_info.Episode.uploader,
-            tag = "\n    ".join([f"<tag>{tag}</tag>" for tag in self.task_info.Episode.tags])
+            uploader = self.task_info.Episode.uploader,
+            uploader_uid = self.task_info.Episode.uploader_uid,
+            uploader_face = self.task_info.Episode.uploader_face,
+            tag = "\n    ".join([f"<tag>{tag}</tag>" for tag in self.task_info.Episode.tags]),
+            thumb = self.task_info.Episode.cover,
+            bvid = self.task_info.Episode.bvid
         )
     
     def _generate_tvshow(self, genres: List[str]):
@@ -103,7 +121,11 @@ class MetadataNFO:
             year = premiered.year,
             director = self.task_info.Episode.uploader,
             genre = "\n    ".join([f"<genre>{genre}</genre>" for genre in genres]),
-            country = "\n    ".join([f"<country>{area}</country>" for area in self.task_info.Episode.areas])
+            country = "\n    ".join([f"<country>{area}</country>" for area in self.task_info.Episode.areas]),
+            rating = self._get_rating(),
+            status = self._get_status(),
+            thumb = self.task_info.Episode.poster,
+            season_id = self.task_info.Episode.season_id
         )
     
     def _generate_episode(self, genres: List[str]):
@@ -118,7 +140,9 @@ class MetadataNFO:
             episode = self.task_info.Episode.episode_number,
             director = self.task_info.Episode.uploader,
             genre = "\n    ".join([f"<genre>{genre}</genre>" for genre in genres]),
-            country = "\n    ".join([f"<country>{area}</country>" for area in self.task_info.Episode.areas])
+            country = "\n    ".join([f"<country>{area}</country>" for area in self.task_info.Episode.areas]),
+            thumb = self.task_info.Episode.cover,
+            ep_id = self.task_info.Episode.ep_id
         )
     
     def _is_tvshow_exists(self):
@@ -126,3 +150,36 @@ class MetadataNFO:
 
         return path.exists()
     
+    def _get_rating(self):
+        # 获取评分信息
+        if self.task_info.Episode.rating:
+            rating = """\
+                <ratings>
+                    <rating default="true" max="10" name="Bilibili">
+                        <value>{rating}</value>
+                        <votes>{votes}</votes>
+                    </rating>
+                </ratings>
+                <rating>{rating}</rating>
+                """.format(rating = self.task_info.Episode.rating, votes = self.task_info.Episode.rating_votes)
+            
+            return self._dedent(rating)
+        
+        return ""
+    
+    def _get_status(self):
+        # 获取完结状态
+        if self.task_info.Episode.new_ep_status:
+            return "<status>Ongoing</status>"
+        else:
+            return "<status>Ended</status>"
+    
+    def _dedent(self, text: str):
+        lines = textwrap.dedent(text).splitlines()
+
+        for index, line in enumerate(lines):
+            if index != 0:
+                lines[index] = "    " + line
+
+        return "\n".join(lines)
+        

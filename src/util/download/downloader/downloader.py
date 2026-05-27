@@ -1,20 +1,28 @@
 from PySide6.QtCore import QRunnable, QThreadPool, QObject, QTimer, Slot, QMetaObject, Q_ARG
 from PySide6.QtCore import Qt
 
-from util.common.enum import DownloadStatus, DownloadType, MediaType
-from util.parse.additional.worker import AdditionalParseWorker
-from util.common import signal_bus, config, Translator, File
-from util.thread import GlobalThreadPoolTask, AsyncTask
-from util.common.data import reversed_video_quality_map
-from util.network import get_cookies
+from ...common.enum import DownloadStatus, DownloadType, MediaType, ToastNotificationCategory
+from ...common.data import reversed_video_quality_map
+from ...common.io.directory import Directory
+from ...common.translator import Translator
+from ...common.signal_bus import signal_bus
+from ...common.config import config
+from ...common.io.file import File
 
-from ..task.info import TaskInfo
+from ...parse.additional.worker import AdditionalParseWorker
+from ...thread.pool import GlobalThreadPoolTask
+from ...network.request import get_cookies
+from ...thread.async_ import AsyncTask
+
 from ..task.manager import task_manager
+from ..task.info import TaskInfo
+
 from .parse_worker import ParseWorker
 from .merger import Merger
 
 from threading import Event, Lock
 from pathlib import Path
+import errno
 import httpx
 import json
 import time
@@ -64,6 +72,32 @@ class TokenBucket:
             self.last_update = time.monotonic()
 
 class ChunkWorker(QRunnable):
+    max_retries = 5
+    retryable_status_codes = {408, 429, 500, 502, 503, 504}
+    permanent_status_codes = {400, 401, 403, 404, 405, 410, 416}
+    permanent_errnos = {
+        errno.EACCES,
+        errno.EPERM,
+        errno.ENOENT,
+        errno.ENOSPC,
+        errno.EROFS,
+        errno.EISDIR,
+        errno.ENOTDIR,
+    }
+    retryable_errnos = {
+        errno.EAGAIN,
+        errno.EWOULDBLOCK,
+        errno.EINTR,
+        errno.ETIMEDOUT,
+        errno.ECONNRESET,
+        errno.ECONNABORTED,
+        errno.ECONNREFUSED,
+        errno.ENETDOWN,
+        errno.ENETUNREACH,
+        errno.EHOSTUNREACH,
+        errno.EPIPE,
+    }
+
     def __init__(self, session: httpx.Client, file_key: str, chunk_index: int, chunk_range: tuple[int, int], file_path: Path, url: str, referer: str, task_info: TaskInfo, stop_event: Event, lock: Lock, token_bucket: TokenBucket, parent=None, on_chunk_start=None, on_chunk_end=None):
         super().__init__()
         self.session = session
@@ -82,6 +116,63 @@ class ChunkWorker(QRunnable):
         self.on_chunk_start = on_chunk_start
         self.on_chunk_end = on_chunk_end
 
+    def _invoke_download_error(self, message: str):
+        if self.parent:
+            QMetaObject.invokeMethod(
+                self.parent,
+                "on_download_error",
+                Qt.ConnectionType.QueuedConnection,
+                Q_ARG(str, message)
+            )
+
+    def _is_retryable_exception(self, exc: Exception):
+        if isinstance(exc, StopIteration):
+            return True
+
+        if isinstance(exc, httpx.HTTPStatusError):
+            status_code = getattr(getattr(exc, "response", None), "status_code", None)
+            if status_code in self.permanent_status_codes:
+                return False
+            if status_code in self.retryable_status_codes:
+                return True
+            return bool(status_code and status_code >= 500)
+
+        if isinstance(exc, httpx.RequestError):
+            return True
+
+        if isinstance(exc, OSError):
+            return exc.errno in self.retryable_errnos
+
+        return False
+
+    def _build_error_message(self, exc: Exception):
+        if isinstance(exc, httpx.HTTPStatusError):
+            response = getattr(exc, "response", None)
+            status_code = getattr(response, "status_code", None)
+            return f"请求返回异常状态码 {status_code}: {exc}"
+
+        if isinstance(exc, httpx.RequestError):
+            return str(exc)
+
+        if isinstance(exc, OSError):
+            return f"文件读写失败: {exc}"
+
+        if isinstance(exc, StopIteration):
+            return str(exc)
+
+        return f"未知异常: {exc}"
+
+    def _report_download_failure(self, exc: Exception, attempt: int, retryable: bool):
+        reason = self._build_error_message(exc)
+
+        if retryable:
+            message = f"分片 {self.chunk_index + 1} 下载失败，已尝试 {attempt} 次仍未成功：{reason}"
+        else:
+            message = f"分片 {self.chunk_index + 1} 遇到不可重试错误：{reason}"
+
+        self.stop_event.set()
+        self._invoke_download_error(message)
+
     def run(self):
         if self.stop_event.is_set():
             return
@@ -93,7 +184,9 @@ class ChunkWorker(QRunnable):
             "Range": f"bytes={self.chunk_range[0]}-{self.chunk_range[1] - 1}"
         }
 
-        while not self.stop_event.is_set():
+        attempt = 0
+
+        while not self.stop_event.is_set() and attempt < self.max_retries:
             downloaded = 0
             try:
                 with open(self.file_path, "r+b") as f:
@@ -137,15 +230,22 @@ class ChunkWorker(QRunnable):
                     # 提前结束但没有报错，说明连接意外断开，触发重试
                     raise StopIteration(f"Chunk mismatch (Expected: {expected_size}, Got: {downloaded}), triggering retry.")
 
-            except Exception:
+            except Exception as exc:
                 if self.stop_event.is_set():
                     break
                 
                 # 发生异常（断网、超时等），清空本轮的下载计数并等待后重试（区块从头下）
                 with self.lock:
-                    self.task_info.Download.downloaded_size -= downloaded
+                    self.task_info.Download.downloaded_size = max(self.task_info.Download.downloaded_size - downloaded, 0)
 
-                time.sleep(1)
+                attempt += 1
+                retryable = self._is_retryable_exception(exc)
+
+                if not retryable or attempt >= self.max_retries:
+                    self._report_download_failure(exc, attempt, retryable)
+                    break
+
+                time.sleep(min(2 ** (attempt - 1), 8))
 
         if self.on_chunk_end:
             self.on_chunk_end()
@@ -179,6 +279,7 @@ class Downloader(QObject):
         self.wait_callback = None
         
         self._completion_triggered = False
+        self._download_error_triggered = False
 
         self.speed_timer = QTimer()
         self.speed_timer.setInterval(1000)
@@ -186,6 +287,7 @@ class Downloader(QObject):
 
     def start(self):
         self._completion_triggered = False
+        self._download_error_triggered = False
 
         # 如果队列空了则说明下载完成（进度 100）
         if self.task_info.Download.progress >= 100 or (not self.task_info.Download.queue and self.task_info.Download.total_size > 0 and self.task_info.Download.status != DownloadStatus.FAILED):
@@ -221,15 +323,40 @@ class Downloader(QObject):
             self.task_info.Download.queue = download_info["download_queue"]
 
         self.update_info(download_info)
+
         self.start_worker()
         self.start_timer()
 
     @Slot(str)
     def on_parse_error(self, error_message: str):
         self.task_info.Download.status = DownloadStatus.FAILED
+
         self.update_item(self.task_info)
+
         signal_bus.download.auto_manage_concurrent_downloads.emit()
+
         signal_bus.toast.show_long_message.emit(
+            ToastNotificationCategory.ERROR,
+            Translator.ERROR_MESSAGES("DOWNLOAD_FAILED"),
+            error_message
+        )
+
+    @Slot(str)
+    def on_download_error(self, error_message: str):
+        if self._download_error_triggered:
+            return
+
+        self._download_error_triggered = True
+        self.task_info.Download.status = DownloadStatus.FAILED
+        self._stop_event.set()
+        self.speed_timer.stop()
+
+        self.update_item(self.task_info)
+
+        signal_bus.download.auto_manage_concurrent_downloads.emit()
+
+        signal_bus.toast.show_long_message.emit(
+            ToastNotificationCategory.ERROR,
             Translator.ERROR_MESSAGES("DOWNLOAD_FAILED"),
             error_message
         )
@@ -244,14 +371,19 @@ class Downloader(QObject):
         path = Path(self.task_info.File.download_path, self.task_info.File.folder, info.get("file_name", ""))
         path.parent.mkdir(parents = True, exist_ok = True)
 
+        # 计算文件所需空间
         file_size = info.get("file_size", 0)
-        if not path.exists() and file_size > 0:
-            File.preallocate_file(path, file_size)
+        current_size = path.stat().st_size if path.exists() else 0
+        required_space = max(file_size - current_size, 0)
+
+        # 检查磁盘空间并预分配文件
+        self._check_disk_space(path, required_space)
 
         info["file_path"] = path
         chunk_list = self.calc_chunk_list(file_key, file_size, self.chunk_size)
         self.calc_downloaded_size()
 
+        # 对于每个区块，启动一个下载线程。区块下载完成后会从 chunk_list 中移除，直到全部完成。
         for chunk_index in chunk_list:
             chunk_range = self.calc_chunk_range(chunk_index, self.chunk_size, file_size)
             worker = ChunkWorker(
@@ -314,7 +446,7 @@ class Downloader(QObject):
         start = chunk_index * chunk_size
         end = min(start + chunk_size, total_size) if total_size > 0 else 0
         return start, end
-    
+
     def calc_downloaded_size(self):
         downloaded_size = 0
         
@@ -493,3 +625,21 @@ class Downloader(QObject):
     def update_item(self, task_info: TaskInfo):
         signal_bus.download.update_downloading_item.emit(task_info)
         task_manager.update(self.task_info)
+
+    def _check_disk_space(self, path: Path, file_size: int):
+        if not Directory.has_enough_space(path.parent, file_size):
+            error_message = Translator.ERROR_MESSAGES("INSUFFICIENT_SPACE")
+
+            self.on_parse_error(error_message)
+
+            raise OSError(error_message)
+            
+        if not path.exists() and file_size > 0:
+            # 预分配文件空间
+            if config.get(config.preallocate_file_space):
+                File.preallocate_file(path, file_size)
+
+            else:
+                # 关闭预分配时，仅创建空文件占位
+                File.create_placeholder(path)
+    
