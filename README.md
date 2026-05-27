@@ -99,5 +99,5 @@ Made with [contrib.rocks](https://contrib.rocks).
 除了日常的代码维护外，处理复杂的跨平台环境以及重构发布都耗费了大量的时间与精力。如果软件确实帮你解决了不少麻烦，欢迎通过下方的赞助码请作者喝杯咖啡。**这是对“为爱发电”最实在的认可！**
 
 <p align="center">
-    <img src="https://bili23.scott-sloan.cn/assets/sponsor.Bqpdl-if.png" alt="赞助二维码" style="width: 300px; margin: 10px 0; border-radius: 8px;" />
+    <img src="https://bili23.scott-sloan.cn/assets/sponsor_weixin.Bqpdl-if.png" alt="赞助二维码" style="width: 300px; margin: 10px 0; border-radius: 8px;" />
 </p>
