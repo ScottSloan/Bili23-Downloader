@@ -1736,77 +1736,131 @@ Note: Videos protected by DRM can only be downloaded up to 1080P; higher qualiti
 <context>
     <name>MainWindow</name>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="45"/>
+        <location filename="../../gui/interface/main_window.py" line="284"/>
         <source>Parser</source>
         <translation>解析</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="51"/>
+        <location filename="../../gui/interface/main_window.py" line="290"/>
         <source>Downloads</source>
         <translation>下載</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="62"/>
+        <location filename="../../gui/interface/main_window.py" line="301"/>
         <source>Favorites</source>
         <translation>收藏</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="71"/>
+        <location filename="../../gui/interface/main_window.py" line="310"/>
         <source>About</source>
         <translation>關於</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="89"/>
+        <location filename="../../gui/interface/main_window.py" line="328"/>
         <source>Settings</source>
         <translation>設定</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="369"/>
+        <source>Welcome to Bili23 Downloader</source>
+        <translation type="vanished">歡迎使用 Bili23 Downloader</translation>
+    </message>
+    <message>
+        <source>It is recommended to read the user guide and FAQs when using for the first time, to help you get started quickly and make full use of all features.</source>
+        <translation type="vanished">首次使用時建議先查看使用說明與常見問題，幫助您更快上手並充分利用各項功能。</translation>
+    </message>
+    <message>
+        <source>View</source>
+        <translation type="vanished">查看</translation>
+    </message>
+    <message>
+        <source>Skip</source>
+        <translation type="vanished">跳過</translation>
+    </message>
+    <message>
+        <source>Download Directory Invalid</source>
+        <translation type="vanished">下載目錄無效</translation>
+    </message>
+    <message>
+        <source>The current download directory is inaccessible or lacks write permissions. Please reset it.</source>
+        <translation type="vanished">目前下載目錄無法存取或沒有寫入權限，請重新設定。</translation>
+    </message>
+    <message>
+        <source>FFmpeg Not Found</source>
+        <translation type="vanished">找不到 FFmpeg</translation>
+    </message>
+    <message>
+        <source>No FFmpeg executable found. Please ensure FFmpeg is installed and configured correctly.</source>
+        <translation type="vanished">找不到 FFmpeg 執行檔。請確保已正確安裝並設定 FFmpeg。</translation>
+    </message>
+    <message>
+        <source>Login Required</source>
+        <translation type="vanished">需要登入</translation>
+    </message>
+    <message>
+        <source>Please log in to your account first.</source>
+        <translation type="vanished">請先登入帳號</translation>
+    </message>
+</context>
+<context>
+    <name>MainWindowBase</name>
+    <message>
+        <location filename="../../gui/interface/main_window.py" line="86"/>
         <source>Welcome to Bili23 Downloader</source>
         <translation>歡迎使用 Bili23 Downloader</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="370"/>
+        <location filename="../../gui/interface/main_window.py" line="87"/>
         <source>It is recommended to read the user guide and FAQs when using for the first time, to help you get started quickly and make full use of all features.</source>
         <translation>首次使用時建議先查看使用說明與常見問題，幫助您更快上手並充分利用各項功能。</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="373"/>
+        <location filename="../../gui/interface/main_window.py" line="90"/>
         <source>View</source>
         <translation>查看</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="374"/>
+        <location filename="../../gui/interface/main_window.py" line="91"/>
         <source>Skip</source>
         <translation>跳過</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="416"/>
+        <location filename="../../gui/interface/main_window.py" line="103"/>
+        <source>Log in to your account</source>
+        <translation>登入帳號</translation>
+    </message>
+    <message>
+        <location filename="../../gui/interface/main_window.py" line="104"/>
+        <source>Click the avatar to log in to your Bilibili account. 
+Download functionality will be limited if you&apos;re not logged in.</source>
+        <translation>點擊頭像登入嘅 Bilibili 帳號，未登入狀態下下載功能將受到限制。</translation>
+    </message>
+    <message>
+        <location filename="../../gui/interface/main_window.py" line="171"/>
         <source>Download Directory Invalid</source>
         <translation>下載目錄無效</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="417"/>
+        <location filename="../../gui/interface/main_window.py" line="172"/>
         <source>The current download directory is inaccessible or lacks write permissions. Please reset it.</source>
         <translation>目前下載目錄無法存取或沒有寫入權限，請重新設定。</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="424"/>
+        <location filename="../../gui/interface/main_window.py" line="179"/>
         <source>FFmpeg Not Found</source>
         <translation>找不到 FFmpeg</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="425"/>
+        <location filename="../../gui/interface/main_window.py" line="180"/>
         <source>No FFmpeg executable found. Please ensure FFmpeg is installed and configured correctly.</source>
         <translation>找不到 FFmpeg 執行檔。請確保已正確安裝並設定 FFmpeg。</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="434"/>
+        <location filename="../../gui/interface/main_window.py" line="189"/>
         <source>Login Required</source>
         <translation>需要登入</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="435"/>
+        <location filename="../../gui/interface/main_window.py" line="190"/>
         <source>Please log in to your account first.</source>
         <translation>請先登入帳號</translation>
     </message>

@@ -49,9 +49,9 @@ Name: "zh_CN"; MessagesFile: "compiler:Languages\ChineseSimplified.isl"
 Name: "zh_TW"; MessagesFile: "compiler:Languages\ChineseTraditional.isl"
 
 [CustomMessages]
-en_US.ConfirmUninstallOldVersion=An older version is already installed. It must be uninstalled before setup can continue. The installation directory will be deleted, so any files in this directory will also be removed. Please back up your files before installing. Uninstall it now?
-zh_CN.ConfirmUninstallOldVersion=检测到已安装的旧版本，必须先卸载旧版本才能继续安装。安装目录将被删除，该目录下的文件也会一并移除，请在安装前做好备份。是否现在卸载旧版本？
-zh_TW.ConfirmUninstallOldVersion=偵測到已安裝舊版本，必須先解除安裝舊版本才能繼續安裝。安裝目錄將被刪除，該目錄下的檔案也會一併移除，請在安裝前做好備份。是否現在解除安裝舊版本？
+en_US.ConfirmUninstallOldVersion=An older version is already installed. Its installation folder will be deleted before setup can continue, so any files in that folder will also be removed. Please back up your files before installing. Delete it now?
+zh_CN.ConfirmUninstallOldVersion=检测到已安装的旧版本，安装程序将在继续前直接删除其安装目录，目录下的文件也会一并移除，请在安装前做好备份。是否现在删除旧版本的安装目录？
+zh_TW.ConfirmUninstallOldVersion=偵測到已安裝舊版本，安裝程式會在繼續前直接刪除其安裝目錄，目錄下的檔案也會一併移除，請在安裝前做好備份。是否現在刪除舊版本的安裝目錄？
 
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
@@ -79,14 +79,13 @@ Type: filesandordirs; Name: "{app}"
 [Code]
 function InitializeSetup(): boolean;
 var
-  ResultStr: String;
-  ResultCode: Integer;
   KeyName: String;
   ConfirmResult: Integer;
+  InstallDir: String;
 begin
   KeyName := 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\' + '{B096F0C1-D105-4EF9-86E1-5E87DA884EA4}' + '_is1';
   
-  if RegQueryStringValue(HKLM, KeyName, 'UninstallString', ResultStr) then
+  if RegQueryStringValue(HKLM, KeyName, 'InstallLocation', InstallDir) then
     begin
       ConfirmResult := MsgBox(CustomMessage('ConfirmUninstallOldVersion'), mbConfirmation, MB_OKCANCEL);
 
@@ -96,12 +95,16 @@ begin
           exit;
         end;
 
-      ResultStr := RemoveQuotes(ResultStr);
-      
-      if ResultStr <> '' then
+      InstallDir := RemoveQuotes(InstallDir);
+
+      if InstallDir <> '' then
         begin
-          Exec(ResultStr, '/silent', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+          if not DelTree(InstallDir, True, True, True) then
+            begin
+              Result := False;
+              exit;
+            end;
         end;
     end;
-  result := true;
+  Result := True;
 end;
