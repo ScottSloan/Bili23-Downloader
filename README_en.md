@@ -1,43 +1,38 @@
-# Bili23-Downloader
 <p align="center">
     <a href="https://bili23.scott-sloan.cn" target="_blank">
         <img src="https://bili23.scott-sloan.cn/logo.png" alt="Bili23 Downloader" style="width: 500px;"/>
     </a>
 </p>
 
+<h1 align="center">Bili23-Downloader</h1>
+
 <p align="center">
-    <img src="https://img.shields.io/badge/GitHub-black?logo=github&style=flat-square" alt="GitHub"/>
-    <img src="https://img.shields.io/badge/Platform-Windows_|_Linux_|_macOS-blue?style=flat-square" alt="Platform"/>
-    <img src="https://img.shields.io/badge/license-GPLv3-orange?style=flat-square" alt="License"/>
+    <img src="https://img.shields.io/github/v/release/ScottSloan/Bili23-Downloader?style=flat-square" alt="Release"/>
+    <img src="https://img.shields.io/github/license/ScottSloan/Bili23-Downloader?style=flat-square" alt="License"/>
+    <img src="https://img.shields.io/github/downloads/ScottSloan/Bili23-Downloader/total?style=flat-square" alt="Downloads"/>
+    <img src="https://img.shields.io/github/stars/ScottSloan/Bili23-Downloader?style=flat-square" alt="Stars"/>
     <img src="https://img.shields.io/github/actions/workflow/status/ScottSloan/Bili23-Downloader/publish.yml?style=flat-square" alt="Build"/>
 </p>
 
-<p align="center">
-    <img src="https://img.shields.io/github/v/release/ScottSloan/Bili23-Downloader?style=flat-square" alt="Version"/>
-    <img src="https://img.shields.io/badge/Python-3.12.10-green?style=flat-square" alt="Python"/>
-    <img src="https://img.shields.io/badge/PySide6-6.10.2-green?style=flat-square" alt="PySide6"/>
-</p>
+<div align="center">
+    <h3>
+        <a href="https://bili23.scott-sloan.cn/">Official Website</a>
+        <span> • </span>
+        <a href="https://bili23.scott-sloan.cn/doc/intro.html">Documentation</a>
+        <span> • </span>
+        <a href="#-download">Download</a>
+        <span> • </span>
+        <a href="README.md">中文</a>
+        <span> • </span>
+        <a href="README_en.md">English</a>
+    </h3>
+</div>
 
-<p align="center">
-    <a href="https://bili23.scott-sloan.cn/"><b>Official Website</b></a> •
-    <a href="https://bili23.scott-sloan.cn/doc/intro.html"><b>Documentation</b></a> •
-    <a href="README.md"><b>中文</b></a> •
-    <a href="README_en.md"><b>English</b></a>
-</p>
+<div align="center">
+    <strong>Open Source, Free, Cross-Platform Bilibili Video Downloader</strong><br>
+</div><br>
 
-<p align="center">
-    <strong>Bili23 Downloader</strong> is a high-quality, cross-platform Bilibili video downloader with a modern UI.<br />
-    It supports multi-threaded acceleration, audio/video stream separation, Danmaku/subtitle downloading, and NFO metadata scraping,<br />
-    as well as highly customizable file classification and naming capabilities. Fully compatible with Windows (including Win7), Linux, and macOS.
-</p>
-
-## 🌟 Community
-Join our community to get the latest updates, Q&A, and technical discussions.
-
-- [QQ Group](https://qm.qq.com/q/KX3uJIFIYK)
-- [QQ Channel](https://pd.qq.com/s/8941to1p0)
-
-> When asking questions, please provide the **problem description** and **complete logs** so we can assist you better.
+<p align="center"><img src="https://bili23.scott-sloan.cn/main_interface_en.png" alt="Program Screenshot" style="width: 80%;"></p>
 
 ## ⚡ Features
 
@@ -57,13 +52,12 @@ Join our community to get the latest updates, Q&A, and technical discussions.
 | 🔒 **Secure Auth**| Supports quick and secure **QR Code Login** and **SMS Verification Login**. |
 | 📖 **Open Source & Free**| Released under the **GPL-3.0** License, fully open-source, no in-app purchases, no ads, embracing community contribution. |
 
-## 📥 Download & Installation
+## 📥 Download
 
-Download the latest version: 👉 [**Go to GitHub Releases**](https://github.com/ScottSloan/Bili23-Downloader/releases/latest)
+Two download methods are available. Choose the one that fits your situation best:
 
-- New users are highly recommended to follow the [**Installation & Quick Start Guide**](https://bili23.scott-sloan.cn/doc/intro.html).
-- If you encounter any problems, please check the [**FAQ**](https://bili23.scott-sloan.cn/doc/faq.html) first.
-- If your issue is not resolved by the documentation, feel free to open a ticket in [**GitHub Issues**](https://github.com/ScottSloan/Bili23-Downloader/issues).
+- [**Go to GitHub Releases**](https://github.com/ScottSloan/Bili23-Downloader/releases/latest) - Recommended if GitHub is easily accessible for you, and you want the latest release.
+- [**Official Website Download (Recommended for users in China)**](https://bili23.scott-sloan.cn/doc/releases.html) - Recommended for users in China, usually faster and more stable to access.
 
 ## 🪧 Terms of Use
 This project is for personal learning and research purposes only. The downloaded content is **strictly for personal, non-commercial use, and any form of commercial use, public dissemination, or distribution is completely prohibited.**  
@@ -87,6 +81,14 @@ New ideas and pull requests are always welcome!
 
 Made with [contrib.rocks](https://contrib.rocks).
 
+## 🌟 Community
+Join our community to get the latest updates, Q&A, and technical discussions.
+
+- [QQ Group](https://qm.qq.com/q/KX3uJIFIYK)
+- [QQ Channel](https://pd.qq.com/s/8941to1p0)
+
+> When asking questions, please provide the **problem description** and **complete logs** so we can assist you better.
+
 ## 💪 Support the Author
 
 This project is independently developed and maintained by [Scott Sloan](https://github.com/ScottSloan) in his spare time. The original intention is to provide everyone with a pure, ad-free, and efficient local Bilibili downloading tool.
@@ -100,5 +102,5 @@ This project is independently developed and maintained by [Scott Sloan](https://
 Besides routine code maintenance, handling complex cross-platform environments and refactoring releases take a massive amount of time and energy. If the software has indeed helped you, you are welcome to buy the author a coffee via the sponsor QR code below. **This is the most practical recognition of open-source dedication!**
 
 <p align="center">
-    <img src="https://bili23.scott-sloan.cn/assets/sponsor.Bqpdl-if.png" alt="Sponsor QR Code" style="width: 300px; margin: 10px 0; border-radius: 8px;" />
+    <img src="https://bili23.scott-sloan.cn/assets/sponsor_weixin.Bqpdl-if.png" alt="Sponsor QR Code" style="width: 300px; margin: 10px 0; border-radius: 8px;" />
 </p>

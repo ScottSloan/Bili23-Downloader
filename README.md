@@ -1,43 +1,38 @@
-# Bili23-Downloader
 <p align="center">
     <a href="https://bili23.scott-sloan.cn" target="_blank">
         <img src="https://bili23.scott-sloan.cn/logo.png" alt="Bili23 Downloader" style="width: 500px;"/>
     </a>
 </p>
 
+<h1 align="center">Bili23-Downloader</h1>
+
 <p align="center">
-    <img src="https://img.shields.io/badge/GitHub-black?logo=github&style=flat-square" alt="GitHub"/>
-    <img src="https://img.shields.io/badge/Platform-Windows_|_Linux_|_macOS-blue?style=flat-square" alt="Platform"/>
-    <img src="https://img.shields.io/badge/license-GPLv3-orange?style=flat-square" alt="License"/>
+    <img src="https://img.shields.io/github/v/release/ScottSloan/Bili23-Downloader?style=flat-square" alt="Release"/>
+    <img src="https://img.shields.io/github/license/ScottSloan/Bili23-Downloader?style=flat-square" alt="License"/>
+    <img src="https://img.shields.io/github/downloads/ScottSloan/Bili23-Downloader/total?style=flat-square" alt="Downloads"/>
+    <img src="https://img.shields.io/github/stars/ScottSloan/Bili23-Downloader?style=flat-square" alt="Stars"/>
     <img src="https://img.shields.io/github/actions/workflow/status/ScottSloan/Bili23-Downloader/publish.yml?style=flat-square" alt="Build"/>
 </p>
 
-<p align="center">
-    <img src="https://img.shields.io/github/v/release/ScottSloan/Bili23-Downloader?style=flat-square" alt="Version"/>
-    <img src="https://img.shields.io/badge/Python-3.13.13-green?style=flat-square" alt="Python"/>
-    <img src="https://img.shields.io/badge/PySide6-6.10.3-green?style=flat-square" alt="PySide6"/>
-</p>
+<div align="center">
+    <h3>
+        <a href="https://bili23.scott-sloan.cn/">项目官网</a>
+        <span> • </span>
+        <a href="https://bili23.scott-sloan.cn/doc/intro.html">说明文档</a>
+        <span> • </span>
+        <a href="#-下载地址">下载地址</a>
+        <span> • </span>
+        <a href="README.md">中文</a>
+        <span> • </span>
+        <a href="README_en.md">English</a>
+    </h3>
+</div>
 
-<p align="center">
-    <a href="https://bili23.scott-sloan.cn/"><b>项目官网</b></a> •
-    <a href="https://bili23.scott-sloan.cn/doc/intro.html"><b>说明文档</b></a> •
-    <a href="README.md"><b>中文</b></a> •
-    <a href="README_en.md"><b>English</b></a>
-</p>
+<div align="center">
+    <strong>开源、免费、跨平台的 B 站视频下载工具</strong><br>
+</div><br>
 
-<p align="center">
-    <strong>Bili23 Downloader</strong> 是一款拥有现代 UI 的高质量跨平台 B 站视频下载工具。<br />
-    不仅支持多线程加速、音视频流分离、弹幕与字幕下载以及 NFO 元数据刮削，<br />
-    还具备高度自定义的文件分类与命名能力，完美兼容 Windows（含 Win7）、Linux 和 macOS 系统。
-</p>
-
-## 🌟 社区交流
-加入社区，获取项目最新动态、问题答疑和技术交流。
-
-- [QQ 交流群](https://qm.qq.com/q/KX3uJIFIYK)
-- [QQ 频道](https://pd.qq.com/s/8941to1p0)
-
-> 如需提问，请提供**问题描述**、**完整日志**，以便我们更好地提供帮助。
+<p align="center"><img src="https://bili23.scott-sloan.cn/main_interface_cn.png" alt="程序截图" style="width: 80%;"></p>
 
 ## ⚡ 程序特性
 
@@ -57,12 +52,12 @@
 | 🔒 **账号安全登录**| 支持快捷安全的**扫码登录**与**短信验证登录**。 |
 | 📖 **完全开源免费**| 基于 **GPL-3.0** 协议发布，代码完全开源、无内购、无广告，拥抱社区共建。 |
 
-## 📥 下载与安装
+## 📥 下载地址
 
-下载最新版本：👉 [**前往 GitHub Releases**](https://github.com/ScottSloan/Bili23-Downloader/releases/latest)
+当前提供两种下载方式，可按使用场景选择：
 
-- 遇到任何问题，请先查阅[**【常见问题 (FAQ)】**](https://bili23.scott-sloan.cn/doc/faq.html)。
-- 确认现有文档中没有解决方案后，欢迎在 [**GitHub Issues**](https://github.com/ScottSloan/Bili23-Downloader/issues) 中提交您的问题或建议。
+- [**GitHub Releases**](https://github.com/ScottSloan/Bili23-Downloader/releases/latest) - 适合访问 GitHub 较稳定的用户，获取最新发布版本。
+- [**官网下载（国内用户推荐）**](https://bili23.scott-sloan.cn/doc/releases.html) - 适合国内用户，通常访问更快、更稳定。
 
 ## 🪧 使用协议
 本项目仅供个人学习与研究用途，下载内容**仅限于个人非商业使用，严禁用于任何形式的商业目的、公开传播或分发**。  
@@ -85,6 +80,14 @@ wbi 签名、部分接口以及 buvid3 等参数生成参考 [SocialSisterYi/bil
 </a>
 
 Made with [contrib.rocks](https://contrib.rocks).
+
+## 🌟 社区交流
+加入社区，获取项目最新动态、问题答疑和技术交流。
+
+- [QQ 交流群](https://qm.qq.com/q/KX3uJIFIYK)
+- [QQ 频道](https://pd.qq.com/s/8941to1p0)
+
+> 如需提问，请提供**问题描述**、**完整日志**，以便我们更好地提供帮助。
 
 ## 💪 支持作者
 
