@@ -12,7 +12,250 @@ from util.common.signal_bus import signal_bus, config
 from util.common.icon import ExtendedFluentIcon
 from util.common.config import config
 
-class MainWindow(MSFluentWindow):
+class MainWindowBase:
+    def run_post_terms_checks(self: "MainWindow") -> None:
+        signal_bus.update.check.emit(False)
+
+        if not config.get(config.tutorial_dialog_shown):
+            QTimer.singleShot(0, self.show_tutorial_dialog)
+
+            config.set(config.tutorial_dialog_shown, True)
+
+        else:
+            if not config.get(config.is_login):
+                QTimer.singleShot(0, self.show_login_teaching_tip)
+
+        QTimer.singleShot(0, self.check_download_path)
+        QTimer.singleShot(0, self.check_ffmpeg)
+
+        signal_bus.emit_pending_signals()
+
+    def _get_toast_function(self, category: ToastNotificationCategory):
+        from gui.component.widget.info_bar import InfoBar
+
+        match category:
+            case ToastNotificationCategory.SUCCESS:
+                func = InfoBar.success
+
+            case ToastNotificationCategory.ERROR:
+                func = InfoBar.error
+
+            case ToastNotificationCategory.WARNING:
+                func = InfoBar.warning
+
+            case ToastNotificationCategory.INFO:
+                func = InfoBar.info
+
+        return func
+
+    def show_toast_notification(self, category: ToastNotificationCategory, title: str, content: str):
+        from gui.component.widget.info_bar import InfoBarPosition
+
+        func = self._get_toast_function(category)
+
+        func(
+            title = title,
+            content = content,
+            orient = Qt.Orientation.Horizontal,
+            isClosable = False,
+            duration = 3000,
+            position = InfoBarPosition.TOP,
+            parent = self
+        )
+
+    def show_toast_notification_long_message(self, category: ToastNotificationCategory, title: str, content: str):
+        from gui.component.widget.info_bar import InfoBarPosition
+
+        func = self._get_toast_function(category)
+
+        func(
+            title = title,
+            content = content,
+            orient = Qt.Orientation.Vertical,
+            isClosable = True,
+            duration = -1,
+            position = InfoBarPosition.BOTTOM_RIGHT,
+            parent = self,
+            contentMaxHeight = 200
+        )
+
+    def show_tutorial_dialog(self):
+        # 询问用户是否首次使用，建议用户查看文档，充分利用程序功能
+        from qfluentwidgets import MessageBox
+
+        dialog = MessageBox(
+            title = self.tr("Welcome to Bili23 Downloader"),
+            content = self.tr("It is recommended to read the user guide and FAQs when using for the first time, to help you get started quickly and make full use of all features."),
+            parent = self
+        )
+        dialog.yesButton.setText(self.tr("View"))
+        dialog.cancelButton.setText(self.tr("Skip"))
+
+        if dialog.exec():
+            import webbrowser
+
+            webbrowser.open("https://bili23.scott-sloan.cn/doc/introduction.html")
+
+        if not config.get(config.is_login):
+            QTimer.singleShot(0, self.show_login_teaching_tip)
+
+    def show_login_teaching_tip(self: "MainWindow"):
+        from qfluentwidgets import TeachingTip, TeachingTipTailPosition
+
+        TeachingTip.create(
+            target = self.avatar_widget,
+            title = self.tr("Log in to your account"),
+            content = self.tr("Click the avatar to log in to your Bilibili account. \nDownload functionality will be limited if you're not logged in."),
+            icon = FluentIcon.INFO,
+            isClosable = True,
+            duration = -1,
+            tailPosition = TeachingTipTailPosition.LEFT,
+            parent = self
+        )
+
+    def show_terms_of_use(self):
+        from ..dialog.misc import TermsOfUseDialog
+
+        dialog = TermsOfUseDialog(self)
+
+        if not dialog.exec():
+            # 用户不接受使用协议，关闭程序
+            self.close()
+
+            return False
+
+        self.run_post_terms_checks()
+
+        return True
+    
+    def show_update_dialog(self, info: dict):
+        from ..dialog.update import UpdateDialog
+
+        dialog = UpdateDialog(info, self)
+        dialog.exec()
+
+    def center_on_screen(self: "MainWindow", show = True):
+        from PySide6.QtWidgets import QApplication
+
+        desktop = QApplication.screens()[0].availableGeometry()
+        w, h = desktop.width(), desktop.height()
+
+        self.move(w // 2 - self.width() // 2, h // 2 - self.height() // 2)
+
+        if show:
+            self.initialized = True
+            self.show()
+
+    def update_download_btn_badge_info(self: "MainWindow", count: int):
+        if self.download_info_badge.isHidden():
+            self.download_info_badge.show()
+
+        if count > 99:
+            self.download_info_badge.setText("99+")
+        elif count == 0:
+            self.download_info_badge.hide()
+            return
+        else:
+            self.download_info_badge.setText(str(count))
+
+        self.download_info_badge.adjustSize()
+
+        self.download_info_badge.move(self.download_btn.width() - 4, 111)
+
+    def check_download_path(self):
+        from util.common.io.directory import Directory
+
+        download_path = config.get(config.download_path)
+
+        accessible = Directory.ensure_directory_accessible(download_path)
+
+        if not accessible:
+            signal_bus.toast.show_long_message.emit(
+                ToastNotificationCategory.ERROR,
+                self.tr("Download Directory Invalid"),
+                self.tr("The current download directory is inaccessible or lacks write permissions. Please reset it.") + f"\n\n{download_path}"
+            )
+
+    def check_ffmpeg(self):
+        if config.no_ffmpeg_available:
+            signal_bus.toast.show_long_message.emit(
+                ToastNotificationCategory.ERROR,
+                self.tr("FFmpeg Not Found"),
+                self.tr("No FFmpeg executable found. Please ensure FFmpeg is installed and configured correctly.")
+            )
+
+    def show_favorites_flyout_menu(self: "MainWindow"):
+        from qfluentwidgets import FlyoutAnimationType, FlyoutAnimationManager, MessageBox
+        from PySide6.QtCore import QPoint
+
+        if not config.get(config.is_login) or config.is_expired:
+            dialog = MessageBox(
+                title = self.tr("Login Required"),
+                content = self.tr("Please log in to your account first."),
+                parent = self
+            )
+            dialog.hideCancelButton()
+            dialog.exec()
+
+            self.reset_route_key()
+
+            return
+        
+        if not self.flyout_initialized:
+            self.flyout_initialized = True
+
+            # 首次显示时加载数据
+            self.flyout_widget.init_flyout()
+
+        self.flyout_widget.adjust_list_widget_width(self.size())
+        
+        manager = FlyoutAnimationManager.make(
+            aniType = FlyoutAnimationType.SLIDE_RIGHT,
+            flyout = self.flyout
+        )
+        target_pos: QPoint = manager.position(self.about_btn)
+        target_pos.setY(max(target_pos.y() + 20, 40))
+
+        self.flyout.exec(
+            target_pos,
+            FlyoutAnimationType.SLIDE_RIGHT
+        )
+
+    def update_route_key(self, key: str):
+        self.current_route_key = key
+
+    def reset_route_key(self: "MainWindow"):
+        self.navigationInterface.setCurrentItem(self.current_route_key)
+
+    def _activate_window(self: "MainWindow"):
+        if not self.initialized:
+            self.resize(950, 600)
+            self.center_on_screen(show = True)
+
+        if self.isMinimized():
+            self.showNormal()
+        else:
+            self.show()
+
+        self.raise_()
+        self.activateWindow()
+    
+    def _addSubInterface(self: "MainWindow", interface: QWidget):
+        interface.setProperty("isStackedTransparent", False)
+        self.stackedWidget.addWidget(interface)
+
+        routeKey = interface.objectName()
+
+        self.navigationInterface.items[routeKey].clicked.connect(lambda: self.switchTo(interface))
+        
+        if self.stackedWidget.count() == 1:
+            self.stackedWidget.currentChanged.connect(self._onCurrentInterfaceChanged)
+            self.navigationInterface.setCurrentItem(routeKey)
+            qrouter.setDefaultRouteKey(self.stackedWidget, routeKey)
+
+        self._updateStackedBackground()
+
+class MainWindow(MainWindowBase, MSFluentWindow):
     def __init__(self):
         super().__init__()
 
@@ -167,19 +410,6 @@ class MainWindow(MSFluentWindow):
 
         self.run_post_terms_checks()
 
-    def run_post_terms_checks(self):
-        signal_bus.update.check.emit(False)
-
-        if not config.get(config.tutorial_dialog_shown):
-            QTimer.singleShot(0, self.show_tutorial_dialog)
-
-            config.set(config.tutorial_dialog_shown, True)
-
-        QTimer.singleShot(0, self.check_download_path)
-        QTimer.singleShot(0, self.check_ffmpeg)
-
-        signal_bus.emit_pending_signals()
-
     def closeEvent(self, e):
         from util.thread.async_ import AsyncTask
 
@@ -280,225 +510,3 @@ class MainWindow(MSFluentWindow):
             self.navigationInterface.buttons()[0].click()  # 切换到解析界面
 
         self.parse_interface.reparse(url)
-
-    def _get_toast_function(self, category: ToastNotificationCategory):
-        from gui.component.widget.info_bar import InfoBar
-
-        match category:
-            case ToastNotificationCategory.SUCCESS:
-                func = InfoBar.success
-
-            case ToastNotificationCategory.ERROR:
-                func = InfoBar.error
-
-            case ToastNotificationCategory.WARNING:
-                func = InfoBar.warning
-
-            case ToastNotificationCategory.INFO:
-                func = InfoBar.info
-
-        return func
-
-    def show_toast_notification(self, category: ToastNotificationCategory, title: str, content: str):
-        from gui.component.widget.info_bar import InfoBarPosition
-
-        func = self._get_toast_function(category)
-
-        func(
-            title = title,
-            content = content,
-            orient = Qt.Orientation.Horizontal,
-            isClosable = False,
-            duration = 3000,
-            position = InfoBarPosition.TOP,
-            parent = self
-        )
-
-    def show_toast_notification_long_message(self, category: ToastNotificationCategory, title: str, content: str):
-        from gui.component.widget.info_bar import InfoBarPosition
-
-        func = self._get_toast_function(category)
-
-        func(
-            title = title,
-            content = content,
-            orient = Qt.Orientation.Vertical,
-            isClosable = True,
-            duration = -1,
-            position = InfoBarPosition.BOTTOM_RIGHT,
-            parent = self,
-            contentMaxHeight = 200
-        )
-
-    def show_teaching_tip(self):
-        from qfluentwidgets import TeachingTip, TeachingTipTailPosition
-
-        TeachingTip.create(
-            target = self.avatar_widget,
-            title = "登录",
-            content = "点击头像登录账号",
-            icon = FluentIcon.INFO,
-            isClosable = True,
-            duration = 10000,
-            tailPosition = TeachingTipTailPosition.LEFT,
-            parent = self
-        )
-
-    def show_terms_of_use(self):
-        from ..dialog.misc import TermsOfUseDialog
-
-        dialog = TermsOfUseDialog(self)
-
-        if not dialog.exec():
-            # 用户不接受使用协议，关闭程序
-            self.close()
-
-            return False
-
-        self.run_post_terms_checks()
-
-        return True
-
-    def show_update_dialog(self, info: dict):
-        from ..dialog.update import UpdateDialog
-
-        dialog = UpdateDialog(info, self)
-        dialog.exec()
-
-    def show_tutorial_dialog(self):
-        # 询问用户是否首次使用，建议用户查看文档，充分利用程序功能
-        from qfluentwidgets import MessageBox
-
-        dialog = MessageBox(
-            title = self.tr("Welcome to Bili23 Downloader"),
-            content = self.tr("It is recommended to read the user guide and FAQs when using for the first time, to help you get started quickly and make full use of all features."),
-            parent = self
-        )
-        dialog.yesButton.setText(self.tr("View"))
-        dialog.cancelButton.setText(self.tr("Skip"))
-
-        if dialog.exec():
-            import webbrowser
-
-            webbrowser.open("https://bili23.scott-sloan.cn/doc/introduction.html")
-
-    def center_on_screen(self, show = True):
-        from PySide6.QtWidgets import QApplication
-
-        desktop = QApplication.screens()[0].availableGeometry()
-        w, h = desktop.width(), desktop.height()
-
-        self.move(w // 2 - self.width() // 2, h // 2 - self.height() // 2)
-
-        if show:
-            self.initialized = True
-            self.show()
-
-    def update_download_btn_badge_info(self, count: int):
-        if self.download_info_badge.isHidden():
-            self.download_info_badge.show()
-
-        if count > 99:
-            self.download_info_badge.setText("99+")
-        elif count == 0:
-            self.download_info_badge.hide()
-            return
-        else:
-            self.download_info_badge.setText(str(count))
-
-        self.download_info_badge.adjustSize()
-
-        self.download_info_badge.move(self.download_btn.width() - 4, 111)
-
-    def check_download_path(self):
-        from util.common.io.directory import Directory
-
-        download_path = config.get(config.download_path)
-
-        accessible = Directory.ensure_directory_accessible(download_path)
-
-        if not accessible:
-            signal_bus.toast.show_long_message.emit(
-                ToastNotificationCategory.ERROR,
-                self.tr("Download Directory Invalid"),
-                self.tr("The current download directory is inaccessible or lacks write permissions. Please reset it.") + f"\n\n{download_path}"
-            )
-
-    def check_ffmpeg(self):
-        if config.no_ffmpeg_available:
-            signal_bus.toast.show_long_message.emit(
-                ToastNotificationCategory.ERROR,
-                self.tr("FFmpeg Not Found"),
-                self.tr("No FFmpeg executable found. Please ensure FFmpeg is installed and configured correctly.")
-            )
-
-    def show_favorites_flyout_menu(self):
-        from qfluentwidgets import FlyoutAnimationType, FlyoutAnimationManager, MessageBox
-        from PySide6.QtCore import QPoint
-
-        if not config.get(config.is_login) or config.is_expired:
-            dialog = MessageBox(
-                title = self.tr("Login Required"),
-                content = self.tr("Please log in to your account first."),
-                parent = self
-            )
-            dialog.hideCancelButton()
-            dialog.exec()
-
-            self.reset_route_key()
-
-            return
-        
-        if not self.flyout_initialized:
-            self.flyout_initialized = True
-
-            # 首次显示时加载数据
-            self.flyout_widget.init_flyout()
-
-        self.flyout_widget.adjust_list_widget_width(self.size())
-        
-        manager = FlyoutAnimationManager.make(
-            aniType = FlyoutAnimationType.SLIDE_RIGHT,
-            flyout = self.flyout
-        )
-        target_pos: QPoint = manager.position(self.about_btn)
-        target_pos.setY(max(target_pos.y() + 20, 40))
-
-        self.flyout.exec(
-            target_pos,
-            FlyoutAnimationType.SLIDE_RIGHT
-        )
-
-    def update_route_key(self, key: str):
-        self.current_route_key = key
-
-    def reset_route_key(self):
-        self.navigationInterface.setCurrentItem(self.current_route_key)
-
-    def _activate_window(self):
-        if not self.initialized:
-            self.resize(950, 600)
-            self.center_on_screen(show = True)
-
-        if self.isMinimized():
-            self.showNormal()
-        else:
-            self.show()
-
-        self.raise_()
-        self.activateWindow()
-    
-    def _addSubInterface(self, interface: QWidget):
-        interface.setProperty("isStackedTransparent", False)
-        self.stackedWidget.addWidget(interface)
-
-        routeKey = interface.objectName()
-
-        self.navigationInterface.items[routeKey].clicked.connect(lambda: self.switchTo(interface))
-        
-        if self.stackedWidget.count() == 1:
-            self.stackedWidget.currentChanged.connect(self._onCurrentInterfaceChanged)
-            self.navigationInterface.setCurrentItem(routeKey)
-            qrouter.setDefaultRouteKey(self.stackedWidget, routeKey)
-
-        self._updateStackedBackground()

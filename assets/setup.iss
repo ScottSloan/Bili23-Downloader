@@ -49,9 +49,15 @@ Name: "zh_CN"; MessagesFile: "compiler:Languages\ChineseSimplified.isl"
 Name: "zh_TW"; MessagesFile: "compiler:Languages\ChineseTraditional.isl"
 
 [CustomMessages]
-en_US.ConfirmUninstallOldVersion=An older version is already installed. It must be uninstalled before setup can continue. The installation directory will be deleted, so any files in this directory will also be removed. Please back up your files before installing. Uninstall it now?
-zh_CN.ConfirmUninstallOldVersion=检测到已安装的旧版本，必须先卸载旧版本才能继续安装。安装目录将被删除，该目录下的文件也会一并移除，请在安装前做好备份。是否现在卸载旧版本？
-zh_TW.ConfirmUninstallOldVersion=偵測到已安裝舊版本，必須先解除安裝舊版本才能繼續安裝。安裝目錄將被刪除，該目錄下的檔案也會一併移除，請在安裝前做好備份。是否現在解除安裝舊版本？
+en_US.ConfirmUninstallOldVersion=An older version is already installed. Its installation folder will be deleted before setup can continue, so any files in that folder will also be removed. Please back up your files before installing. Delete it now?
+zh_CN.ConfirmUninstallOldVersion=检测到已安装的旧版本，安装程序将在继续前直接删除其安装目录，目录下的文件也会一并移除，请在安装前做好备份。是否现在删除旧版本的安装目录？
+zh_TW.ConfirmUninstallOldVersion=偵測到已安裝舊版本，安裝程式會在繼續前直接刪除其安裝目錄，目錄下的檔案也會一併移除，請在安裝前做好備份。是否現在刪除舊版本的安裝目錄？
+en_US.SetupAppRunningError=Setup has detected that Bili23 Downloader is currently running.%n%nPlease close all instances of it first.%nClick OK to retry, or Cancel to exit.
+zh_CN.SetupAppRunningError=安装程序发现 Bili23 Downloader 当前正在运行。%n%n请先关闭正在运行的程序，然后点击“确定”继续，或点击“取消”退出。
+zh_TW.SetupAppRunningError=安裝程式偵測到 Bili23 Downloader 正在執行。%n%n請關閉該程式後按「確定」繼續，或按「取消」離開。
+en_US.UninstallAppRunningError=Uninstall has detected that Bili23 Downloader is currently running.%n%nPlease close all instances of it first.%nClick OK to retry, or Cancel to exit.
+zh_CN.UninstallAppRunningError=卸载程序发现 Bili23 Downloader 当前正在运行。请先关闭正在运行的程序，然后点击“确定”继续，或点击“取消”退出。
+zh_TW.UninstallAppRunningError=解除安裝程式偵測到 Bili23 Downloader 正在執行。%n%n請關閉該程式後按「確定」繼續，或按「取消」離開。
 
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
@@ -77,18 +83,62 @@ Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChang
 Type: filesandordirs; Name: "{app}"
 
 [Code]
-function InitializeSetup(): boolean;
+const
+  MUTEX_MODIFY_STATE = $00000001;
+  SYNCHRONIZE = $00100000;
+
+function OpenMutex(dwDesiredAccess, bInheritHandle: LongWord; lpName: String): LongWord;
+  external 'OpenMutexW@kernel32.dll stdcall';
+
+function CloseHandle(hObject: LongWord): LongBool;
+  external 'CloseHandle@kernel32.dll stdcall';
+
+function IsApplicationRunning(): Boolean;
 var
-  ResultStr: String;
-  ResultCode: Integer;
-  KeyName: String;
+  MutexHandle: LongWord;
+begin
+  MutexHandle := OpenMutex(MUTEX_MODIFY_STATE or SYNCHRONIZE, 0, 'B096F0C1-D105-4EF9-86E1-5E87DA884EA4');
+
+  Result := MutexHandle <> 0;
+
+  if Result then
+    CloseHandle(MutexHandle);
+end;
+
+function ConfirmApplicationClosed(const MessageName: String): Boolean;
+var
   ConfirmResult: Integer;
 begin
+  Result := False;
+
+  while IsApplicationRunning() do
+    begin
+      ConfirmResult := MsgBox(CustomMessage(MessageName), mbError, MB_OKCANCEL);
+
+      if ConfirmResult <> IDOK then
+        exit;
+    end;
+
+  Result := True;
+end;
+
+function InitializeSetup(): boolean;
+var
+  KeyName: String;
+  InstallDir: String;
+  ConfirmResult: Integer;
+begin
+  if not ConfirmApplicationClosed('SetupAppRunningError') then
+    begin
+      Result := False;
+      exit;
+    end;
+
   KeyName := 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\' + '{B096F0C1-D105-4EF9-86E1-5E87DA884EA4}' + '_is1';
   
-  if RegQueryStringValue(HKLM, KeyName, 'UninstallString', ResultStr) then
+  if RegQueryStringValue(HKLM, KeyName, 'InstallLocation', InstallDir) then
     begin
-      ConfirmResult := MsgBox(CustomMessage('ConfirmUninstallOldVersion'), mbConfirmation, MB_OKCANCEL);
+      ConfirmResult := MsgBox(CustomMessage('ConfirmUninstallOldVersion'), mbError, MB_OKCANCEL);
 
       if ConfirmResult <> IDOK then
         begin
@@ -96,12 +146,27 @@ begin
           exit;
         end;
 
-      ResultStr := RemoveQuotes(ResultStr);
-      
-      if ResultStr <> '' then
+      InstallDir := RemoveQuotes(InstallDir);
+
+      if InstallDir <> '' then
         begin
-          Exec(ResultStr, '/silent', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+          if not DelTree(InstallDir, True, True, True) then
+            begin
+              Result := False;
+              exit;
+            end;
         end;
     end;
-  result := true;
+  Result := True;
+end;
+
+function InitializeUninstall(): Boolean;
+begin
+  if not ConfirmApplicationClosed('UninstallAppRunningError') then
+    begin
+      Result := False;
+      exit;
+    end;
+
+  Result := True;
 end;

@@ -66,6 +66,7 @@ import res.resources_rc
 INSTANCE_LOCK_NAME = "instance.lock"
 INSTANCE_LOCK_TIMEOUT_MS = 10_000
 INSTANCE_SERVER_NAME = "bili23_downloader_single_instance"
+APP_MUTEX_NAME = "B096F0C1-D105-4EF9-86E1-5E87DA884EA4"
 
 logger = logging.getLogger(__name__)
 
@@ -76,9 +77,14 @@ class Application(QApplication):
         self.window = None
         self.instance_server: QLocalServer = None
         self.pending_instance_activation = False
+        self.app_mutex_handle = None
+
         self.aboutToQuit.connect(self.cleanup_instance_state)
 
         self.init_single_instance()
+
+        if sys.platform == "win32":
+            self.app_mutex_handle = self._msw_create_mutex(APP_MUTEX_NAME)
 
     def init_single_instance(self):
         lock_path = Path(appdata_path) / "Bili23 Downloader" / "locks" / INSTANCE_LOCK_NAME
@@ -97,10 +103,6 @@ class Application(QApplication):
         if not self.instance_lock.tryLock(0):
             if self.wake_existing_instance():
                 sys.exit(0)
-
-            if self.force_take_over_existing_instance():
-                self.init_instance_server()
-                return
 
             logger.warning("无法获取实例锁，程序已在运行中")
             sys.exit(0)
@@ -149,60 +151,6 @@ class Application(QApplication):
 
         return True
 
-    def force_take_over_existing_instance(self) -> bool:
-        import psutil
-        
-        try:
-            lock_pid, _, _ = self.instance_lock.getLockInfo()
-        except Exception as exc:
-            logger.warning("无法读取实例锁信息: %s", exc)
-            return False
-
-        if not lock_pid:
-            logger.warning("实例锁中没有有效的进程信息，无法强制接管")
-            return False
-
-        try:
-            process = psutil.Process(lock_pid)
-        except psutil.NoSuchProcess:
-            logger.warning("锁对应进程已不存在，尝试重新获取实例锁")
-            self.instance_lock.removeStaleLockFile()
-
-            return self.instance_lock.tryLock(0)
-
-        children = process.children(recursive = True)
-
-        for child in children:
-            try:
-                child.terminate()
-            except psutil.Error:
-                pass
-
-        try:
-            process.terminate()
-        except psutil.Error:
-            pass
-
-        _, alive = psutil.wait_procs([process, *children], timeout = 5)
-
-        for proc in alive:
-            try:
-                proc.kill()
-            except psutil.Error:
-                pass
-
-        if alive:
-            psutil.wait_procs(alive, timeout = 2)
-
-        self.instance_lock.removeStaleLockFile()
-
-        if self.instance_lock.tryLock(0):
-            logger.warning("原实例无法唤醒，已结束旧进程并接管实例")
-            return True
-
-        logger.warning("已结束旧进程，但仍无法重新获取实例锁")
-        return False
-
     def activate_existing_instance(self):
         if self.window is None:
             self.pending_instance_activation = True
@@ -218,6 +166,12 @@ class Application(QApplication):
     def cleanup_instance_state(self):
         if hasattr(self, "instance_lock"):
             self.instance_lock.unlock()
+
+        if sys.platform == "win32" and hasattr(self, "app_mutex_handle") and self.app_mutex_handle:
+            import ctypes
+
+            ctypes.windll.kernel32.CloseHandle(self.app_mutex_handle)
+            self.app_mutex_handle = None
 
         if self.instance_server is not None:
             self.instance_server.close()
@@ -250,6 +204,24 @@ class Application(QApplication):
 
         cookie_manager.init_cookie_info()
         user_manager.init_user_info()
+
+    def _msw_messagebox(self, title: str, content: str):
+        import ctypes
+
+        ctypes.windll.user32.MessageBoxW(0, content, title, 0 | 0x10)
+
+    def _msw_create_mutex(self, name: str):
+        import ctypes
+        from ctypes import wintypes
+
+        kernel32 = ctypes.WinDLL("kernel32", use_last_error = True)
+        kernel32.CreateMutexW.restype = wintypes.HANDLE
+
+        mutex = kernel32.CreateMutexW(None, False, name)
+        if not mutex:
+            raise ctypes.WinError(ctypes.get_last_error())
+
+        return mutex
 
 def _main():
     scaling_value = config.get(config.display_scaling).value
