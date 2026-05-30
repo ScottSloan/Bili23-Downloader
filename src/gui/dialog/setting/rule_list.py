@@ -4,7 +4,6 @@ from qfluentwidgets import SubtitleLabel, MessageBox, CommandBar, Action, Fluent
 
 from gui.component.setting import EditActionWidget
 from gui.component.widget import ColumnTreeWidget
-from gui.dialog.setting import EditRuleDialog
 from gui.component.dialog import DialogBase
 
 from util.common.data import reversed_convention_type_map
@@ -90,6 +89,8 @@ class RuleListDialog(DialogBase):
         return action_widget
 
     def on_add_rule(self):
+        from .edit_rule import EditRuleDialog
+
         entry = {
             "id": str(uuid4()),
             "name": "",
@@ -114,7 +115,12 @@ class RuleListDialog(DialogBase):
                 userData = new_entry
             )
 
+            if new_entry.get("default"):
+                self._set_default_rule(new_entry.get("id"), new_entry.get("type"))
+
     def on_edit_rule(self, index: int):
+        from .edit_rule import EditRuleDialog
+
         entry = self.rule_data_list[index]
 
         dialog = EditRuleDialog(entry, self.main_window)
@@ -128,9 +134,10 @@ class RuleListDialog(DialogBase):
             row.setText(1, self._get_type_str(new_entry.get("type")))
             row.setData(0, Qt.ItemDataRole.UserRole, new_entry)
 
-            self._set_default_rule(new_entry.get("id"), new_entry.get("type"))
-
             self.rule_data_list[index] = new_entry
+
+            if new_entry.get("default"):
+                self._set_default_rule(new_entry.get("id"), new_entry.get("type"))
 
     def on_delete_rule(self, index: int):
         entry = self.rule_data_list[index]

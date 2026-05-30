@@ -1,11 +1,12 @@
+from PySide6.QtWidgets import QHBoxLayout, QVBoxLayout, QLabel
 from PySide6.QtCore import QTimer, Signal, Qt
-from PySide6.QtWidgets import QHBoxLayout
 from PySide6.QtGui import QColor
 
 from qfluentwidgets import (
     PushButton, FluentIcon, PushSettingCard, qconfig, ColorDialog, PrimaryPushButton, setCustomStyleSheet,
     MessageBox, ExpandGroupSettingCard as _ExpandGroupSettingCard, HyperlinkLabel
 )
+from qfluentwidgets.components.settings.expand_setting_card import GroupWidget as _GroupWidget
 
 from .widget import SettingSwitchButton, SettingComboBox, SettingSlider
 
@@ -15,23 +16,9 @@ from util.common.config import config, isWin11
 from util.common.io.directory import Directory
 from util.common.translator import Translator
 
-class ExpandGroupSettingCard(_ExpandGroupSettingCard):
-    def __init__(self, icon, title, content = None, parent = None):
-        super().__init__(icon, title, content, parent)
-
-        self.card.vBoxLayout.removeWidget(self.card.contentLabel)
-
-        self.contentLayout = QHBoxLayout()
-        self.contentLayout.setSpacing(0)
-        self.contentLayout.setContentsMargins(0, 0, 0, 0)
-        self.contentLayout.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-        self.contentLayout.addWidget(self.card.contentLabel, 0, Qt.AlignmentFlag.AlignLeft)
-
-        self.card.vBoxLayout.addLayout(self.contentLayout)
-
+class GuideSettingCardBase:
     def showHyperLinkLabel(self, label: str):
-        self.hyper_label = HyperlinkLabel(text = label, parent = self.card)
+        self.hyper_label = HyperlinkLabel(text = label, parent = self)
 
         self.contentLayout.addSpacing(5)
         self.contentLayout.addWidget(self.hyper_label, 0, Qt.AlignmentFlag.AlignLeft)
@@ -40,7 +27,6 @@ class ExpandGroupSettingCard(_ExpandGroupSettingCard):
         styleSheet = """
         HyperlinkLabel {
             font-size: 11px;
-            font-weight: 600;
         }
         """
         setCustomStyleSheet(self.hyper_label, styleSheet, styleSheet)
@@ -54,6 +40,39 @@ class ExpandGroupSettingCard(_ExpandGroupSettingCard):
         dialog.hideCancelButton()
 
         dialog.show()
+
+    def _initContentLayout(self, vBoxLayout: QVBoxLayout, contentLabel: QLabel):
+        vBoxLayout.removeWidget(contentLabel)
+
+        self.contentLayout = QHBoxLayout()
+        self.contentLayout.setSpacing(0)
+        self.contentLayout.setContentsMargins(0, 0, 0, 0)
+        self.contentLayout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.contentLayout.addWidget(contentLabel, 0, Qt.AlignmentFlag.AlignLeft)
+
+        vBoxLayout.addLayout(self.contentLayout)
+
+class GroupWidget(_GroupWidget, GuideSettingCardBase):
+    def __init__(self, icon, title, content, widget, stretch = 0):
+        super().__init__(icon, title, content, widget, stretch)
+
+        self._initContentLayout(self.vBoxLayout, self.contentLabel)
+
+class ExpandGroupSettingCard(_ExpandGroupSettingCard, GuideSettingCardBase):
+    def __init__(self, icon, title, content = None, parent = None):
+        super().__init__(icon, title, content, parent)
+
+        self._initContentLayout(self.card.vBoxLayout, self.card.contentLabel)
+
+    def addGroup(self, icon, title, content, widget, stretch = 0):
+        group = GroupWidget(icon, title, content, widget, stretch)
+        self.addGroupWidget(group)
+
+        if hasattr(self, "main_window"):
+            group.main_window = self.main_window
+
+        return group
 
 class PersonalizationCard(ExpandGroupSettingCard):
     accentColorChanged = Signal(QColor)
@@ -395,14 +414,13 @@ class ParsingSettingCard(ExpandGroupSettingCard):
     def __init__(self, parent = None):
         super().__init__(FluentIcon.SEARCH, self.tr("Parsing Settings"), self.tr("Configure clipboard monitoring, parse history, and parse list options"), parent)
 
-        self.monitor_clipboard_switch = SettingSwitchButton(config.monitor_clipboard, parent = self)
+        self.custom_monitor_clipboard_btn = PushButton(self.tr("Configure…"), self)
         self.parse_history_switch = SettingSwitchButton(config.parse_history, parent = self)
+        self.custom_parse_list_btn = PushButton(self.tr("Configure…"), self)
 
-        self.custom_header_btn = PushButton(self.tr("Configure…"), self)
-
-        self.addGroup("", self.tr("Monitor Clipboard"), self.tr("Automatically start parsing when a link is copied"), self.monitor_clipboard_switch)
+        self.addGroup("", self.tr("Parse List Settings"), self.tr("Customize the display and behavior of the parse list"), self.custom_parse_list_btn)
+        self.addGroup("", self.tr("Monitor Clipboard Settings"), self.tr("Configure the behavior of clipboard monitoring"), self.custom_monitor_clipboard_btn)
         self.addGroup("", self.tr("Save Parse History"), self.tr("Save the history of parsed links"), self.parse_history_switch)
-        self.addGroup("", self.tr("Parse List Settings"), self.tr("Customize the display and behavior of the parse list"), self.custom_header_btn)
 
 class ConfigFileSettingCard(ExpandGroupSettingCard):
     def __init__(self, parent = None):
@@ -440,8 +458,10 @@ class WindowBehaviorSettingCard(ExpandGroupSettingCard):
         self.addGroup("", self.tr("Close the Main Window"), self.tr("Choose the action when closing the main window"), self.when_close_action_choice)
 
 class DownloadHandlingSettingCard(ExpandGroupSettingCard):
-    def __init__(self, parent = None):
+    def __init__(self, main_window, parent = None):
         super().__init__(FluentIcon.DOWNLOAD, self.tr("Download Handling"), self.tr("Configure download prompts, notifications, and file conflict handling"), parent)
+
+        self.main_window = main_window
 
         self.show_download_options_dialog_switch = SettingSwitchButton(config.show_download_options_dialog, parent = self)
         self.show_notification_switch = SettingSwitchButton(config.show_notification, parent = self)
@@ -450,8 +470,11 @@ class DownloadHandlingSettingCard(ExpandGroupSettingCard):
 
         self.addGroup("", self.tr("Show Download Options Dialog"), self.tr("Show a dialog before starting the download to customize settings for this task"), self.show_download_options_dialog_switch)
         self.addGroup("", self.tr("Show Notifications"), self.tr("Show notifications when downloads complete"), self.show_notification_switch)
-        self.addGroup("", self.tr("Preallocate File Space"), self.tr("Preallocate file space before downloading to improve performance (recommended)"), self.prelocation_switch)
+        preallocate_group = self.addGroup("", self.tr("Preallocate File Space"), self.tr("Preallocate file space before downloading to improve performance"), self.prelocation_switch)
         self.addGroup("", self.tr("File Conflict Resolution"), self.tr("Choose the action when a file with the same name already exists"), self.file_conflict_resolution_choice)
+
+        preallocate_group.showHyperLinkLabel(self.tr("About Preallocating File Space"))
+        preallocate_group.hyper_label.clicked.connect(lambda: preallocate_group.showGuideMessageBox(self.tr("Guide"), Translator.PREALLOCATE_GUIDE()))
 
 class DownloadConcurrencySettingCard(ExpandGroupSettingCard):
     def __init__(self, parent = None):

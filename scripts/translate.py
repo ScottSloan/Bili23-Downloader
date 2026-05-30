@@ -68,6 +68,7 @@ sources = [
     "src/gui/dialog/setting/danmaku_style.py",
     "src/gui/dialog/setting/edit_host.py",
     "src/gui/dialog/setting/edit_rule.py",
+    "src/gui/dialog/setting/monitor_clipboard.py",
     "src/gui/dialog/setting/parse_list.py",
     "src/gui/dialog/setting/priority.py",
     "src/gui/dialog/setting/proxy.py",

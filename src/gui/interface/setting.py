@@ -50,7 +50,7 @@ class SettingInterface(ScrollArea):
 
         self.parse_list_card = ParsingSettingCard(self)
         self.window_behavior_group = WindowBehaviorSettingCard(self)
-        self.download_interaction_card = DownloadHandlingSettingCard(self)
+        self.download_handling_card = DownloadHandlingSettingCard(self.main_window, parent = self)
         
         # Download
         self.download_group = SettingCardGroup(self.tr("Download"), self)
@@ -72,7 +72,7 @@ class SettingInterface(ScrollArea):
         self.file_naming_group = SettingCardGroup(self.tr("File naming"), self)
 
         self.naming_convention_setting_card = PushSettingCard(self.tr("Customize…"), FluentIcon.DOCUMENT, self.tr("Naming Convention"), self.tr("Customize the naming convention for downloaded files"), self)
-        self.numbering_setting_card = NumberSettingCard(self)
+        self.numbering_setting_card = NumberSettingCard(self.main_window, self)
 
         # Advanced
         self.advanced_group = SettingCardGroup(self.tr("Advanced"), self)
@@ -96,7 +96,7 @@ class SettingInterface(ScrollArea):
         # Behavior
         self.behavior_group.addSettingCard(self.parse_list_card)
         self.behavior_group.addSettingCard(self.window_behavior_group)
-        self.behavior_group.addSettingCard(self.download_interaction_card)
+        self.behavior_group.addSettingCard(self.download_handling_card)
 
         # Download
         self.download_group.addSettingCard(self.download_path_card)
@@ -153,7 +153,8 @@ class SettingInterface(ScrollArea):
         self.personalization_card.mica_effect_switch.checkedChanged.connect(signal_bus.interface.mica_effect_changed)
 
         # Behavior
-        self.parse_list_card.custom_header_btn.clicked.connect(self.on_custom_parse_list_column)
+        self.parse_list_card.custom_parse_list_btn.clicked.connect(self.on_custom_parse_list_column)
+        self.parse_list_card.custom_monitor_clipboard_btn.clicked.connect(self.on_custom_monitor_clipboard)
         self.window_behavior_group.stay_on_top_switch.checkedChanged.connect(self.on_change_stay_on_top)
 
         # Download
@@ -183,22 +184,28 @@ class SettingInterface(ScrollArea):
         self.check_update_card.check_now_btn.clicked.connect(self.on_check_update)
 
     def on_custom_parse_list_column(self):
-        from ..dialog.setting import ParseListSettingsDialog
+        from ..dialog.setting.parse_list import ParseListSettingsDialog
 
         dialog = ParseListSettingsDialog(self.main_window)
+        dialog.exec()
+
+    def on_custom_monitor_clipboard(self):
+        from ..dialog.setting.monitor_clipboard import MonitorClipboardDialog
+
+        dialog = MonitorClipboardDialog(self.main_window)
         dialog.exec()
 
     def on_change_stay_on_top(self, checked: bool):
         self.main_window.setStayOnTop(checked)
 
     def on_custom_speed_limit_settings(self):
-        from ..dialog.setting import SpeedLimitSettingDialog
+        from ..dialog.setting.speed_limit import SpeedLimitSettingDialog
 
         dialog = SpeedLimitSettingDialog(self.main_window)
         dialog.exec()
 
     def on_adjust_video_quality_priority(self):
-        from ..dialog.setting import PriorityDialog
+        from ..dialog.setting.priority import PriorityDialog
 
         map_reversed = {v: Translator.VIDEO_QUALITY(k) for k, v in video_quality_map.items()}
 
@@ -208,7 +215,7 @@ class SettingInterface(ScrollArea):
             config.set(config.video_quality_priority, dialog.config_value)
 
     def on_adjust_audio_quality_priority(self):
-        from ..dialog.setting import PriorityDialog
+        from ..dialog.setting.priority import PriorityDialog
 
         map_reversed = {v: Translator.AUDIO_QUALITY(k) for k, v in audio_quality_map.items()}
 
@@ -218,7 +225,7 @@ class SettingInterface(ScrollArea):
             config.set(config.audio_quality_priority, dialog.config_value)
 
     def on_adjust_video_codec_priority(self):
-        from ..dialog.setting import PriorityDialog
+        from ..dialog.setting.priority import PriorityDialog
 
         map_reversed = {v: k for k, v in video_codec_map.items()}
 
@@ -228,31 +235,31 @@ class SettingInterface(ScrollArea):
             config.set(config.video_codec_priority, dialog.config_value)
 
     def on_custom_danmaku_style(self):
-        from ..dialog.setting import DanmakuStyleDialog
+        from ..dialog.setting.danmaku_style import DanmakuStyleDialog
 
         dialog = DanmakuStyleDialog(self.main_window)
         dialog.exec()
 
     def on_custom_subtitles_language(self):
-        from ..dialog.setting import SubtitlesLanguageDialog
+        from ..dialog.setting.subtitles_language import SubtitlesLanguageDialog
 
         dialog = SubtitlesLanguageDialog(self.main_window)
         dialog.exec()
 
     def on_custom_subtitles_style(self):
-        from ..dialog.setting import SubtitlesStyleDialog
+        from ..dialog.setting.subtitles_style import SubtitlesStyleDialog
 
         dialog = SubtitlesStyleDialog(self.main_window)
         dialog.exec()
 
     def on_custom_naming_rule(self):
-        from ..dialog.setting import RuleListDialog
+        from ..dialog.setting.rule_list import RuleListDialog
 
         dialog = RuleListDialog(self.main_window)
         dialog.exec()
 
     def on_custom_starting_number(self):
-        from ..dialog.setting import StartingNumberDialog
+        from ..dialog.setting.starting_number import StartingNumberDialog
 
         dialog = StartingNumberDialog(self.main_window)
 
@@ -260,7 +267,7 @@ class SettingInterface(ScrollArea):
             self.numbering_setting_card.set_current_starting_number(dialog.starting_number)
 
     def on_custom_cdn_server_list(self):
-        from ..dialog.setting import CDNServerDialog
+        from ..dialog.setting.cdn_server import CDNServerDialog
 
         dialog = CDNServerDialog(self.main_window)
         dialog.exec()
@@ -295,7 +302,7 @@ class SettingInterface(ScrollArea):
         self.ffmpeg_card.custom_group.setContent(file_path)
 
     def on_custom_proxy(self):
-        from ..dialog.setting import ProxyDialog
+        from ..dialog.setting.proxy import ProxyDialog
 
         dialog = ProxyDialog(self.main_window)
         dialog.exec()
@@ -351,7 +358,7 @@ class SettingInterface(ScrollArea):
             self.show_restart_message()
 
     def on_custom_user_agent(self):
-        from ..dialog.setting import UserAgentDialog
+        from ..dialog.setting.user_agent import UserAgentDialog
 
         dialog = UserAgentDialog(self.main_window)
         dialog.exec()

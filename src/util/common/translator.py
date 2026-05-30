@@ -334,3 +334,9 @@ For example, if you set the video quality priority to 720P > 1080P > 4K, the pro
     2. Use the index from the parsed list: The numbering directly reflects the original position in the parsed list and won’t change based on download order. For example, items at positions 3, 5, and 6 in the list will be numbered 3, 5, and 6 respectively. Suitable when you want numbering to match the parsing result exactly.
 
     3. Global sequential numbering: All downloaded items share a single continuously incrementing sequence, regardless of series or batch. For example, if the last downloaded item was numbered 5, the next one will be 6. Suitable for maintaining a globally continuous numbering sequence.""")
+
+    @staticmethod
+    def PREALLOCATE_GUIDE():
+        return translate("PREALLOCATE_GUIDE", """Preallocating file space can improve download performance, especially for large files. When enabled, the program will allocate the required disk space before the download starts, reducing performance overhead caused by repeatedly expanding the file during download and minimizing disk fragmentation.
+
+    Note: If the download path is on an external storage device such as a USB drive, and the file system does not support sparse files (e.g., FAT32 or exFAT), please disable this feature—otherwise, the program may become unresponsive.""")

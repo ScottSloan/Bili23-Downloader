@@ -1,6 +1,10 @@
+from PySide6.QtWidgets import QWidget, QVBoxLayout
 from PySide6.QtCore import Qt, QSize
 
-from qfluentwidgets import PrimaryPushButton, IndeterminateProgressRing, ToolTipFilter, TransparentTogglePushButton, PrimarySplitPushButton
+from qfluentwidgets import (
+    PrimaryPushButton, IndeterminateProgressRing, ToolTipFilter, TransparentTogglePushButton, PrimarySplitPushButton,
+    SwitchButton, BodyLabel
+)
 from qfluentwidgets import ToolButton as _ToolButton, TransparentToolButton as _TransparentToolButton
 
 class IndeterminateProgressPushButton(PrimaryPushButton):
@@ -129,3 +133,17 @@ class PagerNumberButton(TransparentTogglePushButton):
         self.setFixedHeight(30)
 
         self.number = number
+
+class LabelSwitchButton(QWidget):
+    def __init__(self, text: str, parent = None):
+        super().__init__(parent)
+
+        self.label = BodyLabel(text, self)
+        self.switch = SwitchButton(self)
+
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        
+        layout.addWidget(self.label)
+        layout.addSpacing(5)
+        layout.addWidget(self.switch)
