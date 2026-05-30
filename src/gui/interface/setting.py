@@ -57,7 +57,7 @@ class SettingInterface(ScrollArea):
 
         self.download_path_card = DownloadPathSettingCard(self.main_window, save = True, parent = self)
         self.download_currency_card = DownloadConcurrencySettingCard(self)
-        self.priority_setting_card = PrioritySettingCard(self)
+        self.priority_setting_card = PrioritySettingCard(self.main_window, parent = self)
         self.download_format_card = DownloadFormatCard(self)
 
         # Additional

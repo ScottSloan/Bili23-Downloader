@@ -67,7 +67,7 @@ class EditRuleDialog(DialogBase):
 
         self.guide_btn = HyperlinkButton(url = "", text = self.tr("Guide"), parent = self)
         self.help_btn = HyperlinkButton(
-            url = "https://bili23.scott-sloan.cn/doc/advanced-usage.html",
+            url = "https://bili23.scott-sloan.cn/doc/naming-rule.html",
             text = self.tr("Open help page"),
             parent = self
         )

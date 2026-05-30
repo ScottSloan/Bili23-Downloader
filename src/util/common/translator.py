@@ -317,3 +317,20 @@ This software operates exclusively based on the user's own legitimate account ac
 Under no circumstances shall the developer be liable for any direct, indirect, incidental, or consequential damages resulting from the use of or inability to use this software. By using this software, you acknowledge that you fully understand the above risks and voluntarily accept all associated responsibilities.
 <br><br>
 <b>Continuing to use this software indicates that you have read, understood, and agreed to comply with all the terms stated above.</b></html>""")
+
+    @staticmethod
+    def PRIORITY_GUIDE():
+        return translate("PRIORITY_GUIDE", """The program will attempt downloads in the order of your configured priority. The actual video quality, audio quality, or codec you can download still depends on what is available in the video itself—priority only determines which option is tried first among multiple available choices.
+
+For example, if you set the video quality priority to 720P > 1080P > 4K, the program will first try to download 720P; if 720P is unavailable, it will then try 1080P and then 4K in sequence.""")
+    
+    @staticmethod
+    def NUMBERING_GUIDE():
+        return translate("NUMBERING_GUIDE", """This setting affects the value of the {number} variable in the naming rule. By default, the program’s preset naming rule does not include {number}. If you want to use numbering, please add {number} to your naming rule first.
+
+    The meaning of each "Numbering Mode" option is as follows:
+    1. Start from specified number (per batch): Every time a new download task begins, numbering restarts from the starting number you set. For example, if the starting number is 1, the first item will be numbered 1, the second 2, and so on. Suitable for scenarios where each batch should have independent numbering.
+
+    2. Use the index from the parsed list: The numbering directly reflects the original position in the parsed list and won’t change based on download order. For example, items at positions 3, 5, and 6 in the list will be numbered 3, 5, and 6 respectively. Suitable when you want numbering to match the parsing result exactly.
+
+    3. Global sequential numbering: All downloaded items share a single continuously incrementing sequence, regardless of series or batch. For example, if the last downloaded item was numbered 5, the next one will be 6. Suitable for maintaining a globally continuous numbering sequence.""")

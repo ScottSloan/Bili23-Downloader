@@ -72,7 +72,8 @@ class FFmpegSource(Enum):
 
 class NumberingType(Enum):
     FROM_SPECIFIED = 0
-    CONTINUOUS = 1
+    USE_PARSE_LIST = 1
+    CONTINUOUS = 2
 
 class Channel(IntEnum):
     UNKNOWN = 0

@@ -2,6 +2,8 @@ from gui.component.dialog import DialogBase
 
 from qfluentwidgets import SubtitleLabel, SpinBox
 
+from util.common.config import config
+
 class StartingNumberDialog(DialogBase):
     def __init__(self, parent = None):
         super().__init__(parent)
@@ -14,6 +16,7 @@ class StartingNumberDialog(DialogBase):
         self.caption_lab = SubtitleLabel(self.tr("Customize Starting Number"))
         self.starting_number_spin = SpinBox(self)
         self.starting_number_spin.setRange(1, 100_000_000)    # ichi oku
+        self.starting_number_spin.setValue(config.get(config.starting_number))
 
         self.viewLayout.addWidget(self.caption_lab)
         self.viewLayout.addSpacing(10)

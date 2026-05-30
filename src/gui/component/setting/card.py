@@ -1,10 +1,10 @@
-from PySide6.QtCore import Signal
+from PySide6.QtCore import QTimer, Signal, Qt
+from PySide6.QtWidgets import QHBoxLayout
 from PySide6.QtGui import QColor
-from PySide6.QtCore import QTimer
 
 from qfluentwidgets import (
-    ExpandGroupSettingCard, PushButton, FluentIcon, PushSettingCard, qconfig, ColorDialog, PrimaryPushButton,
-    MessageBox
+    PushButton, FluentIcon, PushSettingCard, qconfig, ColorDialog, PrimaryPushButton, setCustomStyleSheet,
+    MessageBox, ExpandGroupSettingCard as _ExpandGroupSettingCard, HyperlinkLabel
 )
 
 from .widget import SettingSwitchButton, SettingComboBox, SettingSlider
@@ -13,6 +13,47 @@ from util.thread.pool import GlobalThreadPoolTask
 from util.common.icon import ExtendedFluentIcon
 from util.common.config import config, isWin11
 from util.common.io.directory import Directory
+from util.common.translator import Translator
+
+class ExpandGroupSettingCard(_ExpandGroupSettingCard):
+    def __init__(self, icon, title, content = None, parent = None):
+        super().__init__(icon, title, content, parent)
+
+        self.card.vBoxLayout.removeWidget(self.card.contentLabel)
+
+        self.contentLayout = QHBoxLayout()
+        self.contentLayout.setSpacing(0)
+        self.contentLayout.setContentsMargins(0, 0, 0, 0)
+        self.contentLayout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.contentLayout.addWidget(self.card.contentLabel, 0, Qt.AlignmentFlag.AlignLeft)
+
+        self.card.vBoxLayout.addLayout(self.contentLayout)
+
+    def showHyperLinkLabel(self, label: str):
+        self.hyper_label = HyperlinkLabel(text = label, parent = self.card)
+
+        self.contentLayout.addSpacing(5)
+        self.contentLayout.addWidget(self.hyper_label, 0, Qt.AlignmentFlag.AlignLeft)
+        self.contentLayout.addStretch()
+
+        styleSheet = """
+        HyperlinkLabel {
+            font-size: 11px;
+            font-weight: 600;
+        }
+        """
+        setCustomStyleSheet(self.hyper_label, styleSheet, styleSheet)
+
+    def showGuideMessageBox(self, title: str, content: str):
+        dialog = MessageBox(
+            title = title,
+            content = content,
+            parent = self.main_window
+        )
+        dialog.hideCancelButton()
+
+        dialog.show()
 
 class PersonalizationCard(ExpandGroupSettingCard):
     accentColorChanged = Signal(QColor)
@@ -131,8 +172,10 @@ class DownloadPathSettingCard(PushSettingCard):
         self.set_path(path)
 
 class PrioritySettingCard(ExpandGroupSettingCard):
-    def __init__(self, parent = None):
+    def __init__(self, main_window, parent = None):
         super().__init__(FluentIcon.SETTING, self.tr("Video, Audio, and Codec Priority"), self.tr("Customize download priority settings"), parent)
+
+        self.main_window = main_window
 
         self.video_quality_btn = PushButton(self.tr("Customize…"), self)
         self.audio_quality_btn = PushButton(self.tr("Customize…"), self)
@@ -144,6 +187,10 @@ class PrioritySettingCard(ExpandGroupSettingCard):
         self.addGroup(FluentIcon.VIDEO, self.tr("Video Quality Priority"), "", self.video_quality_btn)
         self.addGroup(FluentIcon.MUSIC, self.tr("Audio Quality Priority"), "", self.audio_quality_btn)
         self.addGroup(FluentIcon.CODE, self.tr("Codec Priority"), "", self.video_codec_btn)
+
+        self.showHyperLinkLabel(self.tr("About Custom Priority Settings"))
+
+        self.hyper_label.clicked.connect(lambda: self.showGuideMessageBox(self.tr("Guide"), Translator.PRIORITY_GUIDE()))
 
 class DanmakuSettingCard(ExpandGroupSettingCard):
     def __init__(self, full_mode = True, parent = None):
@@ -240,15 +287,17 @@ class MetadataSettingCard(ExpandGroupSettingCard):
         self.addGroup("", self.tr("Metadata Format"), "", self.type_choice)
 
 class NumberSettingCard(ExpandGroupSettingCard):
-    def __init__(self, parent = None):
+    def __init__(self, main_window, parent = None):
         super().__init__(ExtendedFluentIcon.NUMBERS, self.tr("Numbering"), self.tr("Configure how the {number} variable is formatted"), parent)
+
+        self.main_window = main_window
 
         self.numbering_type_choice = SettingComboBox(
             config.numbering_type,
             [
                 self.tr("Start from specified number (per batch)"),
-                self.tr("Global sequential numbering"),
-                self.tr("Use list order (1, 2, 3…)")
+                self.tr("Use the index from the parse list"),
+                self.tr("Global sequential numbering")
             ],
             parent = self
         )
@@ -256,8 +305,8 @@ class NumberSettingCard(ExpandGroupSettingCard):
 
         self.addGroup(
             "",
-            self.tr("Numbering Type"),
-            self.tr("Select the source for {number} variable"),
+            self.tr("Numbering Mode"),
+            self.tr("Select how the {number} variable is formatted and incremented"),
             self.numbering_type_choice
         )
         self.starting_number_group = self.addGroup(
@@ -266,7 +315,10 @@ class NumberSettingCard(ExpandGroupSettingCard):
             self.get_starting_number_content(config.get(config.starting_number)),
             self.starting_number_btn
         )
-        
+
+        self.showHyperLinkLabel(self.tr("About Numbering Settings"))
+
+        self.hyper_label.clicked.connect(lambda: self.showGuideMessageBox(self.tr("Guide"), Translator.NUMBERING_GUIDE()))
         self.numbering_type_choice.currentIndexChanged.connect(lambda index: self.starting_number_group.setEnabled(index == 0))
 
         self.starting_number_group.setEnabled(self.numbering_type_choice.currentIndex() == 0)

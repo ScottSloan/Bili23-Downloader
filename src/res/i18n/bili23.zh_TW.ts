@@ -296,37 +296,37 @@
 <context>
     <name>CDNSettingCard</name>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="292"/>
+        <location filename="../../gui/component/setting/card.py" line="344"/>
         <source>CDN Settings</source>
         <translation>CDN 設定</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="292"/>
+        <location filename="../../gui/component/setting/card.py" line="344"/>
         <source>Adjust CDN settings used for downloading</source>
         <translation>調整下載所用的 CDN 設定</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="296"/>
+        <location filename="../../gui/component/setting/card.py" line="348"/>
         <source>Customize…</source>
         <translation>自訂…</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="301"/>
+        <location filename="../../gui/component/setting/card.py" line="353"/>
         <source>Prefer Service Provider CDN</source>
         <translation>優先使用服務商 CDN</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="301"/>
+        <location filename="../../gui/component/setting/card.py" line="353"/>
         <source>Prefer CDN provided by cloud service providers to improve download stability</source>
         <translation>優先使用伺服器供應商提供的 CDN，提升下載穩定性</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="302"/>
+        <location filename="../../gui/component/setting/card.py" line="354"/>
         <source>Customize Service Provider CDN</source>
         <translation>自訂服務商 CDN</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="302"/>
+        <location filename="../../gui/component/setting/card.py" line="354"/>
         <source>Customize the list and priority of service provider CDNs</source>
         <translation>自訂服務商 CDN 清單與優先順序設定</translation>
     </message>
@@ -471,27 +471,27 @@
 <context>
     <name>CheckUpdateSettingCard</name>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="419"/>
+        <location filename="../../gui/component/setting/card.py" line="471"/>
         <source>Check for Updates</source>
         <translation>檢查更新</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="419"/>
+        <location filename="../../gui/component/setting/card.py" line="471"/>
         <source>Check if a new version is available</source>
         <translation>檢查是否有新版本可用</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="421"/>
+        <location filename="../../gui/component/setting/card.py" line="473"/>
         <source>Check Now</source>
         <translation>立即檢查</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="426"/>
+        <location filename="../../gui/component/setting/card.py" line="478"/>
         <source>Include Prerelease Versions</source>
         <translation>包含預發行版本</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="426"/>
+        <location filename="../../gui/component/setting/card.py" line="478"/>
         <source>Include prerelease versions in update checks (may be unstable)</source>
         <translation>在更新檢查中包含預發行版本（可能不穩定）</translation>
     </message>
@@ -526,63 +526,63 @@
 <context>
     <name>ConfigFileSettingCard</name>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="357"/>
+        <location filename="../../gui/component/setting/card.py" line="409"/>
         <source>Config File</source>
         <translation>設定檔</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="357"/>
+        <location filename="../../gui/component/setting/card.py" line="409"/>
         <source>Import or export configuration files</source>
         <translation>匯入或匯出設定檔</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="359"/>
-        <location filename="../../gui/component/setting/card.py" line="361"/>
+        <location filename="../../gui/component/setting/card.py" line="411"/>
+        <location filename="../../gui/component/setting/card.py" line="413"/>
         <source>Browse...</source>
         <translation>浏览…</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="363"/>
+        <location filename="../../gui/component/setting/card.py" line="415"/>
         <source>Reset</source>
         <translation>重設</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="365"/>
+        <location filename="../../gui/component/setting/card.py" line="417"/>
         <source>Open</source>
         <translation>開啟</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="368"/>
+        <location filename="../../gui/component/setting/card.py" line="420"/>
         <source>Import Config</source>
         <translation>匯入設定</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="368"/>
+        <location filename="../../gui/component/setting/card.py" line="420"/>
         <source>Import settings from a configuration file</source>
         <translation>從設定檔匯入設定</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="369"/>
+        <location filename="../../gui/component/setting/card.py" line="421"/>
         <source>Export Config</source>
         <translation>匯出設定</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="369"/>
+        <location filename="../../gui/component/setting/card.py" line="421"/>
         <source>Export settings to a configuration file</source>
         <translation>將設定匯出至設定檔</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="370"/>
+        <location filename="../../gui/component/setting/card.py" line="422"/>
         <source>Reset Config</source>
         <translation>重設設定</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="370"/>
+        <location filename="../../gui/component/setting/card.py" line="422"/>
         <source>Reset all settings to default values</source>
         <translation>將所有設定恢復為預設值</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="371"/>
+        <location filename="../../gui/component/setting/card.py" line="423"/>
         <source>Open Config Directory</source>
         <translation>開啟設定目錄</translation>
     </message>
@@ -603,32 +603,32 @@
 <context>
     <name>CoverSettingCard</name>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="192"/>
+        <location filename="../../gui/component/setting/card.py" line="239"/>
         <source>Cover Download Settings</source>
         <translation>封面下載設定</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="192"/>
+        <location filename="../../gui/component/setting/card.py" line="239"/>
         <source>Adjust cover download settings</source>
         <translation>調整封面下載設定</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="204"/>
+        <location filename="../../gui/component/setting/card.py" line="251"/>
         <source>Download Cover</source>
         <translation>下載封面</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="205"/>
+        <location filename="../../gui/component/setting/card.py" line="252"/>
         <source>Cover Format</source>
         <translation>封面格式</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="206"/>
+        <location filename="../../gui/component/setting/card.py" line="253"/>
         <source>Embed Cover</source>
         <translation>嵌入封面</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="206"/>
+        <location filename="../../gui/component/setting/card.py" line="253"/>
         <source>Embed the downloaded cover into the video file</source>
         <translation>將下載的封面嵌入至影片檔案中</translation>
     </message>
@@ -710,37 +710,37 @@
 <context>
     <name>DanmakuSettingCard</name>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="150"/>
+        <location filename="../../gui/component/setting/card.py" line="197"/>
         <source>Danmaku Download Settings</source>
         <translation>彈幕下載設定</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="150"/>
+        <location filename="../../gui/component/setting/card.py" line="197"/>
         <source>Adjust danmaku download settings</source>
         <translation>調整彈幕下載設定</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="164"/>
+        <location filename="../../gui/component/setting/card.py" line="211"/>
         <source>Customize…</source>
         <translation>自訂…</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="160"/>
+        <location filename="../../gui/component/setting/card.py" line="207"/>
         <source>Download Danmaku</source>
         <translation>下載彈幕</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="161"/>
+        <location filename="../../gui/component/setting/card.py" line="208"/>
         <source>Danmaku Format</source>
         <translation>彈幕格式</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="166"/>
+        <location filename="../../gui/component/setting/card.py" line="213"/>
         <source>Danmaku Style</source>
         <translation>彈幕樣式</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="166"/>
+        <location filename="../../gui/component/setting/card.py" line="213"/>
         <source>Only effective for ASS format danmaku</source>
         <translation>僅 ASS 格式彈幕有效</translation>
     </message>
@@ -748,47 +748,47 @@
 <context>
     <name>DownloadConcurrencySettingCard</name>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="406"/>
+        <location filename="../../gui/component/setting/card.py" line="458"/>
         <source>Download Concurrency</source>
         <translation>下載並行</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="406"/>
+        <location filename="../../gui/component/setting/card.py" line="458"/>
         <source>Adjust per-task threads, concurrent downloads, and speed limits</source>
         <translation>調整每個任務的執行緒數、同時下載數與速度限制</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="411"/>
+        <location filename="../../gui/component/setting/card.py" line="463"/>
         <source>Configure…</source>
         <translation>設定…</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="413"/>
+        <location filename="../../gui/component/setting/card.py" line="465"/>
         <source>Number of Threads</source>
         <translation>多執行緒數</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="414"/>
+        <location filename="../../gui/component/setting/card.py" line="466"/>
         <source>Number of Parallel Downloads</source>
         <translation>平行下載數</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="415"/>
+        <location filename="../../gui/component/setting/card.py" line="467"/>
         <source>Speed Limit Settings</source>
         <translation>速度限制設定</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="413"/>
+        <location filename="../../gui/component/setting/card.py" line="465"/>
         <source>Adjust the number of threads used per task (default: 4)</source>
         <translation>調整單一任務使用的執行緒數，預設為 4</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="414"/>
+        <location filename="../../gui/component/setting/card.py" line="466"/>
         <source>Adjust the number of tasks downloaded simultaneously (default: 1)</source>
         <translation>調整同時下載的任務數，預設為 1</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="415"/>
+        <location filename="../../gui/component/setting/card.py" line="467"/>
         <source>Configure speed limit settings for downloads</source>
         <translation>設定下載的速度限制</translation>
     </message>
@@ -796,32 +796,32 @@
 <context>
     <name>DownloadFormatCard</name>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="334"/>
+        <location filename="../../gui/component/setting/card.py" line="386"/>
         <source>Download Format</source>
         <translation>下載格式</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="334"/>
+        <location filename="../../gui/component/setting/card.py" line="386"/>
         <source>Configure output format settings for downloaded files</source>
         <translation>設定下載檔案的輸出格式選項</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="339"/>
+        <location filename="../../gui/component/setting/card.py" line="391"/>
         <source>Choose the container format for the final output video file</source>
         <translation>選擇最終輸出影片檔案的容器格式</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="339"/>
+        <location filename="../../gui/component/setting/card.py" line="391"/>
         <source>Output Container Format</source>
         <translation>輸出容器格式</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="340"/>
+        <location filename="../../gui/component/setting/card.py" line="392"/>
         <source>Convert M4A to MP3</source>
         <translation>將 M4A 轉換為 MP3</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="340"/>
+        <location filename="../../gui/component/setting/card.py" line="392"/>
         <source>Only applies when downloading audio-only streams. Disabled if video is also selected.</source>
         <translation>僅於下載純音訊串流時有效</translation>
     </message>
@@ -829,62 +829,62 @@
 <context>
     <name>DownloadHandlingSettingCard</name>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="392"/>
+        <location filename="../../gui/component/setting/card.py" line="444"/>
         <source>Download Handling</source>
         <translation>下載處理</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="392"/>
+        <location filename="../../gui/component/setting/card.py" line="444"/>
         <source>Configure download prompts, notifications, and file conflict handling</source>
         <translation>配置下載提示、通知以及檔案衝突處理方式</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="396"/>
+        <location filename="../../gui/component/setting/card.py" line="448"/>
         <source>Auto-rename</source>
         <translation>自動重新命名</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="396"/>
+        <location filename="../../gui/component/setting/card.py" line="448"/>
         <source>Overwrite</source>
         <translation>覆蓋檔案</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="399"/>
+        <location filename="../../gui/component/setting/card.py" line="451"/>
         <source>Show Download Options Dialog</source>
         <translation>下載時顯示選項對話方塊</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="400"/>
+        <location filename="../../gui/component/setting/card.py" line="452"/>
         <source>Show Notifications</source>
         <translation>顯示通知</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="401"/>
+        <location filename="../../gui/component/setting/card.py" line="453"/>
         <source>Preallocate File Space</source>
         <translation>預先配置檔案空間</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="401"/>
+        <location filename="../../gui/component/setting/card.py" line="453"/>
         <source>Preallocate file space before downloading to improve performance (recommended)</source>
         <translation>下載前預先配置檔案空間以提升效能（建議啟用）</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="402"/>
+        <location filename="../../gui/component/setting/card.py" line="454"/>
         <source>File Conflict Resolution</source>
         <translation>同名檔案處理</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="399"/>
+        <location filename="../../gui/component/setting/card.py" line="451"/>
         <source>Show a dialog before starting the download to customize settings for this task</source>
         <translation>開始下載前跳出對話方塊以自訂本次下載設定</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="400"/>
+        <location filename="../../gui/component/setting/card.py" line="452"/>
         <source>Show notifications when downloads complete</source>
         <translation>下載完成時顯示通知</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="402"/>
+        <location filename="../../gui/component/setting/card.py" line="454"/>
         <source>Choose the action when a file with the same name already exists</source>
         <translation>選擇當目標位置已存在同名檔案時的操作</translation>
     </message>
@@ -995,28 +995,28 @@
 <context>
     <name>DownloadPathSettingCard</name>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="56"/>
-        <location filename="../../gui/component/setting/card.py" line="126"/>
+        <location filename="../../gui/component/setting/card.py" line="97"/>
+        <location filename="../../gui/component/setting/card.py" line="167"/>
         <source>Choose folder</source>
         <translation>選取資料夾</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="56"/>
+        <location filename="../../gui/component/setting/card.py" line="97"/>
         <source>Download Path</source>
         <translation>下載路徑</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="103"/>
+        <location filename="../../gui/component/setting/card.py" line="144"/>
         <source>{path} ({free} available)</source>
         <translation>{path} ({free} 可用)</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="117"/>
+        <location filename="../../gui/component/setting/card.py" line="158"/>
         <source>The file system of the selected path does not support sparse files</source>
         <translation>所選路徑的檔案系統不支援稀疏檔案</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="118"/>
+        <location filename="../../gui/component/setting/card.py" line="159"/>
         <source>The file system type of the currently selected download path is {fs}, which does not support sparse files.
 
 If you continue, please disable the &quot;Preallocate file space&quot; option. (Settings → Behavior → Download Handling)</source>
@@ -1479,47 +1479,47 @@ File name: {filename}</source>
 <context>
     <name>FFmpegSettingCard</name>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="320"/>
+        <location filename="../../gui/component/setting/card.py" line="372"/>
         <source>FFmpeg Settings</source>
         <translation>FFmpeg 設定</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="320"/>
+        <location filename="../../gui/component/setting/card.py" line="372"/>
         <source>Configure FFmpeg used for merging and converting videos</source>
         <translation>設定用於合併與轉換影片的 FFmpeg</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="324"/>
+        <location filename="../../gui/component/setting/card.py" line="376"/>
         <source>Bundled (with app)</source>
         <translation>程式內建</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="324"/>
+        <location filename="../../gui/component/setting/card.py" line="376"/>
         <source>System PATH</source>
         <translation>系統環境變數</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="324"/>
+        <location filename="../../gui/component/setting/card.py" line="376"/>
         <source>Custom path</source>
         <translation>自訂路徑</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="325"/>
+        <location filename="../../gui/component/setting/card.py" line="377"/>
         <source>Browse…</source>
         <translation>瀏覽…</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="327"/>
+        <location filename="../../gui/component/setting/card.py" line="379"/>
         <source>Select the FFmpeg executable to use</source>
         <translation>選擇要使用的 FFmpeg 可執行檔</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="327"/>
+        <location filename="../../gui/component/setting/card.py" line="379"/>
         <source>FFmpeg Source</source>
         <translation>FFmpeg 來源</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="328"/>
+        <location filename="../../gui/component/setting/card.py" line="380"/>
         <source>Custom FFmpeg Path</source>
         <translation>自訂 FFmpeg 路徑</translation>
     </message>
@@ -1627,12 +1627,12 @@ File name: {filename}</source>
 <context>
     <name>JumpToPageDialog</name>
     <message>
-        <location filename="../../gui/dialog/misc/jump_to_page.py" line="14"/>
+        <location filename="../../gui/dialog/misc/jump_to_page.py" line="16"/>
         <source>Jump To Page</source>
         <translation>跳至頁面</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/jump_to_page.py" line="17"/>
+        <location filename="../../gui/dialog/misc/jump_to_page.py" line="19"/>
         <source>Enter page number</source>
         <translation>輸入頁碼</translation>
     </message>
@@ -1736,27 +1736,27 @@ Note: Videos protected by DRM can only be downloaded up to 1080P; higher qualiti
 <context>
     <name>MainWindow</name>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="284"/>
+        <location filename="../../gui/interface/main_window.py" line="288"/>
         <source>Parser</source>
         <translation>解析</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="290"/>
+        <location filename="../../gui/interface/main_window.py" line="294"/>
         <source>Downloads</source>
         <translation>下載</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="301"/>
+        <location filename="../../gui/interface/main_window.py" line="305"/>
         <source>Favorites</source>
         <translation>收藏</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="310"/>
+        <location filename="../../gui/interface/main_window.py" line="314"/>
         <source>About</source>
         <translation>關於</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="328"/>
+        <location filename="../../gui/interface/main_window.py" line="332"/>
         <source>Settings</source>
         <translation>設定</translation>
     </message>
@@ -1804,63 +1804,63 @@ Note: Videos protected by DRM can only be downloaded up to 1080P; higher qualiti
 <context>
     <name>MainWindowBase</name>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="86"/>
+        <location filename="../../gui/interface/main_window.py" line="87"/>
         <source>Welcome to Bili23 Downloader</source>
         <translation>歡迎使用 Bili23 Downloader</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="87"/>
+        <location filename="../../gui/interface/main_window.py" line="88"/>
         <source>It is recommended to read the user guide and FAQs when using for the first time, to help you get started quickly and make full use of all features.</source>
         <translation>首次使用時建議先查看使用說明與常見問題，幫助您更快上手並充分利用各項功能。</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="90"/>
+        <location filename="../../gui/interface/main_window.py" line="91"/>
         <source>View</source>
         <translation>查看</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="91"/>
+        <location filename="../../gui/interface/main_window.py" line="92"/>
         <source>Skip</source>
         <translation>跳過</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="103"/>
+        <location filename="../../gui/interface/main_window.py" line="107"/>
         <source>Log in to your account</source>
         <translation>登入帳號</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="104"/>
+        <location filename="../../gui/interface/main_window.py" line="108"/>
         <source>Click the avatar to log in to your Bilibili account. 
 Download functionality will be limited if you&apos;re not logged in.</source>
         <translation>點擊頭像登入嘅 Bilibili 帳號，未登入狀態下下載功能將受到限制。</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="171"/>
+        <location filename="../../gui/interface/main_window.py" line="175"/>
         <source>Download Directory Invalid</source>
         <translation>下載目錄無效</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="172"/>
+        <location filename="../../gui/interface/main_window.py" line="176"/>
         <source>The current download directory is inaccessible or lacks write permissions. Please reset it.</source>
         <translation>目前下載目錄無法存取或沒有寫入權限，請重新設定。</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="179"/>
+        <location filename="../../gui/interface/main_window.py" line="183"/>
         <source>FFmpeg Not Found</source>
         <translation>找不到 FFmpeg</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="180"/>
+        <location filename="../../gui/interface/main_window.py" line="184"/>
         <source>No FFmpeg executable found. Please ensure FFmpeg is installed and configured correctly.</source>
         <translation>找不到 FFmpeg 執行檔。請確保已正確安裝並設定 FFmpeg。</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="189"/>
+        <location filename="../../gui/interface/main_window.py" line="193"/>
         <source>Login Required</source>
         <translation>需要登入</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="190"/>
+        <location filename="../../gui/interface/main_window.py" line="194"/>
         <source>Please log in to your account first.</source>
         <translation>請先登入帳號</translation>
     </message>
@@ -2067,22 +2067,22 @@ To get a single complete video file, please enable &quot;Merge video and audio&q
 <context>
     <name>MetadataSettingCard</name>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="229"/>
+        <location filename="../../gui/component/setting/card.py" line="276"/>
         <source>Metadata Download Settings</source>
         <translation>元數據下載設定</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="229"/>
+        <location filename="../../gui/component/setting/card.py" line="276"/>
         <source>Adjust metadata download settings</source>
         <translation>調整元數據下載設定</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="239"/>
+        <location filename="../../gui/component/setting/card.py" line="286"/>
         <source>Download Metadata</source>
         <translation>下載元數據</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="240"/>
+        <location filename="../../gui/component/setting/card.py" line="287"/>
         <source>Metadata Format</source>
         <translation>元數據格式</translation>
     </message>
@@ -2122,6 +2122,28 @@ For advanced usage, see the help documentation.</source>
     </message>
 </context>
 <context>
+    <name>NUMBERING_GUIDE</name>
+    <message>
+        <location filename="../../util/common/translator.py" line="329"/>
+        <source>This setting affects the value of the {number} variable in the naming rule. By default, the program’s preset naming rule does not include {number}. If you want to use numbering, please add {number} to your naming rule first.
+
+    The meaning of each &quot;Numbering Mode&quot; option is as follows:
+    1. Start from specified number (per batch): Every time a new download task begins, numbering restarts from the starting number you set. For example, if the starting number is 1, the first item will be numbered 1, the second 2, and so on. Suitable for scenarios where each batch should have independent numbering.
+
+    2. Use the index from the parsed list: The numbering directly reflects the original position in the parsed list and won’t change based on download order. For example, items at positions 3, 5, and 6 in the list will be numbered 3, 5, and 6 respectively. Suitable when you want numbering to match the parsing result exactly.
+
+    3. Global sequential numbering: All downloaded items share a single continuously incrementing sequence, regardless of series or batch. For example, if the last downloaded item was numbered 5, the next one will be 6. Suitable for maintaining a globally continuous numbering sequence.</source>
+        <translation>此設定會影響命名規則中 {number} 變數的取值。程式預設的命名規則未包含 {number}，若需使用編號，請先將其加入命名規則中。
+
+    「編號方式」各選項的含義如下：
+    1. 每批次從指定數字開始：每次開始新下載任務時，編號皆從您設定的起始數字重新計算。例如，起始數字設為 1 時，第一項編號為 1，第二項為 2。適用於需按批次獨立編號的情境。
+
+    2. 使用解析清單中的序號：編號直接沿用解析清單中的原始位置，不會因下載順序而改變。例如，清單中第 3、5、6 項，編號即為 3、5、6。適用於希望編號與解析結果保持一致的情境。
+
+    3. 全域順序編號：所有下載內容共用一套連續遞增的編號，不區分系列或批次。例如，目前已下載至 5，下一個編號即為 6。適用於希望全域保持連續編號的情境。</translation>
+    </message>
+</context>
+<context>
     <name>NamingConventionCard</name>
     <message>
         <location filename="../../gui/dialog/download_options/card.py" line="241"/>
@@ -2147,54 +2169,76 @@ For advanced usage, see the help documentation.</source>
 <context>
     <name>NumberSettingCard</name>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="244"/>
+        <location filename="../../gui/component/setting/card.py" line="291"/>
         <source>Numbering</source>
         <translation>編號設定</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="244"/>
+        <location filename="../../gui/component/setting/card.py" line="291"/>
         <source>Configure how the {number} variable is formatted</source>
         <translation>設定 {number} 變數的格式</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="249"/>
+        <location filename="../../gui/component/setting/card.py" line="298"/>
         <source>Start from specified number (per batch)</source>
         <translation>每批次從指定數字開始</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="250"/>
+        <location filename="../../gui/component/setting/card.py" line="299"/>
+        <source>Use the index from the parse list</source>
+        <translation>使用解析清單中的序號</translation>
+    </message>
+    <message>
+        <location filename="../../gui/component/setting/card.py" line="300"/>
         <source>Global sequential numbering</source>
         <translation>全域順序編號</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="251"/>
-        <source>Use list order (1, 2, 3…)</source>
-        <translation>依清單順序（1, 2, 3…）</translation>
+        <location filename="../../gui/component/setting/card.py" line="308"/>
+        <source>Numbering Mode</source>
+        <translation>編號方式</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="255"/>
+        <location filename="../../gui/component/setting/card.py" line="309"/>
+        <source>Select how the {number} variable is formatted and incremented</source>
+        <translation>選擇 {number} 變數的格式設定及遞增方式</translation>
+    </message>
+    <message>
+        <location filename="../../gui/component/setting/card.py" line="319"/>
+        <source>About Numbering Settings</source>
+        <translation>關於編號設置的說明</translation>
+    </message>
+    <message>
+        <location filename="../../gui/component/setting/card.py" line="304"/>
         <source>Customize…</source>
         <translation>自訂…</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="259"/>
-        <source>Numbering Type</source>
-        <translation>編號方式</translation>
-    </message>
-    <message>
-        <location filename="../../gui/component/setting/card.py" line="265"/>
+        <location filename="../../gui/component/setting/card.py" line="314"/>
         <source>Starting Number</source>
         <translation>起始編號</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="288"/>
+        <location filename="../../gui/component/setting/card.py" line="321"/>
+        <source>Guide</source>
+        <translation>說明</translation>
+    </message>
+    <message>
+        <location filename="../../gui/component/setting/card.py" line="340"/>
         <source>Set initial number for per-batch. Current: {current}</source>
         <translation>設定每批次編號的起始數字，目前值：{current}</translation>
     </message>
+</context>
+<context>
+    <name>PRIORITY_GUIDE</name>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="260"/>
-        <source>Select the source for {number} variable</source>
-        <translation>選擇 {number} 變數的來源</translation>
+        <location filename="../../util/common/translator.py" line="323"/>
+        <source>The program will attempt downloads in the order of your configured priority. The actual video quality, audio quality, or codec you can download still depends on what is available in the video itself—priority only determines which option is tried first among multiple available choices.
+
+For example, if you set the video quality priority to 720P &gt; 1080P &gt; 4K, the program will first try to download 720P; if 720P is unavailable, it will then try 1080P and then 4K in sequence.</source>
+        <translation type="unfinished">程式會依照設定的優先順序依序嘗試下載。最終可下載的畫質、音質或編碼仍取決於影片本身是否提供，優先順序僅決定在多個可用選項中優先選擇哪一個。
+
+例如，若將畫質優先順序設為 720P &gt; 1080P &gt; 4K，程式會先嘗試下載 720P 畫質；若 720P 不可用，則依序嘗試 1080P、4K。</translation>
     </message>
 </context>
 <context>
@@ -2456,47 +2500,47 @@ For advanced usage, see the help documentation.</source>
 <context>
     <name>ParsingSettingCard</name>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="344"/>
+        <location filename="../../gui/component/setting/card.py" line="396"/>
         <source>Parsing Settings</source>
         <translation>解析設定</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="344"/>
+        <location filename="../../gui/component/setting/card.py" line="396"/>
         <source>Configure clipboard monitoring, parse history, and parse list options</source>
         <translation>設定剪貼簿監控、解析記錄與解析清單選項</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="349"/>
+        <location filename="../../gui/component/setting/card.py" line="401"/>
         <source>Configure…</source>
         <translation>設定…</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="351"/>
+        <location filename="../../gui/component/setting/card.py" line="403"/>
         <source>Monitor Clipboard</source>
         <translation>監聽剪貼簿</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="351"/>
+        <location filename="../../gui/component/setting/card.py" line="403"/>
         <source>Automatically start parsing when a link is copied</source>
         <translation>當偵測到複製連結時自動開始解析</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="352"/>
+        <location filename="../../gui/component/setting/card.py" line="404"/>
         <source>Save Parse History</source>
         <translation>儲存解析記錄</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="352"/>
+        <location filename="../../gui/component/setting/card.py" line="404"/>
         <source>Save the history of parsed links</source>
         <translation>保存已解析連結的歷史紀錄</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="353"/>
+        <location filename="../../gui/component/setting/card.py" line="405"/>
         <source>Parse List Settings</source>
         <translation>解析清單設定</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="353"/>
+        <location filename="../../gui/component/setting/card.py" line="405"/>
         <source>Customize the display and behavior of the parse list</source>
         <translation>自訂解析清單的顯示與行為</translation>
     </message>
@@ -2504,67 +2548,67 @@ For advanced usage, see the help documentation.</source>
 <context>
     <name>PersonalizationCard</name>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="21"/>
+        <location filename="../../gui/component/setting/card.py" line="62"/>
         <source>Personalization</source>
         <translation>個人化</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="21"/>
+        <location filename="../../gui/component/setting/card.py" line="62"/>
         <source>Customize the app theme, colors, and visual effects</source>
         <translation>自訂應用程式佈景主題、色彩與視覺效果</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="25"/>
+        <location filename="../../gui/component/setting/card.py" line="66"/>
         <source>Light</source>
         <translation>淺色</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="25"/>
+        <location filename="../../gui/component/setting/card.py" line="66"/>
         <source>Dark</source>
         <translation>深色</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="25"/>
+        <location filename="../../gui/component/setting/card.py" line="66"/>
         <source>System default</source>
         <translation>系統預設</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="27"/>
+        <location filename="../../gui/component/setting/card.py" line="68"/>
         <source>Customize…</source>
         <translation>自訂…</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="33"/>
+        <location filename="../../gui/component/setting/card.py" line="74"/>
         <source>Theme</source>
         <translation>主題</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="33"/>
+        <location filename="../../gui/component/setting/card.py" line="74"/>
         <source>Select the application theme</source>
         <translation>選擇應用程式主題</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="34"/>
+        <location filename="../../gui/component/setting/card.py" line="75"/>
         <source>Accent Color</source>
         <translation>強調色</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="34"/>
+        <location filename="../../gui/component/setting/card.py" line="75"/>
         <source>Customize the accent color used in the application</source>
         <translation>自訂應用程式中使用的強調色</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="35"/>
+        <location filename="../../gui/component/setting/card.py" line="76"/>
         <source>Mica Effect</source>
         <translation>雲母效果</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="35"/>
+        <location filename="../../gui/component/setting/card.py" line="76"/>
         <source>Apply translucent Mica effect (Windows 11 only)</source>
         <translation>套用半透明雲母效果（僅限 Windows 11）</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="42"/>
+        <location filename="../../gui/component/setting/card.py" line="83"/>
         <source>Choose color</source>
         <translation>選擇顏色</translation>
     </message>
@@ -2572,12 +2616,12 @@ For advanced usage, see the help documentation.</source>
 <context>
     <name>PriorityDialog</name>
     <message>
-        <location filename="../../gui/dialog/setting/priority.py" line="21"/>
+        <location filename="../../gui/dialog/setting/priority.py" line="23"/>
         <source>Customize Priority</source>
         <translation>自訂優先順序</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/priority.py" line="22"/>
+        <location filename="../../gui/dialog/setting/priority.py" line="24"/>
         <source>Drag items to reorder. Higher items have higher priority.</source>
         <translation>拖曳清單項目調整順序，位置越上方優先權越高。</translation>
     </message>
@@ -2585,36 +2629,46 @@ For advanced usage, see the help documentation.</source>
 <context>
     <name>PrioritySettingCard</name>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="135"/>
+        <location filename="../../gui/component/setting/card.py" line="176"/>
         <source>Video, Audio, and Codec Priority</source>
         <translation>畫質、音質與編碼優先順序</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="135"/>
+        <location filename="../../gui/component/setting/card.py" line="176"/>
         <source>Customize download priority settings</source>
         <translation>自訂下載的優先順序</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="137"/>
-        <location filename="../../gui/component/setting/card.py" line="138"/>
-        <location filename="../../gui/component/setting/card.py" line="139"/>
+        <location filename="../../gui/component/setting/card.py" line="180"/>
+        <location filename="../../gui/component/setting/card.py" line="181"/>
+        <location filename="../../gui/component/setting/card.py" line="182"/>
         <source>Customize…</source>
         <translation>自訂…</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="144"/>
+        <location filename="../../gui/component/setting/card.py" line="187"/>
         <source>Video Quality Priority</source>
         <translation>畫質優先順序</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="145"/>
+        <location filename="../../gui/component/setting/card.py" line="188"/>
         <source>Audio Quality Priority</source>
         <translation>音質優先順序</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="146"/>
+        <location filename="../../gui/component/setting/card.py" line="189"/>
         <source>Codec Priority</source>
         <translation>編碼優先順序</translation>
+    </message>
+    <message>
+        <location filename="../../gui/component/setting/card.py" line="191"/>
+        <source>About Custom Priority Settings</source>
+        <translation>關於自訂優先順序的說明</translation>
+    </message>
+    <message>
+        <location filename="../../gui/component/setting/card.py" line="193"/>
+        <source>Guide</source>
+        <translation>說明</translation>
     </message>
 </context>
 <context>
@@ -2731,27 +2785,27 @@ ISP：{isp}</translation>
 <context>
     <name>ProxySettingCard</name>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="306"/>
+        <location filename="../../gui/component/setting/card.py" line="358"/>
         <source>Proxy Settings</source>
         <translation>代理設定</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="306"/>
+        <location filename="../../gui/component/setting/card.py" line="358"/>
         <source>Adjust proxy server settings used for parsing and downloading</source>
         <translation>調整用於解析與下載的代理伺服器設定</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="310"/>
+        <location filename="../../gui/component/setting/card.py" line="362"/>
         <source>Configure…</source>
         <translation>設定…</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="315"/>
+        <location filename="../../gui/component/setting/card.py" line="367"/>
         <source>Use Proxy Server</source>
         <translation>使用代理伺服器</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="316"/>
+        <location filename="../../gui/component/setting/card.py" line="368"/>
         <source>Configure Proxy Server</source>
         <translation>設定代理伺服器</translation>
     </message>
@@ -3105,7 +3159,7 @@ ISP：{isp}</translation>
 <context>
     <name>StartingNumberDialog</name>
     <message>
-        <location filename="../../gui/dialog/setting/starting_number.py" line="12"/>
+        <location filename="../../gui/dialog/setting/starting_number.py" line="14"/>
         <source>Customize Starting Number</source>
         <translation>自訂起始編號</translation>
     </message>
@@ -3113,43 +3167,43 @@ ISP：{isp}</translation>
 <context>
     <name>SubtitleSettingCard</name>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="170"/>
+        <location filename="../../gui/component/setting/card.py" line="217"/>
         <source>Subtitle Download Settings</source>
         <translation>字幕下載設定</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="170"/>
+        <location filename="../../gui/component/setting/card.py" line="217"/>
         <source>Adjust subtitle download settings</source>
         <translation>調整字幕下載設定</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="184"/>
-        <location filename="../../gui/component/setting/card.py" line="185"/>
+        <location filename="../../gui/component/setting/card.py" line="231"/>
+        <location filename="../../gui/component/setting/card.py" line="232"/>
         <source>Customize…</source>
         <translation>自訂…</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="180"/>
+        <location filename="../../gui/component/setting/card.py" line="227"/>
         <source>Download Subtitles</source>
         <translation>下載字幕</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="181"/>
+        <location filename="../../gui/component/setting/card.py" line="228"/>
         <source>Subtitle Format</source>
         <translation>字幕格式</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="187"/>
+        <location filename="../../gui/component/setting/card.py" line="234"/>
         <source>Subtitle Language</source>
         <translation>字幕語言</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="188"/>
+        <location filename="../../gui/component/setting/card.py" line="235"/>
         <source>Subtitle Style</source>
         <translation>字幕樣式</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="188"/>
+        <location filename="../../gui/component/setting/card.py" line="235"/>
         <source>Only effective for ASS format subtitles</source>
         <translation>僅 ASS 格式字幕有效</translation>
     </message>
@@ -3702,57 +3756,57 @@ Under no circumstances shall the developer be liable for any direct, indirect, i
 <context>
     <name>WindowBehaviorSettingCard</name>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="380"/>
+        <location filename="../../gui/component/setting/card.py" line="432"/>
         <source>Window Behavior</source>
         <translation>視窗行為</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="380"/>
+        <location filename="../../gui/component/setting/card.py" line="432"/>
         <source>Adjust the behavior of the main window during startup, runtime, and shutdown</source>
         <translation>調整主視窗在啟動、執行與關閉時的行為</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="384"/>
+        <location filename="../../gui/component/setting/card.py" line="436"/>
         <source>Exit the program</source>
         <translation>結束程式</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="384"/>
+        <location filename="../../gui/component/setting/card.py" line="436"/>
         <source>Minimize to system tray</source>
         <translation>最小化至系統匣</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="384"/>
+        <location filename="../../gui/component/setting/card.py" line="436"/>
         <source>Always ask</source>
         <translation>總是詢問</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="387"/>
+        <location filename="../../gui/component/setting/card.py" line="439"/>
         <source>Stay on Top</source>
         <translation>視窗置頂</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="388"/>
+        <location filename="../../gui/component/setting/card.py" line="440"/>
         <source>Close the Main Window</source>
         <translation>關閉主視窗</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="386"/>
+        <location filename="../../gui/component/setting/card.py" line="438"/>
         <source>Start the application without showing the main window</source>
         <translation>啟動應用程式時不顯示主視窗</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="386"/>
+        <location filename="../../gui/component/setting/card.py" line="438"/>
         <source>Silent Start</source>
         <translation>靜默啟動</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="387"/>
+        <location filename="../../gui/component/setting/card.py" line="439"/>
         <source>Keep the window always on top of the desktop</source>
         <translation>將視窗始終置於桌面頂端</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="388"/>
+        <location filename="../../gui/component/setting/card.py" line="440"/>
         <source>Choose the action when closing the main window</source>
         <translation>選擇關閉主視窗時的操作</translation>
     </message>
