@@ -13,6 +13,8 @@ class PriorityDialog(DialogBase):
         self.map_data = map_data.copy()
         self.config_data = config_data.copy()
 
+        self.config_value = None
+
         self.init_UI()
 
         self.load_list_data()
@@ -37,6 +39,11 @@ class PriorityDialog(DialogBase):
             item.setData(Qt.ItemDataRole.UserRole, config_value)
 
             self.drag_list.addItem(item)
+
+    def accept(self):
+        self.config_value = self.get_config_value()
+
+        return super().accept()
 
     def get_config_value(self):
         config_value = []

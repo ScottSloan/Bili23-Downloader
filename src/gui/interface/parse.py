@@ -471,7 +471,7 @@ class ParseInterface(ParseBase):
         dialog = JumpToPageDialog(self.main_window)
 
         if dialog.exec():
-            page_number = int(dialog.page_box.text())
+            page_number = dialog.page
 
             if 1 <= page_number <= self.pager.total_pages:
                 self.segmented_widget.pager_widget.on_change_page(page_number)

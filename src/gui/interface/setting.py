@@ -205,7 +205,7 @@ class SettingInterface(ScrollArea):
         dialog = PriorityDialog(map_reversed, config.get(config.video_quality_priority), self.main_window)
 
         if dialog.exec():
-            config.set(config.video_quality_priority, dialog.get_config_value())
+            config.set(config.video_quality_priority, dialog.config_value)
 
     def on_adjust_audio_quality_priority(self):
         from ..dialog.setting import PriorityDialog
@@ -215,7 +215,7 @@ class SettingInterface(ScrollArea):
         dialog = PriorityDialog(map_reversed, config.get(config.audio_quality_priority), self.main_window)
 
         if dialog.exec():
-            config.set(config.audio_quality_priority, dialog.get_config_value())
+            config.set(config.audio_quality_priority, dialog.config_value)
 
     def on_adjust_video_codec_priority(self):
         from ..dialog.setting import PriorityDialog
@@ -225,7 +225,7 @@ class SettingInterface(ScrollArea):
         dialog = PriorityDialog(map_reversed, config.get(config.video_codec_priority), self.main_window)
 
         if dialog.exec():
-            config.set(config.video_codec_priority, dialog.get_config_value())
+            config.set(config.video_codec_priority, dialog.config_value)
 
     def on_custom_danmaku_style(self):
         from ..dialog.setting import DanmakuStyleDialog
@@ -257,7 +257,7 @@ class SettingInterface(ScrollArea):
         dialog = StartingNumberDialog(self.main_window)
 
         if dialog.exec():
-            self.numbering_setting_card.set_current_starting_number(dialog.starting_number_spin.value())
+            self.numbering_setting_card.set_current_starting_number(dialog.starting_number)
 
     def on_custom_cdn_server_list(self):
         from ..dialog.setting import CDNServerDialog

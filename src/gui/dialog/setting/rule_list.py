@@ -153,7 +153,7 @@ class RuleListDialog(DialogBase):
         self.init_rule_list()
 
     def on_help(self):
-        webbrowser.open("https://bili23.scott-sloan.cn/doc/advanced-usage.html")
+        webbrowser.open("https://bili23.scott-sloan.cn/doc/naming-rule.html")
 
     def accept(self):
         config.set(config.naming_rule_list, self.rule_data_list)

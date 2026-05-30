@@ -6,6 +6,8 @@ class StartingNumberDialog(DialogBase):
     def __init__(self, parent = None):
         super().__init__(parent)
 
+        self.starting_number = None
+
         self.init_UI()
 
     def init_UI(self):
@@ -18,3 +20,8 @@ class StartingNumberDialog(DialogBase):
         self.viewLayout.addWidget(self.starting_number_spin)
 
         self.widget.setMaximumWidth(350)
+
+    def accept(self):
+        self.starting_number = self.starting_number_spin.value()
+
+        return super().accept()
