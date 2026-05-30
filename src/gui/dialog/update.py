@@ -1,4 +1,5 @@
 from PySide6.QtWidgets import QVBoxLayout, QWidget, QHBoxLayout, QApplication
+from PySide6.QtCore import QSize
 from PySide6.QtGui import QIcon
 
 from qfluentwidgets import BodyLabel, SubtitleLabel, PushButton, PrimaryPushButton, TextBrowser, CaptionLabel
@@ -13,7 +14,7 @@ import sys
 
 class UpdateDialog(FluentDialogBase):
     def __init__(self, info: dict, parent = None):
-        super().__init__(parent = None)
+        super().__init__(QSize(650, 450), parent = None)
 
         self._parent_window = parent
         self._info = info

@@ -185,10 +185,21 @@ class DownloadPathSettingCard(PushSettingCard):
     def on_change_download_path(self):
         path = Directory.browse_directory(self.parent_window, self.tr("Choose folder"), config.get(config.download_path))
 
-        if self.save:
-            config.set(config.download_path, path)
-        
-        self.set_path(path)
+        if path:
+            if self.save:
+                config.set(config.download_path, path)
+
+            self.set_path(path)
+
+        else:
+            dialog = MessageBox(
+                title = self.tr("Download Directory Inaccessible"),
+                content = self.tr("The selected download directory is inaccessible or lacks write permission. Please check and choose a different directory."),
+                parent = self.parent_window
+            )
+            dialog.hideCancelButton()
+
+            dialog.show()
 
 class PrioritySettingCard(ExpandGroupSettingCard):
     def __init__(self, parent_window, parent = None):
@@ -338,7 +349,7 @@ class NumberSettingCard(ExpandGroupSettingCard):
         self.showHyperLinkLabel(self.tr("About Numbering Settings"))
 
         self.hyper_label.clicked.connect(lambda: self.showGuideMessageBox(self.tr("Guide"), Translator.NUMBERING_GUIDE()))
-        self.numbering_type_choice.currentIndexChanged.connect(lambda index: self.starting_number_group.setEnabled(index == 0))
+        self.numbering_type_choice.currentIndexChanged.connect(self.on_change_numbering_type)
 
         self.starting_number_group.setEnabled(self.numbering_type_choice.currentIndex() == 0)
 

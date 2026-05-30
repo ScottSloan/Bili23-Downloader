@@ -1,3 +1,4 @@
+from PySide6.QtCore import QSize
 from PySide6.QtGui import QIcon
 
 from qfluentwidgets import FluentIcon, MessageBox
@@ -11,7 +12,7 @@ from util.common.icon import ExtendedFluentIcon
 
 class DownloadOptionsDialog(TopNavigationDialogBase):
     def __init__(self, parent = None):
-        super().__init__(parent)
+        super().__init__(QSize(750, 500), parent)
 
         self.main_window = parent
 

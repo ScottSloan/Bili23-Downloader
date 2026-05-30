@@ -1,5 +1,5 @@
-from PySide6.QtWidgets import QVBoxLayout, QHBoxLayout, QWidget
-from PySide6.QtCore import Qt, QEventLoop
+from PySide6.QtWidgets import QVBoxLayout, QHBoxLayout, QWidget, QApplication
+from PySide6.QtCore import Qt, QEventLoop, QSize
 
 from qfluentwidgets import (
     MessageBoxBase, FluentWidgetTitleBar, FluentWidget, PrimaryPushButton, PushButton,
@@ -87,10 +87,11 @@ class FluentDialogBase(Base, FluentWidget):
     """
     通过 FluentWidget 实现的模态对话框基类，提供了 Fluent 风格的标题栏和窗口效果。
     """
-    def __init__(self, parent = None):
+    def __init__(self, size: QSize, parent = None):
         Base.__init__(self)
         FluentWidget.__init__(self, parent)
 
+        self._size = size
         self._setup_title_bar()
 
         self.setMicaEffectEnabled(config.get(config.mica_effect))
@@ -99,8 +100,6 @@ class FluentDialogBase(Base, FluentWidget):
 
         self._event_loop = None
         self._result = False
-
-        self._parent_window = None
 
     def _setup_title_bar(self):
         titleBar = FluentWidgetTitleBar(self)
@@ -120,12 +119,12 @@ class FluentDialogBase(Base, FluentWidget):
         self.titleBar.raise_()
         
     def _center_on_parent(self):
-        if self._parent_window:
-            parent_rect = self._parent_window.geometry()
-            dialog_rect = self.frameGeometry()
-            center_point = parent_rect.center()
-            dialog_rect.moveCenter(center_point)
-            self.move(dialog_rect.topLeft())
+        parent_rect = QApplication.instance().window.geometry()
+
+        new_left = parent_rect.left() + (parent_rect.width() - self._size.width()) // 2
+        new_top = parent_rect.top() + (parent_rect.height() - self._size.height()) // 2
+
+        self.move(new_left, new_top)
 
     def accept(self):
         self._result = True
@@ -141,10 +140,13 @@ class FluentDialogBase(Base, FluentWidget):
         
         super().closeEvent(e)
 
-    def exec(self):
-        # 模拟实现模态对话框的 exec 方法
+    def showEvent(self, e):
         self._center_on_parent()
 
+        super().showEvent(e)
+
+    def exec(self):
+        # 模拟实现模态对话框的 exec 方法
         self.show()
 
         # 将 QEventLoop 的父对象设为自己，避免独立事件循环导致的内存及生命周期问题
@@ -161,10 +163,8 @@ class TopNavigationDialogBase(FluentDialogBase):
     """
     顶部导航对话框基类，适用于需要在对话框顶部显示导航栏的场景。
     """
-    def __init__(self, parent = None):
-        super().__init__(parent = None)
-
-        self._parent_window = parent
+    def __init__(self, size: QSize, parent = None):
+        super().__init__(size, parent = None)
 
         self._setup_widget()
 

@@ -1,5 +1,5 @@
 from ...common.data import reversed_video_quality_map, reversed_audio_quality_map, video_codec_str_map
-from ...common.enum import DownloadStatus, DownloadType
+from ...common.enum import DownloadStatus, DownloadType, NumberingType
 from ...common.timestamp import get_timestamp_ms
 from ...common.translator import Translator
 from ...common.signal_bus import signal_bus
@@ -27,7 +27,7 @@ class TaskManager:
 
         signal_bus.download.create_task.connect(self.create)
 
-    def __episode_info_to_task_info(self, episode_info: dict) -> TaskInfo:
+    def __episode_info_to_task_info(self, episode_info: dict, number) -> TaskInfo:
         task_info = TaskInfo()
 
         # BasicInfo
@@ -47,7 +47,7 @@ class TaskManager:
         task_info.Download.keep_original_files = config.keep_original_files
 
         # EpisodeInfo
-        task_info.Episode.from_dict(self.__update_episode_info(episode_info))
+        task_info.Episode.from_dict(self.__update_episode_info(episode_info, number))
 
         # FileNameInfo
         self.__update_file_name_info(task_info)
@@ -73,7 +73,7 @@ class TaskManager:
 
         return type
 
-    def __update_episode_info(self, episode_info: dict):
+    def __update_episode_info(self, episode_info: dict, number):
         extra_data = EpisodeData.get_episode_data(episode_info.get("episode_id", ""))
 
         title = episode_info.get("title", "")
@@ -90,7 +90,7 @@ class TaskManager:
             **extra_data,
             **episode_info.get("related_titles", {}),
             **episode_info.get("uploader_info", {}),
-            "number": self.__arrange_number()
+            "number": number
         }
 
         # 过滤文件系统非法字符
@@ -139,21 +139,39 @@ class TaskManager:
                 # 过滤文件系统非法字符
                 episode_info[title] = re.sub(r'[\/\\\:\*\?\"\<\>\|]', '_', episode_info.get(title, ""))
 
-    def __arrange_number(self):
-        config.current_starting_number += 1
-
-        return config.current_starting_number - 1
-
     def create(self, episode_info_list: List[dict]):
         task_info_list = []
+
+        numbering_type = config.get(config.numbering_type)
+
+        if numbering_type == NumberingType.CONTINUOUS:
+            if config.current_starting_number is None:
+                config.current_starting_number = config.global_starting_number
+
+            next_number = config.current_starting_number
+
+        elif numbering_type == NumberingType.FROM_SPECIFIED:
+            next_number = config.get(config.starting_number)
+
+        else:
+            next_number = None
 
         for episode_info in episode_info_list:
             if self.__check_reparse_needed(episode_info):
                 continue
 
-            task_info = self.__episode_info_to_task_info(episode_info)
+            if numbering_type == NumberingType.USE_PARSE_LIST:
+                number = episode_info.get("number", "")
+            else:
+                number = next_number
+                next_number += 1
+
+            task_info = self.__episode_info_to_task_info(episode_info, number)
 
             task_info_list.append(task_info)
+
+        if numbering_type == NumberingType.CONTINUOUS and next_number is not None:
+            config.current_starting_number = next_number
 
         if task_info_list:
             # 存储到数据库，并添加到下载列表
@@ -239,4 +257,3 @@ class TaskManager:
         self.__update_file_name_info(task_info)
 
 task_manager = TaskManager()
-

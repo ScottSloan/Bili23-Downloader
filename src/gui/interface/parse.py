@@ -75,11 +75,8 @@ class ParseBase(QFrame):
 
     def check_starting_number(self):
         # 更新当前起始编号，如果尚未设置
-        if config.current_starting_number is None:
-            if config.get(config.numbering_type) == NumberingType.CONTINUOUS:
-                config.current_starting_number = config.global_starting_number
-            else:
-                config.current_starting_number = config.get(config.starting_number)
+        if config.current_starting_number is None and config.get(config.numbering_type) == NumberingType.CONTINUOUS:
+            config.current_starting_number = config.global_starting_number
 
     def reset_search(self):
         self.parse_list.search_keywords(None)
