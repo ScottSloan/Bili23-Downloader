@@ -35,7 +35,7 @@ class GuideSettingCardBase:
         dialog = MessageBox(
             title = title,
             content = content,
-            parent = self.main_window
+            parent = self.parent_window
         )
         dialog.hideCancelButton()
 
@@ -69,18 +69,18 @@ class ExpandGroupSettingCard(_ExpandGroupSettingCard, GuideSettingCardBase):
         group = GroupWidget(icon, title, content, widget, stretch)
         self.addGroupWidget(group)
 
-        if hasattr(self, "main_window"):
-            group.main_window = self.main_window
+        if hasattr(self, "parent_window"):
+            group.parent_window = self.parent_window
 
         return group
 
 class PersonalizationCard(ExpandGroupSettingCard):
     accentColorChanged = Signal(QColor)
 
-    def __init__(self, main_window, parent = None):
+    def __init__(self, parent_window, parent = None):
         super().__init__(FluentIcon.PALETTE, self.tr("Personalization"), self.tr("Customize the app theme, colors, and visual effects"), parent)
 
-        self.main_window = main_window
+        self.parent_window = parent_window
 
         self.theme_choice = SettingComboBox(config.themeMode, [self.tr("Light"), self.tr("Dark"), self.tr("System default")], parent = self)
 
@@ -99,7 +99,7 @@ class PersonalizationCard(ExpandGroupSettingCard):
     def __showColorDialog(self):
         """ show color dialog """
         w = ColorDialog(
-            qconfig.get(config.themeColor), self.tr("Choose color"), self.main_window, enableAlpha = True)
+            qconfig.get(config.themeColor), self.tr("Choose color"), self.parent_window, enableAlpha = True)
         w.colorChanged.connect(self.__onCustomColorChanged)
         w.exec()
 
@@ -191,10 +191,10 @@ class DownloadPathSettingCard(PushSettingCard):
         self.set_path(path)
 
 class PrioritySettingCard(ExpandGroupSettingCard):
-    def __init__(self, main_window, parent = None):
+    def __init__(self, parent_window, parent = None):
         super().__init__(FluentIcon.SETTING, self.tr("Video, Audio, and Codec Priority"), self.tr("Customize download priority settings"), parent)
 
-        self.main_window = main_window
+        self.parent_window = parent_window
 
         self.video_quality_btn = PushButton(self.tr("Customize…"), self)
         self.audio_quality_btn = PushButton(self.tr("Customize…"), self)
@@ -306,10 +306,10 @@ class MetadataSettingCard(ExpandGroupSettingCard):
         self.addGroup("", self.tr("Metadata Format"), "", self.type_choice)
 
 class NumberSettingCard(ExpandGroupSettingCard):
-    def __init__(self, main_window, parent = None):
+    def __init__(self, parent_window, parent = None):
         super().__init__(ExtendedFluentIcon.NUMBERS, self.tr("Numbering"), self.tr("Configure how the {number} variable is formatted"), parent)
 
-        self.main_window = main_window
+        self.parent_window = parent_window
 
         self.numbering_type_choice = SettingComboBox(
             config.numbering_type,
@@ -387,10 +387,10 @@ class ProxySettingCard(ExpandGroupSettingCard):
         self.addGroup("", self.tr("Configure Proxy Server"), "", self.custom_btn)
 
 class FFmpegSettingCard(ExpandGroupSettingCard):
-    def __init__(self, main_window, parent = None):
+    def __init__(self, parent_window, parent = None):
         super().__init__(FluentIcon.SETTING, self.tr("FFmpeg Settings"), self.tr("Configure FFmpeg used for merging and converting videos"), parent)
 
-        self.main_window = main_window
+        self.parent_window = parent_window
 
         self.source_choice = SettingComboBox(config.ffmpeg_source, [self.tr("Bundled (with app)"), self.tr("System PATH"), self.tr("Custom path")], parent = self)
         self.custom_btn = PushButton(self.tr("Browse…"), self)
@@ -458,10 +458,10 @@ class WindowBehaviorSettingCard(ExpandGroupSettingCard):
         self.addGroup("", self.tr("Close the Main Window"), self.tr("Choose the action when closing the main window"), self.when_close_action_choice)
 
 class DownloadHandlingSettingCard(ExpandGroupSettingCard):
-    def __init__(self, main_window, parent = None):
+    def __init__(self, parent_window, parent = None):
         super().__init__(FluentIcon.DOWNLOAD, self.tr("Download Handling"), self.tr("Configure download prompts, notifications, and file conflict handling"), parent)
 
-        self.main_window = main_window
+        self.parent_window = parent_window
 
         self.show_download_options_dialog_switch = SettingSwitchButton(config.show_download_options_dialog, parent = self)
         self.show_notification_switch = SettingSwitchButton(config.show_notification, parent = self)

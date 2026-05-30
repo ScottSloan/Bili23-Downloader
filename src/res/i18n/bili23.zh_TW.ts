@@ -55,52 +55,52 @@
 <context>
     <name>AboutDialog</name>
     <message>
-        <location filename="../../gui/dialog/misc/about.py" line="25"/>
+        <location filename="../../gui/dialog/misc/about.py" line="24"/>
         <source>About {app_name}</source>
         <translation>關於 {app_name}</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/about.py" line="27"/>
+        <location filename="../../gui/dialog/misc/about.py" line="26"/>
         <source>Version {app_version}</source>
         <translation>版本 {app_version}</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/about.py" line="28"/>
+        <location filename="../../gui/dialog/misc/about.py" line="27"/>
         <source>Powered by Qt {qt_version} and QFluentWidgets {qfluentwidgets_version}</source>
         <translation>基於 Qt {qt_version} 及 QFluentWidgets {qfluentwidgets_version} 構建</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/about.py" line="29"/>
+        <location filename="../../gui/dialog/misc/about.py" line="28"/>
         <source>This software is free and open-source, licensed under the GNU General Public License v3 (GPLv3).</source>
         <translation>本軟體為免費開源軟體，採用 GNU 通用公眾授權條款第三版（GPLv3）授權。</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/about.py" line="30"/>
+        <location filename="../../gui/dialog/misc/about.py" line="29"/>
         <source>Copyright © 2022-{year} Scott Sloan. All Rights Reserved.</source>
         <translation>Copyright © 2022-{year} Scott Sloan. All Rights Reserved.</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/about.py" line="32"/>
+        <location filename="../../gui/dialog/misc/about.py" line="31"/>
         <source>If this project saved you time or solved your problem, consider buying the author a coffee! Don&apos;t forget to star the repository on GitHub to support open-source development.</source>
         <translation>若此專案為您節省時間或解決問題，歡迎贊助作者一杯咖啡，也別忘了在 GitHub 上點個 Star 支援開源！</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/about.py" line="35"/>
+        <location filename="../../gui/dialog/misc/about.py" line="34"/>
         <source>Terms of Use</source>
         <translation>使用協議</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/about.py" line="36"/>
+        <location filename="../../gui/dialog/misc/about.py" line="35"/>
         <source>Documentation</source>
         <translation>幫助文件</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/about.py" line="37"/>
+        <location filename="../../gui/dialog/misc/about.py" line="36"/>
         <source>Github</source>
         <translation>GitHub</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/about.py" line="38"/>
+        <location filename="../../gui/dialog/misc/about.py" line="37"/>
         <source>Sponsor</source>
         <translation>贊助作者</translation>
     </message>
@@ -972,32 +972,32 @@
 <context>
     <name>DownloadOptionsDialog</name>
     <message>
-        <location filename="../../gui/dialog/download_options/dialog.py" line="16"/>
+        <location filename="../../gui/dialog/download_options/dialog.py" line="18"/>
         <source>Download Options</source>
         <translation>下載選項</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/download_options/dialog.py" line="28"/>
+        <location filename="../../gui/dialog/download_options/dialog.py" line="32"/>
         <source>Media Settings</source>
         <translation>媒體設定</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/download_options/dialog.py" line="29"/>
+        <location filename="../../gui/dialog/download_options/dialog.py" line="33"/>
         <source>Additional Files</source>
         <translation>附加檔案</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/download_options/dialog.py" line="30"/>
+        <location filename="../../gui/dialog/download_options/dialog.py" line="34"/>
         <source>Download Settings</source>
         <translation>下載設定</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/download_options/dialog.py" line="42"/>
+        <location filename="../../gui/dialog/download_options/dialog.py" line="46"/>
         <source>No files selected for download</source>
         <translation>未選取任何要下載的檔案</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/download_options/dialog.py" line="43"/>
+        <location filename="../../gui/dialog/download_options/dialog.py" line="47"/>
         <source>Please select at least one of the following: video stream, audio stream, or additional files.</source>
         <translation>請至少選擇下載獨立影片串流、音訊串流或附加檔案中的一項。</translation>
     </message>
@@ -1896,100 +1896,104 @@ Download functionality will be limited if you&apos;re not logged in.</source>
 <context>
     <name>MediaInfoCard</name>
     <message>
-        <location filename="../../gui/dialog/download_options/card.py" line="22"/>
+        <location filename="../../gui/dialog/download_options/card.py" line="23"/>
         <source>Media Info</source>
-        <translation>媒體資訊</translation>
+        <translation>媒體信息</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/download_options/card.py" line="22"/>
+        <location filename="../../gui/dialog/download_options/card.py" line="23"/>
         <source>Configure download video quality, audio quality, and codec settings</source>
         <translation>調整畫質、音質與編碼下載設定</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/download_options/card.py" line="26"/>
-        <location filename="../../gui/dialog/download_options/card.py" line="149"/>
+        <location filename="../../gui/dialog/download_options/card.py" line="38"/>
+        <source>About Media Info</source>
+        <translation>關於媒體信息的說明</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialog/download_options/card.py" line="40"/>
         <source>Guide</source>
         <translation>說明</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/download_options/card.py" line="35"/>
+        <location filename="../../gui/dialog/download_options/card.py" line="34"/>
         <source>Video Quality</source>
         <translation>畫質</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/download_options/card.py" line="36"/>
+        <location filename="../../gui/dialog/download_options/card.py" line="35"/>
         <source>Audio Quality</source>
         <translation>音質</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/download_options/card.py" line="37"/>
+        <location filename="../../gui/dialog/download_options/card.py" line="36"/>
         <source>Video Codec</source>
         <translation>編碼</translation>
     </message>
     <message>
+        <location filename="../../gui/dialog/download_options/card.py" line="59"/>
         <location filename="../../gui/dialog/download_options/card.py" line="60"/>
-        <location filename="../../gui/dialog/download_options/card.py" line="61"/>
-        <location filename="../../gui/dialog/download_options/card.py" line="64"/>
+        <location filename="../../gui/dialog/download_options/card.py" line="63"/>
         <source>Fetching...</source>
         <translation>取得中...</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/download_options/card.py" line="73"/>
+        <location filename="../../gui/dialog/download_options/card.py" line="72"/>
         <source>Video quality will be automatically selected based on priority settings</source>
         <translation>將依優先順序設定自動選擇畫質</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/download_options/card.py" line="74"/>
+        <location filename="../../gui/dialog/download_options/card.py" line="73"/>
         <source>Video codec will be automatically selected based on priority settings</source>
         <translation>將依優先順序設定自動選擇編碼</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/download_options/card.py" line="85"/>
+        <location filename="../../gui/dialog/download_options/card.py" line="84"/>
         <source>No audio track (silent video stream)</source>
         <translation>無聲影片串流，不含音軌</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/download_options/card.py" line="88"/>
+        <location filename="../../gui/dialog/download_options/card.py" line="87"/>
         <source>Audio track is already embedded in the video stream</source>
         <translation>影片串流中已包含音軌</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/download_options/card.py" line="91"/>
+        <location filename="../../gui/dialog/download_options/card.py" line="90"/>
         <source>Audio quality will be automatically selected based on priority settings</source>
         <translation>將依優先順序設定自動選擇音質</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/download_options/card.py" line="139"/>
+        <location filename="../../gui/dialog/download_options/card.py" line="138"/>
         <source>Largest file size, best compatibility</source>
         <translation>檔案體積大，相容性強</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/download_options/card.py" line="145"/>
+        <location filename="../../gui/dialog/download_options/card.py" line="144"/>
         <source>Smallest file size, poorest compatibility</source>
         <translation>壓縮效率最高，但相容性最差</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/download_options/card.py" line="117"/>
+        <location filename="../../gui/dialog/download_options/card.py" line="116"/>
         <source>Unknown Audio Quality</source>
         <translation>未知音質</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/download_options/card.py" line="142"/>
+        <location filename="../../gui/dialog/download_options/card.py" line="141"/>
         <source>Smaller file size, limited compatibility</source>
         <translation>文件体积小，但兼容性较差</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/download_options/card.py" line="96"/>
+        <location filename="../../gui/dialog/download_options/card.py" line="95"/>
         <source>Unknown Video Quality</source>
         <translation>未知畫質</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/download_options/card.py" line="112"/>
+        <location filename="../../gui/dialog/download_options/card.py" line="111"/>
         <source>preview</source>
         <translation>試看</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/download_options/card.py" line="130"/>
+        <location filename="../../gui/dialog/download_options/card.py" line="129"/>
         <source>Unknown Video Codec</source>
         <translation>未知編碼</translation>
     </message>
@@ -1997,52 +2001,52 @@ Download functionality will be limited if you&apos;re not logged in.</source>
 <context>
     <name>MediaOptionsCard</name>
     <message>
-        <location filename="../../gui/dialog/download_options/card.py" line="171"/>
+        <location filename="../../gui/dialog/download_options/card.py" line="160"/>
         <source>Media Options</source>
         <translation>媒體選項</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/download_options/card.py" line="171"/>
+        <location filename="../../gui/dialog/download_options/card.py" line="160"/>
         <source>Configure download behavior for video and audio streams</source>
         <translation>設定影片與音訊串流的下載行為</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/download_options/card.py" line="179"/>
+        <location filename="../../gui/dialog/download_options/card.py" line="168"/>
         <source>Download standalone video stream</source>
         <translation>下載獨立影片串流</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/download_options/card.py" line="179"/>
+        <location filename="../../gui/dialog/download_options/card.py" line="168"/>
         <source>Download a video stream without audio</source>
         <translation>下載不含音訊的影片串流</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/download_options/card.py" line="180"/>
+        <location filename="../../gui/dialog/download_options/card.py" line="169"/>
         <source>Download standalone audio stream</source>
         <translation>下載獨立音訊串流</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/download_options/card.py" line="180"/>
+        <location filename="../../gui/dialog/download_options/card.py" line="169"/>
         <source>Download an audio stream without video</source>
         <translation>下載不含影片的音訊串流</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/download_options/card.py" line="181"/>
+        <location filename="../../gui/dialog/download_options/card.py" line="170"/>
         <source>Merge separate video and audio streams into a single file</source>
         <translation>將獨立的影片串流與音訊串流合併為單一檔案</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/download_options/card.py" line="182"/>
+        <location filename="../../gui/dialog/download_options/card.py" line="171"/>
         <source>Keep the original separate stream files after merging</source>
         <translation>合併影片與音訊後保留原始的獨立串流檔案</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/download_options/card.py" line="181"/>
+        <location filename="../../gui/dialog/download_options/card.py" line="170"/>
         <source>Merge video and audio</source>
         <translation>合併影片與音訊</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/download_options/card.py" line="182"/>
+        <location filename="../../gui/dialog/download_options/card.py" line="171"/>
         <source>Keep original files</source>
         <translation>保留原始檔案</translation>
     </message>
@@ -2100,37 +2104,37 @@ To get a single complete video file, please enable &quot;Merge video and audio&q
 <context>
     <name>MonitorClipboardDialog</name>
     <message>
-        <location filename="../../gui/dialog/setting/monitor_clipboard.py" line="13"/>
+        <location filename="../../gui/dialog/setting/monitor_clipboard.py" line="17"/>
         <source>Monitor Clipboard Settings</source>
         <translation>剪貼簿監控設定</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/monitor_clipboard.py" line="15"/>
+        <location filename="../../gui/dialog/setting/monitor_clipboard.py" line="19"/>
         <source>Monitor Clipboard</source>
         <translation>監聽剪貼簿</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/monitor_clipboard.py" line="16"/>
+        <location filename="../../gui/dialog/setting/monitor_clipboard.py" line="20"/>
         <source>On - Automatically start parsing when a link is copied</source>
         <translation>開 - 複製連結時自動開始解析</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/monitor_clipboard.py" line="17"/>
+        <location filename="../../gui/dialog/setting/monitor_clipboard.py" line="21"/>
         <source>Off - Do not monitor clipboard</source>
         <translation>關 - 不監控剪貼簿</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/monitor_clipboard.py" line="19"/>
+        <location filename="../../gui/dialog/setting/monitor_clipboard.py" line="23"/>
         <source>Show Download Confirmation Dialog</source>
         <translation>顯示下載確認對話框</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/monitor_clipboard.py" line="20"/>
+        <location filename="../../gui/dialog/setting/monitor_clipboard.py" line="24"/>
         <source>On - Show the dialog after parsing a link</source>
         <translation>開 - 解析連結後顯示對話框</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/monitor_clipboard.py" line="21"/>
+        <location filename="../../gui/dialog/setting/monitor_clipboard.py" line="25"/>
         <source>Off - Do not show the dialog</source>
         <translation>關 - 不顯示對話框</translation>
     </message>
@@ -2194,22 +2198,22 @@ For advanced usage, see the help documentation.</source>
 <context>
     <name>NamingConventionCard</name>
     <message>
-        <location filename="../../gui/dialog/download_options/card.py" line="241"/>
+        <location filename="../../gui/dialog/download_options/card.py" line="230"/>
         <source>Naming Convention</source>
         <translation>命名規則</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/download_options/card.py" line="241"/>
+        <location filename="../../gui/dialog/download_options/card.py" line="230"/>
         <source>Choose the naming rule to use when downloading</source>
         <translation>選擇下載時使用的命名規則</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/download_options/card.py" line="273"/>
+        <location filename="../../gui/dialog/download_options/card.py" line="262"/>
         <source>Not available</source>
         <translation>不可用</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/download_options/card.py" line="275"/>
+        <location filename="../../gui/dialog/download_options/card.py" line="264"/>
         <source>Custom naming rules are not supported for favorites and profiles</source>
         <translation>收藏夾與個人空間類型不支援自訂命名規則</translation>
     </message>
@@ -2391,87 +2395,87 @@ For example, if you set the video quality priority to 720P &gt; 1080P &gt; 4K, t
 <context>
     <name>ParseInterface</name>
     <message>
-        <location filename="../../gui/interface/parse.py" line="204"/>
+        <location filename="../../gui/interface/parse.py" line="225"/>
         <source>Paste and Parse</source>
         <translation>貼上並解析</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="208"/>
+        <location filename="../../gui/interface/parse.py" line="229"/>
         <source>Link / av / BV / ep / ss / md / Favorites / Profile</source>
         <translation>連結 / av / BV / ep / ss / md / 收藏夾 / 個人空間</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="213"/>
+        <location filename="../../gui/interface/parse.py" line="234"/>
         <source>Parse</source>
         <translation>解析</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="224"/>
+        <location filename="../../gui/interface/parse.py" line="245"/>
         <source>Download Options</source>
         <translation>下載選項</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="228"/>
+        <location filename="../../gui/interface/parse.py" line="249"/>
         <source>More</source>
         <translation>更多</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="243"/>
+        <location filename="../../gui/interface/parse.py" line="264"/>
         <source>Download Selected Items</source>
         <translation>下載所選項目</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="349"/>
+        <location filename="../../gui/interface/parse.py" line="366"/>
         <source>Parse Failed</source>
         <translation>解析失敗</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="376"/>
+        <location filename="../../gui/interface/parse.py" line="391"/>
         <source>Added to download queue</source>
         <translation>已加入下載佇列</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="396"/>
+        <location filename="../../gui/interface/parse.py" line="406"/>
         <source>Search</source>
         <translation>搜尋</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="397"/>
+        <location filename="../../gui/interface/parse.py" line="407"/>
         <source>Batch select</source>
         <translation>批次選取</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="398"/>
+        <location filename="../../gui/interface/parse.py" line="408"/>
         <source>Parsing history</source>
         <translation>解析記錄</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="407"/>
+        <location filename="../../gui/interface/parse.py" line="417"/>
         <source>Jump to page</source>
         <translation>跳至頁面</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="408"/>
+        <location filename="../../gui/interface/parse.py" line="418"/>
         <source>Auto-parse pagination</source>
         <translation>自動解析分頁</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="437"/>
+        <location filename="../../gui/interface/parse.py" line="447"/>
         <source>{category_name} ({selected_count} selected, {total_count} total)</source>
         <translation>{category_name}（已選取 {selected_count} 項，共 {total_count} 項）</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="443"/>
+        <location filename="../../gui/interface/parse.py" line="453"/>
         <source>{category_name} ({total_count} total)</source>
         <translation>{category_name}（共 {total_count} 項）</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="480"/>
+        <location filename="../../gui/interface/parse.py" line="494"/>
         <source>Invalid page number</source>
         <translation>無效的頁碼</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="480"/>
+        <location filename="../../gui/interface/parse.py" line="494"/>
         <source>Please enter a number between 1 and {total_pages}</source>
         <translation>請輸入1到{total_pages}之間的一個數字</translation>
     </message>

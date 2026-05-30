@@ -1,10 +1,11 @@
 from PySide6.QtCore import Qt
 
 from qfluentwidgets import (
-    ExpandGroupSettingCard, FluentIcon, SwitchButton, IndicatorPosition, HyperlinkButton, MessageBox, SettingCard,
+    FluentIcon, SwitchButton, IndicatorPosition, HyperlinkButton, MessageBox, SettingCard,
     ComboBox
 )
 
+from gui.component.setting.card import ExpandGroupSettingCard
 from gui.component.widget import DictComboBox
 
 from util.common.data import reversed_video_quality_map, reversed_audio_quality_map, reversed_video_codec_map, reversed_audio_codec_map
@@ -18,12 +19,10 @@ from util.format.file_name import FileNameFormatter
 from util.format.units import Units
 
 class MediaInfoCard(ExpandGroupSettingCard):
-    def __init__(self, options_dialog, parent = None):
+    def __init__(self, parent_window, parent = None):
         super().__init__(FluentIcon.INFO, self.tr("Media Info"), self.tr("Configure download video quality, audio quality, and codec settings"), parent)
 
-        self.options_dialog = options_dialog
-
-        self.guide_btn = HyperlinkButton("", self.tr("Guide"), parent = self)
+        self.parent_window = parent_window
 
         self.video_quality_choice = DictComboBox(parent = self)
         self.audio_quality_choice = DictComboBox(parent = self)
@@ -36,9 +35,9 @@ class MediaInfoCard(ExpandGroupSettingCard):
         self.audio_quality_group = self.addGroup(FluentIcon.MUSIC, self.tr("Audio Quality"), "", self.audio_quality_choice)
         self.video_codec_group = self.addGroup(FluentIcon.CODE, self.tr("Video Codec"), "", self.video_codec_choice)
 
-        self.addWidget(self.guide_btn)
+        self.showHyperLinkLabel(self.tr("About Media Info"))
 
-        self.guide_btn.clicked.connect(self.on_guide)
+        self.hyper_label.clicked.connect(lambda: self.showGuideMessageBox(self.tr("Guide"), Translator.MEDIA_INFO_GUIDE()))
 
     def on_load(self):
         self.video_quality_choice.set_current_data(config.video_quality_id)
@@ -143,16 +142,6 @@ class MediaInfoCard(ExpandGroupSettingCard):
             
             case 13:
                 return self.tr("Smallest file size, poorest compatibility")
-
-    def on_guide(self):
-        dialog = MessageBox(
-            self.tr("Guide"),
-            Translator.MEDIA_INFO_GUIDE(),
-            parent = self.options_dialog
-        )
-        dialog.hideCancelButton()
-
-        dialog.exec()
 
     @property
     def video_quality_id(self):

@@ -3,7 +3,6 @@ from PySide6.QtCore import qVersion
 
 from qfluentwidgets import SubtitleLabel, BodyLabel, TransparentPushButton, FluentIcon, __version__
 
-from gui.dialog.misc import TermsOfUseDialog
 from gui.component.dialog import DialogBase
 
 from util.common.config import config
@@ -76,6 +75,8 @@ class AboutDialog(DialogBase):
         self.sponsor_btn.clicked.connect(self.on_sponsor)
 
     def on_terms(self):
+        from gui.dialog.misc.terms import TermsOfUseDialog
+
         dialog = TermsOfUseDialog(self)
         dialog.exec()
 

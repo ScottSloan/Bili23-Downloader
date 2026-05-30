@@ -220,13 +220,15 @@ class APPConfig(QConfig):
     # Behavior
     auto_check_all = ConfigItem("Behavior", "auto_check_all", False, BoolValidator())
     parse_list_column = ConfigItem("Behavior", "parse_list_column", DefaultValue.parse_list_column)
+    monitor_clipboard = ConfigItem("Behavior", "monitor_clipboard", False, BoolValidator())
+    show_download_confirmation_dialog = ConfigItem("Behavior", "show_download_confirmation_dialog", False, BoolValidator())
 
     silent_start = ConfigItem("Behavior", "silent_start", False, BoolValidator())
     stay_on_top = ConfigItem("Behavior", "stay_on_top", False, BoolValidator())
-    monitor_clipboard = ConfigItem("Behavior", "monitor_clipboard", False, BoolValidator())
+    when_close_window = OptionsConfigItem("Behavior", "when_close_window", WhenClose.ALWAYS_ASK, OptionsValidator(WhenClose), EnumSerializer(WhenClose))
+
     parse_history = ConfigItem("Behavior", "parse_history", True, BoolValidator())
     show_download_options_dialog = ConfigItem("Behavior", "show_download_options_dialog", True, BoolValidator())
-    when_close_window = OptionsConfigItem("Behavior", "when_close_window", WhenClose.ALWAYS_ASK, OptionsValidator(WhenClose), EnumSerializer(WhenClose))
     preallocate_file_space = ConfigItem("Behavior", "preallocate_file_space", True, BoolValidator())
     file_conflict_resolution = OptionsConfigItem("Behavior", "file_conflict_resolution", FileConflictResolution.AUTO_RENAME, OptionsValidator(FileConflictResolution), EnumSerializer(FileConflictResolution))
 
