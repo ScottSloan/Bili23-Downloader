@@ -22,7 +22,7 @@ class MediaSettingsPage(ScrollArea):
 
     def init_UI(self):
         self.media_info_card = MediaInfoCard(self.options_dialog, parent = self)
-        self.media_options_card = MediaOptionsCard(parent = self)
+        self.media_options_card = MediaOptionsCard(self.options_dialog, parent = self)
         
         main_layout = QVBoxLayout()
         main_layout.addWidget(self.media_info_card)

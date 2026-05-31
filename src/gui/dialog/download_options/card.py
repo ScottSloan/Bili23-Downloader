@@ -156,8 +156,10 @@ class MediaInfoCard(ExpandGroupSettingCard):
         return self.video_codec_choice.currentData()
 
 class MediaOptionsCard(ExpandGroupSettingCard):
-    def __init__(self, parent = None):
+    def __init__(self, parent_window, parent = None):
         super().__init__(ExtendedFluentIcon.OPTIONS, self.tr("Media Options"), self.tr("Configure download behavior for video and audio streams"), parent)
+
+        self.parent_window = parent_window
 
         self.download_video_stream_switch = SwitchButton(parent = self, indicatorPos = IndicatorPosition.RIGHT)
         self.download_audio_stream_switch = SwitchButton(parent = self, indicatorPos = IndicatorPosition.RIGHT)
@@ -170,6 +172,8 @@ class MediaOptionsCard(ExpandGroupSettingCard):
         self.merge_video_audio_group = self.addGroup("", self.tr("Merge video and audio"), self.tr("Merge separate video and audio streams into a single file"), self.merge_video_audio_switch)
         self.keep_original_files_group = self.addGroup("", self.tr("Keep original files"), self.tr("Keep the original separate stream files after merging"), self.keep_original_files_switch)
 
+        self.showHyperLinkLabel(self.tr("About Media Options"))
+
         self.connect_signals()
 
         self.on_load()
@@ -178,6 +182,8 @@ class MediaOptionsCard(ExpandGroupSettingCard):
         self.download_video_stream_switch.checkedChanged.connect(self.on_change_download_stream_options)
         self.download_audio_stream_switch.checkedChanged.connect(self.on_change_download_stream_options)
         self.merge_video_audio_switch.checkedChanged.connect(self.on_change_merge_option)
+
+        self.hyper_label.clicked.connect(lambda: self.showGuideMessageBox(self.tr("Guide"), Translator.MEDIA_OPTIONS_GUIDE()))
 
     def on_load(self):
         self.download_video_stream_switch.setChecked(config.download_video_stream)

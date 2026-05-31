@@ -1,15 +1,14 @@
-from PySide6.QtWidgets import QVBoxLayout, QWidget, QHBoxLayout, QListWidgetItem
-from PySide6.QtGui import QColor, QIcon, QPainter, QPen
-from PySide6.QtCore import Signal, Qt, QSize
+from PySide6.QtWidgets import QVBoxLayout, QWidget, QHBoxLayout
+from PySide6.QtGui import QColor, QPainter, QPen
+from PySide6.QtCore import Signal, QSize
 
 from qfluentwidgets import (
-    FlyoutViewBase, FluentIcon, isDarkTheme, ListWidget, ComboBox, PopUpAniStackedWidget
+    FlyoutViewBase, FluentIcon, isDarkTheme, ComboBox, PopUpAniStackedWidget, NavigationWidget
 )
-from qfluentwidgets.components.navigation import NavigationWidget
 
 from gui.component.entry_list import EntryListView
-
 from .button import TransparentToolButton
+from .navigation import NavigationPanel
 from .pager import Pager
 
 from util.parse.parser.favorite import FavoriteParser
@@ -17,7 +16,6 @@ from util.common.icon import ExtendedFluentIcon
 from util.common.signal_bus import signal_bus
 from util.common.config import config
 
-from typing import Union
 import webbrowser
 
 class Separator(NavigationWidget):
@@ -39,119 +37,6 @@ class Separator(NavigationWidget):
         painter.setPen(pen)
 
         painter.drawLine(2, 0, 2, self.height())
-
-class CategoryWidget(QWidget):
-    def __init__(self, parent = None):
-        super().__init__(parent)
-
-        self.init_UI()
-
-        self.init_category_list()
-
-    def init_UI(self):
-        self.category_list = ListWidget(self)
-
-        self.refresh_btn = TransparentToolButton(ExtendedFluentIcon.RETRY, parent = self)
-        self.refresh_btn.setToolTip(self.tr("Refresh"))
-        self.refresh_btn.setFixedHeight(32)
-
-        self.open_in_browser_btn = TransparentToolButton(FluentIcon.GLOBE, parent = self)
-        self.open_in_browser_btn.setToolTip(self.tr("Open in Browser"))
-        self.open_in_browser_btn.setFixedHeight(32)
-
-        btn_layout = QHBoxLayout()
-        btn_layout.setContentsMargins(0, 0, 0, 0)
-        btn_layout.setSpacing(5)
-        btn_layout.addWidget(self.refresh_btn)
-        btn_layout.addWidget(self.open_in_browser_btn)
-        btn_layout.addStretch()
-
-        viewLayout = QVBoxLayout(self)
-        viewLayout.setContentsMargins(0, 0, 5, 0)
-
-        viewLayout.addWidget(self.category_list)
-        viewLayout.addLayout(btn_layout)
-
-        self.open_in_browser_btn.clicked.connect(self.on_open_in_browser)
-
-    def init_category_list(self):
-        category_list = [
-            {
-                "icon": ExtendedFluentIcon.FAVORITE,
-                "text": self.tr("Favorites"),
-                "data": {
-                    "isSelectable": True,
-                }
-            },
-            {
-                "icon": ExtendedFluentIcon.ALBUM,
-                "text": self.tr("Subscriptions"),
-                "data": {
-                    "isSelectable": True,
-                }
-            },
-            {
-                "icon": FluentIcon.HEART,
-                "text": self.tr("Anime & Series"),
-                "data": {
-                    "isSelectable": True,
-                }
-            },
-            {
-                "icon": ExtendedFluentIcon.CLOCK,
-                "text": self.tr("Watch later"),
-                "data": {
-                    "isSelectable": False,
-                    "url": "bili23://watch_later"
-                }
-            },
-            {
-                "icon": FluentIcon.HISTORY,
-                "text": self.tr("History"),
-                "data": {
-                    "isSelectable": False,
-                    "url": "bili23://history"
-                }
-            }
-        ]
-
-        for category in category_list:
-            self.add_category(category["icon"], category["text"], category["data"])
-
-        self.category_list.setCurrentRow(0)
-
-        self.category_list.itemClicked.connect(self.on_list_item_clicked)
-
-    def add_category(self, icon: Union[str, QIcon, FluentIcon], text: str, data: dict):
-        item = QListWidgetItem(f"   {text}", self.category_list)
-        item.setIcon(icon.icon())
-        item.setData(Qt.ItemDataRole.UserRole, data)
-        item.setSizeHint(QSize(0, 40))
-
-        self.category_list.addItem(item)
-
-    def on_list_item_clicked(self, item: QListWidgetItem):
-        data = item.data(Qt.ItemDataRole.UserRole)
-
-        parent_widget: 'FavoriteFlyoutWidget' = self.parent()
-
-        if data["isSelectable"]:
-            parent_widget.on_category_changed(self.category_list.row(item))
-        
-        else:
-            parent_widget.closed.emit()
-            
-            signal_bus.parse.parse_url.emit(data["url"])
-
-    def on_open_in_browser(self):
-        match self.category_list.currentIndex().row():
-            case 0 | 1:
-                url = "https://space.bilibili.com/{uid}/favlist".format(uid = config.user_uid)
-
-            case 2:
-                url = "https://space.bilibili.com/{uid}/bangumi".format(uid = config.user_uid)
-
-        webbrowser.open(url)
 
 class EntryWidget(QWidget):
     def __init__(self, parent: 'FavoriteFlyoutWidget'):
@@ -232,6 +117,7 @@ class FollowWidget(QWidget):
         self.pager = Pager(self)
 
         filter_box = QHBoxLayout()
+        filter_box.setContentsMargins(5, 5, 5, 5)
         filter_box.addWidget(self.type_choice)
         filter_box.addWidget(self.status_choice)
 
@@ -301,16 +187,41 @@ class FavoriteFlyoutWidget(FlyoutViewBase):
         self.subscribtion_parser.success_callback = self.subscribtion_widget.update_list
 
     def init_UI(self):
-        self.category_widget = CategoryWidget(self)
-        self.category_widget.setFixedWidth(180)
+        self.category_widget = NavigationPanel(self)
+
+        self.refresh_btn = TransparentToolButton(ExtendedFluentIcon.RETRY, parent = self)
+        self.refresh_btn.setToolTip(self.tr("Refresh"))
+        self.refresh_btn.setFixedHeight(32)
+
+        self.open_in_browser_btn = TransparentToolButton(FluentIcon.GLOBE, parent = self)
+        self.open_in_browser_btn.setToolTip(self.tr("Open in Browser"))
+        self.open_in_browser_btn.setFixedHeight(32)
+
+        btn_layout = QHBoxLayout()
+        btn_layout.setContentsMargins(0, 0, 0, 0)
+        btn_layout.setSpacing(5)
+        btn_layout.addWidget(self.refresh_btn)
+        btn_layout.addWidget(self.open_in_browser_btn)
+        btn_layout.addStretch()
+
+        category_layout = QVBoxLayout()
+        category_layout.setContentsMargins(0, 0, 5, 0)
+        category_layout.addWidget(self.category_widget)
+        category_layout.addLayout(btn_layout)
 
         self.separator = Separator(self)
 
         self.favorite_widget = EntryWidget(self)
+        self.favorite_widget.setObjectName("favorite")
+
         self.subscribtion_widget = EntryWidget(self)
+        self.subscribtion_widget.setObjectName("subscription")
+
         self.follow_widget = FollowWidget(self)
+        self.follow_widget.setObjectName("follow")
 
         self.stack_widget = PopUpAniStackedWidget(self)
+        self.stack_widget.setContentsMargins(0, 5, 0, 5)
         self.stack_widget.addWidget(self.favorite_widget)
         self.stack_widget.addWidget(self.subscribtion_widget)
         self.stack_widget.addWidget(self.follow_widget)
@@ -318,11 +229,51 @@ class FavoriteFlyoutWidget(FlyoutViewBase):
         self.viewLayout = QHBoxLayout(self)
         self.viewLayout.setContentsMargins(10, 10, 10, 10)
         self.viewLayout.setSpacing(0)
-        self.viewLayout.addWidget(self.category_widget)
+        self.viewLayout.addLayout(category_layout)
         self.viewLayout.addWidget(self.separator)
-        self.viewLayout.addWidget(self.stack_widget)
-        
-        self.category_widget.refresh_btn.clicked.connect(self.init_flyout)
+        self.viewLayout.addWidget(self.stack_widget, stretch = 1)
+
+        self.init_category_list()
+
+    def init_category_list(self):
+        self.add_category(
+            routeKey = "favorite",
+            icon = ExtendedFluentIcon.FAVORITE,
+            text = self.tr("Favorites"),
+            widget = self.favorite_widget
+        )
+        self.add_category(
+            routeKey = "subscription",
+            icon = ExtendedFluentIcon.ALBUM,
+            text = self.tr("Subscriptions"),
+            widget = self.subscribtion_widget
+        )
+        self.add_category(
+            routeKey = "follow",
+            icon = FluentIcon.HEART,
+            text = self.tr("Anime & Series"),
+            widget = self.follow_widget
+        )
+
+        self.add_category(
+            routeKey = "watch_later",
+            icon = ExtendedFluentIcon.CLOCK,
+            text = self.tr("Watch later"),
+            onClick = lambda: self.on_parse_url("bili23://watch_later"),
+            selectable = False,
+        )
+        self.add_category(
+            routeKey = "history",
+            icon = FluentIcon.HISTORY,
+            text = self.tr("History"),
+            onClick = lambda: self.on_parse_url("bili23://history"),
+            selectable = False,
+        )
+
+        self.category_widget.setCurrentItem("favorite")
+
+        self.open_in_browser_btn.clicked.connect(self.on_open_in_browser)
+        self.refresh_btn.clicked.connect(self.init_flyout)
 
     def init_flyout(self):
         # 初始化数据
@@ -332,9 +283,9 @@ class FavoriteFlyoutWidget(FlyoutViewBase):
 
     def adjust_list_widget_width(self, parent_size: QSize):
         if parent_size.width() >= 1250:
-            width = 1110        # 显示三列
+            width = 1130        # 显示三列
         else:
-            width = 810        # 显示两列
+            width = 830        # 显示两列
 
         if parent_size.height() >= 700:
             height = 655
@@ -347,3 +298,34 @@ class FavoriteFlyoutWidget(FlyoutViewBase):
 
     def on_category_changed(self, index: int):
         self.stack_widget.setCurrentIndex(index)
+
+    def on_parse_url(self, url: str):
+        self.closed.emit()
+
+        signal_bus.parse.parse_url.emit(url)
+
+    def add_category(self, routeKey: str, icon, text, widget: QWidget = None, onClick = None, selectable = True):
+        if widget:
+            self.stack_widget.addWidget(widget)
+            routeKey = widget.objectName()
+
+        if onClick is None:
+            onClick =  lambda: self.stack_widget.setCurrentWidget(widget)
+
+        self.category_widget.addItem(
+            routeKey,
+            icon,
+            text,
+            onClick,
+            selectable = selectable,
+        )
+
+    def on_open_in_browser(self):
+        match self.stack_widget.currentIndex():
+            case 0 | 1:
+                url = "https://space.bilibili.com/{uid}/favlist".format(uid = config.user_uid)
+
+            case 2:
+                url = "https://space.bilibili.com/{uid}/bangumi".format(uid = config.user_uid)
+
+        webbrowser.open(url)
