@@ -3,9 +3,9 @@ from PySide6.QtCore import Qt, QEventLoop, QSize
 
 from qfluentwidgets import (
     MessageBoxBase, FluentWidgetTitleBar, FluentWidget, PrimaryPushButton, PushButton,
-    PopUpAniStackedWidget, InfoBar, InfoBarPosition
+    PopUpAniStackedWidget, InfoBar, InfoBarPosition, MessageBox as _MessageBox
 )
-from .widget import PivotItem, Pivot
+from .widget import PivotItem, Pivot, ScrollArea
 
 from util.common.enum import ToastNotificationCategory
 from util.common.style_sheet import StyleSheet
@@ -217,3 +217,24 @@ class TopNavigationDialogBase(FluentDialogBase):
         )
 
         self.stackedWidget.addWidget(widget)
+
+class MessageBox(_MessageBox):
+    def __init__(self, title: str, content: str, parent: QWidget = None):
+        super().__init__(title, content, parent)
+
+        self.textLayout.removeWidget(self.contentLabel)
+
+        self._scroll_area = ScrollArea(self.widget)
+        self._scroll_area.setContentsMargins(0, 0, 0, 0)
+        self._scroll_area._setScrollWidget(self.contentLabel, resizable = True)
+
+        self.textLayout.addWidget(self._scroll_area)
+
+        self.widget.setMaximumHeight(parent.height() * 0.8)
+
+    def showEvent(self, e):
+        content_width = self.contentLabel.rect().width()
+
+        self._scroll_area.setMinimumWidth(content_width)
+
+        super().showEvent(e)

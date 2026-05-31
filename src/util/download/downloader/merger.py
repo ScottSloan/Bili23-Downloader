@@ -1,6 +1,6 @@
 from PySide6.QtCore import QObject
 
-from ...common.enum import DownloadStatus, DownloadType, ToastNotificationCategory
+from ...common.enum import DownloadStatus, DownloadType, OriginalFileType, ToastNotificationCategory
 from ...common.io.file import safe_remove, safe_rename
 from ...common.timestamp import get_timestamp
 from ...common.signal_bus import signal_bus
@@ -108,20 +108,21 @@ class Merger(QObject):
 
         try:
             if has_video and has_audio:
-                self.keep_original_files()
+                kept_original_files = self.keep_original_files()
                 if self._has_error: return
-                self.add_file(self.final_video_file_name, self.final_audio_file_name, clear = True)
+
+                self.add_file(*kept_original_files, clear = True)
 
             elif has_video and not has_audio:
-                safe_rename(cwd, self.temp_video_file_name, self.final_mp4_video_file_name)
-                self.add_file(self.final_mp4_video_file_name, clear = True)
+                final_video_file_name = safe_rename(cwd, self.temp_video_file_name, self.final_mp4_video_file_name).name
+                self.add_file(final_video_file_name, clear = True)
 
             elif has_audio and not has_video:
                 if self._output_audio_file is None:
                     self._output_audio_file = self.temp_audio_file_name
 
-                safe_rename(cwd, self._output_audio_file, self.final_audio_file_name)
-                self.add_file(self.final_audio_file_name, clear = True)
+                final_audio_file_name = safe_rename(cwd, self._output_audio_file, self.final_audio_file_name).name
+                self.add_file(final_audio_file_name, clear = True)
 
             self.mark_as_completed()
 
@@ -135,15 +136,19 @@ class Merger(QObject):
         try:
             cwd = self.get_cwd()
             
-            safe_rename(cwd, self.temp_output_file_name, self.final_output_file_name)
+            final_output_file_name = safe_rename(cwd, self.temp_output_file_name, self.final_output_file_name).name
+
+            kept_original_files = []
 
             if not self.task_info.Download.keep_original_files:
                 safe_remove(cwd, *self.task_info.File.relative_files)
             else:
-                self.keep_original_files()
+                kept_original_files = self.keep_original_files()
                 if self._has_error: return
 
-            self.add_file(self.final_output_file_name, clear = True)
+                safe_remove(cwd, *self.task_info.File.relative_files)
+
+            self.add_file(final_output_file_name, *kept_original_files, clear = True)
             self.mark_as_completed()
 
         except Exception as e:
@@ -176,10 +181,34 @@ class Merger(QObject):
     def keep_original_files(self):
         try:
             cwd = self.get_cwd()
-            safe_rename(cwd, self.temp_video_file_name, self.final_video_file_name)
-            safe_rename(cwd, self.temp_audio_file_name, self.final_audio_file_name)
+
+            try:
+                original_file_type = OriginalFileType(config.keep_original_files_type)
+            except ValueError:
+                original_file_type = OriginalFileType.BOTH
+
+            kept_original_files = []
+
+            match original_file_type:
+                case OriginalFileType.BOTH:
+                    final_video_file_name = safe_rename(cwd, self.temp_video_file_name, self.final_video_file_name).name
+                    final_audio_file_name = safe_rename(cwd, self.temp_audio_file_name, self.final_audio_file_name).name
+
+                    kept_original_files.extend([final_video_file_name, final_audio_file_name])
+
+                case OriginalFileType.VIDEO:
+                    final_video_file_name = safe_rename(cwd, self.temp_video_file_name, self.final_video_file_name).name
+                    kept_original_files.append(final_video_file_name)
+
+                case OriginalFileType.AUDIO:
+                    final_audio_file_name = safe_rename(cwd, self.temp_audio_file_name, self.final_audio_file_name).name
+                    kept_original_files.append(final_audio_file_name)
+
+            return kept_original_files
         except Exception as e:
             self.set_error_message(Translator.ERROR_MESSAGES("RENAME_FAILED"), str(e))
+
+            return []
 
     def on_merge_error(self, error: Exception, stdout: str, stderr: str):
         error_map = {

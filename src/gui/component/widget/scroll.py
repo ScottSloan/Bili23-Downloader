@@ -14,6 +14,10 @@ class ScrollArea(_ScrollArea):
         scroll_widget.setObjectName("scrollWidget")
         scroll_widget.setLayout(layout)
 
+        self._setScrollWidget(scroll_widget, resizable)
+
+    def _setScrollWidget(self, scroll_widget, resizable = True):
+
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.setWidget(scroll_widget)
         self.setWidgetResizable(resizable)

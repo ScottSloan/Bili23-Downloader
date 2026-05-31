@@ -334,6 +334,7 @@ class APPConfig(QConfig):
     download_audio_stream = True
     merge_video_audio = True
     keep_original_files = False
+    keep_original_files_type = 0
 
     # Misc
     target_naming_rule_id = None

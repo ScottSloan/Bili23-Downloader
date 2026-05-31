@@ -281,8 +281,7 @@ class Translator:
 
     @staticmethod
     def MEDIA_INFO_GUIDE():
-        return translate("MEDIA_INFO_GUIDE", """The media info shown here defaults to the first video in the parsed results. If multiple videos are available,
-this information may not exactly match the one you download—use it for reference only.
+        return translate("MEDIA_INFO_GUIDE", """The media info shown here defaults to the first video in the parsed results. If multiple videos are available, this information may not exactly match the one you download—use it for reference only.
 
 To view detailed media info for a specific video, right-click its entry in the parse list and select "Update Media Info".
 To customize the priority settings, go to the Settings page.

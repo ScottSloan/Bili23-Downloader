@@ -1,8 +1,7 @@
 from PySide6.QtCore import Qt
 
 from qfluentwidgets import (
-    FluentIcon, SwitchButton, IndicatorPosition, HyperlinkButton, MessageBox, SettingCard,
-    ComboBox
+    FluentIcon, SwitchButton, IndicatorPosition, SettingCard, ComboBox
 )
 
 from gui.component.setting.card import ExpandGroupSettingCard
@@ -167,10 +166,14 @@ class MediaOptionsCard(ExpandGroupSettingCard):
         self.merge_video_audio_switch = SwitchButton(parent = self, indicatorPos = IndicatorPosition.RIGHT)
         self.keep_original_files_switch = SwitchButton(parent = self, indicatorPos = IndicatorPosition.RIGHT)
 
+        self.original_files_type_choice = ComboBox(parent = self)
+        self.original_files_type_choice.addItems([self.tr("Both"), self.tr("Video Only"), self.tr("Audio Only")])
+
         self.addGroup("", self.tr("Download standalone video stream"), self.tr("Download a video stream without audio"), self.download_video_stream_switch)
         self.addGroup("", self.tr("Download standalone audio stream"), self.tr("Download an audio stream without video"), self.download_audio_stream_switch)
         self.merge_video_audio_group = self.addGroup("", self.tr("Merge video and audio"), self.tr("Merge separate video and audio streams into a single file"), self.merge_video_audio_switch)
         self.keep_original_files_group = self.addGroup("", self.tr("Keep original files"), self.tr("Keep the original separate stream files after merging"), self.keep_original_files_switch)
+        self.keep_original_files_type_group = self.addGroup("", self.tr("Original file type to keep"), self.tr("Choose which original stream files to keep when keeping original files"), self.original_files_type_choice)
 
         self.showHyperLinkLabel(self.tr("About Media Options"))
 
@@ -182,6 +185,7 @@ class MediaOptionsCard(ExpandGroupSettingCard):
         self.download_video_stream_switch.checkedChanged.connect(self.on_change_download_stream_options)
         self.download_audio_stream_switch.checkedChanged.connect(self.on_change_download_stream_options)
         self.merge_video_audio_switch.checkedChanged.connect(self.on_change_merge_option)
+        self.keep_original_files_switch.checkedChanged.connect(self.on_change_keep_original_files_option)
 
         self.hyper_label.clicked.connect(lambda: self.showGuideMessageBox(self.tr("Guide"), Translator.MEDIA_OPTIONS_GUIDE()))
 
@@ -190,6 +194,9 @@ class MediaOptionsCard(ExpandGroupSettingCard):
         self.download_audio_stream_switch.setChecked(config.download_audio_stream)
         self.merge_video_audio_switch.setChecked(config.merge_video_audio)
         self.keep_original_files_switch.setChecked(config.keep_original_files)
+        self.original_files_type_choice.setCurrentIndex(config.keep_original_files_type)
+
+        self.on_change_keep_original_files_option()
 
     def on_change_download_stream_options(self):
         enable = self.download_video_stream_switch.isChecked() and self.download_audio_stream_switch.isChecked()
@@ -199,7 +206,6 @@ class MediaOptionsCard(ExpandGroupSettingCard):
         self.merge_video_audio_group.setEnabled(enable)
 
         keep_original_enable = enable and self.merge_video_audio_switch.isChecked()
-        
         self.keep_original_files_switch.setEnabled(keep_original_enable)
         self.keep_original_files_group.setEnabled(keep_original_enable)
 
@@ -214,6 +220,11 @@ class MediaOptionsCard(ExpandGroupSettingCard):
 
         if not enable:
             self.keep_original_files_switch.setChecked(False)
+
+    def on_change_keep_original_files_option(self):
+        enable = self.keep_original_files_switch.isChecked()
+
+        self.keep_original_files_type_group.setEnabled(enable)
 
     @property
     def download_video_stream(self):

@@ -138,3 +138,8 @@ class ParserType(Enum):
     WATCH_LATER = "WATCH_LATER"
     DYNAMIC = "DYNAMIC"
     UNKNOWN = "UNKNOWN"
+
+class OriginalFileType(IntEnum):
+    BOTH = 0
+    VIDEO = 1
+    AUDIO = 2

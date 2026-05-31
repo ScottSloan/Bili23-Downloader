@@ -1,10 +1,13 @@
 from PySide6.QtWidgets import QVBoxLayout
 from PySide6.QtCore import QTimer
 
-from gui.dialog.download_options.card import MediaInfoCard, MediaOptionsCard, MessageBox
+from qfluentwidgets import MessageBox
+
+from gui.dialog.download_options.card import MediaInfoCard, MediaOptionsCard
 from gui.component.widget import ScrollArea
 
 from util.parse.preview.info import PreviewerInfo
+from util.common.enum import OriginalFileType
 from util.common.signal_bus import signal_bus
 from util.common.config import config
 
@@ -70,6 +73,8 @@ class MediaSettingsPage(ScrollArea):
         config.download_audio_stream = self.media_options_card.download_audio_stream
         config.merge_video_audio = self.media_options_card.merge_video_audio
         config.keep_original_files = self.media_options_card.keep_original_files
+
+        config.keep_original_files_type = self.media_options_card.original_files_type_choice.currentIndex()
 
     def on_check(self):
         # 只下载独立视频流会导致没有声音，提示用户确认
