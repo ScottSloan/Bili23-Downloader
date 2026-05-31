@@ -50,6 +50,12 @@ class DefaultValue:
         }
     ]
 
+    auto_select_conditions = {
+        "user_uploads": 0,
+        "bangumi": 0,
+        "other": 0
+    }
+
     video_quality_priority = [
         127,
         126,
@@ -218,11 +224,11 @@ class APPConfig(QConfig):
     mica_effect = ConfigItem("Interface", "mica_effect", False, BoolValidator())
 
     # Behavior
-    auto_check_all = ConfigItem("Behavior", "auto_check_all", False, BoolValidator())
     parse_list_column = ConfigItem("Behavior", "parse_list_column", DefaultValue.parse_list_column)
     monitor_clipboard = ConfigItem("Behavior", "monitor_clipboard", False, BoolValidator())
     show_download_confirmation_dialog = ConfigItem("Behavior", "show_download_confirmation_dialog", False, BoolValidator())
     auto_select_mode = OptionsConfigItem("Behavior", "auto_select_mode", AutoSelectMode.MANUAL, OptionsValidator(AutoSelectMode), EnumSerializer(AutoSelectMode))
+    auto_select_conditions = ConfigItem("Behavior", "auto_select_conditions", DefaultValue.auto_select_conditions)
     parse_history = ConfigItem("Behavior", "parse_history", True, BoolValidator())
 
     silent_start = ConfigItem("Behavior", "silent_start", False, BoolValidator())

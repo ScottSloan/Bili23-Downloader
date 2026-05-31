@@ -24,14 +24,11 @@ class ParseListSettingsDialog(DialogBase):
 
         self.drag_list = CheckableDragListWidget(self)
 
-        self.auto_check_all_switch = LabelSwitchButton(self.tr("Automatically check all parsed items"), parent = self)
-
         self.viewLayout.addWidget(self.caption_lab)
         self.viewLayout.addSpacing(10)
         self.viewLayout.addWidget(column_lab)
         self.viewLayout.addWidget(self.drag_list)
         self.viewLayout.addSpacing(10)
-        self.viewLayout.addWidget(self.auto_check_all_switch)
 
         self.widget.setMinimumWidth(400)
 
@@ -46,8 +43,6 @@ class ParseListSettingsDialog(DialogBase):
 
         self.drag_list.setRowEnabled(0, False)   # 禁止隐藏第一列（序号）
         self.drag_list.setMinDragRow(1)          # 保持第一列（序号）在最前面，不允许拖动到其他位置
-
-        self.auto_check_all_switch.switch.setChecked(config.get(config.auto_check_all))
 
     def accept(self):
         column_list = []
@@ -65,7 +60,6 @@ class ParseListSettingsDialog(DialogBase):
             return
         
         config.set(config.parse_list_column, column_list)
-        config.set(config.auto_check_all, self.auto_check_all_switch.switch.isChecked())
 
         signal_bus.parse.update_column_settings.emit()
             

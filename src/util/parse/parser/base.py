@@ -34,12 +34,13 @@ class ParserBase:
 
     def find_str(self, pattern: str, url: str, check: bool = True):
         result = re.findall(pattern, url)
-
-        if check and not result:
-            raise ValueError("无效的链接")
         
-        return result[0]
-    
+        if result:
+            return result[0]
+        
+        elif check:
+            raise ValueError("无效的链接")
+
     def enc_wbi(self, params: dict):
         def getMixinKey(orig: str):
             return reduce(lambda s, i: s + orig[i], mixinKeyEncTab, "")[:32]

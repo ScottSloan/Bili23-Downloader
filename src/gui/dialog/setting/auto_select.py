@@ -21,7 +21,6 @@ class AutoSelectDialog(DialogBase):
         self.manual_radio = RadioButton(self.tr("Let me choose manually"), self)
         self.select_all_radio = RadioButton(self.tr("Automatically select all items"), self)
         self.conditional_selection_radio = RadioButton(self.tr("Automatically select based on conditions"), self)
-        self.manual_radio.setChecked(True)
 
         self.custom_hint_lab = BodyLabel(self.tr('The following rules can only be modified when "Automatically select based on conditions" is selected.'), self)
 
@@ -88,6 +87,14 @@ class AutoSelectDialog(DialogBase):
             case AutoSelectMode.CONDITIONAL:
                 self.conditional_selection_radio.setChecked(True)
 
+        user_uploads_condition = config.get(config.auto_select_conditions).get("user_uploads", 0)
+        bangumi_condition = config.get(config.auto_select_conditions).get("bangumi", 0)
+        other_condition = config.get(config.auto_select_conditions).get("other", 0)
+
+        self.user_uploads_choice.setCurrentIndex(user_uploads_condition)
+        self.bangumi_choice.setCurrentIndex(bangumi_condition)
+        self.other_choice.setCurrentIndex(other_condition)
+
         self.on_custom_options_enabled()
 
     def accept(self):
@@ -99,6 +106,12 @@ class AutoSelectDialog(DialogBase):
 
         elif self.conditional_selection_radio.isChecked():
             config.set(config.auto_select_mode, AutoSelectMode.CONDITIONAL)
+
+        config.set(config.auto_select_conditions, {
+            "user_uploads": self.user_uploads_choice.currentIndex(),
+            "bangumi": self.bangumi_choice.currentIndex(),
+            "other": self.other_choice.currentIndex()
+        })
 
         return super().accept()
 

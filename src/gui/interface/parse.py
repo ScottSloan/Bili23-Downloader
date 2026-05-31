@@ -12,7 +12,7 @@ from gui.component.widget import (
 )
 from gui.component.parse_list import ParseTreeView
 
-from util.common.enum import ToastNotificationCategory, NumberingType
+from util.common.enum import ToastNotificationCategory, NumberingType, AutoSelectMode, ParserType
 from util.common.signal_bus import signal_bus, config
 from util.common.icon import ExtendedFluentIcon
 from util.common.translator import Translator
@@ -66,12 +66,50 @@ class ParseBase(QFrame):
 
             self.season_choice.hide()
 
-    def check_need_check_all(self):
-        # 如果配置了自动全选，则直接勾选所有项目
-        if config.get(config.auto_check_all):
-            self.parse_list.check_all_items()
+    def apply_auto_select(self, category_name: str):
+        match config.get(config.auto_select_mode):
+            case AutoSelectMode.SELECT_ALL:
+                # 选中全部项目
+                self.parse_list.check_all_items()
 
-            self.download_btn.setEnabled(True)
+                self.download_btn.setEnabled(True)
+
+            case AutoSelectMode.CONDITIONAL:
+                # 按条件自动选择
+                conditions: dict = config.get(config.auto_select_conditions)
+
+                match category_name:
+                    case ParserType.VIDEO.value:
+                        # 投稿视频
+
+                        # 默认的行为就是单个视频自动选中，分P自动选中对应视频，合集自动选中对应视频，所以只需处理全选的情况
+                        if conditions.get("user_uploads") == 1:
+                            self.parse_list.check_all_items()
+
+                        # == 0 时无需处理
+
+                    case "ANIME" | "DOCUMENTARY" | "TV" | "CHN_ANIME" | "MOVIE" | "VARIETY":
+                        # 剧集类
+                        
+                        # 同理，默认行为是选中对应剧集，所以只需处理选中正片的情况
+                        if conditions.get("bangumi") == 1:
+                            self.parse_list._check_main_episodes_node()
+
+                        # == 0 时无需处理
+
+                    case ParserType.CHEESE.value:
+                        # 课程
+
+                        # 同理，默认行为是选中对应剧集，所以只需处理选中正片的情况
+                        if conditions.get("bangumi") == 1:
+                            self.parse_list.check_all_items()
+
+                    case _:
+                        # 其他
+                        
+                        # 对于其他类型，默认行为是全不选，所以只需处理全选的情况
+                        if conditions.get("other") == 1:
+                            self.parse_list.check_all_items()
 
     def check_starting_number(self):
         # 更新当前起始编号，如果尚未设置
@@ -184,11 +222,11 @@ class ParseBase(QFrame):
             parent = self.main_window
         )
 
-    def post_parse_success_check(self, extra_data: dict):
+    def post_parse_success_check(self, category_name: str, extra_data: dict):
         # 根据解析结果判断是否显示分页组件
         self.check_extra_data(extra_data)
 
-        self.check_need_check_all()
+        self.apply_auto_select(category_name)
 
     def show_download_options_dialog(self):
         from ..dialog.download_options.dialog import DownloadOptionsDialog
@@ -346,7 +384,7 @@ class ParseInterface(ParseBase):
 
         self.update_previewer_info()
 
-        self.post_parse_success_check(extra_data)
+        self.post_parse_success_check(category_name, extra_data)
 
         self.on_item_check_state_changed(None)
         self.parse_btn.setIndeterminateState(False)

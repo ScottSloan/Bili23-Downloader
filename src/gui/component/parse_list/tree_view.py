@@ -271,3 +271,11 @@ class ParseTreeView(TreeView):
         """
 
         setCustomStyleSheet(self, light_style, dark_style)
+
+    def _check_main_episodes_node(self):
+        # 选中剧集类正片部分
+        try:
+            self._model.root_node.children[0].children[0].set_checked_state(Qt.CheckState.Checked)
+            
+        except IndexError:
+            pass

@@ -21,7 +21,9 @@ class CheeseEpisodeParser(EpisodeParserBase):
         if self.target_episode_info:
             return node
         else:
-            self.update_episode_list(node)
+            current_episode_data = ("ep_id", self.get_ep_id()) 
+
+            self.update_episode_list(node, current_episode_data)
 
     def sections_parser(self):
         cheese_title = self.info_data["title"]
@@ -119,3 +121,16 @@ class CheeseEpisodeParser(EpisodeParserBase):
             return int(match.group(1))
         else:
             return 0
+        
+    def get_ep_id(self):
+        # 如果 info_data 中存在 current_ep_id 字段，优先使用该字段作为 ep_id
+        if "current_ep_id" in self.info_data:
+            return self.info_data.get("current_ep_id")
+        
+        else:
+            # 否则从正片章节中获取第一个剧集的 ep_id 作为 ep_id
+            for section in self.info_data["sections"]:
+                for episode in section["episodes"]:
+                    return episode.get("id", "")
+            
+            return ""

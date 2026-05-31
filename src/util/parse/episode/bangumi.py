@@ -22,9 +22,7 @@ class BangumiEpisodeParser(EpisodeParserBase):
         if self.target_episode_info:
             return node
         else:
-            current_ep_id = self.info_data.get("current_ep_id")
-
-            current_episode_data = ("ep_id", current_ep_id) if current_ep_id else None
+            current_episode_data = ("ep_id", self.get_ep_id()) 
 
             self.update_episode_list(node, current_episode_data)
 
@@ -171,3 +169,13 @@ class BangumiEpisodeParser(EpisodeParserBase):
         
         else:
             return episode_data.get("title", "")
+        
+    def get_ep_id(self):
+        # 如果 info_data 中存在 current_ep_id 字段，优先使用该字段作为 ep_id
+        if "current_ep_id" in self.info_data:
+            return self.info_data.get("current_ep_id")
+        
+        else:
+            # 否则从正片章节中获取第一个剧集的 ep_id 作为 ep_id
+            if "episodes" in self.info_data and self.info_data["episodes"]:
+                return self.info_data["episodes"][0].get("ep_id", "")
