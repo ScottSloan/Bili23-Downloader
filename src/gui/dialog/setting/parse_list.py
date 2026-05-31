@@ -2,7 +2,7 @@ from PySide6.QtCore import Qt
 
 from qfluentwidgets import SubtitleLabel, BodyLabel
 
-from gui.component.widget import CheckableDragListWidget, LabelSwitchButton
+from gui.component.widget import CheckableDragListWidget
 from gui.component.dialog import DialogBase
 
 from util.common.signal_bus import signal_bus

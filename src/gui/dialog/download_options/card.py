@@ -36,7 +36,7 @@ class MediaInfoCard(ExpandGroupSettingCard):
 
         self.showHyperLinkLabel(self.tr("About Media Info"))
 
-        self.hyper_label.clicked.connect(lambda: self.showGuideMessageBox(self.tr("Guide"), Translator.MEDIA_INFO_GUIDE()))
+        self.hyper_label.clicked.connect(lambda: self.showGuideMessageBox(self.tr("Instructions"), Translator.MEDIA_INFO_GUIDE()))
 
     def on_load(self):
         self.video_quality_choice.set_current_data(config.video_quality_id)
@@ -187,7 +187,7 @@ class MediaOptionsCard(ExpandGroupSettingCard):
         self.merge_video_audio_switch.checkedChanged.connect(self.on_change_merge_option)
         self.keep_original_files_switch.checkedChanged.connect(self.on_change_keep_original_files_option)
 
-        self.hyper_label.clicked.connect(lambda: self.showGuideMessageBox(self.tr("Guide"), Translator.MEDIA_OPTIONS_GUIDE()))
+        self.hyper_label.clicked.connect(lambda: self.showGuideMessageBox(self.tr("Instructions"), Translator.MEDIA_OPTIONS_GUIDE()))
 
     def on_load(self):
         self.download_video_stream_switch.setChecked(config.download_video_stream)

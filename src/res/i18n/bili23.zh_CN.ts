@@ -217,73 +217,73 @@
 <context>
     <name>AutoSelectDialog</name>
     <message>
-        <location filename="../../gui/dialog/setting/auto_select.py" line="20"/>
+        <location filename="../../gui/dialog/setting/auto_select.py" line="18"/>
         <source>Auto-select Download Items Settings</source>
         <translation>自动选择下载项设置</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/auto_select.py" line="21"/>
+        <location filename="../../gui/dialog/setting/auto_select.py" line="19"/>
         <source>Set how items in the parsed list are automatically selected after parsing is complete.</source>
         <translation>设置解析完成后，解析列表中的项目如何自动勾选。</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/auto_select.py" line="23"/>
+        <location filename="../../gui/dialog/setting/auto_select.py" line="21"/>
         <source>Let me choose manually</source>
         <translation>让我手动选择</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/auto_select.py" line="24"/>
-        <location filename="../../gui/dialog/setting/auto_select.py" line="48"/>
+        <location filename="../../gui/dialog/setting/auto_select.py" line="22"/>
+        <location filename="../../gui/dialog/setting/auto_select.py" line="45"/>
         <source>Automatically select all items</source>
         <translation>自动勾选所有项目</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/auto_select.py" line="25"/>
+        <location filename="../../gui/dialog/setting/auto_select.py" line="23"/>
         <source>Automatically select based on conditions</source>
         <translation>按条件自动勾选</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/auto_select.py" line="28"/>
+        <location filename="../../gui/dialog/setting/auto_select.py" line="25"/>
         <source>The following rules can only be modified when &quot;Automatically select based on conditions&quot; is selected.</source>
         <translation>仅在选择&quot;按条件自动勾选&quot;时可修改以下规则。</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/auto_select.py" line="30"/>
+        <location filename="../../gui/dialog/setting/auto_select.py" line="27"/>
         <source>When parsing user-uploaded videos</source>
         <translation>解析投稿视频时</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/auto_select.py" line="33"/>
+        <location filename="../../gui/dialog/setting/auto_select.py" line="30"/>
         <source>Select only the single video corresponding to the link</source>
         <translation>选中链接所对应的单个视频</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/auto_select.py" line="34"/>
+        <location filename="../../gui/dialog/setting/auto_select.py" line="31"/>
         <source>Select all videos in the multi-part or collection</source>
         <translation>选中分P或合集中的所有视频</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/auto_select.py" line="37"/>
+        <location filename="../../gui/dialog/setting/auto_select.py" line="34"/>
         <source>When parsing episodic or course-type videos</source>
         <translation>解析剧集类或课程类视频时</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/auto_select.py" line="40"/>
+        <location filename="../../gui/dialog/setting/auto_select.py" line="37"/>
         <source>Select only the single episode corresponding to the link</source>
         <translation>选中链接所对应的单个剧集</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/auto_select.py" line="41"/>
+        <location filename="../../gui/dialog/setting/auto_select.py" line="38"/>
         <source>Select all main episodes in the series</source>
         <translation>选中该剧集中所有正片剧集</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/auto_select.py" line="44"/>
+        <location filename="../../gui/dialog/setting/auto_select.py" line="41"/>
         <source>When parsing other types of videos</source>
         <translation>解析其他类型视频时</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/auto_select.py" line="47"/>
+        <location filename="../../gui/dialog/setting/auto_select.py" line="44"/>
         <source>Choose manually</source>
         <translation>手动选择</translation>
     </message>
@@ -906,7 +906,7 @@
     </message>
     <message>
         <location filename="../../gui/component/setting/card.py" line="491"/>
-        <source>Guide</source>
+        <source>Instructions</source>
         <translation>说明</translation>
     </message>
     <message>
@@ -1402,7 +1402,7 @@ Reminder: Due to Bilibili&apos;s anti-abuse mechanism, parsing too many pages or
     </message>
     <message>
         <location filename="../../gui/dialog/setting/edit_rule.py" line="68"/>
-        <source>Guide</source>
+        <source>Instructions</source>
         <translation>说明</translation>
     </message>
     <message>
@@ -2015,11 +2015,6 @@ Download functionality will be limited if you&apos;re not logged in.</source>
         <translation>有关媒体信息的说明</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/download_options/card.py" line="39"/>
-        <source>Guide</source>
-        <translation>说明</translation>
-    </message>
-    <message>
         <location filename="../../gui/dialog/download_options/card.py" line="33"/>
         <source>Video Quality</source>
         <translation>画质</translation>
@@ -2033,6 +2028,11 @@ Download functionality will be limited if you&apos;re not logged in.</source>
         <location filename="../../gui/dialog/download_options/card.py" line="35"/>
         <source>Video Codec</source>
         <translation>编码</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialog/download_options/card.py" line="39"/>
+        <source>Instructions</source>
+        <translation>说明</translation>
     </message>
     <message>
         <location filename="../../gui/dialog/download_options/card.py" line="58"/>
@@ -2176,7 +2176,7 @@ Download functionality will be limited if you&apos;re not logged in.</source>
     </message>
     <message>
         <location filename="../../gui/dialog/download_options/card.py" line="190"/>
-        <source>Guide</source>
+        <source>Instructions</source>
         <translation>说明</translation>
     </message>
     <message>
@@ -2243,39 +2243,54 @@ To get a single complete video file, please enable &quot;Merge video and audio&q
 <context>
     <name>MonitorClipboardDialog</name>
     <message>
-        <location filename="../../gui/dialog/setting/monitor_clipboard.py" line="19"/>
+        <location filename="../../gui/dialog/setting/monitor_clipboard.py" line="17"/>
         <source>Monitor Clipboard Settings</source>
         <translation>剪贴板监控设置</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/monitor_clipboard.py" line="21"/>
+        <location filename="../../gui/dialog/setting/monitor_clipboard.py" line="19"/>
         <source>Monitor Clipboard</source>
         <translation>监听剪贴板</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/monitor_clipboard.py" line="22"/>
+        <location filename="../../gui/dialog/setting/monitor_clipboard.py" line="20"/>
         <source>On - Automatically start parsing when a link is copied</source>
         <translation>开 - 当复制链接时自动开始解析</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/monitor_clipboard.py" line="23"/>
+        <location filename="../../gui/dialog/setting/monitor_clipboard.py" line="21"/>
         <source>Off - Do not monitor clipboard</source>
         <translation>关 - 不监控剪贴板</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/monitor_clipboard.py" line="25"/>
+        <location filename="../../gui/dialog/setting/monitor_clipboard.py" line="23"/>
         <source>Automatically Show Download Confirmation Dialog</source>
         <translation>自动显示下载确认对话框</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/monitor_clipboard.py" line="26"/>
+        <location filename="../../gui/dialog/setting/monitor_clipboard.py" line="24"/>
         <source>On - Show the dialog after parsing a link</source>
         <translation>开 - 解析链接后显示对话框</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/monitor_clipboard.py" line="27"/>
+        <location filename="../../gui/dialog/setting/monitor_clipboard.py" line="25"/>
         <source>Off - Do not show the dialog</source>
         <translation>关 - 不显示对话框</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialog/setting/monitor_clipboard.py" line="26"/>
+        <source>About this option</source>
+        <translation>有关此选项的说明</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialog/setting/monitor_clipboard.py" line="61"/>
+        <source>Instructions</source>
+        <translation>说明</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialog/setting/monitor_clipboard.py" line="62"/>
+        <source>This feature needs to be used in conjunction with the &quot;Automatic Download Item Selection Settings&quot;. When enabled, if no items are selected in the list after parsing is complete, the download confirmation dialog will not pop up.</source>
+        <translation>此功能需要与&quot;自动选中下载项设置&quot;配合使用。启用后，如果解析完成时列表中没有任何被选中的项目，将不会弹出下载确认对话框。</translation>
     </message>
 </context>
 <context>
@@ -2400,6 +2415,11 @@ The meaning of each &quot;Numbering Mode&quot; option is as follows:
         <translation>有关编号设置的说明</translation>
     </message>
     <message>
+        <location filename="../../gui/component/setting/card.py" line="352"/>
+        <source>Instructions</source>
+        <translation>说明</translation>
+    </message>
+    <message>
         <location filename="../../gui/component/setting/card.py" line="335"/>
         <source>Customize…</source>
         <translation>自定义…</translation>
@@ -2408,11 +2428,6 @@ The meaning of each &quot;Numbering Mode&quot; option is as follows:
         <location filename="../../gui/component/setting/card.py" line="345"/>
         <source>Starting Number</source>
         <translation>起始编号</translation>
-    </message>
-    <message>
-        <location filename="../../gui/component/setting/card.py" line="352"/>
-        <source>Guide</source>
-        <translation>说明</translation>
     </message>
     <message>
         <location filename="../../gui/component/setting/card.py" line="371"/>
@@ -2473,17 +2488,17 @@ For example, if you set the video quality priority to 720P &gt; 1080P &gt; 4K, t
 <context>
     <name>ParseBase</name>
     <message>
-        <location filename="../../gui/interface/parse.py" line="157"/>
+        <location filename="../../gui/interface/parse.py" line="195"/>
         <source>{category_name} ({total_count} total)</source>
         <translation>{category_name}（共 {total_count} 项）</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="178"/>
+        <location filename="../../gui/interface/parse.py" line="216"/>
         <source>Auto-parse Pagination</source>
         <translation>自动解析分页</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="179"/>
+        <location filename="../../gui/interface/parse.py" line="217"/>
         <source>Click here to automatically parse all pages.</source>
         <translation>点击此处可进行自动解析分页操作</translation>
     </message>
@@ -2534,87 +2549,87 @@ For example, if you set the video quality priority to 720P &gt; 1080P &gt; 4K, t
 <context>
     <name>ParseInterface</name>
     <message>
-        <location filename="../../gui/interface/parse.py" line="222"/>
+        <location filename="../../gui/interface/parse.py" line="262"/>
         <source>Paste and Parse</source>
         <translation>粘贴并解析</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="226"/>
+        <location filename="../../gui/interface/parse.py" line="266"/>
         <source>Link / av / BV / ep / ss / md / Favorites / Profile</source>
         <translation>链接 / av / BV / ep / ss / md / 收藏夹 / 个人空间</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="231"/>
+        <location filename="../../gui/interface/parse.py" line="271"/>
         <source>Parse</source>
         <translation>解析</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="242"/>
+        <location filename="../../gui/interface/parse.py" line="282"/>
         <source>Download Options</source>
         <translation>下载选项</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="246"/>
+        <location filename="../../gui/interface/parse.py" line="286"/>
         <source>More</source>
         <translation>更多</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="261"/>
+        <location filename="../../gui/interface/parse.py" line="301"/>
         <source>Download Selected Items</source>
         <translation>下载所选项目</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="364"/>
+        <location filename="../../gui/interface/parse.py" line="404"/>
         <source>Parse Failed</source>
         <translation>解析失败</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="389"/>
+        <location filename="../../gui/interface/parse.py" line="429"/>
         <source>Added to download queue</source>
         <translation>已加入到下载队列</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="404"/>
+        <location filename="../../gui/interface/parse.py" line="444"/>
         <source>Search</source>
         <translation>搜索</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="405"/>
+        <location filename="../../gui/interface/parse.py" line="445"/>
         <source>Batch select</source>
         <translation>批量选择</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="406"/>
+        <location filename="../../gui/interface/parse.py" line="446"/>
         <source>Parsing history</source>
         <translation>解析记录</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="415"/>
+        <location filename="../../gui/interface/parse.py" line="455"/>
         <source>Jump to page</source>
         <translation>跳转到页面</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="416"/>
+        <location filename="../../gui/interface/parse.py" line="456"/>
         <source>Auto-parse pagination</source>
         <translation>自动解析分页</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="445"/>
+        <location filename="../../gui/interface/parse.py" line="485"/>
         <source>{category_name} ({selected_count} selected, {total_count} total)</source>
         <translation>{category_name}（已选择 {selected_count} 项，共 {total_count} 项）</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="451"/>
+        <location filename="../../gui/interface/parse.py" line="491"/>
         <source>{category_name} ({total_count} total)</source>
         <translation>{category_name}（共 {total_count} 项）</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="492"/>
+        <location filename="../../gui/interface/parse.py" line="532"/>
         <source>Invalid page number</source>
         <translation>无效页码</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="492"/>
+        <location filename="../../gui/interface/parse.py" line="532"/>
         <source>Please enter a number between 1 and {total_pages}</source>
         <translation>请输入一个介于1和{total_pages}之间的数字</translation>
     </message>
@@ -2632,9 +2647,8 @@ For example, if you set the video quality priority to 720P &gt; 1080P &gt; 4K, t
         <translation>选择要显示的列并拖动以调整顺序</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/parse_list.py" line="27"/>
         <source>Automatically check all parsed items</source>
-        <translation>自动选中所有已解析的项目</translation>
+        <translation type="vanished">自动选中所有已解析的项目</translation>
     </message>
 </context>
 <context>
@@ -2882,7 +2896,7 @@ For example, if you set the video quality priority to 720P &gt; 1080P &gt; 4K, t
     </message>
     <message>
         <location filename="../../gui/component/setting/card.py" line="224"/>
-        <source>Guide</source>
+        <source>Instructions</source>
         <translation>说明</translation>
     </message>
 </context>

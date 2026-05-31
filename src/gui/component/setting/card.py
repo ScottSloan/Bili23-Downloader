@@ -221,7 +221,7 @@ class PrioritySettingCard(ExpandGroupSettingCard):
 
         self.showHyperLinkLabel(self.tr("About Custom Priority Settings"))
 
-        self.hyper_label.clicked.connect(lambda: self.showGuideMessageBox(self.tr("Guide"), Translator.PRIORITY_GUIDE()))
+        self.hyper_label.clicked.connect(lambda: self.showGuideMessageBox(self.tr("Instructions"), Translator.PRIORITY_GUIDE()))
 
 class DanmakuSettingCard(ExpandGroupSettingCard):
     def __init__(self, full_mode = True, parent = None):
@@ -349,7 +349,7 @@ class NumberSettingCard(ExpandGroupSettingCard):
 
         self.showHyperLinkLabel(self.tr("About Numbering Settings"))
 
-        self.hyper_label.clicked.connect(lambda: self.showGuideMessageBox(self.tr("Guide"), Translator.NUMBERING_GUIDE()))
+        self.hyper_label.clicked.connect(lambda: self.showGuideMessageBox(self.tr("Instructions"), Translator.NUMBERING_GUIDE()))
         self.numbering_type_choice.currentIndexChanged.connect(self.on_change_numbering_type)
 
         self.starting_number_group.setEnabled(self.numbering_type_choice.currentIndex() == 0)
@@ -488,7 +488,7 @@ class DownloadHandlingSettingCard(ExpandGroupSettingCard):
         self.addGroup("", self.tr("File Conflict Resolution"), self.tr("Choose the action when a file with the same name already exists"), self.file_conflict_resolution_choice)
 
         preallocate_group.showHyperLinkLabel(self.tr("About Preallocating File Space"))
-        preallocate_group.hyper_label.clicked.connect(lambda: preallocate_group.showGuideMessageBox(self.tr("Guide"), Translator.PREALLOCATE_GUIDE()))
+        preallocate_group.hyper_label.clicked.connect(lambda: preallocate_group.showGuideMessageBox(self.tr("Instructions"), Translator.PREALLOCATE_GUIDE()))
 
 class DownloadConcurrencySettingCard(ExpandGroupSettingCard):
     def __init__(self, parent = None):

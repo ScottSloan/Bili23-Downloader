@@ -1,6 +1,4 @@
-from PySide6.QtWidgets import QHBoxLayout
-
-from qfluentwidgets import SubtitleLabel, BodyLabel, HyperlinkLabel
+from qfluentwidgets import SubtitleLabel, MessageBox
 
 from gui.component.dialog import DialogBase
 from gui.component.widget import LabelSwitchButton
@@ -25,7 +23,7 @@ class MonitorClipboardDialog(DialogBase):
         self.show_download_confirmation_dialog_switch = LabelSwitchButton(self.tr("Automatically Show Download Confirmation Dialog"), parent = self)
         self.show_download_confirmation_dialog_switch.switch.onText = self.tr("On - Show the dialog after parsing a link")
         self.show_download_confirmation_dialog_switch.switch.offText = self.tr("Off - Do not show the dialog")
-        self.show_download_confirmation_dialog_switch.showHyperLabel("注意事项")
+        self.show_download_confirmation_dialog_switch.showHyperLabel(self.tr("About this option"))
 
         self.viewLayout.addWidget(caption_lab)
         self.viewLayout.addSpacing(10)
@@ -36,6 +34,7 @@ class MonitorClipboardDialog(DialogBase):
         self.widget.setMinimumWidth(450)
 
         self.monitor_clipboard_switch.switch.checkedChanged.connect(self.on_monitor_clipboard)
+        self.show_download_confirmation_dialog_switch.hyper_label.clicked.connect(self.on_guide)
 
     def init_data(self):
         self.monitor_clipboard_switch.switch.setChecked(config.get(config.monitor_clipboard))
@@ -56,3 +55,13 @@ class MonitorClipboardDialog(DialogBase):
 
         if not enabled:
             self.show_download_confirmation_dialog_switch.switch.setChecked(False)
+
+    def on_guide(self):
+        dialog = MessageBox(
+            title = self.tr("Instructions"),
+            content = self.tr('This feature needs to be used in conjunction with the "Automatic Download Item Selection Settings". When enabled, if no items are selected in the list after parsing is complete, the download confirmation dialog will not pop up.'),
+            parent = self
+        )
+        dialog.hideCancelButton()
+
+        dialog.exec()

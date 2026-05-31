@@ -240,7 +240,9 @@ class ParseBase(QFrame):
             # 重置标志位
             self._triggered_by_clipboard = False
 
-            self.on_download()
+            # 如果有选中项才会显示下载确认对话框
+            if self.parse_list.get_checked_items_count() > 0:
+                self.on_download()
 
 class ParseInterface(ParseBase):
     def __init__(self, parent = None):

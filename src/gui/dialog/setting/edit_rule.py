@@ -65,7 +65,7 @@ class EditRuleDialog(DialogBase):
 
         self.set_default_chk = CheckBox(self.tr("Set as default rule for this type"), self)
 
-        self.guide_btn = HyperlinkButton(url = "", text = self.tr("Guide"), parent = self)
+        self.guide_btn = HyperlinkButton(url = "", text = self.tr("Instructions"), parent = self)
         self.help_btn = HyperlinkButton(
             url = "https://bili23.scott-sloan.cn/doc/naming-rule.html",
             text = self.tr("Open help page"),
