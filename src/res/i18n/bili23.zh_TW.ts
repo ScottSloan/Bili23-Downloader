@@ -2119,13 +2119,13 @@ Download functionality will be limited if you&apos;re not logged in.</source>
 <context>
     <name>MediaSettingsPage</name>
     <message>
-        <location filename="../../gui/dialog/download_options/media.py" line="82"/>
-        <location filename="../../gui/dialog/download_options/media.py" line="92"/>
+        <location filename="../../gui/dialog/download_options/media.py" line="87"/>
+        <location filename="../../gui/dialog/download_options/media.py" line="97"/>
         <source>Important Notice</source>
         <translation>重要提示</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/download_options/media.py" line="83"/>
+        <location filename="../../gui/dialog/download_options/media.py" line="88"/>
         <source>Downloading video only will result in a silent video.
 
 If you intentionally need a video without audio, you may proceed. Otherwise, please also enable the audio stream.</source>
@@ -2134,7 +2134,7 @@ If you intentionally need a video without audio, you may proceed. Otherwise, ple
 若確實需要無聲影片，可繼續操作；否則請同時勾選音訊串流。</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/download_options/media.py" line="93"/>
+        <location filename="../../gui/dialog/download_options/media.py" line="98"/>
         <source>&quot;Merge video and audio&quot; is disabled. Video and audio will be downloaded as two separate files.
 
 To get a single complete video file, please enable &quot;Merge video and audio&quot;.</source>
@@ -2190,8 +2190,8 @@ To get a single complete video file, please enable &quot;Merge video and audio&q
     </message>
     <message>
         <location filename="../../gui/dialog/setting/monitor_clipboard.py" line="23"/>
-        <source>Show Download Confirmation Dialog</source>
-        <translation>顯示下載確認對話框</translation>
+        <source>Automatically Show Download Confirmation Dialog</source>
+        <translation>自動顯示下載確認對話框</translation>
     </message>
     <message>
         <location filename="../../gui/dialog/setting/monitor_clipboard.py" line="24"/>
@@ -2490,57 +2490,57 @@ For example, if you set the video quality priority to 720P &gt; 1080P &gt; 4K, t
         <translation>下載所選項目</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="363"/>
+        <location filename="../../gui/interface/parse.py" line="364"/>
         <source>Parse Failed</source>
         <translation>解析失敗</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="388"/>
+        <location filename="../../gui/interface/parse.py" line="389"/>
         <source>Added to download queue</source>
         <translation>已加入下載佇列</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="403"/>
+        <location filename="../../gui/interface/parse.py" line="404"/>
         <source>Search</source>
         <translation>搜尋</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="404"/>
+        <location filename="../../gui/interface/parse.py" line="405"/>
         <source>Batch select</source>
         <translation>批次選取</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="405"/>
+        <location filename="../../gui/interface/parse.py" line="406"/>
         <source>Parsing history</source>
         <translation>解析記錄</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="414"/>
+        <location filename="../../gui/interface/parse.py" line="415"/>
         <source>Jump to page</source>
         <translation>跳至頁面</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="415"/>
+        <location filename="../../gui/interface/parse.py" line="416"/>
         <source>Auto-parse pagination</source>
         <translation>自動解析分頁</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="444"/>
+        <location filename="../../gui/interface/parse.py" line="445"/>
         <source>{category_name} ({selected_count} selected, {total_count} total)</source>
         <translation>{category_name}（已選取 {selected_count} 項，共 {total_count} 項）</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="450"/>
+        <location filename="../../gui/interface/parse.py" line="451"/>
         <source>{category_name} ({total_count} total)</source>
         <translation>{category_name}（共 {total_count} 項）</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="491"/>
+        <location filename="../../gui/interface/parse.py" line="492"/>
         <source>Invalid page number</source>
         <translation>無效的頁碼</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="491"/>
+        <location filename="../../gui/interface/parse.py" line="492"/>
         <source>Please enter a number between 1 and {total_pages}</source>
         <translation>請輸入1到{total_pages}之間的一個數字</translation>
     </message>

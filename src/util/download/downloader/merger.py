@@ -41,6 +41,7 @@ class Merger(QObject):
             if config.get(config.m4a_to_mp3):
                 # 将 m4a 转换为 mp3
                 self.m4a_to_mp3()
+                return
             
             # else:
             #     # 对 m4a 文件进行修复

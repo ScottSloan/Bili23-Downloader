@@ -75,6 +75,11 @@ class NumberingType(Enum):
     USE_PARSE_LIST = 1
     CONTINUOUS = 2
 
+class ParseAutoCheckMode(Enum):
+    CURRENT = "current"
+    ALL = "all"
+    MAIN = "main"
+
 class Channel(IntEnum):
     UNKNOWN = 0
     PORTABLE = 1

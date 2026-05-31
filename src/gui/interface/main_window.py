@@ -337,7 +337,7 @@ class MainWindow(MainWindowBase, MSFluentWindow):
         self.connect_signals()
 
         if config.get(config.stay_on_top):
-            self.setStayOnTop(False)
+            self.setStayOnTop(True)
 
     def init_deferred_ui(self):
         from gui.component.widget.flyout import FavoriteFlyoutWidget

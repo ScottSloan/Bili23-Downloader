@@ -114,4 +114,9 @@ class ColumnTreeWidget(TreeWidget):
             item.setData(0, Qt.ItemDataRole.UserRole, userData)
 
         return item
+    
+    def updateGeometries(self):
+        super().updateGeometries()
+
+        self.verticalScrollBar().setSingleStep(20)
 

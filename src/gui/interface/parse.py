@@ -190,20 +190,20 @@ class ParseBase(QFrame):
 
         self.check_need_check_all()
 
-        if config.get(config.show_download_confirmation_dialog) and self._triggered_by_clipboard:
-            # 重置标志位
-            self._triggered_by_clipboard = False
-
-            # 显示下载确认对话框
-            QTimer.singleShot(1000, self.on_download)
-
     def show_download_options_dialog(self):
         from ..dialog.download_options.dialog import DownloadOptionsDialog
 
         dialog = DownloadOptionsDialog(self.main_window)
         
         return dialog
-    
+
+    def on_preview_info_finished(self):
+        if config.get(config.show_download_confirmation_dialog) and self._triggered_by_clipboard:
+            # 重置标志位
+            self._triggered_by_clipboard = False
+
+            self.on_download()
+
 class ParseInterface(ParseBase):
     def __init__(self, parent = None):
         super().__init__(parent = parent)
@@ -305,6 +305,7 @@ class ParseInterface(ParseBase):
         signal_bus.parse.update_preview_info.connect(self.update_previewer_info)
         signal_bus.parse.search_keyword.connect(self.parse_list.search_keywords)
         signal_bus.parse.show_interactive_video_dialog.connect(self.on_show_interactive_video_dialog)
+        signal_bus.parse.preview_finish.connect(self.on_preview_info_finished)
 
         self.segmented_widget.search_widget.scrollToItem.connect(self.scroll_to_item)
         self.segmented_widget.search_widget.checkMatches.connect(self.check_matches)
