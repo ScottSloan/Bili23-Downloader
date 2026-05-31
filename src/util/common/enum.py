@@ -148,3 +148,8 @@ class OriginalFileType(IntEnum):
     BOTH = 0
     VIDEO = 1
     AUDIO = 2
+
+class AutoSelectMode(Enum):
+    MANUAL = 0
+    SELECT_ALL = 1
+    CONDITIONAL = 2

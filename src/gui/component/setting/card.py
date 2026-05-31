@@ -426,12 +426,14 @@ class ParsingSettingCard(ExpandGroupSettingCard):
     def __init__(self, parent = None):
         super().__init__(FluentIcon.SEARCH, self.tr("Parsing Settings"), self.tr("Configure clipboard monitoring, parse history, and parse list options"), parent)
 
-        self.custom_monitor_clipboard_btn = PushButton(self.tr("Configure…"), self)
-        self.parse_history_switch = SettingSwitchButton(config.parse_history, parent = self)
         self.custom_parse_list_btn = PushButton(self.tr("Configure…"), self)
+        self.custom_monitor_clipboard_btn = PushButton(self.tr("Configure…"), self)
+        self.custom_auto_select_btn = PushButton(self.tr("Configure…"), self)
+        self.parse_history_switch = SettingSwitchButton(config.parse_history, parent = self)
 
         self.addGroup("", self.tr("Parse List Settings"), self.tr("Customize the display and behavior of the parse list"), self.custom_parse_list_btn)
         self.addGroup("", self.tr("Monitor Clipboard Settings"), self.tr("Configure the behavior of clipboard monitoring"), self.custom_monitor_clipboard_btn)
+        self.addGroup("", self.tr("Auto-select Download Items Settings"), self.tr("Configure how items in the parse list are automatically selected after parsing"), self.custom_auto_select_btn)
         self.addGroup("", self.tr("Save Parse History"), self.tr("Save the history of parsed links"), self.parse_history_switch)
 
 class ConfigFileSettingCard(ExpandGroupSettingCard):

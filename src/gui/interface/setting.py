@@ -155,6 +155,7 @@ class SettingInterface(ScrollArea):
         # Behavior
         self.parse_list_card.custom_parse_list_btn.clicked.connect(self.on_custom_parse_list_column)
         self.parse_list_card.custom_monitor_clipboard_btn.clicked.connect(self.on_custom_monitor_clipboard)
+        self.parse_list_card.custom_auto_select_btn.clicked.connect(self.on_custom_auto_select)
         self.window_behavior_group.stay_on_top_switch.checkedChanged.connect(self.on_change_stay_on_top)
 
         # Download
@@ -193,6 +194,12 @@ class SettingInterface(ScrollArea):
         from ..dialog.setting.monitor_clipboard import MonitorClipboardDialog
 
         dialog = MonitorClipboardDialog(self.main_window)
+        dialog.exec()
+
+    def on_custom_auto_select(self):
+        from ..dialog.setting.auto_select import AutoSelectDialog
+
+        dialog = AutoSelectDialog(self.main_window)
         dialog.exec()
 
     def on_change_stay_on_top(self, checked: bool):
