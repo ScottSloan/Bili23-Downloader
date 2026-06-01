@@ -132,7 +132,9 @@ class Translator:
             "DEFAULT_FOR_PART": translate("DEFAULT_RULE_NAMES", "Preset: Multi-part Video"),
             "DEFAULT_FOR_COLLECTION": translate("DEFAULT_RULE_NAMES", "Preset: Collection"),
             "DEFAULT_FOR_BANGUMI": translate("DEFAULT_RULE_NAMES", "Preset: Series & Shows"),
-            "DEFAULT_FOR_CHEESE": translate("DEFAULT_RULE_NAMES", "Preset: Courses")
+            "DEFAULT_FOR_CHEESE": translate("DEFAULT_RULE_NAMES", "Preset: Courses"),
+            "DEFAULT_FOR_FAVORITE": translate("DEFAULT_RULE_NAMES", "Preset: Favorites"),
+            "DEFAULT_FOR_SPACE": translate("DEFAULT_RULE_NAMES", "Preset: Profile")
         }
 
     @staticmethod
@@ -145,6 +147,8 @@ class Translator:
             "INTERACTIVE": translate("CONVENTION_TYPE", "User Uploads - Interactive"),
             "BANGUMI": translate("CONVENTION_TYPE", "Series & Shows"),
             "CHEESE": translate("CONVENTION_TYPE", "Courses"),
+            "FAVORITE": translate("CONVENTION_TYPE", "Favorites"),
+            "SPACE": translate("CONVENTION_TYPE", "Profile")
         }
 
     @staticmethod
@@ -157,7 +161,7 @@ class Translator:
             "CREATE_TS": translate("VARIABLE_DESCRIPTION", "Download task creation timestamp"),
             "NUMBER": translate("VARIABLE_DESCRIPTION", "Sequence number"),
             "UPLOADER": translate("VARIABLE_DESCRIPTION", "Uploader name"),
-            "UPLOADER_UID": translate("VARIABLE_DESCRIPTION", "Uploader UID"),
+            "UPLOADER_UID": translate("VARIABLE_DESCRIPTION", "Uploader id"),
             "VIDEO_QUALITY": translate("VARIABLE_DESCRIPTION", "Video quality"),
             "AUDIO_QUALITY": translate("VARIABLE_DESCRIPTION", "Audio quality"),
             "VIDEO_CODEC": translate("VARIABLE_DESCRIPTION", "Video codec"),
@@ -188,6 +192,14 @@ class Translator:
             "EPISODE_TITLE": translate("VARIABLE_DESCRIPTION", "Episode title"),
             "SEASON_NUMBER": translate("VARIABLE_DESCRIPTION", "Season number"),
             "EPISODE_NUMBER": translate("VARIABLE_DESCRIPTION", "Episode number"),
+
+            "FAVORITES_NAME": translate("VARIABLE_DESCRIPTION", "Favorites name"),
+            "FAVORITES_ID": translate("VARIABLE_DESCRIPTION", "Favorites id"),
+            "FAVORITES_OWNER": translate("VARIABLE_DESCRIPTION", "Favorites owner"),
+            "FAVORITES_OWNER_ID": translate("VARIABLE_DESCRIPTION", "Favorites owner id"),
+
+            "SPACE_OWNER": translate("VARIABLE_DESCRIPTION", "User name"),
+            "SPACE_OWNER_ID": translate("VARIABLE_DESCRIPTION", "User id")
         }
 
     @staticmethod

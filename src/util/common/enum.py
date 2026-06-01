@@ -92,6 +92,8 @@ class ConventionType(IntEnum):
     COLLECTION = 13
     BANGUMI = 20
     CHEESE = 30
+    FAVORITE = 40
+    SPACE = 50
 
 class MediaType(IntEnum):
     UNKNOWN = 0

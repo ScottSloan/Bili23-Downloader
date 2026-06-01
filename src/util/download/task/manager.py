@@ -50,6 +50,9 @@ class TaskManager:
         task_info.Episode.from_dict(self.__update_episode_info(episode_info, number))
 
         # FileNameInfo
+        # 下载目录在生成 TaskInfo 时就确定，后续即便修改了下载目录的设置，也不会影响已生成的 TaskInfo 中的下载目录，避免下载过程中下载目录发生变化导致的问题
+        task_info.File.download_path = config.get(config.download_path)
+
         self.__update_file_name_info(task_info)
 
         return task_info
@@ -80,8 +83,10 @@ class TaskManager:
 
         attr = episode_info.get("attribute", 0)
 
+        # 对于任何类型视频，都保存一个 leaf_title 备用，供下载收藏夹和个人空间时使用
         episode_info["leaf_title"] = title
 
+        # 对于剧集和课程，使用 episode_title 表示剧集名称或课程名称，leaf_title 表示分P标题
         if attr & Attribute.BANGUMI_BIT != 0 or attr & Attribute.CHEESE_BIT != 0:
             episode_info["episode_title"] = title
 
@@ -109,7 +114,6 @@ class TaskManager:
 
         task_info.File.name = str(path.name)
 
-        task_info.File.download_path = config.get(config.download_path)
         task_info.File.folder = str(path.parent)
 
     def __check_reparse_needed(self, episode_info: dict):

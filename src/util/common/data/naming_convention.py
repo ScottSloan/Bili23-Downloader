@@ -1,9 +1,13 @@
+from ..enum import ConventionType
+
 convention_type_map = {
-    "NORMAL": 11,
-    "PART": 12,
-    "COLLECTION": 13,
-    "BANGUMI": 20,
-    "CHEESE": 30
+    "NORMAL": ConventionType.NORMAL,
+    "PART": ConventionType.PART,
+    "COLLECTION": ConventionType.COLLECTION,
+    "BANGUMI": ConventionType.BANGUMI,
+    "CHEESE": ConventionType.CHEESE,
+    "FAVORITE": ConventionType.FAVORITE,
+    "SPACE": ConventionType.SPACE
 }
 
 reversed_convention_type_map = {v: k for k, v in convention_type_map.items()}
@@ -14,20 +18,26 @@ class VariableListFactory:
 
     def build(self, type):
         match type:
-            case 11:
+            case ConventionType.NORMAL:
                 return self._base_variable + self._normal_variable
             
-            case 12:
+            case ConventionType.PART:
                 return self._base_variable + self._part_variable
             
-            case 13:
+            case ConventionType.COLLECTION:
                 return self._base_variable + self._collection_variable
             
-            case 20:
+            case ConventionType.BANGUMI:
                 return self._base_variable + self._bangumi_variable
             
-            case 30:
+            case ConventionType.CHEESE:
                 return self._base_variable + self._cheese_variable
+            
+            case ConventionType.FAVORITE:
+                return self._base_variable + self._favorite_variable
+
+            case ConventionType.SPACE:
+                return self._base_variable + self._space_variable
         
         return 
     
@@ -334,5 +344,51 @@ class VariableListFactory:
                 "variable": "{season_id}",
                 "description": "SEASON_ID",
                 "example": "4016"
+            }
+        ]
+
+    @property
+    def _favorite_variable(self):
+        return [
+            {
+                "name": "favorites_name",
+                "variable": "{favorites_name}",
+                "description": "FAVORITES_NAME",
+                "example": "默认收藏夹"
+            },
+            {
+                "name": "favorites_id",
+                "variable": "{favorites_id}",
+                "description": "FAVORITES_ID",
+                "example": "12345678"
+            },
+            {
+                "name": "favorites_owner",
+                "variable": "{favorites_owner}",
+                "description": "FAVORITES_OWNER",
+                "example": "用户昵称"
+            },
+            {
+                "name": "favorites_owner_id",
+                "variable": "{favorites_owner_id}",
+                "description": "FAVORITES_OWNER_ID",
+                "example": "12345678"
+            }
+        ]
+    
+    @property
+    def _space_variable(self):
+        return [
+            {
+                "name": "space_owner",
+                "variable": "{space_owner}",
+                "description": "SPACE_OWNER",
+                "example": "用户昵称"
+            },
+            {
+                "name": "space_owner_id",
+                "variable": "{space_owner_id}",
+                "description": "SPACE_OWNER_ID",
+                "example": "12345678"
             }
         ]

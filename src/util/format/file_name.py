@@ -87,8 +87,6 @@ class FileNameFormatter:
             Attribute.INTERACTIVE_BIT: "{collection_title}/{leaf_title}",
             Attribute.POPULAR_BIT: "{collection_title}/{leaf_title}",
             Attribute.COLLECTION_LIST_BIT: "{collection_title}/{leaf_title}",
-            Attribute.FAVLIST_BIT: Path("{favorites_owner_id}_{favorites_owner}") / self.rule,
-            Attribute.SPACE_BIT: Path("{space_owner_id}_{space_owner}") / self.rule,
             Attribute.WATCH_LATER_BIT: "{leaf_title}"
         }
 
@@ -160,7 +158,9 @@ class FileNameFormatter:
             Attribute.COLLECTION_BIT: ConventionType.COLLECTION,
             Attribute.BANGUMI_BIT: ConventionType.BANGUMI,
             Attribute.CHEESE_BIT: ConventionType.CHEESE,
-            Attribute.POPULAR_BIT: ConventionType.NORMAL
+            Attribute.POPULAR_BIT: ConventionType.NORMAL,
+            Attribute.FAVLIST_BIT: ConventionType.FAVORITE,
+            Attribute.SPACE_BIT: ConventionType.SPACE
         }
 
         for attr, type_id in type_map.items():

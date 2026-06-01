@@ -182,6 +182,20 @@ class DefaultValue:
             "type": 30,
             "rule": "{series_title}/{episode_title}",
             "default": True
+        },
+        {
+            "id": "cbbacfa4-1b8c-4e5a-9c8d-7a0b3f1e5c3e",
+            "name": "DEFAULT_FOR_FAVORITE",
+            "type": 40,
+            "rule": "{favorites_owner_id}_{favorites_owner}/{favorites_name}/{leaf_title}",
+            "default": True
+        },
+        {
+            "id": "d9c8e5f7-2a1b-4c3d-9e8f-7a6b5c4d3e2f",
+            "name": "DEFAULT_FOR_SPACE",
+            "type": 50,
+            "rule": "{space_owner_id}_{space_owner}/{leaf_title}",
+            "default": True
         }
     ]
 

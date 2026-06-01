@@ -278,4 +278,4 @@ class NamingConventionCard(SettingCard):
         else:
             self.rule_choice.addItem(self.tr("Not available"))
             self.rule_choice.setEnabled(False)
-            self.setContent(self.tr("Custom naming rules are not supported for favorites and profiles"))
+            self.setContent(self.tr("Custom naming rules are not available for this type of media"))
