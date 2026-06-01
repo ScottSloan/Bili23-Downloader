@@ -95,6 +95,9 @@ class Previewer(ParserBase):
             # 标记成功获取媒体信息，允许下载和显示下载选项
             PreviewerInfo.error_occurred = False
 
+            # 回调解析完成信号
+            signal_bus.parse.preview_finish.emit()
+
         except Exception as e:
             self.on_init_error(str(e))
 

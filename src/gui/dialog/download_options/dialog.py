@@ -1,3 +1,4 @@
+from PySide6.QtCore import QSize
 from PySide6.QtGui import QIcon
 
 from qfluentwidgets import FluentIcon, MessageBox
@@ -11,7 +12,9 @@ from util.common.icon import ExtendedFluentIcon
 
 class DownloadOptionsDialog(TopNavigationDialogBase):
     def __init__(self, parent = None):
-        super().__init__(parent)
+        super().__init__(QSize(750, 500), parent)
+
+        self.main_window = parent
 
         self.setWindowTitle(self.tr("Download Options"))
         self.setWindowIcon(QIcon(":/bili23/icon/app.svg"))
@@ -19,6 +22,8 @@ class DownloadOptionsDialog(TopNavigationDialogBase):
         self.setFixedSize(750, 500)
 
         self.init_UI()
+
+        self.set_open_state(True)
 
     def init_UI(self):
         self.media_settings_page = MediaSettingsPage(self)
@@ -52,3 +57,11 @@ class DownloadOptionsDialog(TopNavigationDialogBase):
         self.download_settings_page.on_save()
 
         return super().accept()
+    
+    def closeEvent(self, event):
+        super().closeEvent(event)
+
+        self.set_open_state(False)
+
+    def set_open_state(self, open: bool):
+        self.main_window.parse_interface.download_options_dialog_opened = open

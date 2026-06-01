@@ -1,6 +1,10 @@
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout
 from PySide6.QtCore import Qt, QSize
 
-from qfluentwidgets import PrimaryPushButton, IndeterminateProgressRing, ToolTipFilter, TransparentTogglePushButton, PrimarySplitPushButton
+from qfluentwidgets import (
+    PrimaryPushButton, IndeterminateProgressRing, ToolTipFilter, TransparentTogglePushButton, PrimarySplitPushButton,
+    SwitchButton, BodyLabel, HyperlinkLabel
+)
 from qfluentwidgets import ToolButton as _ToolButton, TransparentToolButton as _TransparentToolButton
 
 class IndeterminateProgressPushButton(PrimaryPushButton):
@@ -129,3 +133,31 @@ class PagerNumberButton(TransparentTogglePushButton):
         self.setFixedHeight(30)
 
         self.number = number
+
+class LabelSwitchButton(QWidget):
+    def __init__(self, text: str, parent = None):
+        super().__init__(parent)
+
+        self.label = BodyLabel(text, self)
+        self.switch = SwitchButton(self)
+
+        self._layout = QVBoxLayout(self)
+        self._layout.setContentsMargins(0, 0, 0, 0)
+        
+        self._layout.addWidget(self.label)
+        self._layout.addSpacing(5)
+        self._layout.addWidget(self.switch)
+
+    def showHyperLabel(self, text: str):
+        self._layout.removeWidget(self.switch)
+
+        self.hyper_label = HyperlinkLabel(text, self)
+
+        hyper_layout = QHBoxLayout()
+        hyper_layout.setContentsMargins(0, 0, 0, 0)
+        hyper_layout.addWidget(self.switch)
+        hyper_layout.addSpacing(5)
+        hyper_layout.addWidget(self.hyper_label)
+        hyper_layout.addStretch()
+
+        self._layout.addLayout(hyper_layout)

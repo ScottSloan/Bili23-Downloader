@@ -12,7 +12,7 @@ from gui.component.widget import (
 )
 from gui.component.parse_list import ParseTreeView
 
-from util.common.enum import ToastNotificationCategory, NumberingType
+from util.common.enum import ToastNotificationCategory, NumberingType, AutoSelectMode, ParserType
 from util.common.signal_bus import signal_bus, config
 from util.common.icon import ExtendedFluentIcon
 from util.common.translator import Translator
@@ -66,20 +66,55 @@ class ParseBase(QFrame):
 
             self.season_choice.hide()
 
-    def check_need_check_all(self):
-        # 如果配置了自动全选，则直接勾选所有项目
-        if config.get(config.auto_check_all):
-            self.parse_list.check_all_items()
+    def apply_auto_select(self, category_name: str):
+        match config.get(config.auto_select_mode):
+            case AutoSelectMode.SELECT_ALL:
+                # 选中全部项目
+                self.parse_list.check_all_items()
 
-            self.download_btn.setEnabled(True)
+                self.download_btn.setEnabled(True)
+
+            case AutoSelectMode.CONDITIONAL:
+                # 按条件自动选择
+                conditions: dict = config.get(config.auto_select_conditions)
+
+                match category_name:
+                    case ParserType.VIDEO.value:
+                        # 投稿视频
+
+                        # 默认的行为就是单个视频自动选中，分P自动选中对应视频，合集自动选中对应视频，所以只需处理全选的情况
+                        if conditions.get("user_uploads") == 1:
+                            self.parse_list.check_all_items()
+
+                        # == 0 时无需处理
+
+                    case "ANIME" | "DOCUMENTARY" | "TV" | "CHN_ANIME" | "MOVIE" | "VARIETY":
+                        # 剧集类
+                        
+                        # 同理，默认行为是选中对应剧集，所以只需处理选中正片的情况
+                        if conditions.get("bangumi") == 1:
+                            self.parse_list._check_main_episodes_node()
+
+                        # == 0 时无需处理
+
+                    case ParserType.CHEESE.value:
+                        # 课程
+
+                        # 同理，默认行为是选中对应剧集，所以只需处理选中正片的情况
+                        if conditions.get("bangumi") == 1:
+                            self.parse_list.check_all_items()
+
+                    case _:
+                        # 其他
+                        
+                        # 对于其他类型，默认行为是全不选，所以只需处理全选的情况
+                        if conditions.get("other") == 1:
+                            self.parse_list.check_all_items()
 
     def check_starting_number(self):
         # 更新当前起始编号，如果尚未设置
-        if config.current_starting_number is None:
-            if config.get(config.numbering_type) == NumberingType.CONTINUOUS:
-                config.current_starting_number = config.global_starting_number
-            else:
-                config.current_starting_number = config.get(config.starting_number)
+        if config.current_starting_number is None and config.get(config.numbering_type) == NumberingType.CONTINUOUS:
+            config.current_starting_number = config.global_starting_number
 
     def reset_search(self):
         self.parse_list.search_keywords(None)
@@ -127,7 +162,7 @@ class ParseBase(QFrame):
 
     def on_show_interactive_video_dialog(self, data: dict):
         # 显示互动视频对话框，询问用户是否探查所有节点
-        from gui.dialog.misc import InteractiveVideoDialog
+        from gui.dialog.misc.interactive_video import InteractiveVideoDialog
 
         dialog = InteractiveVideoDialog(data, self.main_window)
 
@@ -187,12 +222,35 @@ class ParseBase(QFrame):
             parent = self.main_window
         )
 
+    def post_parse_success_check(self, category_name: str, extra_data: dict):
+        # 根据解析结果判断是否显示分页组件
+        self.check_extra_data(extra_data)
+
+        self.apply_auto_select(category_name)
+
+    def show_download_options_dialog(self):
+        from ..dialog.download_options.dialog import DownloadOptionsDialog
+
+        dialog = DownloadOptionsDialog(self.main_window)
+        
+        return dialog
+
+    def on_preview_info_finished(self):
+        if config.get(config.show_download_confirmation_dialog) and self._triggered_by_clipboard:
+            # 重置标志位
+            self._triggered_by_clipboard = False
+
+            # 如果有选中项才会显示下载确认对话框
+            if self.parse_list.get_checked_items_count() > 0:
+                self.on_download()
+
 class ParseInterface(ParseBase):
     def __init__(self, parent = None):
         super().__init__(parent = parent)
 
         self.main_window = parent
-        self._download_options_dialog = None
+        self._triggered_by_clipboard = False
+        self.download_options_dialog_opened = False
 
         self.setObjectName("ParseInterface")
 
@@ -287,6 +345,7 @@ class ParseInterface(ParseBase):
         signal_bus.parse.update_preview_info.connect(self.update_previewer_info)
         signal_bus.parse.search_keyword.connect(self.parse_list.search_keywords)
         signal_bus.parse.show_interactive_video_dialog.connect(self.on_show_interactive_video_dialog)
+        signal_bus.parse.preview_finish.connect(self.on_preview_info_finished)
 
         self.segmented_widget.search_widget.scrollToItem.connect(self.scroll_to_item)
         self.segmented_widget.search_widget.checkMatches.connect(self.check_matches)
@@ -327,15 +386,11 @@ class ParseInterface(ParseBase):
 
         self.update_previewer_info()
 
+        self.post_parse_success_check(category_name, extra_data)
+
         self.on_item_check_state_changed(None)
-
         self.parse_btn.setIndeterminateState(False)
-
-        # 根据解析结果判断是否显示分页组件
-        self.check_extra_data(extra_data)
-
-        self.check_need_check_all()
-
+        # 清空搜索关键词
         self.parse_list.search_keywords("")
 
     def on_parse_error(self, error_message: str):
@@ -362,13 +417,11 @@ class ParseInterface(ParseBase):
             return
 
         if config.get(config.show_download_options_dialog):
-            from ..dialog.download_options.dialog import DownloadOptionsDialog
+            dialog = self.show_download_options_dialog()
 
-            dialog = DownloadOptionsDialog(self.main_window)
-            
             if not dialog.exec():
                 return
-
+            
         checked_episodes_list = self.parse_list.get_checked_items(to_dict = True, mark_as_downloaded = True)
 
         GlobalThreadPoolTask.run_func(task_manager.create, checked_episodes_list)
@@ -382,13 +435,8 @@ class ParseInterface(ParseBase):
         if not self.check_preview_info():
             return
         
-        from ..dialog.download_options.dialog import DownloadOptionsDialog
-
-        dialog = DownloadOptionsDialog(self.main_window)
+        dialog = self.show_download_options_dialog()
         dialog.exec()
-
-    def on_download_menu(self):
-        pass
 
     def on_top_layout_show_more_menu(self):
         menu = RoundMenu(parent = self)
@@ -412,7 +460,7 @@ class ParseInterface(ParseBase):
         menu.exec(pos)
 
     def on_search(self):
-        from ..dialog.misc import SearchDialog
+        from ..dialog.misc.search import SearchDialog
 
         dialog = SearchDialog(self.main_window)
         
@@ -422,7 +470,7 @@ class ParseInterface(ParseBase):
             self.segmented_widget.show_search(matches)
 
     def on_batch_select(self):
-        from ..dialog.misc import BatchSelectDialog
+        from ..dialog.misc.batch_select import BatchSelectDialog
 
         dialog = BatchSelectDialog(self.main_window)
 
@@ -449,29 +497,33 @@ class ParseInterface(ParseBase):
         self.download_btn.setEnabled(checked_count > 0)
 
     def on_copy_url(self):
-        if self.clipboard.mimeData().hasText() and config.get(config.monitor_clipboard):
+        # 只有当剪贴板内容为文本且符合 URL 模式，并且用户启用了监控剪贴板功能，且当前没有打开下载选项对话框时，才自动解析剪贴板中的链接
+        if self.clipboard.mimeData().hasText() and config.get(config.monitor_clipboard) and not self.download_options_dialog_opened:
             url = self.clipboard.text()
 
             for parser_type, pattern in url_patterns:
                 if re.findall(pattern, url):
+                    # 置标志位，表示接下来的解析是由监控剪贴板触发的
+                    self._triggered_by_clipboard = True
+
                     self.url_box.setText(url)
                     self.on_parse()
 
                     return parser_type
 
     def on_history(self):
-        from ..dialog.misc import ParseHistoryDialog
+        from ..dialog.misc.parse_history import ParseHistoryDialog
 
         dialog = ParseHistoryDialog(self.main_window)
         dialog.exec()
 
     def on_jump_to_page(self):
-        from ..dialog.misc import JumpToPageDialog
+        from ..dialog.misc.jump_to_page import JumpToPageDialog
 
         dialog = JumpToPageDialog(self.main_window)
 
         if dialog.exec():
-            page_number = int(dialog.page_box.text())
+            page_number = dialog.page
 
             if 1 <= page_number <= self.pager.total_pages:
                 self.segmented_widget.pager_widget.on_change_page(page_number)

@@ -1,4 +1,4 @@
-from .button import IndeterminateProgressPushButton, ToolButton, PagerNumberButton, TransparentToolButton, IndeterminateProgressSplitPushButton
+from .button import IndeterminateProgressPushButton, ToolButton, PagerNumberButton, TransparentToolButton, IndeterminateProgressSplitPushButton, LabelSwitchButton
 from .list_widget import DragListWidget, CheckableDragListWidget
 from .combobox import CidComboBox, DictComboBox, SeasonComboBox
 from .spinbox import SpinBox, DoubleSpinBox, CompactSpinBox

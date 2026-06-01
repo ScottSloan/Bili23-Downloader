@@ -27,7 +27,8 @@ class VideoEpisodeParser(EpisodeParserBase):
         if self.target_episode_info:
             return node
         else:
-            episode_data = ("cid", self.info_data["cid"])
+            # 获取剧集数据中的 cid 作为 extra_data 传递，供自动选择使用
+            episode_data = ("cid", self.get_cid())
             
             self.update_episode_list(node, episode_data)
 
@@ -243,3 +244,15 @@ class VideoEpisodeParser(EpisodeParserBase):
             item.set_attribute(self.target_attribute)
 
         item.set_attribute(attribute)
+
+    def get_cid(self):
+        # 如果存在分P页码，则根据页码信息获取对应页的 cid
+        if "current_page_number" in self.info_data:
+            current_page_number = self.info_data["current_page_number"]
+
+            for page in self.info_data.get("pages", []):
+                if page["page"] == current_page_number:
+                    return page["cid"]
+
+        return self.info_data["cid"]
+

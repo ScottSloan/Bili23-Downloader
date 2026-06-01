@@ -210,6 +210,12 @@ class VideoParser(ParserBase):
         bvid = self.find_str(r"BV\w+", self.url)
 
         return bvid
+    
+    def get_page_number(self):
+        # 识别分P链接中的页码
+        page_number = self.find_str(r"p=(\d+)", self.url, check = False)
+
+        return int(page_number) if page_number else None
 
     def aid_to_bvid(self, aid: int):
         XOR_CODE = 23442827791579
@@ -262,6 +268,13 @@ class VideoParser(ParserBase):
         response = request.run()
 
         self.check_response(response)
+
+        # 尝试识别分P页码
+        page_number = self.get_page_number()
+
+        if page_number:
+            # 识别到页码，将此信息传递到 info_data
+            response["data"]["current_page_number"] = page_number
 
         self.info_data = response
     

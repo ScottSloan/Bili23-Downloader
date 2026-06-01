@@ -72,7 +72,13 @@ class FFmpegSource(Enum):
 
 class NumberingType(Enum):
     FROM_SPECIFIED = 0
-    CONTINUOUS = 1
+    USE_PARSE_LIST = 1
+    CONTINUOUS = 2
+
+class ParseAutoCheckMode(Enum):
+    CURRENT = "current"
+    ALL = "all"
+    MAIN = "main"
 
 class Channel(IntEnum):
     UNKNOWN = 0
@@ -137,3 +143,13 @@ class ParserType(Enum):
     WATCH_LATER = "WATCH_LATER"
     DYNAMIC = "DYNAMIC"
     UNKNOWN = "UNKNOWN"
+
+class OriginalFileType(IntEnum):
+    BOTH = 0
+    VIDEO = 1
+    AUDIO = 2
+
+class AutoSelectMode(Enum):
+    MANUAL = 0
+    SELECT_ALL = 1
+    CONDITIONAL = 2

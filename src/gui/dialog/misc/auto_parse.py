@@ -47,8 +47,8 @@ class AutoParseDialog(DialogBase):
         parse_interval_lab = BodyLabel(self.tr("Parsing Interval"), self)
 
         self.parse_interval_spin = DoubleSpinBox(parent = self)
-        self.parse_interval_spin.setRange(0.1, 10.0)
-        self.parse_interval_spin.setSingleStep(0.1)
+        self.parse_interval_spin.setRange(0.1, 15.0)
+        self.parse_interval_spin.setSingleStep(1)
         self.parse_interval_spin.setDecimals(1)
         self.parse_interval_spin.setValue(config.get(config.auto_parse_interval))
 

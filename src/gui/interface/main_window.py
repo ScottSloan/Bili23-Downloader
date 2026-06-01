@@ -114,7 +114,7 @@ class MainWindowBase:
         )
 
     def show_terms_of_use(self):
-        from ..dialog.misc import TermsOfUseDialog
+        from ..dialog.misc.terms import TermsOfUseDialog
 
         dialog = TermsOfUseDialog(self)
 
@@ -337,7 +337,7 @@ class MainWindow(MainWindowBase, MSFluentWindow):
         self.connect_signals()
 
         if config.get(config.stay_on_top):
-            self.setStayOnTop(False)
+            self.setStayOnTop(True)
 
     def init_deferred_ui(self):
         from gui.component.widget.flyout import FavoriteFlyoutWidget
@@ -448,7 +448,7 @@ class MainWindow(MainWindowBase, MSFluentWindow):
                 return False
             
             case WhenClose.ALWAYS_ASK:
-                from ..dialog.misc import ExitDialog
+                from ..dialog.misc.exit import ExitDialog
 
                 dialog = ExitDialog(self)
 

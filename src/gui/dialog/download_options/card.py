@@ -1,10 +1,10 @@
 from PySide6.QtCore import Qt
 
 from qfluentwidgets import (
-    ExpandGroupSettingCard, FluentIcon, SwitchButton, IndicatorPosition, HyperlinkButton, MessageBox, SettingCard,
-    ComboBox
+    FluentIcon, SwitchButton, IndicatorPosition, SettingCard, ComboBox
 )
 
+from gui.component.setting.card import ExpandGroupSettingCard
 from gui.component.widget import DictComboBox
 
 from util.common.data import reversed_video_quality_map, reversed_audio_quality_map, reversed_video_codec_map, reversed_audio_codec_map
@@ -18,12 +18,10 @@ from util.format.file_name import FileNameFormatter
 from util.format.units import Units
 
 class MediaInfoCard(ExpandGroupSettingCard):
-    def __init__(self, options_dialog, parent = None):
+    def __init__(self, parent_window, parent = None):
         super().__init__(FluentIcon.INFO, self.tr("Media Info"), self.tr("Configure download video quality, audio quality, and codec settings"), parent)
 
-        self.options_dialog = options_dialog
-
-        self.guide_btn = HyperlinkButton("", self.tr("Guide"), parent = self)
+        self.parent_window = parent_window
 
         self.video_quality_choice = DictComboBox(parent = self)
         self.audio_quality_choice = DictComboBox(parent = self)
@@ -36,9 +34,9 @@ class MediaInfoCard(ExpandGroupSettingCard):
         self.audio_quality_group = self.addGroup(FluentIcon.MUSIC, self.tr("Audio Quality"), "", self.audio_quality_choice)
         self.video_codec_group = self.addGroup(FluentIcon.CODE, self.tr("Video Codec"), "", self.video_codec_choice)
 
-        self.addWidget(self.guide_btn)
+        self.showHyperLinkLabel(self.tr("About Media Info"))
 
-        self.guide_btn.clicked.connect(self.on_guide)
+        self.hyper_label.clicked.connect(lambda: self.showGuideMessageBox(self.tr("Instructions"), Translator.MEDIA_INFO_GUIDE()))
 
     def on_load(self):
         self.video_quality_choice.set_current_data(config.video_quality_id)
@@ -144,16 +142,6 @@ class MediaInfoCard(ExpandGroupSettingCard):
             case 13:
                 return self.tr("Smallest file size, poorest compatibility")
 
-    def on_guide(self):
-        dialog = MessageBox(
-            self.tr("Guide"),
-            Translator.MEDIA_INFO_GUIDE(),
-            parent = self.options_dialog
-        )
-        dialog.hideCancelButton()
-
-        dialog.exec()
-
     @property
     def video_quality_id(self):
         return self.video_quality_choice.currentData()
@@ -167,8 +155,10 @@ class MediaInfoCard(ExpandGroupSettingCard):
         return self.video_codec_choice.currentData()
 
 class MediaOptionsCard(ExpandGroupSettingCard):
-    def __init__(self, parent = None):
+    def __init__(self, parent_window, parent = None):
         super().__init__(ExtendedFluentIcon.OPTIONS, self.tr("Media Options"), self.tr("Configure download behavior for video and audio streams"), parent)
+
+        self.parent_window = parent_window
 
         self.download_video_stream_switch = SwitchButton(parent = self, indicatorPos = IndicatorPosition.RIGHT)
         self.download_audio_stream_switch = SwitchButton(parent = self, indicatorPos = IndicatorPosition.RIGHT)
@@ -176,10 +166,16 @@ class MediaOptionsCard(ExpandGroupSettingCard):
         self.merge_video_audio_switch = SwitchButton(parent = self, indicatorPos = IndicatorPosition.RIGHT)
         self.keep_original_files_switch = SwitchButton(parent = self, indicatorPos = IndicatorPosition.RIGHT)
 
+        self.original_files_type_choice = ComboBox(parent = self)
+        self.original_files_type_choice.addItems([self.tr("Both"), self.tr("Video Only"), self.tr("Audio Only")])
+
         self.addGroup("", self.tr("Download standalone video stream"), self.tr("Download a video stream without audio"), self.download_video_stream_switch)
         self.addGroup("", self.tr("Download standalone audio stream"), self.tr("Download an audio stream without video"), self.download_audio_stream_switch)
         self.merge_video_audio_group = self.addGroup("", self.tr("Merge video and audio"), self.tr("Merge separate video and audio streams into a single file"), self.merge_video_audio_switch)
         self.keep_original_files_group = self.addGroup("", self.tr("Keep original files"), self.tr("Keep the original separate stream files after merging"), self.keep_original_files_switch)
+        self.keep_original_files_type_group = self.addGroup("", self.tr("Original file type to keep"), self.tr("Choose which original stream files to keep when keeping original files"), self.original_files_type_choice)
+
+        self.showHyperLinkLabel(self.tr("About Media Options"))
 
         self.connect_signals()
 
@@ -189,12 +185,18 @@ class MediaOptionsCard(ExpandGroupSettingCard):
         self.download_video_stream_switch.checkedChanged.connect(self.on_change_download_stream_options)
         self.download_audio_stream_switch.checkedChanged.connect(self.on_change_download_stream_options)
         self.merge_video_audio_switch.checkedChanged.connect(self.on_change_merge_option)
+        self.keep_original_files_switch.checkedChanged.connect(self.on_change_keep_original_files_option)
+
+        self.hyper_label.clicked.connect(lambda: self.showGuideMessageBox(self.tr("Instructions"), Translator.MEDIA_OPTIONS_GUIDE()))
 
     def on_load(self):
         self.download_video_stream_switch.setChecked(config.download_video_stream)
         self.download_audio_stream_switch.setChecked(config.download_audio_stream)
         self.merge_video_audio_switch.setChecked(config.merge_video_audio)
         self.keep_original_files_switch.setChecked(config.keep_original_files)
+        self.original_files_type_choice.setCurrentIndex(config.keep_original_files_type)
+
+        self.on_change_keep_original_files_option()
 
     def on_change_download_stream_options(self):
         enable = self.download_video_stream_switch.isChecked() and self.download_audio_stream_switch.isChecked()
@@ -204,7 +206,6 @@ class MediaOptionsCard(ExpandGroupSettingCard):
         self.merge_video_audio_group.setEnabled(enable)
 
         keep_original_enable = enable and self.merge_video_audio_switch.isChecked()
-        
         self.keep_original_files_switch.setEnabled(keep_original_enable)
         self.keep_original_files_group.setEnabled(keep_original_enable)
 
@@ -219,6 +220,11 @@ class MediaOptionsCard(ExpandGroupSettingCard):
 
         if not enable:
             self.keep_original_files_switch.setChecked(False)
+
+    def on_change_keep_original_files_option(self):
+        enable = self.keep_original_files_switch.isChecked()
+
+        self.keep_original_files_type_group.setEnabled(enable)
 
     @property
     def download_video_stream(self):

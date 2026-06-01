@@ -9,7 +9,7 @@ from qfluentwidgets import (
 from .serializer import LanguageSerializer, ScalingSerializer
 from .enum import (
     Language, WhenClose, DanmakuType, SubtitleType, CoverType, MetadataType, ProxyType, FFmpegSource, NumberingType,
-    Scaling, FileConflictResolution, VideoContainer
+    Scaling, FileConflictResolution, VideoContainer, AutoSelectMode
 )
 
 from pathlib import Path
@@ -49,6 +49,12 @@ class DefaultValue:
             "show": True
         }
     ]
+
+    auto_select_conditions = {
+        "user_uploads": 0,
+        "bangumi": 0,
+        "other": 0
+    }
 
     video_quality_priority = [
         127,
@@ -209,8 +215,8 @@ class DefaultValue:
 class APPConfig(QConfig):
     # APP
     app_name = "Bili23 Downloader"
-    app_version = "2.00.6"
-    app_comparable_version = "2.00.6"
+    app_version = "2.00.7"
+    app_comparable_version = "2.00.7"
 
     # Interface
     language = OptionsConfigItem("Interface", "language", Language.AUTO, OptionsValidator(Language), LanguageSerializer(), restart = True)
@@ -218,15 +224,18 @@ class APPConfig(QConfig):
     mica_effect = ConfigItem("Interface", "mica_effect", False, BoolValidator())
 
     # Behavior
-    auto_check_all = ConfigItem("Behavior", "auto_check_all", False, BoolValidator())
     parse_list_column = ConfigItem("Behavior", "parse_list_column", DefaultValue.parse_list_column)
+    monitor_clipboard = ConfigItem("Behavior", "monitor_clipboard", False, BoolValidator())
+    show_download_confirmation_dialog = ConfigItem("Behavior", "show_download_confirmation_dialog", False, BoolValidator())
+    auto_select_mode = OptionsConfigItem("Behavior", "auto_select_mode", AutoSelectMode.MANUAL, OptionsValidator(AutoSelectMode), EnumSerializer(AutoSelectMode))
+    auto_select_conditions = ConfigItem("Behavior", "auto_select_conditions", DefaultValue.auto_select_conditions)
+    parse_history = ConfigItem("Behavior", "parse_history", True, BoolValidator())
 
     silent_start = ConfigItem("Behavior", "silent_start", False, BoolValidator())
     stay_on_top = ConfigItem("Behavior", "stay_on_top", False, BoolValidator())
-    monitor_clipboard = ConfigItem("Behavior", "monitor_clipboard", False, BoolValidator())
-    parse_history = ConfigItem("Behavior", "parse_history", True, BoolValidator())
-    show_download_options_dialog = ConfigItem("Behavior", "show_download_options_dialog", True, BoolValidator())
     when_close_window = OptionsConfigItem("Behavior", "when_close_window", WhenClose.ALWAYS_ASK, OptionsValidator(WhenClose), EnumSerializer(WhenClose))
+
+    show_download_options_dialog = ConfigItem("Behavior", "show_download_options_dialog", True, BoolValidator())
     preallocate_file_space = ConfigItem("Behavior", "preallocate_file_space", True, BoolValidator())
     file_conflict_resolution = OptionsConfigItem("Behavior", "file_conflict_resolution", FileConflictResolution.AUTO_RENAME, OptionsValidator(FileConflictResolution), EnumSerializer(FileConflictResolution))
 
@@ -332,6 +341,7 @@ class APPConfig(QConfig):
     download_audio_stream = True
     merge_video_audio = True
     keep_original_files = False
+    keep_original_files_type = 0
 
     # Misc
     target_naming_rule_id = None

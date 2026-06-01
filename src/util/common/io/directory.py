@@ -84,12 +84,10 @@ class Directory:
         dir_path = QFileDialog.getExistingDirectory(parent, title, default_path, QFileDialog.Option.ShowDirsOnly | QFileDialog.Option.DontResolveSymlinks)
 
         if dir_path:
-            try:
-                if Directory.ensure_directory_accessible(dir_path):
-                    return dir_path
-                
-            except Exception:
-                return None
+            if Directory.ensure_directory_accessible(dir_path):
+                return dir_path
+
+            return None
         else:
             return default_path
 

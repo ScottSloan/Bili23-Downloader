@@ -8,6 +8,8 @@ class JumpToPageDialog(DialogBase):
     def __init__(self, parent = None):
         super().__init__(parent)
 
+        self.page = None
+
         self.init_UI()
 
     def init_UI(self):
@@ -22,3 +24,8 @@ class JumpToPageDialog(DialogBase):
         self.viewLayout.addWidget(self.page_box)
 
         self.widget.setMinimumWidth(300)
+
+    def accept(self):
+        self.page = int(self.page_box.text())
+
+        return super().accept()

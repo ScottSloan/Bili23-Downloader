@@ -6,11 +6,13 @@ from .base import ParserBase
 class CheeseParser(ParserBase):
     def __init__(self):
         super().__init__()
+
+        self.ep_id = None
         
     def get_ep_id(self):
-        ep_id = self.find_str(r"ep([0-9]+)", self.url)
+        self.ep_id = self.find_str(r"ep([0-9]+)", self.url)
 
-        return f"ep_id={ep_id}"
+        return f"ep_id={self.ep_id}"
     
     def get_season_id(self):
         season_id = self.find_str(r"ss([0-9]+)", self.url)
@@ -41,7 +43,10 @@ class CheeseParser(ParserBase):
         self.check_response(response)
 
         self.info_data = response
-    
+
+        if self.ep_id:
+            self.info_data["data"]["current_ep_id"] = int(self.ep_id)
+
     def get_parser_type(self):
         return ParserType.CHEESE
     

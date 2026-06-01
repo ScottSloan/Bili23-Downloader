@@ -1,6 +1,6 @@
 from PySide6.QtCore import Qt
 
-from qfluentwidgets import SubtitleLabel, BodyLabel, SwitchButton
+from qfluentwidgets import SubtitleLabel, BodyLabel
 
 from gui.component.widget import CheckableDragListWidget
 from gui.component.dialog import DialogBase
@@ -24,16 +24,11 @@ class ParseListSettingsDialog(DialogBase):
 
         self.drag_list = CheckableDragListWidget(self)
 
-        auto_check_all_lab = BodyLabel(self.tr("Automatically check all parsed items"), self)
-        self.auto_check_all_switch = SwitchButton(self)
-
         self.viewLayout.addWidget(self.caption_lab)
         self.viewLayout.addSpacing(10)
         self.viewLayout.addWidget(column_lab)
         self.viewLayout.addWidget(self.drag_list)
         self.viewLayout.addSpacing(10)
-        self.viewLayout.addWidget(auto_check_all_lab)
-        self.viewLayout.addWidget(self.auto_check_all_switch)
 
         self.widget.setMinimumWidth(400)
 
@@ -65,7 +60,6 @@ class ParseListSettingsDialog(DialogBase):
             return
         
         config.set(config.parse_list_column, column_list)
-        config.set(config.auto_check_all, self.auto_check_all_switch.isChecked())
 
         signal_bus.parse.update_column_settings.emit()
             

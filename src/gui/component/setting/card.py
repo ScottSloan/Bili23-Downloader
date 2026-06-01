@@ -1,26 +1,87 @@
-from PySide6.QtCore import Signal
+from PySide6.QtWidgets import QHBoxLayout, QVBoxLayout, QLabel
+from PySide6.QtCore import QTimer, Signal, Qt
 from PySide6.QtGui import QColor
-from PySide6.QtCore import QTimer
 
 from qfluentwidgets import (
-    ExpandGroupSettingCard, PushButton, FluentIcon, PushSettingCard, qconfig, ColorDialog, PrimaryPushButton,
-    MessageBox
+    PushButton, FluentIcon, PushSettingCard, qconfig, ColorDialog, PrimaryPushButton, setCustomStyleSheet,
+    MessageBox, ExpandGroupSettingCard as _ExpandGroupSettingCard, HyperlinkLabel
 )
+from qfluentwidgets.components.settings.expand_setting_card import GroupWidget as _GroupWidget
 
 from .widget import SettingSwitchButton, SettingComboBox, SettingSlider
+from ..dialog import MessageBox
 
 from util.thread.pool import GlobalThreadPoolTask
 from util.common.icon import ExtendedFluentIcon
 from util.common.config import config, isWin11
 from util.common.io.directory import Directory
+from util.common.translator import Translator
+
+class GuideSettingCardBase:
+    def showHyperLinkLabel(self, label: str):
+        self.hyper_label = HyperlinkLabel(text = label, parent = self)
+
+        self.contentLayout.addSpacing(5)
+        self.contentLayout.addWidget(self.hyper_label, 0, Qt.AlignmentFlag.AlignLeft)
+        self.contentLayout.addStretch()
+
+        styleSheet = """
+        HyperlinkLabel {
+            font-size: 11px;
+        }
+        """
+        setCustomStyleSheet(self.hyper_label, styleSheet, styleSheet)
+
+    def showGuideMessageBox(self, title: str, content: str):
+        dialog = MessageBox(
+            title = title,
+            content = content,
+            parent = self.parent_window
+        )
+        dialog.hideCancelButton()
+
+        dialog.show()
+
+    def _initContentLayout(self, vBoxLayout: QVBoxLayout, contentLabel: QLabel):
+        vBoxLayout.removeWidget(contentLabel)
+
+        self.contentLayout = QHBoxLayout()
+        self.contentLayout.setSpacing(0)
+        self.contentLayout.setContentsMargins(0, 0, 0, 0)
+        self.contentLayout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.contentLayout.addWidget(contentLabel, 0, Qt.AlignmentFlag.AlignLeft)
+
+        vBoxLayout.addLayout(self.contentLayout)
+
+class GroupWidget(_GroupWidget, GuideSettingCardBase):
+    def __init__(self, icon, title, content, widget, stretch = 0):
+        super().__init__(icon, title, content, widget, stretch)
+
+        self._initContentLayout(self.vBoxLayout, self.contentLabel)
+
+class ExpandGroupSettingCard(_ExpandGroupSettingCard, GuideSettingCardBase):
+    def __init__(self, icon, title, content = None, parent = None):
+        super().__init__(icon, title, content, parent)
+
+        self._initContentLayout(self.card.vBoxLayout, self.card.contentLabel)
+
+    def addGroup(self, icon, title, content, widget, stretch = 0):
+        group = GroupWidget(icon, title, content, widget, stretch)
+        self.addGroupWidget(group)
+
+        if hasattr(self, "parent_window"):
+            group.parent_window = self.parent_window
+
+        return group
 
 class PersonalizationCard(ExpandGroupSettingCard):
     accentColorChanged = Signal(QColor)
 
-    def __init__(self, main_window, parent = None):
+    def __init__(self, parent_window, parent = None):
         super().__init__(FluentIcon.PALETTE, self.tr("Personalization"), self.tr("Customize the app theme, colors, and visual effects"), parent)
 
-        self.main_window = main_window
+        self.parent_window = parent_window
 
         self.theme_choice = SettingComboBox(config.themeMode, [self.tr("Light"), self.tr("Dark"), self.tr("System default")], parent = self)
 
@@ -39,7 +100,7 @@ class PersonalizationCard(ExpandGroupSettingCard):
     def __showColorDialog(self):
         """ show color dialog """
         w = ColorDialog(
-            qconfig.get(config.themeColor), self.tr("Choose color"), self.main_window, enableAlpha = True)
+            qconfig.get(config.themeColor), self.tr("Choose color"), self.parent_window, enableAlpha = True)
         w.colorChanged.connect(self.__onCustomColorChanged)
         w.exec()
 
@@ -125,14 +186,27 @@ class DownloadPathSettingCard(PushSettingCard):
     def on_change_download_path(self):
         path = Directory.browse_directory(self.parent_window, self.tr("Choose folder"), config.get(config.download_path))
 
-        if self.save:
-            config.set(config.download_path, path)
-        
-        self.set_path(path)
+        if path:
+            if self.save:
+                config.set(config.download_path, path)
+
+            self.set_path(path)
+
+        else:
+            dialog = MessageBox(
+                title = self.tr("Download Directory Inaccessible"),
+                content = self.tr("The selected download directory is inaccessible or lacks write permission. Please check and choose a different directory."),
+                parent = self.parent_window
+            )
+            dialog.hideCancelButton()
+
+            dialog.show()
 
 class PrioritySettingCard(ExpandGroupSettingCard):
-    def __init__(self, parent = None):
+    def __init__(self, parent_window, parent = None):
         super().__init__(FluentIcon.SETTING, self.tr("Video, Audio, and Codec Priority"), self.tr("Customize download priority settings"), parent)
+
+        self.parent_window = parent_window
 
         self.video_quality_btn = PushButton(self.tr("Customize…"), self)
         self.audio_quality_btn = PushButton(self.tr("Customize…"), self)
@@ -144,6 +218,10 @@ class PrioritySettingCard(ExpandGroupSettingCard):
         self.addGroup(FluentIcon.VIDEO, self.tr("Video Quality Priority"), "", self.video_quality_btn)
         self.addGroup(FluentIcon.MUSIC, self.tr("Audio Quality Priority"), "", self.audio_quality_btn)
         self.addGroup(FluentIcon.CODE, self.tr("Codec Priority"), "", self.video_codec_btn)
+
+        self.showHyperLinkLabel(self.tr("About Custom Priority Settings"))
+
+        self.hyper_label.clicked.connect(lambda: self.showGuideMessageBox(self.tr("Instructions"), Translator.PRIORITY_GUIDE()))
 
 class DanmakuSettingCard(ExpandGroupSettingCard):
     def __init__(self, full_mode = True, parent = None):
@@ -240,15 +318,17 @@ class MetadataSettingCard(ExpandGroupSettingCard):
         self.addGroup("", self.tr("Metadata Format"), "", self.type_choice)
 
 class NumberSettingCard(ExpandGroupSettingCard):
-    def __init__(self, parent = None):
+    def __init__(self, parent_window, parent = None):
         super().__init__(ExtendedFluentIcon.NUMBERS, self.tr("Numbering"), self.tr("Configure how the {number} variable is formatted"), parent)
+
+        self.parent_window = parent_window
 
         self.numbering_type_choice = SettingComboBox(
             config.numbering_type,
             [
                 self.tr("Start from specified number (per batch)"),
-                self.tr("Global sequential numbering"),
-                self.tr("Use list order (1, 2, 3…)")
+                self.tr("Use the index from the parse list"),
+                self.tr("Global sequential numbering")
             ],
             parent = self
         )
@@ -256,8 +336,8 @@ class NumberSettingCard(ExpandGroupSettingCard):
 
         self.addGroup(
             "",
-            self.tr("Numbering Type"),
-            self.tr("Select the source for {number} variable"),
+            self.tr("Numbering Mode"),
+            self.tr("Select how the {number} variable is formatted and incremented"),
             self.numbering_type_choice
         )
         self.starting_number_group = self.addGroup(
@@ -266,8 +346,11 @@ class NumberSettingCard(ExpandGroupSettingCard):
             self.get_starting_number_content(config.get(config.starting_number)),
             self.starting_number_btn
         )
-        
-        self.numbering_type_choice.currentIndexChanged.connect(lambda index: self.starting_number_group.setEnabled(index == 0))
+
+        self.showHyperLinkLabel(self.tr("About Numbering Settings"))
+
+        self.hyper_label.clicked.connect(lambda: self.showGuideMessageBox(self.tr("Instructions"), Translator.NUMBERING_GUIDE()))
+        self.numbering_type_choice.currentIndexChanged.connect(self.on_change_numbering_type)
 
         self.starting_number_group.setEnabled(self.numbering_type_choice.currentIndex() == 0)
 
@@ -316,10 +399,10 @@ class ProxySettingCard(ExpandGroupSettingCard):
         self.addGroup("", self.tr("Configure Proxy Server"), "", self.custom_btn)
 
 class FFmpegSettingCard(ExpandGroupSettingCard):
-    def __init__(self, main_window, parent = None):
+    def __init__(self, parent_window, parent = None):
         super().__init__(FluentIcon.SETTING, self.tr("FFmpeg Settings"), self.tr("Configure FFmpeg used for merging and converting videos"), parent)
 
-        self.main_window = main_window
+        self.parent_window = parent_window
 
         self.source_choice = SettingComboBox(config.ffmpeg_source, [self.tr("Bundled (with app)"), self.tr("System PATH"), self.tr("Custom path")], parent = self)
         self.custom_btn = PushButton(self.tr("Browse…"), self)
@@ -343,14 +426,15 @@ class ParsingSettingCard(ExpandGroupSettingCard):
     def __init__(self, parent = None):
         super().__init__(FluentIcon.SEARCH, self.tr("Parsing Settings"), self.tr("Configure clipboard monitoring, parse history, and parse list options"), parent)
 
-        self.monitor_clipboard_switch = SettingSwitchButton(config.monitor_clipboard, parent = self)
+        self.custom_parse_list_btn = PushButton(self.tr("Configure…"), self)
+        self.custom_monitor_clipboard_btn = PushButton(self.tr("Configure…"), self)
+        self.custom_auto_select_btn = PushButton(self.tr("Configure…"), self)
         self.parse_history_switch = SettingSwitchButton(config.parse_history, parent = self)
 
-        self.custom_header_btn = PushButton(self.tr("Configure…"), self)
-
-        self.addGroup("", self.tr("Monitor Clipboard"), self.tr("Automatically start parsing when a link is copied"), self.monitor_clipboard_switch)
+        self.addGroup("", self.tr("Parse List Settings"), self.tr("Customize the display and behavior of the parse list"), self.custom_parse_list_btn)
+        self.addGroup("", self.tr("Monitor Clipboard Settings"), self.tr("Configure the behavior of clipboard monitoring"), self.custom_monitor_clipboard_btn)
+        self.addGroup("", self.tr("Auto-select Download Items Settings"), self.tr("Configure how items in the parse list are automatically selected after parsing"), self.custom_auto_select_btn)
         self.addGroup("", self.tr("Save Parse History"), self.tr("Save the history of parsed links"), self.parse_history_switch)
-        self.addGroup("", self.tr("Parse List Settings"), self.tr("Customize the display and behavior of the parse list"), self.custom_header_btn)
 
 class ConfigFileSettingCard(ExpandGroupSettingCard):
     def __init__(self, parent = None):
@@ -388,8 +472,10 @@ class WindowBehaviorSettingCard(ExpandGroupSettingCard):
         self.addGroup("", self.tr("Close the Main Window"), self.tr("Choose the action when closing the main window"), self.when_close_action_choice)
 
 class DownloadHandlingSettingCard(ExpandGroupSettingCard):
-    def __init__(self, parent = None):
+    def __init__(self, parent_window, parent = None):
         super().__init__(FluentIcon.DOWNLOAD, self.tr("Download Handling"), self.tr("Configure download prompts, notifications, and file conflict handling"), parent)
+
+        self.parent_window = parent_window
 
         self.show_download_options_dialog_switch = SettingSwitchButton(config.show_download_options_dialog, parent = self)
         self.show_notification_switch = SettingSwitchButton(config.show_notification, parent = self)
@@ -398,8 +484,11 @@ class DownloadHandlingSettingCard(ExpandGroupSettingCard):
 
         self.addGroup("", self.tr("Show Download Options Dialog"), self.tr("Show a dialog before starting the download to customize settings for this task"), self.show_download_options_dialog_switch)
         self.addGroup("", self.tr("Show Notifications"), self.tr("Show notifications when downloads complete"), self.show_notification_switch)
-        self.addGroup("", self.tr("Preallocate File Space"), self.tr("Preallocate file space before downloading to improve performance (recommended)"), self.prelocation_switch)
+        preallocate_group = self.addGroup("", self.tr("Preallocate File Space"), self.tr("Preallocate file space before downloading to improve performance"), self.prelocation_switch)
         self.addGroup("", self.tr("File Conflict Resolution"), self.tr("Choose the action when a file with the same name already exists"), self.file_conflict_resolution_choice)
+
+        preallocate_group.showHyperLinkLabel(self.tr("About Preallocating File Space"))
+        preallocate_group.hyper_label.clicked.connect(lambda: preallocate_group.showGuideMessageBox(self.tr("Instructions"), Translator.PREALLOCATE_GUIDE()))
 
 class DownloadConcurrencySettingCard(ExpandGroupSettingCard):
     def __init__(self, parent = None):

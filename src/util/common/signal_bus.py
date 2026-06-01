@@ -20,6 +20,8 @@ class SignalBus:
         update_parse_list_count = Signal(str, int)
 
         preview_init = Signal(dict)
+        preview_finish = Signal()
+
         query_video_info = Signal(int, int, object)
         query_audio_info = Signal(int, object)
 
