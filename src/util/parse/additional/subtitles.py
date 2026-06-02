@@ -9,7 +9,7 @@ from ...format.time import Time
 from .base import AdditionalParserBase
 from .file.subtitle_ass import SubtitlesASS
 
-import json
+import orjson
 
 class SubtitlesParser(AdditionalParserBase):
     def __init__(self, task_info: TaskInfo):
@@ -83,7 +83,7 @@ class SubtitlesParser(AdditionalParserBase):
         return ass, "ass"
 
     def _to_json(self, data: dict):
-        return json.dumps(data, ensure_ascii = False, indent = 2), "json"
+        return orjson.dumps(data, option = orjson.OPT_INDENT_2).decode("utf-8"), "json"
 
     def _get_subtitles_data_list(self):
         subtitles_data_list = []

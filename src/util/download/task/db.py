@@ -6,7 +6,7 @@ from .info import TaskInfo
 
 from pathlib import Path
 from typing import List
-import json
+import orjson
 
 class TaskDatabase(Database):
     def __init__(self):
@@ -20,6 +20,7 @@ class TaskDatabase(Database):
             CREATE TABLE IF NOT EXISTS "download_task" (
                 "id"	INTEGER UNIQUE,
                 "task_id"	TEXT UNIQUE,
+                "hash_id"   TEXT UNIQUE,
                 "cover_id"	TEXT,
                 "title"	TEXT,
                 "created_time"	INTEGER,
@@ -29,6 +30,7 @@ class TaskDatabase(Database):
             CREATE TABLE IF NOT EXISTS "completed_task" (
                 "id"	INTEGER UNIQUE,
                 "task_id"	TEXT UNIQUE,
+                "hash_id"   TEXT UNIQUE,
                 "cover_id"	TEXT,
                 "title"	TEXT,
                 "completed_time"	INTEGER,
@@ -63,7 +65,7 @@ class TaskDatabase(Database):
                 task_info.Basic.cover_id,                                   # cover_id
                 task_info.Basic.show_title,                                 # title
                 timestamp,                                                  # created_time or completed_time
-                json.dumps(task_info.to_dict(), ensure_ascii = False)       # data
+                orjson.dumps(task_info.to_dict()).decode("utf-8")       # data
             ))
 
         if completed:
@@ -80,7 +82,7 @@ class TaskDatabase(Database):
     def update_task(self, task_info: TaskInfo):
         self.execute("""
             UPDATE download_task SET data = ? WHERE task_id = ?
-        """, (json.dumps(task_info.to_dict(), ensure_ascii = False), task_info.Basic.task_id))
+        """, (orjson.dumps(task_info.to_dict()).decode("utf-8"), task_info.Basic.task_id))
 
     def delete_task(self, task_id: str, completed: bool = False):
         if completed:

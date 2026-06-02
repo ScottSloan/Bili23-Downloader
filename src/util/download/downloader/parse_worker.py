@@ -14,7 +14,7 @@ from ..task.info import TaskInfo
 
 from urllib.parse import urlencode
 import logging
-import json
+import orjson
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +34,7 @@ class ParseWorker(QRunnable, ParserBase):
 
             if not self.error:
                 download_info = self.parse_download_info()
-                download_info_json = json.dumps(download_info, ensure_ascii = False)
+                download_info_json = orjson.dumps(download_info).decode("utf-8")
 
                 QMetaObject.invokeMethod(
                     self.parent,

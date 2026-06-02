@@ -22,9 +22,9 @@ from .merger import Merger
 
 from threading import Event, Lock
 from pathlib import Path
+import orjson
 import errno
 import httpx
-import json
 import time
 
 class TokenBucket:
@@ -312,7 +312,7 @@ class Downloader(QObject):
         if self._stop_event.is_set():
             return
         
-        download_info = json.loads(download_info_json)
+        download_info = orjson.loads(download_info_json)
         self.download_list = download_info["download_list"]
         self.task_info.Download.status = DownloadStatus.DOWNLOADING
         self.task_info.Download.total_size = download_info["total_size"]

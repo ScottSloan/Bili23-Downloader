@@ -1,9 +1,15 @@
 from dataclasses import dataclass, field, fields, asdict
+from functools import lru_cache
+
+
+@lru_cache(maxsize=None)
+def _field_names(cls) -> frozenset[str]:
+    return frozenset(f.name for f in fields(cls))
 
 @dataclass
 class InfoBase:
     def from_dict(self, data: dict) -> None:
-        field_names = {f.name for f in fields(self)}
+        field_names = _field_names(type(self))
 
         for k, v in data.items():
             if k in field_names:

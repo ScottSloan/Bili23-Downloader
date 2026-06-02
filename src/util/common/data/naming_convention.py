@@ -34,10 +34,10 @@ class VariableListFactory:
                 return self._base_variable + self._cheese_variable
             
             case ConventionType.FAVORITE:
-                return self._base_variable + self._favorite_variable
+                return self._base_variable + self._normal_variable + self._favorite_variable
 
             case ConventionType.SPACE:
-                return self._base_variable + self._space_variable
+                return self._base_variable + self._normal_variable + self._space_variable
         
         return 
     

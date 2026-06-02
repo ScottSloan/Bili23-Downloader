@@ -3,7 +3,7 @@ from ...common.translator import Translator
 from .tree import TreeItem, EpisodeData, Attribute
 from .base import EpisodeParserBase
 
-import json
+import orjson
 import re
 
 class CheeseEpisodeParser(EpisodeParserBase):
@@ -112,7 +112,7 @@ class CheeseEpisodeParser(EpisodeParserBase):
         }.get(episode_data["status"])
     
     def get_premiered(self):
-        text = json.dumps(self.info_data, ensure_ascii = False)
+        text = orjson.dumps(self.info_data).decode("utf-8")
 
         # 使用正则找到第一条 release_date 字段对应的值
         match = re.search(r'"release_date"\s*:\s*(\d+)', text)

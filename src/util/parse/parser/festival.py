@@ -1,7 +1,7 @@
 from ...network.request import SyncNetWorkRequest, ResponseType
 from .base import ParserBase
 
-import json
+import orjson
 import re
 
 class FestivalParser(ParserBase):
@@ -29,7 +29,7 @@ class FestivalParser(ParserBase):
             json_data = match.group(1)
             
             try:
-                info_data: dict = json.loads(json_data)
+                info_data: dict = orjson.loads(json_data)
                 
                 bvid = info_data["videoInfo"]["bvid"]
 

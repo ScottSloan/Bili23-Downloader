@@ -18,7 +18,7 @@ from .info import TaskInfo
 from pathlib import Path
 from typing import List
 from uuid import uuid4
-import json
+import orjson
 import re
 
 class TaskManager:
@@ -193,7 +193,7 @@ class TaskManager:
             data = entry[0]  # 获取 data 列
 
             task_info = TaskInfo()
-            task_info.from_dict(json.loads(data))
+            task_info.from_dict(orjson.loads(data))
 
             task_info_list.append(task_info)
 

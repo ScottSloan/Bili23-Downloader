@@ -12,7 +12,7 @@ import util.misc.dm_pb2 as dm_pb2
 
 from typing import List
 from math import ceil
-import json
+import orjson
 
 class DanmakuParser(AdditionalParserBase):
     def __init__(self, task_info: TaskInfo):
@@ -44,7 +44,7 @@ class DanmakuParser(AdditionalParserBase):
         return ass, "ass"
 
     def _to_json(self, dict_list: List[dict]) -> tuple:
-        return json.dumps(dict_list, ensure_ascii = False, indent = 2), "json"
+        return orjson.dumps(dict_list, option = orjson.OPT_INDENT_2).decode("utf-8"), "json"
 
     def _get_all_protobuf_parts(self):
         if duration := self.task_info.Episode.duration:

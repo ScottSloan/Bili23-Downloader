@@ -14,6 +14,7 @@ from .enum import (
 
 from pathlib import Path
 import logging
+import orjson
 import sys
 
 logger = logging.getLogger(__name__)
@@ -231,6 +232,8 @@ class APPConfig(QConfig):
     app_name = "Bili23 Downloader"
     app_version = "2.00.7"
     app_comparable_version = "2.00.7"
+    app_config_version = 2100
+    config_version = ConfigItem("Application", "config_version", app_config_version)
 
     # Interface
     language = OptionsConfigItem("Interface", "language", Language.AUTO, OptionsValidator(Language), LanguageSerializer(), restart = True)
@@ -372,6 +375,34 @@ class APPConfig(QConfig):
 
     tutorial_dialog_shown = ConfigItem("Misc", "tutorial_dialog_shown", False, BoolValidator())
 
+def check_need_patch():
+    # 检查是否需要修补配置文件
+    with open(config_path, "r", encoding = "utf-8") as f:
+        data = orjson.loads(f.read())
+
+        if "config_version" in data.get("Application", {}):
+            config_version = data.get("Application", {}).get("config_version", 0)
+
+            return config_version < config.app_config_version, config_version
+        else:
+            return True, 0
+
+def patch_config(config_version: int):
+    # 配置文件修补
+    if config_version < 2100:
+        naming_rule_list = config.get(config.naming_rule_list)
+        naming_rule_type_list = [rule["type"] for rule in naming_rule_list]
+
+        for rule in DefaultValue.naming_rule_list:
+            if rule["type"] not in naming_rule_type_list:
+                naming_rule_list.append(rule)
+
+        config.set(config.naming_rule_list, naming_rule_list)
+
+    # 完成修补，写入新的 config_version
+    config.set(config.config_version, config.app_config_version)
+    config.save()
+
 config = APPConfig()
 config.themeMode.value = Theme.AUTO
 
@@ -382,3 +413,11 @@ if not config_path.exists():
     logger.warning("配置文件不存在，将创建新配置文件")
 
 qconfig.load(config_path, config)
+
+# 判断是否需要修补配置文件
+need_patch, config_version = check_need_patch()
+
+if need_patch:
+    logger.info("检测到旧版本配置文件，正在进行修补")
+
+    patch_config(config_version)
