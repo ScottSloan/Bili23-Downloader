@@ -1,5 +1,4 @@
 from PySide6.QtCore import Signal, QObject
-from PySide6.QtGui import QPixmap
 
 from .enum import ToastNotificationCategory
 from .config import config

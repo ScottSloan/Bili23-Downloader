@@ -8,7 +8,7 @@ requires-python = ">=3.9"
 dependencies = [
     "PySide6==6.10.3",
     "PySide6-Fluent-Widgets==1.11.2",
-    "orjson==3.11.3",
+    "orjson==3.11.9",
     "qrcode==8.2",
     "protobuf==7.35.0",
     "httpx==0.28.1",

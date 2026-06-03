@@ -230,8 +230,8 @@ class DefaultValue:
 class APPConfig(QConfig):
     # APP
     app_name = "Bili23 Downloader"
-    app_version = "2.00.7"
-    app_comparable_version = "2.00.7"
+    app_version = "2.10.0"
+    app_comparable_version = "2.10.0"
     app_config_version = 2100
     config_version = ConfigItem("Application", "config_version", app_config_version)
 
@@ -244,7 +244,7 @@ class APPConfig(QConfig):
     parse_list_column = ConfigItem("Behavior", "parse_list_column", DefaultValue.parse_list_column)
     monitor_clipboard = ConfigItem("Behavior", "monitor_clipboard", False, BoolValidator())
     show_download_confirmation_dialog = ConfigItem("Behavior", "show_download_confirmation_dialog", False, BoolValidator())
-    auto_select_mode = OptionsConfigItem("Behavior", "auto_select_mode", AutoSelectMode.MANUAL, OptionsValidator(AutoSelectMode), EnumSerializer(AutoSelectMode))
+    auto_select_mode = OptionsConfigItem("Behavior", "auto_select_mode_", AutoSelectMode.CONDITIONAL, OptionsValidator(AutoSelectMode), EnumSerializer(AutoSelectMode))
     auto_select_conditions = ConfigItem("Behavior", "auto_select_conditions", DefaultValue.auto_select_conditions)
     parse_history = ConfigItem("Behavior", "parse_history", True, BoolValidator())
 
@@ -295,7 +295,7 @@ class APPConfig(QConfig):
     starting_number = ConfigItem("File Naming", "starting_number", 1)
 
     # Advanced
-    prefer_cdn_server_provider = ConfigItem("Advanced", "prefer_cdn_server", True, BoolValidator())
+    prefer_cdn_server_provider = ConfigItem("Advanced", "prefer_cdn_server_provider_", True, BoolValidator())
     cdn_server_list = ConfigItem("Advanced", "cdn_server_list", DefaultValue.cdn_server_list)
 
     ffmpeg_source = OptionsConfigItem("Advanced", "ffmpeg_source", FFmpegSource.BUNDLED, OptionsValidator(FFmpegSource), EnumSerializer(FFmpegSource), restart = True)
@@ -335,13 +335,15 @@ class APPConfig(QConfig):
     is_login = ConfigItem("Cookie", "is_login", False, BoolValidator())
     is_expired = False
 
+    # Application
+    should_upgrade_config = False
+    accepted_terms = ConfigItem("Application", "accepted_terms", False, BoolValidator())
+    skip_version = ConfigItem("Application", "skip_version", "")
+
     # User
     user_uname: str = ""
     user_uid: str = ""
     user_avatar_pixmap: QPixmap = None
-
-    accepted_terms = ConfigItem("Application", "accepted_terms", False, BoolValidator())
-    skip_version = ConfigItem("Application", "skip_version", "")
 
     # FFmpeg
     ffmpeg_executable = ""
@@ -419,5 +421,7 @@ need_patch, config_version = check_need_patch()
 
 if need_patch:
     logger.info("检测到旧版本配置文件，正在进行修补")
+
+    config.should_upgrade_config = True
 
     patch_config(config_version)

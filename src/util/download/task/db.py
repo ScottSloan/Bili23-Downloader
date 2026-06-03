@@ -1,11 +1,13 @@
+from ...common.config import appdata_path, config
 from ...common.timestamp import get_timestamp
-from ...common.config import appdata_path
 from ...common.database import Database
+from ...parse.episode.tree import Attribute
 
 from .info import TaskInfo
 
 from pathlib import Path
 from typing import List
+import hashlib
 import orjson
 
 class TaskDatabase(Database):
@@ -13,6 +15,14 @@ class TaskDatabase(Database):
         self.path = Path(appdata_path) / "Bili23 Downloader" / "task.db"
 
         self.check_and_create_table()
+
+        self._check_should_upgrade()
+
+    def _check_should_upgrade(self):
+        if config.should_upgrade_config:
+            self._upgrade()
+
+            config.should_upgrade_config = False
 
     def check_and_create_table(self):
         self.execute_script("""
@@ -62,21 +72,22 @@ class TaskDatabase(Database):
 
             info_list.append((
                 task_info.Basic.task_id,                                    # task_id
+                self._calc_hash_id(task_info),                              # hash_id
                 task_info.Basic.cover_id,                                   # cover_id
                 task_info.Basic.show_title,                                 # title
                 timestamp,                                                  # created_time or completed_time
-                orjson.dumps(task_info.to_dict()).decode("utf-8")       # data
+                orjson.dumps(task_info.to_dict()).decode("utf-8")           # data
             ))
 
         if completed:
             self.executemany("""
-                INSERT INTO completed_task (task_id, cover_id, title, completed_time, data)
-                VALUES (?, ?, ?, ?, ?)
+                INSERT INTO completed_task (task_id, hash_id, cover_id, title, completed_time, data)
+                VALUES (?, ?, ?, ?, ?, ?)
             """, info_list)
         else:
             self.executemany("""
-                INSERT INTO download_task (task_id, cover_id, title, created_time, data)
-                VALUES (?, ?, ?, ?, ?)
+                INSERT INTO download_task (task_id, hash_id, cover_id, title, created_time, data)
+                VALUES (?, ?, ?, ?, ?, ?)
             """, info_list)
 
     def update_task(self, task_info: TaskInfo):
@@ -93,3 +104,64 @@ class TaskDatabase(Database):
             self.execute("""
                 DELETE FROM download_task WHERE task_id = ?
             """, (task_id,))
+
+    def _upgrade(self):
+        def _to_task_list(result):
+            _task_info_list = []
+
+            for entry in result:
+                task_info = TaskInfo()
+                task_info.from_dict(orjson.loads(entry[0]))
+
+                _task_info_list.append(task_info)
+
+            return _task_info_list
+
+        # 执行数据库升级逻辑
+
+        # 取出原有数据
+        download_tasks = self.query_tasks(completed = False)
+        completed_tasks = self.query_tasks(completed = True)
+
+        # 删除原有表
+        self.execute_script("""
+            DROP TABLE IF EXISTS download_task;
+            DROP TABLE IF EXISTS completed_task;
+        """)
+
+        # 重新创建表
+        self.check_and_create_table()
+
+        self.add_tasks(_to_task_list(download_tasks), completed = False)
+        self.add_tasks(_to_task_list(completed_tasks), completed = True)
+
+    def _calc_hash_id(self, task_info: TaskInfo):
+        # 计算 hash_id
+        attr = task_info.Episode.attribute
+
+        if attr & Attribute.VIDEO_BIT:
+            # 投稿视频
+            metadata = {
+                "bvid": task_info.Episode.bvid,
+                "cid": task_info.Episode.cid,
+                "aid": task_info.Episode.aid
+            }
+
+        elif attr & Attribute.BANGUMI_BIT:
+            # 剧集类
+            metadata = {
+                "bvid": task_info.Episode.bvid,
+                "cid": task_info.Episode.cid,
+                "aid": task_info.Episode.aid,
+                "ep_id": task_info.Episode.ep_id
+            }
+
+        elif attr & Attribute.CHEESE_BIT:
+            # 课程类
+            metadata = {
+                "aid": task_info.Episode.aid,
+                "cid": task_info.Episode.cid,
+                "ep_id": task_info.Episode.ep_id
+            }
+
+        return hashlib.md5(orjson.dumps(metadata)).hexdigest()

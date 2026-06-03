@@ -4,6 +4,7 @@ from ..common.config import config
 
 from enum import Enum
 import logging
+import orjson
 import httpx
 
 logging.getLogger("httpx").setLevel(logging.WARNING)
@@ -133,7 +134,7 @@ class SyncNetWorkRequest:
                 return response.text
 
             case ResponseType.JSON:
-                return response.json()
+                return orjson.loads(response.text)
 
             case ResponseType.BYTES:
                 return response.content
