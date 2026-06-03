@@ -111,11 +111,6 @@ class ParseBase(QFrame):
                         if conditions.get("other") == 1:
                             self.parse_list.check_all_items()
 
-    def check_starting_number(self):
-        # 更新当前起始编号，如果尚未设置
-        if config.current_starting_number is None and config.get(config.numbering_type) == NumberingType.CONTINUOUS:
-            config.current_starting_number = config.global_starting_number
-
     def reset_search(self):
         self.parse_list.search_keywords(None)
 
@@ -359,8 +354,6 @@ class ParseInterface(ParseBase):
         self.clipboard = QApplication.clipboard()
         self.clipboard.changed.connect(self.on_copy_url)
 
-        self.check_starting_number()
-
     def on_paste_and_parse(self):
         url = self.clipboard.text()
 
@@ -421,9 +414,13 @@ class ParseInterface(ParseBase):
 
             if not dialog.exec():
                 return
-            
+
+        # 获取选中的下载项    
         checked_episodes_list = self.parse_list.get_checked_items(to_dict = True, mark_as_downloaded = True)
 
+        config.current_starting_number = config.get(config.starting_number)
+
+        # 添加到下载队列
         GlobalThreadPoolTask.run_func(task_manager.create, checked_episodes_list)
 
         signal_bus.toast.show.emit(ToastNotificationCategory.SUCCESS, "", self.tr("Added to download queue"))

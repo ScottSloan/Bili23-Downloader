@@ -169,7 +169,6 @@ class SettingInterface(ScrollArea):
 
         # File Naming
         self.naming_convention_setting_card.clicked.connect(self.on_custom_naming_rule)
-        self.numbering_setting_card.starting_number_btn.clicked.connect(self.on_custom_starting_number)
 
         # Advanced
         self.cdn_card.custom_btn.clicked.connect(self.on_custom_cdn_server_list)
@@ -264,14 +263,6 @@ class SettingInterface(ScrollArea):
 
         dialog = RuleListDialog(self.main_window)
         dialog.exec()
-
-    def on_custom_starting_number(self):
-        from ..dialog.setting.starting_number import StartingNumberDialog
-
-        dialog = StartingNumberDialog(self.main_window)
-
-        if dialog.exec():
-            self.numbering_setting_card.set_current_starting_number(dialog.starting_number)
 
     def on_custom_cdn_server_list(self):
         from ..dialog.setting.cdn_server import CDNServerDialog

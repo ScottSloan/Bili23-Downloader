@@ -15,6 +15,7 @@ from .reparse_worker import ReparseWorker
 from .db import TaskDatabase
 from .info import TaskInfo
 
+from threading import Lock
 from pathlib import Path
 from typing import List
 from uuid import uuid4
@@ -80,7 +81,6 @@ class TaskManager:
         extra_data = EpisodeData.get_episode_data(episode_info.get("episode_id", ""))
 
         title = episode_info.get("title", "")
-
         attr = episode_info.get("attribute", 0)
 
         # 对于任何类型视频，都保存一个 leaf_title 备用，供下载收藏夹和个人空间时使用
@@ -113,7 +113,6 @@ class TaskManager:
         path = Path(formatter.format())
 
         task_info.File.name = str(path.name)
-
         task_info.File.folder = str(path.parent)
 
     def __check_reparse_needed(self, episode_info: dict):
@@ -143,39 +142,42 @@ class TaskManager:
                 # 过滤文件系统非法字符
                 episode_info[title] = re.sub(r'[\/\\\:\*\?\"\<\>\|]', '_', episode_info.get(title, ""))
 
+    def __get_number(self, episode_info: dict = None):
+        match config.get(config.numbering_type):
+            case NumberingType.CONTINUOUS:
+                # 全局顺序编号
+                return config.global_starting_number
+            
+            case NumberingType.FROM_SPECIFIED:
+                # 返回 current_starting_number，然后自增
+                _current = config.current_starting_number
+                config.current_starting_number += 1
+
+                return _current
+            
+            case _:
+                return episode_info.get("number", "")
+
     def create(self, episode_info_list: List[dict]):
         task_info_list = []
 
-        numbering_type = config.get(config.numbering_type)
-
-        if numbering_type == NumberingType.CONTINUOUS:
-            if config.current_starting_number is None:
-                config.current_starting_number = config.global_starting_number
-
-            next_number = config.current_starting_number
-
-        elif numbering_type == NumberingType.FROM_SPECIFIED:
-            next_number = config.get(config.starting_number)
-
-        else:
-            next_number = None
-
         for episode_info in episode_info_list:
+            # 判断是否需要重新解析
             if self.__check_reparse_needed(episode_info):
                 continue
 
-            if numbering_type == NumberingType.USE_PARSE_LIST:
-                number = episode_info.get("number", "")
-            else:
-                number = next_number
-                next_number += 1
+            # 判断是否重复下载
+            # TODO: 重复下载逻辑
+
+            # 先判断重复下载，再分配编号
+            number = self.__get_number(episode_info)
 
             task_info = self.__episode_info_to_task_info(episode_info, number)
 
             task_info_list.append(task_info)
 
-        if numbering_type == NumberingType.CONTINUOUS and next_number is not None:
-            config.current_starting_number = next_number
+            # 全局起始编号自增
+            config.global_starting_number += 1
 
         if task_info_list:
             # 存储到数据库，并添加到下载列表

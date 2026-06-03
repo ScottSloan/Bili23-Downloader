@@ -76,7 +76,7 @@ class FileNameFormatter:
         return str(Path(*normalized_parts))
 
     def get_special_rule(self):
-        # 判断是否为特殊类型的视频：互动视频、每周必看、收藏夹、个人空间
+        # 判断是否为特殊类型的视频：互动视频、每周必看、合集列表、稍后再看、历史记录
         # 这些类型不支持自定义，直接使用内部预设规则
 
         if self.rule is None:
@@ -87,7 +87,8 @@ class FileNameFormatter:
             Attribute.INTERACTIVE_BIT: "{collection_title}/{leaf_title}",
             Attribute.POPULAR_BIT: "{collection_title}/{leaf_title}",
             Attribute.COLLECTION_LIST_BIT: "{collection_title}/{leaf_title}",
-            Attribute.WATCH_LATER_BIT: "{leaf_title}"
+            Attribute.WATCH_LATER_BIT: "{leaf_title}",
+            Attribute.HISTORY_BIT: "{leaf_title}",
         }
 
         for attr, rule in rule_map.items():
@@ -152,6 +153,16 @@ class FileNameFormatter:
         return self.get_type_id_from_attribute(task_info.Episode.attribute)
 
     def get_type_id_from_attribute(self, attribute: int):
+        unsupported_attr = [
+            Attribute.WATCH_LATER_BIT,
+            Attribute.HISTORY_BIT,
+            Attribute.COLLECTION_LIST_BIT
+        ]
+
+        for attr in unsupported_attr:
+            if attribute & attr:
+                return None
+
         type_map = {
             Attribute.NORMAL_BIT: ConventionType.NORMAL,
             Attribute.PART_BIT: ConventionType.PART,
@@ -160,7 +171,7 @@ class FileNameFormatter:
             Attribute.CHEESE_BIT: ConventionType.CHEESE,
             Attribute.POPULAR_BIT: ConventionType.NORMAL,
             Attribute.FAVLIST_BIT: ConventionType.FAVORITE,
-            Attribute.SPACE_BIT: ConventionType.SPACE
+            Attribute.SPACE_BIT: ConventionType.SPACE,
         }
 
         for attr, type_id in type_map.items():

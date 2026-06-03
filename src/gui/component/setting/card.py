@@ -332,7 +332,8 @@ class NumberSettingCard(ExpandGroupSettingCard):
             ],
             parent = self
         )
-        self.starting_number_btn = PushButton(self.tr("Customize…"), self)
+        self.custom_starting_number_btn = PushButton(self.tr("Customize…"), self)
+        self.custom_global_starting_number_btn = PushButton(self.tr("Customize…"), self)
 
         self.addGroup(
             "",
@@ -344,18 +345,38 @@ class NumberSettingCard(ExpandGroupSettingCard):
             "",
             self.tr("Starting Number"),
             self.get_starting_number_content(config.get(config.starting_number)),
-            self.starting_number_btn
+            self.custom_starting_number_btn
+        )
+        self.global_number_group = self.addGroup(
+            "",
+            self.tr("Global Sequential Numbering"),
+            self.get_global_starting_number_content(config.global_starting_number),
+            self.custom_global_starting_number_btn
         )
 
         self.showHyperLinkLabel(self.tr("About Numbering Settings"))
 
+        self.connect_signal()
+
+        self.starting_number_group.setEnabled(self.numbering_type_choice.currentIndex() == 0)
+        self.global_number_group.setEnabled(self.numbering_type_choice.currentIndex() == 2)
+
+    def connect_signal(self):
         self.hyper_label.clicked.connect(lambda: self.showGuideMessageBox(self.tr("Instructions"), Translator.NUMBERING_GUIDE()))
         self.numbering_type_choice.currentIndexChanged.connect(self.on_change_numbering_type)
 
-        self.starting_number_group.setEnabled(self.numbering_type_choice.currentIndex() == 0)
+        self.card.expandButton.clicked.connect(lambda: self.get_global_starting_number_content(config.global_starting_number))
+
+        self.custom_starting_number_btn.clicked.connect(
+            lambda: self.show_custom_starting_number_dialog(is_global=False)
+        )
+        self.custom_global_starting_number_btn.clicked.connect(
+            lambda: self.show_custom_starting_number_dialog(is_global=True)
+        )
 
     def on_change_numbering_type(self, type_index: int):
         self.starting_number_group.setEnabled(type_index == 0)
+        self.global_number_group.setEnabled(type_index == 2)
 
         # 重置当前起始数字，避免在切换编号类型后出现不符合预期的数字
         config.current_starting_number = None
@@ -365,10 +386,34 @@ class NumberSettingCard(ExpandGroupSettingCard):
 
         self.starting_number_group.setContent(self.get_starting_number_content(value))
 
-        config.current_starting_number = None
+    def set_current_global_starting_number(self, value: int):
+        config.global_starting_number = value
+
+        self.global_number_group.setContent(self.get_global_starting_number_content(value))
 
     def get_starting_number_content(self, value: int):
         return self.tr("Set initial number for per-batch. Current: {current}").format(current = value)
+    
+    def get_global_starting_number_content(self, value: int):
+        return self.tr("Current global sequential starting number: {current}").format(current = value)
+
+    def show_custom_starting_number_dialog(self, is_global = False):
+        from ...dialog.setting.starting_number import StartingNumberDialog
+
+        if is_global:
+            title = self.tr("Customize Global Sequential Starting Number")
+            value = config.global_starting_number
+        else:
+            title = self.tr("Customize Starting Number")
+            value = config.get(config.starting_number)
+
+        dialog = StartingNumberDialog(title, value, self.parent_window)
+
+        if dialog.exec():
+            if is_global:
+                self.set_current_global_starting_number(dialog.starting_number)
+            else:
+                self.set_current_starting_number(dialog.starting_number)
 
 class CDNSettingCard(ExpandGroupSettingCard):
     def __init__(self, parent = None):

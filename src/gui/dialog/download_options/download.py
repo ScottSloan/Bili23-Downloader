@@ -33,17 +33,7 @@ class DownloadSettingsPage(ScrollArea):
 
         self.setScrollLayout(main_layout)
 
-        self.numbering_settings_card.starting_number_btn.clicked.connect(self.on_custom_starting_number)
-
     def on_save(self):
         config.set(config.download_path, self.download_path_card.path)
 
         config.target_naming_rule_id = self.naming_convention_card.rule_choice.currentData()
-
-    def on_custom_starting_number(self):
-        from gui.dialog.setting.starting_number import StartingNumberDialog
-
-        dialog = StartingNumberDialog(self.options_dialog)
-
-        if dialog.exec():
-            self.numbering_settings_card.set_current_starting_number(dialog.starting_number)

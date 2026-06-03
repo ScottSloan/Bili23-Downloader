@@ -1,4 +1,4 @@
-from ...common.enum import MediaType, ToastNotificationCategory
+from ...common.enum import MediaType, ToastNotificationCategory, ParserType
 from ...common.signal_bus import signal_bus
 from ...common.config import config
 
