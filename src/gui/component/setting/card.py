@@ -343,13 +343,13 @@ class NumberSettingCard(ExpandGroupSettingCard):
         )
         self.starting_number_group = self.addGroup(
             "",
-            self.tr("Starting Number"),
+            self.tr("Per-Batch Starting Number"),
             self.get_starting_number_content(config.get(config.starting_number)),
             self.custom_starting_number_btn
         )
         self.global_number_group = self.addGroup(
             "",
-            self.tr("Global Sequential Numbering"),
+            self.tr("Global Sequential Starting Number"),
             self.get_global_starting_number_content(config.global_starting_number),
             self.custom_global_starting_number_btn
         )
@@ -365,7 +365,7 @@ class NumberSettingCard(ExpandGroupSettingCard):
         self.hyper_label.clicked.connect(lambda: self.showGuideMessageBox(self.tr("Instructions"), Translator.NUMBERING_GUIDE()))
         self.numbering_type_choice.currentIndexChanged.connect(self.on_change_numbering_type)
 
-        self.card.expandButton.clicked.connect(lambda: self.get_global_starting_number_content(config.global_starting_number))
+        self.card.expandButton.clicked.connect(self._update_global_starting_number)
 
         self.custom_starting_number_btn.clicked.connect(
             lambda: self.show_custom_starting_number_dialog(is_global=False)
@@ -395,7 +395,7 @@ class NumberSettingCard(ExpandGroupSettingCard):
         return self.tr("Set initial number for per-batch. Current: {current}").format(current = value)
     
     def get_global_starting_number_content(self, value: int):
-        return self.tr("Current global sequential starting number: {current}").format(current = value)
+        return self.tr("Set global sequential starting number. Current: {current}").format(current = value)
 
     def show_custom_starting_number_dialog(self, is_global = False):
         from ...dialog.setting.starting_number import StartingNumberDialog
@@ -404,7 +404,7 @@ class NumberSettingCard(ExpandGroupSettingCard):
             title = self.tr("Customize Global Sequential Starting Number")
             value = config.global_starting_number
         else:
-            title = self.tr("Customize Starting Number")
+            title = self.tr("Customize Per-Batch Starting Number")
             value = config.get(config.starting_number)
 
         dialog = StartingNumberDialog(title, value, self.parent_window)
@@ -414,6 +414,9 @@ class NumberSettingCard(ExpandGroupSettingCard):
                 self.set_current_global_starting_number(dialog.starting_number)
             else:
                 self.set_current_starting_number(dialog.starting_number)
+
+    def _update_global_starting_number(self):
+        self.get_global_starting_number_content(config.global_starting_number)
 
 class CDNSettingCard(ExpandGroupSettingCard):
     def __init__(self, parent = None):

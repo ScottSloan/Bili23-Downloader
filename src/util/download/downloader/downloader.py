@@ -324,8 +324,7 @@ class Downloader(QObject):
 
         self.update_info(download_info)
 
-        self.start_worker()
-        self.start_timer()
+        self.start_download()
 
     @Slot(str)
     def on_parse_error(self, error_message: str):
@@ -355,11 +354,20 @@ class Downloader(QObject):
 
         signal_bus.download.auto_manage_concurrent_downloads.emit()
 
+        # 
         signal_bus.toast.show_long_message.emit(
             ToastNotificationCategory.ERROR,
             Translator.ERROR_MESSAGES("DOWNLOAD_FAILED"),
             error_message
         )
+
+    def start_download(self):
+        try:
+            self.start_worker()
+            self.start_timer()
+        
+        except Exception as e:
+            self.on_download_error(str(e))
 
     def start_worker(self):
         if not self.task_info.Download.queue:
@@ -484,7 +492,7 @@ class Downloader(QObject):
                 self.task_info.Download.queue.remove(file_key)
 
             if self.task_info.Download.queue and not self._stop_event.is_set():
-                self.start_worker()
+                self.start_download()
                 return
 
         # 若队列全空，且任务没被暂停/取消，意味着所有文件下载完成
@@ -596,6 +604,9 @@ class Downloader(QObject):
             on_end()
 
     def start_timer(self):
+        if self.speed_timer.isActive():
+            return
+        
         self.last_sampled_size = self.task_info.Download.downloaded_size
         self.speed_timer.start()
 
@@ -629,8 +640,6 @@ class Downloader(QObject):
     def _check_disk_space(self, path: Path, file_size: int):
         if not Directory.has_enough_space(path.parent, file_size):
             error_message = Translator.ERROR_MESSAGES("INSUFFICIENT_SPACE")
-
-            self.on_parse_error(error_message)
 
             raise OSError(error_message)
             

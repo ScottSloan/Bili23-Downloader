@@ -43,10 +43,10 @@ class ParseWorker(QRunnable, ParserBase):
                     Q_ARG(str, download_info_json)     # 由于不支持直接传递字典，所以传递 json 字符串，在主线程再转换回来
                 )
 
-        except:
+        except Exception as e:
             logger.exception("解析下载链接失败")
 
-            self.on_parse_error(Translator.ERROR_MESSAGES("PARSE_FAILED"))
+            self.on_parse_error("{}\n\n{}".format(Translator.ERROR_MESSAGES("PARSE_FAILED"), str(e)))
 
     def get_info(self):
         if self.task_info.Episode.attribute & Attribute.VIDEO_BIT:

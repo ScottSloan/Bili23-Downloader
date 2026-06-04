@@ -19,6 +19,9 @@ class AutoParseDialog(DialogBase):
 
         self.init_UI()
 
+        # 只有打开过此对话框，才会隐藏教学提示
+        config.set(config.auto_parse_teaching_tip_shown, True)
+
     def init_UI(self):
         self.caption_lab = SubtitleLabel(self.tr("Auto-parse Pagination"), self)
 

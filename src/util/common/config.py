@@ -373,7 +373,7 @@ class APPConfig(QConfig):
     auto_add_to_download_list = ConfigItem("Misc", "auto_add_to_download_list", False, BoolValidator())
     auto_parse_interval = ConfigItem("Misc", "auto_parse_interval", 2.0)
 
-    auto_parse_teaching_tip_shown = ConfigItem("Misc", "auto_parse_teaching_tip_shown", False, BoolValidator())
+    auto_parse_teaching_tip_shown = ConfigItem("Misc", "auto_parse_teaching_tip_shown_", False, BoolValidator())
 
     tutorial_dialog_shown = ConfigItem("Misc", "tutorial_dialog_shown", False, BoolValidator())
 
