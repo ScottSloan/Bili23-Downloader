@@ -351,7 +351,7 @@ For example, if you set the video quality priority to 720P > 1080P > 4K, the pro
         return translate("NUMBERING_GUIDE", """This setting affects the value of the {number} variable in the naming rule. By default, the program’s preset naming rule does not include {number}. If you want to use numbering, please add {number} to your naming rule first.
 
 The meaning of each "Numbering Mode" option is as follows:
-1. Start from specified number (per batch): Every time a new download task begins, numbering restarts from the starting number you set. For example, if the starting number is 1, the first item will be numbered 1, the second 2, and so on. Suitable for scenarios where each batch should have independent numbering.
+1. Sequential numbering starting from 1 per batch: Every time a new download task begins, numbering restarts from 1. Suitable for scenarios where each batch should have independent numbering.
 
 2. Use the index from the parsed list: The numbering directly reflects the original position in the parsed list and won’t change based on download order. For example, items at positions 3, 5, and 6 in the list will be numbered 3, 5, and 6 respectively. Suitable when you want numbering to match the parsing result exactly.
 

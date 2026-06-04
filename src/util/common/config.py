@@ -292,7 +292,6 @@ class APPConfig(QConfig):
     # File Naming
     naming_rule_list = ConfigItem("File Naming", "naming_convention", DefaultValue.naming_rule_list)
     numbering_type = OptionsConfigItem("File Naming", "numbering_type", NumberingType.CONTINUOUS, OptionsValidator(NumberingType), EnumSerializer(NumberingType))
-    starting_number = ConfigItem("File Naming", "starting_number", 1)
 
     # Advanced
     prefer_cdn_server_provider = ConfigItem("Advanced", "prefer_cdn_server_provider_", True, BoolValidator())

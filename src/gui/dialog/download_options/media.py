@@ -144,7 +144,7 @@ class MediaSettingsPage(ScrollArea):
 
         map_reversed = {v: k for k, v in video_codec_map.items()}
 
-        dialog = PriorityDialog(map_reversed, config.get(config.video_codec_priority), self.options_dialog)
+        dialog = PriorityDialog(map_reversed, config.get(config.video_codec_priority), self.options_dialog )
 
         if dialog.exec():
             config.set(config.video_codec_priority, dialog.config_value)

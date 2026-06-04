@@ -200,7 +200,7 @@ class ParseBase(QFrame):
             # 开始解析前，隐藏分页组件
             self.segmented_widget.hide_pager()
 
-            config.current_starting_number = config.get(config.starting_number)
+            config.current_starting_number = 1
             
             self.start_progress_parse_worker(dialog.payload)
 
@@ -417,7 +417,7 @@ class ParseInterface(ParseBase):
         # 获取选中的下载项    
         checked_episodes_list = self.parse_list.get_checked_items(to_dict = True, mark_as_downloaded = True)
 
-        config.current_starting_number = config.get(config.starting_number)
+        config.current_starting_number = 1
 
         # 添加到下载队列
         GlobalThreadPoolTask.run_func(task_manager.create, checked_episodes_list)
