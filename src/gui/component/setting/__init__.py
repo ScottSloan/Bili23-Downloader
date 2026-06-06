@@ -5,6 +5,10 @@ from .card import (
     DownloadHandlingSettingCard, DownloadConcurrencySettingCard, DownloadConcurrencySettingCard,
     PersonalizationCard, CheckUpdateSettingCard
 )
+from .aisum import (
+    CloudflareEndpointSettingCard, CloudflareTokenSettingCard,
+    CloudflareModelSettingCard, CloudflareUploadMethodSettingCard,
+)
 from .group import FontGroup, BorderGroup, ColorGroup, MarginGroup, AlignmentGroup, AdvancedGroup, ResolutionGroup
 from .widget import (
     SettingSwitchButton, SettingComboBox, EditActionWidget, ParseActionWidget, InsertActionWidget, SettingSlider

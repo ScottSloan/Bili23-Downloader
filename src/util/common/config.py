@@ -11,6 +11,9 @@ from .enum import (
     Language, WhenClose, DanmakuType, SubtitleType, CoverType, MetadataType, ProxyType, FFmpegSource, NumberingType,
     Scaling, FileConflictResolution, VideoContainer, AutoSelectMode
 )
+from .data.aisum_models import (
+    SummaryUploadMethod, DEFAULT_MODEL_ID,
+)
 
 from pathlib import Path
 import logging
@@ -331,6 +334,12 @@ class APPConfig(QConfig):
     bundle_ffmpeg_exist = False
 
     no_ffmpeg_available = True
+
+    # Cloudflare AI
+    cloudflare_endpoint = ConfigItem("Cloudflare", "endpoint", "")
+    cloudflare_token = ConfigItem("Cloudflare", "token", "")
+    cloudflare_model = ConfigItem("Cloudflare", "model", DEFAULT_MODEL_ID)
+    cloudflare_upload_method = OptionsConfigItem("Cloudflare", "upload_method", SummaryUploadMethod.FORM_DATA, OptionsValidator(SummaryUploadMethod), EnumSerializer(SummaryUploadMethod))
 
     # Download Options
     video_quality_id = 200

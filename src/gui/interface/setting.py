@@ -1,16 +1,18 @@
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QFileDialog
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QFileDialog, QFrame
 from PySide6.QtCore import Qt
 
 from qfluentwidgets import (
     ScrollArea, SettingCardGroup, PushSettingCard, ComboBoxSettingCard, MSFluentWindow, MessageBox, FluentIcon, 
-    setTheme, setThemeColor
+    setTheme, setThemeColor, BodyLabel
 )
 
 from gui.component.setting import (
     PrioritySettingCard, DanmakuSettingCard, SubtitleSettingCard, CoverSettingCard, MetadataSettingCard, CDNSettingCard, ProxySettingCard,
     FFmpegSettingCard, NumberSettingCard, DownloadFormatCard, DownloadPathSettingCard, ParsingSettingCard, ConfigFileSettingCard,
     WindowBehaviorSettingCard, DownloadHandlingSettingCard, DownloadConcurrencySettingCard, PersonalizationCard,
-    CheckUpdateSettingCard
+    CheckUpdateSettingCard,
+    CloudflareEndpointSettingCard, CloudflareTokenSettingCard,
+    CloudflareModelSettingCard, CloudflareUploadMethodSettingCard,
 )
 
 from util.common.data import video_quality_map, audio_quality_map, video_codec_map
@@ -88,6 +90,16 @@ class SettingInterface(ScrollArea):
 
         self.check_update_card = CheckUpdateSettingCard(self)
 
+        # Cloudflare AI（QFrame 卡片，用普通容器 + addWidget）
+        self.cloudflare_group = QFrame(self)
+        self.cloudflare_group_label = BodyLabel(self.tr("Cloudflare AI"), self.cloudflare_group)
+        self.cloudflare_group_layout = QVBoxLayout(self.cloudflare_group)
+        self.cloudflare_group_layout.addWidget(self.cloudflare_group_label)
+        self.cloudflare_group_layout.addWidget(CloudflareEndpointSettingCard(self))
+        self.cloudflare_group_layout.addWidget(CloudflareTokenSettingCard(self))
+        self.cloudflare_group_layout.addWidget(CloudflareModelSettingCard(self))
+        self.cloudflare_group_layout.addWidget(CloudflareUploadMethodSettingCard(self))
+
         # Interface
         self.interface_group.addSettingCard(self.personalization_card)
         self.interface_group.addSettingCard(self.scaling_card)
@@ -123,6 +135,8 @@ class SettingInterface(ScrollArea):
 
         # Software Update
         self.update_group.addSettingCard(self.check_update_card)
+
+        self.expand_layout.addWidget(self.cloudflare_group)
 
         self.expand_layout.setSpacing(28)
         self.expand_layout.setContentsMargins(30, 10, 30, 0)

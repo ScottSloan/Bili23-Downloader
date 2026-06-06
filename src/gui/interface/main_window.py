@@ -317,6 +317,22 @@ class MainWindow(MainWindowBase, MSFluentWindow):
             position = NavigationItemPosition.TOP
         )
 
+        # AISum / Other Download 独立页面入口
+        self.aisum_btn = self.navigationInterface.addItem(
+            "AISumInterface",
+            FluentIcon.ROBOT,
+            self.tr("AI Summary"),
+            selectable = True,
+            position = NavigationItemPosition.TOP
+        )
+        self.other_download_btn = self.navigationInterface.addItem(
+            "OtherDownloadInterface",
+            FluentIcon.DOWNLOAD,
+            self.tr("Other Downloads"),
+            selectable = True,
+            position = NavigationItemPosition.TOP
+        )
+
         self.avatar_widget = NavigationLargeAvatarWidget("", QPixmap(":/bili23/image/noface.jpg"), self)
 
         self.navigationInterface.addWidget(
@@ -347,12 +363,18 @@ class MainWindow(MainWindowBase, MSFluentWindow):
 
         from .download import DownloadInterface
         from .setting import SettingInterface
+        from .aisum import AISumInterface
+        from .other_download import OtherDownloadInterface
 
         self.download_interface = DownloadInterface(self)
         self.setting_interface = SettingInterface(self)
+        self.aisum_interface = AISumInterface(self)
+        self.other_download_interface = OtherDownloadInterface(self)
 
         self._addSubInterface(self.download_interface)
         self._addSubInterface(self.setting_interface)
+        self._addSubInterface(self.aisum_interface)
+        self._addSubInterface(self.other_download_interface)
 
         self.system_tray_icon = SystemTrayIcon(self)
         self.system_tray_icon.show()
@@ -384,6 +406,8 @@ class MainWindow(MainWindowBase, MSFluentWindow):
         self.parse_btn.clicked.connect(lambda: self.update_route_key("ParseInterface"))
         self.download_btn.clicked.connect(lambda: self.update_route_key("DownloadInterface"))
         self.setting_btn.clicked.connect(lambda: self.update_route_key("SettingInterface"))
+        self.aisum_btn.clicked.connect(lambda: self.update_route_key("AISumInterface"))
+        self.other_download_btn.clicked.connect(lambda: self.update_route_key("OtherDownloadInterface"))
 
     def init_utils(self):
         QApplication.processEvents()
