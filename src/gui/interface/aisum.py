@@ -210,7 +210,7 @@ class _PromptEditDialog(QDialog):
             id=self._preset.id if self._preset else str(uuid.uuid4()),
             title=title,
             prompt=prompt,
-            builtin=False,
+            builtin=self._preset.builtin if self._preset else False,
         )
         self.accept()
 
@@ -584,6 +584,7 @@ class _BilibiliSumPage(QWidget):
     def _on_error(self, error_message: str):
         label = BodyLabel(error_message, self)
         self.result_layout.addWidget(label)
+        self._result_rows.append((label, ""))
         signal_bus.toast.show.emit(
             ToastNotificationCategory.ERROR,
             self.tr("Summary Failed"),
@@ -615,6 +616,12 @@ class _BilibiliSumPage(QWidget):
         self._result_rows.append((row, file_path))
 
     def _delete_file(self, row: QWidget, file_path: str):
+        if not file_path:
+            self.result_layout.removeWidget(row)
+            row.deleteLater()
+            self._result_rows = [(r, f) for r, f in self._result_rows if r is not row]
+            return
+
         try:
             Path = __import__("pathlib").Path
             p = Path(file_path)

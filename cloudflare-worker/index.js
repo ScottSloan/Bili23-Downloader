@@ -52,6 +52,18 @@
  *   - 文件上传: 需模型支持多模态输入（音频/视频/图片）
  */
 
+// -------------------------------- 工具函数 --------------------------------
+function arrayBufferToBase64(buffer) {
+  // 分块构建 base64，避免 String.fromCharCode(...arr) 的栈溢出
+  const bytes = new Uint8Array(buffer);
+  const CHUNK = 0x8000; // 32KB per chunk
+  let binary = "";
+  for (let i = 0; i < bytes.length; i += CHUNK) {
+    binary += String.fromCharCode.apply(null, bytes.subarray(i, i + CHUNK));
+  }
+  return btoa(binary);
+}
+
 // -------------------------------- AI 路由 --------------------------------
 export default {
   async fetch(request, env) {
@@ -103,9 +115,7 @@ export default {
 
         if (fileType.startsWith("image/") || fileType.startsWith("video/")) {
           // 图片/视频：作为多模态输入
-          const base64 = btoa(
-            String.fromCharCode(...new Uint8Array(fileBytes))
-          );
+          const base64 = arrayBufferToBase64(fileBytes);
           aiInput = {
             messages: [
               {
@@ -122,9 +132,7 @@ export default {
           };
         } else if (fileType.startsWith("audio/")) {
           // 音频：直接传二进制
-          const base64 = btoa(
-            String.fromCharCode(...new Uint8Array(fileBytes))
-          );
+          const base64 = arrayBufferToBase64(fileBytes);
           aiInput = {
             audio: base64,
           };

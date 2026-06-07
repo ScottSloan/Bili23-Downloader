@@ -10,6 +10,7 @@ Cloudflare Workers AI HTTP 客户端
 
 import httpx
 import logging
+from pathlib import Path
 
 from util.common.config import config
 from util.common.data.aisum_models import DEFAULT_MODEL_ID
@@ -131,61 +132,202 @@ class CloudflareClient:
         return joined
 
     # ------------------------ AI 调用底层 ------------------------
+    _MAX_RETRIES = 3          # 最大重试次数
+    _RETRY_DELAY_SEC = 2      # 初始退避延迟（秒）
+
     def _call_ai(self, text: str) -> str:
-        """通用 AI 单次调用"""
+        """通用 AI 单次调用（含指数退避重试）"""
         payload = {
             "model": self._model,
             "messages": [{"role": "user", "content": text}],
             "max_tokens": 2048,
         }
-        try:
-            resp = httpx.post(
-                self._endpoint,
-                json=payload,
-                headers=self._headers(),
-                timeout=600,
-            )
-            resp.raise_for_status()
-            result = resp.json()
-        except httpx.TimeoutException:
-            raise RuntimeError("AI 请求超时，请检查网络或尝试更短的文本")
-        except httpx.HTTPStatusError as e:
-            raise RuntimeError(f"Cloudflare Worker 返回错误: HTTP {e.response.status_code}")
-        except Exception as e:
-            raise RuntimeError(f"AI 请求失败: {e}")
-
-        return _extract_response(result)
+        last_error = None
+        for attempt in range(self._MAX_RETRIES + 1):
+            try:
+                resp = httpx.post(
+                    self._endpoint,
+                    json=payload,
+                    headers=self._headers(),
+                    timeout=600,
+                )
+                resp.raise_for_status()
+                return _extract_response(resp.json())
+            except httpx.TimeoutException:
+                last_error = RuntimeError("AI 请求超时，请检查网络或尝试更短的文本")
+            except httpx.HTTPStatusError as e:
+                # 5xx 可重试，4xx 不重试
+                if 500 <= e.response.status_code < 600 and attempt < self._MAX_RETRIES:
+                    logger.warning(f"AI 调用 {e.response.status_code}，{self._RETRY_DELAY_SEC * (2 ** attempt)}s 后重试({attempt + 1}/{self._MAX_RETRIES})")
+                    import time
+                    time.sleep(self._RETRY_DELAY_SEC * (2 ** attempt))
+                    continue
+                last_error = RuntimeError(f"Cloudflare Worker 返回错误: HTTP {e.response.status_code}")
+                break
+            except Exception as e:
+                if attempt < self._MAX_RETRIES:
+                    logger.warning(f"AI 调用失败，{self._RETRY_DELAY_SEC * (2 ** attempt)}s 后重试({attempt + 1}/{self._MAX_RETRIES}): {e}")
+                    import time
+                    time.sleep(self._RETRY_DELAY_SEC * (2 ** attempt))
+                    continue
+                last_error = RuntimeError(f"AI 请求失败: {e}")
+                break
+        raise last_error
 
     # ================================================================
     # Whisper 音频转录（Audio 模式三阶段流水线第一步）
     # ================================================================
+    _MAX_UPLOAD_SIZE = 10 * 1024 * 1024   # 10MB，Whisper 实际受限，超过易触发 3006
+    _CHUNK_DURATION_SEC = 300             # 每段 5 分钟，48kbps ≈ 1.8MB
+
     def transcribe_audio(self, file_path: str) -> str:
-        """上传音频文件到 Worker whisper 转录，返回纯文本"""
+        """上传音频文件到 Worker whisper 转录，返回纯文本
+
+        流程：ffmpeg 压缩至 48kbps mono → 检查大小
+          - < 10MB：直接上传转录
+          - ≥ 10MB：ffmpeg 分段 → 逐段转录 → 本地拼接
+        """
         if not self._endpoint:
             self._load_from_config()
         if not self._endpoint:
             raise RuntimeError("Cloudflare API Endpoint 未配置，请在设置中填写")
 
-        with open(file_path, "rb") as f:
-            files = {"file": f}
-            # whisper 不接受 prompt，但 Worker /transcribe 端点只需 file
-            try:
-                resp = httpx.post(
-                    self._endpoint + "/transcribe",
-                    files=files,
-                    headers=self._headers(),
-                    timeout=600,
-                )
-                resp.raise_for_status()
-                result = resp.json()
-            except httpx.TimeoutException:
-                raise RuntimeError("音频上传超时，请检查网络")
-            except httpx.HTTPStatusError as e:
-                raise RuntimeError(f"转录请求失败: HTTP {e.response.status_code}")
-            except Exception as e:
-                raise RuntimeError(f"转录请求失败: {e}")
+        import subprocess
+        import tempfile
 
-        return _extract_response(result)
+        # Step 1: 压缩音频至 48kbps mono
+        compressed = tempfile.NamedTemporaryFile(suffix=".m4a", delete=False)
+        compressed.close()
+        try:
+            subprocess.run([
+                "ffmpeg", "-y", "-i", file_path,
+                "-ac", "1", "-ar", "16000", "-b:a", "48k",
+                compressed.name,
+            ], capture_output=True, check=True)
+            upload_path = compressed.name
+        except (subprocess.CalledProcessError, FileNotFoundError):
+            upload_path = file_path
+
+        try:
+            # Step 2: 检查文件大小
+            file_size = Path(upload_path).stat().st_size
+            logger.info(f"压缩后音频: {file_size / 1024 / 1024:.1f}MB")
+
+            if file_size < self._MAX_UPLOAD_SIZE:
+                return self._transcribe_single(upload_path)
+            else:
+                logger.info(f"文件超过 {self._MAX_UPLOAD_SIZE / 1024 / 1024:.0f}MB，启用分段转录")
+                return self._transcribe_chunked(upload_path)
+        finally:
+            if upload_path != file_path:
+                try:
+                    Path(upload_path).unlink(missing_ok=True)
+                except Exception:
+                    pass
+
+    def _transcribe_single(self, file_path: str) -> str:
+        """上传单个音频文件到 /transcribe 并返回文本（含重试）"""
+        last_error = None
+        for attempt in range(self._MAX_RETRIES + 1):
+            try:
+                with open(file_path, "rb") as f:
+                    files = {"file": f}
+                    resp = httpx.post(
+                        self._endpoint + "/transcribe",
+                        files=files,
+                        headers=self._headers(),
+                        timeout=600,
+                    )
+                if resp.status_code != 200:
+                    # 5xx 可重试
+                    if 500 <= resp.status_code < 600 and attempt < self._MAX_RETRIES:
+                        logger.warning(f"转录 {resp.status_code}，{self._RETRY_DELAY_SEC * (2 ** attempt)}s 后重试({attempt + 1}/{self._MAX_RETRIES})")
+                        import time
+                        time.sleep(self._RETRY_DELAY_SEC * (2 ** attempt))
+                        continue
+                    raise RuntimeError(f"转录失败 ({resp.status_code}): {resp.text[:500]}")
+                return _extract_response(resp.json())
+            except RuntimeError:
+                raise
+            except httpx.TimeoutException:
+                last_error = RuntimeError("音频上传超时，请检查网络")
+            except Exception as e:
+                last_error = RuntimeError(f"转录请求失败: {e}")
+
+            if attempt < self._MAX_RETRIES:
+                logger.warning(f"转录失败，{self._RETRY_DELAY_SEC * (2 ** attempt)}s 后重试({attempt + 1}/{self._MAX_RETRIES}): {last_error}")
+                import time
+                time.sleep(self._RETRY_DELAY_SEC * (2 ** attempt))
+
+        raise last_error
+
+    def _transcribe_chunked(self, file_path: str) -> str:
+        """ffmpeg 精确时间分段 → 逐段 whisper 转录 → 本地拼接
+
+        优先用 ffprobe 获取时长做精确切段；ffprobe 不可用时回退到 segment muxer。
+        """
+        import subprocess
+        import tempfile
+        import shutil
+
+        out_dir = tempfile.mkdtemp(prefix="aisum_seg_")
+        try:
+            # ffprobe 获取音频总时长
+            try:
+                probe = subprocess.run([
+                    "ffprobe", "-v", "quiet", "-show_entries", "format=duration",
+                    "-of", "default=noprint_wrappers=1:nokey=1", file_path,
+                ], capture_output=True, text=True, check=True)
+                total_sec = float(probe.stdout.strip())
+            except Exception:
+                total_sec = 0
+                logger.warning("ffprobe 不可用，回退到 segment muxer 切段")
+
+            if total_sec > self._CHUNK_DURATION_SEC:
+                # 精确切段
+                seg_count = int(total_sec // self._CHUNK_DURATION_SEC) + (1 if total_sec % self._CHUNK_DURATION_SEC > 30 else 0)
+                seg_count = max(seg_count, 1)
+                logger.info(f"音频 {total_sec:.0f}s，分为 {seg_count} 段（每段 {self._CHUNK_DURATION_SEC}s）")
+
+                transcripts = []
+                try:
+                    for i in range(seg_count):
+                        start = i * self._CHUNK_DURATION_SEC
+                        seg_path = Path(out_dir) / f"seg_{i:03d}.m4a"
+                        logger.info(f"  切段 {i + 1}/{seg_count}: {start}s ~ {start + self._CHUNK_DURATION_SEC}s")
+                        subprocess.run([
+                            "ffmpeg", "-y", "-i", file_path,
+                            "-ss", str(start), "-to", str(start + self._CHUNK_DURATION_SEC),
+                            "-ac", "1", "-ar", "16000", "-b:a", "48k",
+                            str(seg_path),
+                        ], capture_output=True, check=True)
+                        text = self._transcribe_single(str(seg_path))
+                        transcripts.append(text)
+                finally:
+                    shutil.rmtree(out_dir, ignore_errors=True)
+                return "\n".join(transcripts)
+
+            # 回退：segment muxer 切段（按 keyframe，可能有少量重叠）
+            seg_pattern = Path(out_dir) / "seg_%03d.m4a"
+            subprocess.run([
+                "ffmpeg", "-y", "-i", file_path,
+                "-f", "segment", "-segment_time", str(self._CHUNK_DURATION_SEC),
+                "-c", "copy", str(seg_pattern),
+            ], capture_output=True, check=True)
+
+            seg_files = sorted(Path(out_dir).glob("seg_*.m4a"))
+            if not seg_files:
+                raise RuntimeError("音频分段失败：未生成任何分段文件")
+
+            logger.info(f"segment muxer 分为 {len(seg_files)} 段，开始逐段转录")
+            transcripts = []
+            for i, seg_path in enumerate(seg_files):
+                logger.info(f"  转录 {i + 1}/{len(seg_files)} ({seg_path.stat().st_size / 1024:.0f}KB)")
+                text = self._transcribe_single(str(seg_path))
+                transcripts.append(text)
+            return "\n".join(transcripts)
+        finally:
+            shutil.rmtree(out_dir, ignore_errors=True)
 
     def summarize_text_three_phase(
         self,
