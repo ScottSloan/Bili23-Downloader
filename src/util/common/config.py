@@ -13,6 +13,9 @@ from .enum import (
 )
 from .data.aisum_models import (
     SummaryUploadMethod, DEFAULT_MODEL_ID,
+    BUILTIN_PRESETS, DEFAULT_SLOT_MAPPING,
+    serialize_presets, deserialize_presets,
+    serialize_slot_mapping, deserialize_slot_mapping,
 )
 
 from pathlib import Path
@@ -340,6 +343,12 @@ class APPConfig(QConfig):
     cloudflare_token = ConfigItem("Cloudflare", "token", "")
     cloudflare_model = ConfigItem("Cloudflare", "model", DEFAULT_MODEL_ID)
     cloudflare_upload_method = OptionsConfigItem("Cloudflare", "upload_method", SummaryUploadMethod.FORM_DATA, OptionsValidator(SummaryUploadMethod), EnumSerializer(SummaryUploadMethod))
+
+    # Cloudflare AI 提示词预设
+    cloudflare_presets = ConfigItem("Cloudflare", "presets", serialize_presets(BUILTIN_PRESETS))
+    cloudflare_slot_original = ConfigItem("Cloudflare", "slot_original", DEFAULT_SLOT_MAPPING["original"])
+    cloudflare_slot_refined = ConfigItem("Cloudflare", "slot_refined", DEFAULT_SLOT_MAPPING["refined"])
+    cloudflare_slot_keypoints = ConfigItem("Cloudflare", "slot_keypoints", DEFAULT_SLOT_MAPPING["keypoints"])
 
     # Download Options
     video_quality_id = 200

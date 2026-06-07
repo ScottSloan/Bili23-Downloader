@@ -4,7 +4,7 @@ Cloudflare Workers AI HTTP 客户端
 通过 Worker 中转调用 Workers AI 模型：
   - multipart/form-data 上传文件
   - JSON 模式纯文本对话
-  - 两阶段字幕总结流水线（Phase1 文案整理 + Phase2 要点总结）
+  - 三阶段字幕总结流水线（原始文案 → 精炼文案 + 要点文案）
   - 长文本自动分片分治（>6000 字符）
 """
 
@@ -12,13 +12,14 @@ import httpx
 import logging
 
 from util.common.config import config
-from util.common.data.aisum_models import SummaryUploadMethod, DEFAULT_MODEL_ID
+from util.common.data.aisum_models import DEFAULT_MODEL_ID
 
 logger = logging.getLogger(__name__)
 
-# 长文本分片触发阈值（字符数）
-CHUNK_THRESHOLD = 6000
-CHUNK_SIZE = 4000
+# 长文本分片阈值（字符数，按纯文本计算）
+# Llama 3.2 3B 输出上限约 1000-2000 字符，输入 ≈ 输出 时每段 ~1000 字符最佳
+CHUNK_THRESHOLD = 1500
+CHUNK_SIZE = 1000
 
 
 class CloudflareClient:
@@ -55,120 +56,79 @@ class CloudflareClient:
         return headers
 
     # ================================================================
-    # 核心：两阶段字幕总结流水线
+    # 核心：三阶段字幕总结流水线
     # ================================================================
-    def summarize_subtitle_pipeline(self, json_text: str, title: str = "", desc: str = "") -> dict:
-        """两阶段字幕总结流水线
+    def summarize_three_phase(
+        self,
+        json_text: str,
+        title: str = "",
+        desc: str = "",
+        prompt_original: str = "",
+        prompt_refined: str = "",
+        prompt_keypoints: str = "",
+    ) -> dict:
+        """三阶段字幕总结流水线
+
+        Phase 1: JSON 字幕 → 原始文案
+        Phase 2: 原始文案 → 精炼文案
+        Phase 3: 原始文案 → 要点文案
 
         Returns:
-            {"phase1": "整理后文案", "phase2": "要点总结"}
+            {"original": "...", "refined": "...", "keypoints": "..."}
         """
         if not self._endpoint:
             self._load_from_config()
         if not self._endpoint:
             raise RuntimeError("Cloudflare API Endpoint 未配置，请在设置中填写")
 
-        # 构建上下文前缀
         ctx = _build_context(title, desc)
 
-        # 检测是否需要分片
-        if len(json_text) > CHUNK_THRESHOLD:
-            organized = self._phase1_chunked(json_text, ctx)
+        # Phase 1: JSON 字幕 → 原始文案
+        # 先 Python 提取纯文本（去 JSON 开销），再决定是否需要分片
+        plain_text = _json_to_text(json_text)
+        if len(plain_text) > CHUNK_THRESHOLD:
+            original = self._chunked_organize(plain_text, ctx, prompt_original)
         else:
-            organized = self._phase1_organize(json_text, ctx)
+            original = self._call_ai(f"{ctx}{prompt_original}\n\n{plain_text}")
 
-        summary = self._phase2_summarize(organized, ctx)
+        # Phase 2: 原始文案 → 精炼文案 (共用 Phase 1 输出)
+        refined = self._call_ai(f"{ctx}{prompt_refined}\n\n{original}")
 
-        return {"phase1": organized, "phase2": summary}
+        # Phase 3: 原始文案 → 要点文案 (共用 Phase 1 输出)
+        keypoints = self._call_ai(f"{ctx}{prompt_keypoints}\n\n{original}")
 
-    # ------------------------ Phase 1: 文案整理 ------------------------
-    def _phase1_organize(self, json_text: str, context: str = "") -> str:
-        """单段 JSON 字幕 → 流畅完整文案"""
-        prompt = (
-            "你是一位资深的文案编辑。请将以下 JSON 格式的字幕文本整理为流畅完整的文案。"
-            "要求：\n"
-            "1. 自动补全标点符号（句号、逗号、感叹号等）\n"
-            "2. 根据语义划分自然段落（每段 3~5 句，不同主题之间空行分隔）\n"
-            "3. 修正 AI 语音识别导致的错别字和不通顺表达\n"
-            '4. 适当去掉\u201c然后\u201d\u201c就是说\u201d\u201c这个啊\u201d等口语填充词\n'
-            "5. 保持语义完整，不脑补内容\n"
-            "直接输出整理后的文案，不要附加说明。"
-        )
-        full_prompt = f"{context}{prompt}\n\n{json_text}"
-        return self._call_ai(full_prompt)
+        return {
+            "original": original,
+            "refined": refined,
+            "keypoints": keypoints,
+        }
 
-    def _phase1_chunked(self, json_text: str, context: str = "") -> str:
-        """长文本：分片 → 每段整理 → 合并"""
-        chunks = self._split_chunks(json_text)
-        if len(chunks) == 1:
-            return self._phase1_organize(chunks[0], context)
+    # ------------------------ 长文本分片组织（Phase 1） ------------------------
+    def _chunked_organize(self, text: str, context: str, prompt: str) -> str:
+        """长文本：Python 预切分 → AI 逐段整理 → Python 拼接（无 AI merge）
 
-        summaries = []
+        AI merge 是数据丢失的根源：合并后的输入过长，小模型输出截断。
+        改为 Python 直接拼接，彻底消除瓶颈。"""
+        chunks = _split_text(text, CHUNK_SIZE)
+        logger.info(f"Phase 1 分片: {len(chunks)} 段 ({len(text)} 字符)")
+
+        results = []
         for i, chunk in enumerate(chunks):
-            logger.info(f"Phase 1 分段处理 {i+1}/{len(chunks)}")
-            s = self._phase1_chunk_organize(chunk, context)
-            summaries.append(s)
+            logger.info(f"  整理 {i+1}/{len(chunks)} ({len(chunk)} 字符)")
+            # 每段指令：禁止独立开头/结尾，要求等量输出
+            extra = (
+                f"\n\n"
+                f"【重要】这是长文本被切分后的第 {i+1}/{len(chunks)} 段。\n"
+                f"- 不要写开场白或收尾句，直接从内容开始整理\n"
+                f"- 输出长度不得明显短于输入（输入约{len(chunk)}字）\n"
+                f"- 每个句子的内容都不准遗漏"
+            )
+            r = self._call_ai(f"{context}{prompt}\n\n{chunk}{extra}")
+            results.append(r)
 
-        merge_prompt = (
-            "请将以下多段文案合并为一份连贯的完整文案，"
-            "消除重复内容，保持逻辑流畅，按自然段落组织。"
-        )
-        return self._call_ai(f"{context}{merge_prompt}\n\n" + "\n\n---\n\n".join(summaries))
-
-    def _phase1_chunk_organize(self, chunk: str, context: str = "") -> str:
-        """单段文案整理（分片模式）"""
-        prompt = (
-            "请将以下 JSON 格式的字幕段落整理为流畅的文案。"
-            "补全标点、修正错别字、去掉口语填充词。"
-            "保持语义完整，不要附加说明。"
-        )
-        return self._call_ai(f"{context}{prompt}\n\n{chunk}")
-
-    # ------------------------ Phase 2: 要点总结 ------------------------
-    def _phase2_summarize(self, organized_text: str, context: str = "") -> str:
-        """整理后文案 → 层次化要点总结"""
-        prompt = (
-            "你是一位专业的内容提炼编辑。请对以下整理后的文本进行浓缩总结。要求如下：\n"
-            "1. 去粗取精：删除重复论述和冗余修饰，保留核心观点与逻辑链条\n"
-            "2. 语言风格：精炼、客观、专业\n"
-            "3. 输出格式：使用 Markdown 标题层级（# 一级要点, ## 二级要点, - 细节）\n"
-            "4. 篇幅控制：总字数控制在原文 1/3 以内\n"
-            "注意：\n"
-            "- 如果原文是教程/方法类内容，操作步骤不可省略\n"
-            "- 直接输出，不要附加说明"
-        )
-        return self._call_ai(f"{context}{prompt}\n\n{organized_text}")
-
-    # ------------------------ 长文本分片工具 ------------------------
-    def _split_chunks(self, text: str) -> list:
-        """按 JSON body 条目边界切分为 ~CHUNK_SIZE 字符的段"""
-        import json as _json
-        try:
-            data = _json.loads(text)
-            body = data.get("body", [])
-        except Exception:
-            return [text[i:i + CHUNK_SIZE] for i in range(0, len(text), CHUNK_SIZE)]
-
-        chunks = []
-        current_lines = []
-        current_len = 0
-
-        for item in body:
-            item_str = _json.dumps(item, ensure_ascii=False)
-            item_len = len(item_str)
-            if current_len + item_len > CHUNK_SIZE and current_lines:
-                chunk_data = {"body": current_lines}
-                chunks.append(_json.dumps(chunk_data, ensure_ascii=False))
-                current_lines = []
-                current_len = 0
-            current_lines.append(item)
-            current_len += item_len
-
-        if current_lines:
-            chunk_data = {"body": current_lines}
-            chunks.append(_json.dumps(chunk_data, ensure_ascii=False))
-
-        return chunks or [text]
+        # 程序拼接：AI 不再参与合并
+        joined = "\n\n".join(results)
+        return joined
 
     # ------------------------ AI 调用底层 ------------------------
     def _call_ai(self, text: str) -> str:
@@ -176,6 +136,7 @@ class CloudflareClient:
         payload = {
             "model": self._model,
             "messages": [{"role": "user", "content": text}],
+            "max_tokens": 2048,
         }
         try:
             resp = httpx.post(
@@ -196,8 +157,72 @@ class CloudflareClient:
         return _extract_response(result)
 
     # ================================================================
-    # 旧版兼容接口
+    # Whisper 音频转录（Audio 模式三阶段流水线第一步）
     # ================================================================
+    def transcribe_audio(self, file_path: str) -> str:
+        """上传音频文件到 Worker whisper 转录，返回纯文本"""
+        if not self._endpoint:
+            self._load_from_config()
+        if not self._endpoint:
+            raise RuntimeError("Cloudflare API Endpoint 未配置，请在设置中填写")
+
+        with open(file_path, "rb") as f:
+            files = {"file": f}
+            # whisper 不接受 prompt，但 Worker /transcribe 端点只需 file
+            try:
+                resp = httpx.post(
+                    self._endpoint + "/transcribe",
+                    files=files,
+                    headers=self._headers(),
+                    timeout=600,
+                )
+                resp.raise_for_status()
+                result = resp.json()
+            except httpx.TimeoutException:
+                raise RuntimeError("音频上传超时，请检查网络")
+            except httpx.HTTPStatusError as e:
+                raise RuntimeError(f"转录请求失败: HTTP {e.response.status_code}")
+            except Exception as e:
+                raise RuntimeError(f"转录请求失败: {e}")
+
+        return _extract_response(result)
+
+    def summarize_text_three_phase(
+        self,
+        text: str,
+        title: str = "",
+        desc: str = "",
+        prompt_original: str = "",
+        prompt_refined: str = "",
+        prompt_keypoints: str = "",
+    ) -> dict:
+        """对纯文本执行三阶段总结（Audio 模式用，无需 JSON 预处理）
+
+        与 summarize_three_phase 区别：输入已是纯文本，跳过 _json_to_text
+        """
+        if not self._endpoint:
+            self._load_from_config()
+        if not self._endpoint:
+            raise RuntimeError("Cloudflare API Endpoint 未配置，请在设置中填写")
+
+        ctx = _build_context(title, desc)
+
+        if len(text) > CHUNK_THRESHOLD:
+            original = self._chunked_organize(text, ctx, prompt_original)
+        else:
+            original = self._call_ai(f"{ctx}{prompt_original}\n\n{text}")
+
+        refined = self._call_ai(f"{ctx}{prompt_refined}\n\n{original}")
+        keypoints = self._call_ai(f"{ctx}{prompt_keypoints}\n\n{original}")
+
+        return {
+            "original": original,
+            "refined": refined,
+            "keypoints": keypoints,
+        }
+
+    # ================================================================
+    # 音频/视频总结接口（旧版兼容）
     def summarize_multipart(self, file_path: str, prompt: str) -> str:
         """通过 multipart/form-data 上传文件并获取总结"""
         if not self._endpoint:
@@ -228,8 +253,46 @@ class CloudflareClient:
         return _extract_response(result)
 
     def summarize_text(self, text: str) -> str:
-        """通过 JSON 模式发送纯文本获取总结（旧版兼容）"""
+        """通过 JSON 模式发送纯文本获取总结"""
         return self._call_ai(text)
+
+
+def _json_to_text(json_text: str) -> str:
+    """将 JSON 字幕提取为纯文本（去 JSON 开销，节约 30-50% 字符）"""
+    import json as _json
+    try:
+        data = _json.loads(json_text)
+        body = data.get("body", [])
+    except Exception:
+        return json_text
+
+    lines = []
+    for item in body:
+        content = item.get("content", "").strip()
+        if content:
+            lines.append(content)
+    return "\n".join(lines)
+
+
+def _split_text(text: str, chunk_size: int) -> list:
+    """将纯文本按字符数切分，尽量在句末/段末断开"""
+    if len(text) <= chunk_size:
+        return [text]
+
+    chunks = []
+    start = 0
+    while start < len(text):
+        end = min(start + chunk_size, len(text))
+        if end < len(text):
+            # 回退到最近的句号/换行处
+            for sep in ("\n\n", "\n", "。", "）", "！", "？", "；", ".", "!", "?", ";"):
+                pos = text.rfind(sep, start + chunk_size // 2, end)
+                if pos > start:
+                    end = pos + len(sep)
+                    break
+        chunks.append(text[start:end])
+        start = end
+    return chunks
 
 
 def _extract_response(result: dict) -> str:
