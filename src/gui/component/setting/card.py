@@ -1,21 +1,24 @@
-from PySide6.QtWidgets import QHBoxLayout, QVBoxLayout, QLabel
+from PySide6.QtWidgets import QHBoxLayout, QVBoxLayout, QLabel, QFileDialog
 from PySide6.QtCore import QTimer, Signal, Qt
 from PySide6.QtGui import QColor
 
 from qfluentwidgets import (
     PushButton, FluentIcon, PushSettingCard, qconfig, ColorDialog, PrimaryPushButton, setCustomStyleSheet,
-    MessageBox, ExpandGroupSettingCard as _ExpandGroupSettingCard, HyperlinkLabel
+    MessageBox, ExpandGroupSettingCard as _ExpandGroupSettingCard, HyperlinkLabel, DropDownPushButton,
+    RoundMenu, Action
 )
 from qfluentwidgets.components.settings.expand_setting_card import GroupWidget as _GroupWidget
 
 from .widget import SettingSwitchButton, SettingComboBox, SettingSlider
 from ..dialog import MessageBox
 
+from util.common.config import config, isWin11, APPConfig
 from util.thread.pool import GlobalThreadPoolTask
 from util.common.icon import ExtendedFluentIcon
-from util.common.config import config, isWin11
 from util.common.io.directory import Directory
 from util.common.translator import Translator
+
+from pathlib import Path
 
 class GuideSettingCardBase:
     def showHyperLinkLabel(self, label: str):
@@ -350,11 +353,11 @@ class NumberSettingCard(ExpandGroupSettingCard):
 
         self.showHyperLinkLabel(self.tr("About Numbering Settings"))
 
-        self.connect_signal()
+        self.connect_signals()
 
         self.global_number_group.setEnabled(self.numbering_type_choice.currentIndex() == 2)
 
-    def connect_signal(self):
+    def connect_signals(self):
         self.hyper_label.clicked.connect(lambda: self.showGuideMessageBox(self.tr("Instructions"), Translator.NUMBERING_GUIDE()))
         self.numbering_type_choice.currentIndexChanged.connect(self.on_change_numbering_type)
 
@@ -454,29 +457,6 @@ class ParsingSettingCard(ExpandGroupSettingCard):
         self.addGroup("", self.tr("Auto-select Download Items Settings"), self.tr("Configure how items in the parse list are automatically selected after parsing"), self.custom_auto_select_btn)
         self.addGroup("", self.tr("Save Parse History"), self.tr("Save the history of parsed links"), self.parse_history_switch)
 
-class ConfigFileSettingCard(ExpandGroupSettingCard):
-    def __init__(self, parent = None):
-        super().__init__(ExtendedFluentIcon.FILE_SETTINGS, self.tr("Config File"), self.tr("Import or export configuration files"), parent)
-
-        self.import_btn = PushButton(self.tr("Browse..."), self)
-        self.import_btn.setMinimumWidth(90)
-        self.export_btn = PushButton(self.tr("Browse..."), self)
-        self.export_btn.setMinimumWidth(90)
-        self.reset_btn = PushButton(self.tr("Reset"), self)
-        self.reset_btn.setMinimumWidth(90)
-        self.open_dir_btn = PushButton(self.tr("Open"), self)
-        self.open_dir_btn.setMinimumWidth(90)
-
-        self.addGroup("", self.tr("Import Config"), self.tr("Import settings from a configuration file"), self.import_btn)
-        self.addGroup("", self.tr("Export Config"), self.tr("Export settings to a configuration file"), self.export_btn)
-        self.addGroup("", self.tr("Reset Config"), self.tr("Reset all settings to default values"), self.reset_btn)
-        self.addGroup("", self.tr("Open Config Directory"), "", self.open_dir_btn)
-
-        self.open_dir_btn.clicked.connect(self.on_open_config_directory)
-
-    def on_open_config_directory(self):
-        Directory.open_directory_in_explorer(str(config.file.parent))
-
 class WindowBehaviorSettingCard(ExpandGroupSettingCard):
     def __init__(self, parent = None):
         super().__init__(ExtendedFluentIcon.APPLICATION_WINDOW, self.tr("Window Behavior"), self.tr("Adjust the behavior of the main window during startup, runtime, and shutdown"), parent)
@@ -533,13 +513,88 @@ class CheckUpdateSettingCard(ExpandGroupSettingCard):
         self.addGroup("", self.tr("Include Prerelease Versions"), self.tr("Include prerelease versions in update checks (may be unstable)"), self.include_prerelease_switch)
 
 class OtherAdvancedSettingCard(ExpandGroupSettingCard):
-    def __init__(self, parent = None):
+    def __init__(self, parent_window, parent = None):
         super().__init__(FluentIcon.SETTING, self.tr("Other Advanced Settings"), self.tr("Configure other advanced settings"), parent)
 
-        self.custom_user_agent_btn = PushButton(self.tr("Customize…"), self)
-        self.config_file_settings_btn = PushButton(self.tr("Configure…"), self)
-        self.view_log_btn = PushButton(self.tr("View logs"), self)
+        self.parent_window = parent_window
 
-        self.addGroup("", self.tr("Custom User Agent"), self.tr("Set a custom user agent string for network requests"), self.custom_user_agent_btn)
+        self.custom_user_agent_btn = PushButton(self.tr("Customize…"), self)
+        self.config_file_settings_btn = DropDownPushButton(text = self.tr("Configure"), parent = self)
+        self.view_log_btn = PushButton(self.tr("View…"), self)
+
+        menu = RoundMenu(parent = self.config_file_settings_btn)
+        menu.addAction(Action(ExtendedFluentIcon.IMPORT, self.tr("Import Config"), triggered = self.on_import_config))
+        menu.addAction(Action(ExtendedFluentIcon.EXPORT, self.tr("Export Config"), triggered = self.on_export_config))
+        menu.addAction(Action(ExtendedFluentIcon.RETRY, self.tr("Reset Config"), triggered = self.on_reset_config))
+        menu.addAction(Action(FluentIcon.FOLDER, self.tr("Open Config Directory"), triggered = self.on_open_config_directory))
+
+        self.config_file_settings_btn.setMenu(menu)
+
+        self.addGroup("", self.tr("Custom User-Agent"), self.tr("Set a custom User-Agent string for network requests"), self.custom_user_agent_btn)
         self.addGroup("", self.tr("Config File Settings"), self.tr("Import/export configuration files or reset to defaults"), self.config_file_settings_btn)
         self.addGroup("", self.tr("View Logs"), self.tr("View application logs for troubleshooting"), self.view_log_btn)
+        
+        self.connect_signals()
+
+    def connect_signals(self):
+        self.custom_user_agent_btn.clicked.connect(self.on_custom_user_agent)
+        #self.view_log_btn.clicked.connect(self.on_view_logs)
+
+    def on_custom_user_agent(self):
+        from ...dialog.setting.user_agent import UserAgentDialog
+
+        dialog = UserAgentDialog(self.parent_window)
+        dialog.exec()
+
+    def on_import_config(self):
+        file_path, _ = QFileDialog.getOpenFileName(
+            self.parent_window,
+            self.tr("Import Config File"),
+            "",
+            self.tr("Config Files (*.json)")
+        )
+
+        if not file_path:
+            return
+        
+        original_file = config.file
+        
+        config.load(file_path)
+        config.file = original_file  # 恢复原来的配置文件路径，避免误覆盖
+        
+        config.save()
+
+        config.appRestartSig.emit()
+
+    def on_export_config(self):
+        file_path, _ = QFileDialog.getSaveFileName(
+            self.parent_window,
+            self.tr("Export Config File"),
+            "",
+            self.tr("Config Files (*.json)")
+        )
+
+        if not file_path:
+            return
+        
+        temp_config = APPConfig()
+        temp_config.load(config.file)
+        temp_config.file = Path(file_path)
+
+        temp_config.save()
+
+    def on_reset_config(self):
+        dialog = MessageBox(
+            self.tr("Reset Config"),
+            self.tr("Are you sure you want to reset all settings to their default values? This action cannot be undone."),
+            self.parent_window
+        )
+
+        if dialog.exec():
+            # 直接删除配置文件，程序会在下次启动时自动创建一个新的默认配置文件
+            config.file.unlink(missing_ok = True)
+            
+            config.appRestartSig.emit()
+
+    def on_open_config_directory(self):
+        Directory.open_directory_in_explorer(str(config.file.parent))

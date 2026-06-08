@@ -1,9 +1,9 @@
 from .card import (
     DownloadPathSettingCard, PrioritySettingCard, DanmakuSettingCard, SubtitleSettingCard, CoverSettingCard,
     MetadataSettingCard, NumberSettingCard, CDNSettingCard, ProxySettingCard, FFmpegSettingCard,
-    DownloadFormatCard, ParsingSettingCard, ConfigFileSettingCard, WindowBehaviorSettingCard, 
-    DownloadHandlingSettingCard, DownloadConcurrencySettingCard, DownloadConcurrencySettingCard,
-    PersonalizationCard, CheckUpdateSettingCard, OtherAdvancedSettingCard
+    DownloadFormatCard, ParsingSettingCard, WindowBehaviorSettingCard, DownloadHandlingSettingCard,
+    DownloadConcurrencySettingCard, DownloadConcurrencySettingCard, PersonalizationCard,
+    CheckUpdateSettingCard, OtherAdvancedSettingCard
 )
 from .group import FontGroup, BorderGroup, ColorGroup, MarginGroup, AlignmentGroup, AdvancedGroup, ResolutionGroup
 from .widget import (

@@ -57,9 +57,9 @@ class MediaInfoCard(ExpandGroupSettingCard):
 
         self.showHyperLinkLabel(self.tr("About Media Info"))
 
-        self.connect_signal()
+        self.connect_signals()
 
-    def connect_signal(self):
+    def connect_signals(self):
         self.hyper_label.clicked.connect(lambda: self.showGuideMessageBox(self.tr("Instructions"), Translator.MEDIA_INFO_GUIDE()))
 
     def on_load(self):

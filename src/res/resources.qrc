@@ -11,6 +11,8 @@
         <file>icon/light/album.svg</file>
         <file>icon/light/clear.svg</file>
         <file>icon/light/retry.svg</file>
+        <file>icon/light/import.svg</file>
+        <file>icon/light/export.svg</file>
         <file>icon/light/select.svg</file>
         <file>icon/light/rename.svg</file>
         <file>icon/light/server.svg</file>
@@ -41,6 +43,8 @@
         <file>icon/dark/album.svg</file>
         <file>icon/dark/clear.svg</file>
         <file>icon/dark/retry.svg</file>
+        <file>icon/dark/import.svg</file>
+        <file>icon/dark/export.svg</file>
         <file>icon/dark/select.svg</file>
         <file>icon/dark/rename.svg</file>
         <file>icon/dark/server.svg</file>
