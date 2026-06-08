@@ -174,7 +174,7 @@ class ParseWorker(QRunnable, ParserBase):
 
             self.on_parse_error(message)
 
-            raise Exception(message)
+            raise RuntimeError(message)
         
     def get_output_file_ext(self):
         has_video = self.task_info.Download.type & DownloadType.VIDEO != 0

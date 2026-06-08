@@ -11,9 +11,9 @@ class CDN:
 
         if config.get(config.prefer_cdn_server_provider):
             # 将替换后的 URL 列表放在前面，原始 URL 列表放在后面，以便优先使用替换后的 URL
-            url_list = replaced_url_list + url_list
+            url_list = replaced_url_list + filtered_url_list
         else:
-            url_list = url_list + replaced_url_list
+            url_list = filtered_url_list + replaced_url_list
 
         # 去重并保持顺序
         return list(dict.fromkeys(url_list))

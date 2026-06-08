@@ -531,3 +531,15 @@ class CheckUpdateSettingCard(ExpandGroupSettingCard):
         self.card.addWidget(self.check_now_btn)
 
         self.addGroup("", self.tr("Include Prerelease Versions"), self.tr("Include prerelease versions in update checks (may be unstable)"), self.include_prerelease_switch)
+
+class OtherAdvancedSettingCard(ExpandGroupSettingCard):
+    def __init__(self, parent = None):
+        super().__init__(FluentIcon.SETTING, self.tr("Other Advanced Settings"), self.tr("Configure other advanced settings"), parent)
+
+        self.custom_user_agent_btn = PushButton(self.tr("Customize…"), self)
+        self.config_file_settings_btn = PushButton(self.tr("Configure…"), self)
+        self.view_log_btn = PushButton(self.tr("View logs"), self)
+
+        self.addGroup("", self.tr("Custom User Agent"), self.tr("Set a custom user agent string for network requests"), self.custom_user_agent_btn)
+        self.addGroup("", self.tr("Config File Settings"), self.tr("Import/export configuration files or reset to defaults"), self.config_file_settings_btn)
+        self.addGroup("", self.tr("View Logs"), self.tr("View application logs for troubleshooting"), self.view_log_btn)

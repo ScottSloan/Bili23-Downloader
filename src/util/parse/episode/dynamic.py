@@ -89,6 +89,7 @@ class DynamicEpisodeParser(EpisodeParserBase):
     def update(self, title: str, cid: int):
         node_data = {
             "episode_id": self.episode_id,
+            "badge": "充电专属" if self.info_data["is_upower_exclusive"] else "",
             "aid": self.info_data["aid"],
             "bvid": self.info_data["bvid"],
             "cid": cid,

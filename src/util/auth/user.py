@@ -101,6 +101,6 @@ class UserManager(AuthBase):
 
             self.show_toast_error(Translator.ERROR_MESSAGES("UNKNOWN_ERROR"), message)
 
-            raise Exception(message)
+            raise RuntimeError(message)
 
 user_manager = UserManager()

@@ -362,3 +362,11 @@ The meaning of each "Numbering Mode" option is as follows:
         return translate("PREALLOCATE_GUIDE", """Preallocating file space can improve download performance, especially for large files. When enabled, the program will allocate the required disk space before the download starts, reducing performance overhead caused by repeatedly expanding the file during download and minimizing disk fragmentation.
 
 Note: If the download path is on an external storage device such as a USB drive, and the file system does not support sparse files (e.g., FAT32 or exFAT), please disable this feature—otherwise, the program may become unresponsive.""")
+    
+    @staticmethod
+    @get_map_method
+    def ERROR_CODE_EXPLANATION(key = None):
+        return {
+            412: translate("ERROR_CODE_EXPLANATION", "Request blocked, client IP has been banned"),
+            87008: translate("ERROR_CODE_EXPLANATION", "Paid content requires purchasing")
+        }

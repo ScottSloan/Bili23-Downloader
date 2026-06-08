@@ -69,7 +69,7 @@ class ParserBase:
 
     def check_response(self, response: dict):
         if self.error_message:
-            raise Exception(self.error_message)
+            raise RuntimeError(self.error_message)
         
         if response.get("code", -1) != 0:
             logger.error("接口请求错误：\n{response}".format(
@@ -77,7 +77,7 @@ class ParserBase:
                 )
             )
 
-            raise Exception(response.get("message", "未知错误"))
+            raise RuntimeError(response.get("message", "未知错误"))
     
     def get_extra_data(self) -> dict:
         return {}
@@ -96,5 +96,5 @@ class ParserBase:
                 Translator.ERROR_MESSAGES("LOGIN_REQUIRED_MESSAGE")
             )
 
-            raise Exception("Please log in to your account first.")
+            raise RuntimeError("Please log in to your account first.")
     

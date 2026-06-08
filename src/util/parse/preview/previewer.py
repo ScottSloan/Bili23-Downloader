@@ -1,5 +1,6 @@
-from ...common.enum import MediaType, ToastNotificationCategory, ParserType
+from ...common.enum import MediaType, ToastNotificationCategory
 from ...common.signal_bus import signal_bus
+from ...common.translator import Translator
 from ...common.config import config
 
 from ...network.request import NetworkRequestWorker
@@ -61,7 +62,7 @@ class Previewer(ParserBase):
     def post_process(self):
         # 判断是否为 DRM
         if PreviewerInfo.info_data.get("is_drm", False):
-            raise Exception("不支持下载受 DRM 保护的媒体")
+            raise RuntimeError("不支持下载受 DRM 保护的媒体")
 
         # 判断媒体类型（dash or mp4），前面不需要解析的视频类型在这里 media_type 仍然是 UNKNOWN
         # 不会影响后续流程
@@ -199,12 +200,17 @@ class Previewer(ParserBase):
         return True
 
     def check_response(self, response: dict):
-        if response.get("code", -1) != 0:
-            message = response.get("message", "未知错误")
+        code = response.get("code", -1)
+
+        if code != 0:
+            if code in Translator.ERROR_CODE_EXPLANATION():
+                message = Translator.ERROR_CODE_EXPLANATION(code)
+            else:
+                message = response.get("message", "未知错误")
 
             self.on_init_error(message)
 
-            raise Exception(message)
+            raise RuntimeError(message)
 
     def clear_cache(self):
         PreviewerInfo.info_data = {}

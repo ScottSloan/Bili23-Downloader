@@ -29,7 +29,7 @@ class AuthBase:
 
             signal_bus.emit_signal(self.error, message)
 
-            raise Exception(message)
+            raise RuntimeError(message)
     
     def update_cookies(self):
         # 登录成功后更新 cookies 信息到配置中

@@ -10,7 +10,7 @@ from gui.component.setting import (
     PrioritySettingCard, DanmakuSettingCard, SubtitleSettingCard, CoverSettingCard, MetadataSettingCard, CDNSettingCard, ProxySettingCard,
     FFmpegSettingCard, NumberSettingCard, DownloadFormatCard, DownloadPathSettingCard, ParsingSettingCard, ConfigFileSettingCard,
     WindowBehaviorSettingCard, DownloadHandlingSettingCard, DownloadConcurrencySettingCard, PersonalizationCard,
-    CheckUpdateSettingCard
+    CheckUpdateSettingCard, OtherAdvancedSettingCard
 )
 
 from util.common.data import video_quality_map, audio_quality_map, video_codec_map
@@ -80,8 +80,10 @@ class SettingInterface(ScrollArea):
         self.cdn_card = CDNSettingCard(self)
         self.ffmpeg_card = FFmpegSettingCard(self.main_window, self)
         self.proxy_card = ProxySettingCard(self)
-        self.config_file_card = ConfigFileSettingCard(self)
-        self.user_agent_card = PushSettingCard(self.tr("Customize…"), FluentIcon.GLOBE, "User-Agent", self.tr("Customize the User-Agent used for parsing and downloading"), self)
+        self.other_card = OtherAdvancedSettingCard(self)
+
+        #self.config_file_card = ConfigFileSettingCard(self)
+        #self.user_agent_card = PushSettingCard(self.tr("Customize…"), FluentIcon.GLOBE, "User-Agent", self.tr("Customize the User-Agent used for parsing and downloading"), self)
 
         # Software Update
         self.update_group = SettingCardGroup(self.tr("Updates"), self)
@@ -118,8 +120,7 @@ class SettingInterface(ScrollArea):
         self.advanced_group.addSettingCard(self.cdn_card)
         self.advanced_group.addSettingCard(self.ffmpeg_card)
         self.advanced_group.addSettingCard(self.proxy_card)
-        self.advanced_group.addSettingCard(self.config_file_card)
-        self.advanced_group.addSettingCard(self.user_agent_card)
+        self.advanced_group.addSettingCard(self.other_card)
 
         # Software Update
         self.update_group.addSettingCard(self.check_update_card)
@@ -175,10 +176,13 @@ class SettingInterface(ScrollArea):
         self.ffmpeg_card.source_choice.currentIndexChanged.connect(self.on_change_ffmpeg_source)
         self.ffmpeg_card.custom_btn.clicked.connect(self.on_change_ffmpeg_path)
         self.proxy_card.custom_btn.clicked.connect(self.on_custom_proxy)
-        self.config_file_card.import_btn.clicked.connect(self.on_import_config)
-        self.config_file_card.export_btn.clicked.connect(self.on_export_config)
-        self.config_file_card.reset_btn.clicked.connect(self.on_reset_config)
-        self.user_agent_card.clicked.connect(self.on_custom_user_agent)
+
+
+
+        #self.config_file_card.import_btn.clicked.connect(self.on_import_config)
+        #self.config_file_card.export_btn.clicked.connect(self.on_export_config)
+        #self.config_file_card.reset_btn.clicked.connect(self.on_reset_config)
+        #self.user_agent_card.clicked.connect(self.on_custom_user_agent)
 
         # Update
         self.check_update_card.check_now_btn.clicked.connect(self.on_check_update)

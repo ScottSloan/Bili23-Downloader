@@ -242,7 +242,7 @@ class CookieManager(AuthBase):
 
             self.show_toast_error("错误", message)
 
-            raise Exception(message)
+            raise RuntimeError(message)
         
     def format_dict(self, template: dict, context: dict):
         return {

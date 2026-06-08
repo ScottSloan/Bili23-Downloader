@@ -1209,6 +1209,19 @@ If you continue, please disable the &quot;Preallocate file space&quot; option. (
     </message>
 </context>
 <context>
+    <name>ERROR_CODE_EXPLANATION</name>
+    <message>
+        <location filename="../../util/common/translator.py" line="370"/>
+        <source>Request blocked, client IP has been banned</source>
+        <translation>請求遭封鎖，用戶端IP已被禁止</translation>
+    </message>
+    <message>
+        <location filename="../../util/common/translator.py" line="371"/>
+        <source>Paid content requires purchasing</source>
+        <translation>付費內容需要購買</translation>
+    </message>
+</context>
+<context>
     <name>ERROR_MESSAGES</name>
     <message>
         <location filename="../../util/common/translator.py" line="230"/>
@@ -2469,6 +2482,64 @@ The meaning of each &quot;Numbering Mode&quot; option is as follows:
     </message>
 </context>
 <context>
+    <name>OtherAdvancedSettingCard</name>
+    <message>
+        <location filename="../../gui/component/setting/card.py" line="537"/>
+        <source>Other Advanced Settings</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../gui/component/setting/card.py" line="537"/>
+        <source>Configure other advanced settings</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../gui/component/setting/card.py" line="539"/>
+        <source>Customize…</source>
+        <translation type="unfinished">自訂…</translation>
+    </message>
+    <message>
+        <location filename="../../gui/component/setting/card.py" line="540"/>
+        <source>Configure…</source>
+        <translation type="unfinished">設定…</translation>
+    </message>
+    <message>
+        <location filename="../../gui/component/setting/card.py" line="541"/>
+        <source>View logs</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../gui/component/setting/card.py" line="543"/>
+        <source>Custom User Agent</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../gui/component/setting/card.py" line="543"/>
+        <source>Set a custom user agent string for network requests</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../gui/component/setting/card.py" line="544"/>
+        <source>Config File Settings</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../gui/component/setting/card.py" line="544"/>
+        <source>Import/export configuration files or reset to defaults</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../gui/component/setting/card.py" line="545"/>
+        <source>View Logs</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../gui/component/setting/card.py" line="545"/>
+        <source>View application logs for troubleshooting</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>PREALLOCATE_GUIDE</name>
     <message>
         <location filename="../../util/common/translator.py" line="362"/>
@@ -3285,13 +3356,11 @@ ISP：{isp}</translation>
         <translation>進階</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="84"/>
         <source>Customize the User-Agent used for parsing and downloading</source>
-        <translation>自訂解析與下載所使用的 User-Agent</translation>
+        <translation type="vanished">自訂解析與下載所使用的 User-Agent</translation>
     </message>
     <message>
         <location filename="../../gui/interface/setting.py" line="74"/>
-        <location filename="../../gui/interface/setting.py" line="84"/>
         <source>Customize…</source>
         <translation>自訂…</translation>
     </message>
@@ -3311,22 +3380,22 @@ ISP：{isp}</translation>
         <translation>自訂下載檔案的命名規則</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="87"/>
+        <location filename="../../gui/interface/setting.py" line="89"/>
         <source>Updates</source>
         <translation>軟體更新</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="291"/>
+        <location filename="../../gui/interface/setting.py" line="295"/>
         <source>Select FFmpeg executable</source>
         <translation>選擇 FFmpeg 可執行檔</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="293"/>
+        <location filename="../../gui/interface/setting.py" line="297"/>
         <source>FFmpeg executable ({executable})</source>
         <translation>FFmpeg 可執行檔 ({executable})</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="276"/>
+        <location filename="../../gui/interface/setting.py" line="280"/>
         <source>Bundled FFmpeg not found</source>
         <translation>未找到程式內建的 FFmpeg</translation>
     </message>
@@ -3337,38 +3406,38 @@ ISP：{isp}</translation>
         <translation>系統預設</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="277"/>
+        <location filename="../../gui/interface/setting.py" line="281"/>
         <source>The bundled FFmpeg executable is missing. Please switch to &apos;System PATH&apos; or specify a custom path.</source>
         <translation>缺少程式內建的 FFmpeg 可執行檔。請切換至「系統環境變數」或指定自訂路徑。</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="311"/>
+        <location filename="../../gui/interface/setting.py" line="315"/>
         <source>Import Config File</source>
         <translation>匯入設定檔</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="313"/>
-        <location filename="../../gui/interface/setting.py" line="333"/>
+        <location filename="../../gui/interface/setting.py" line="317"/>
+        <location filename="../../gui/interface/setting.py" line="337"/>
         <source>Config Files (*.json)</source>
         <translation>設定檔 (*.json)</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="331"/>
+        <location filename="../../gui/interface/setting.py" line="335"/>
         <source>Export Config File</source>
         <translation>匯出設定檔</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="347"/>
+        <location filename="../../gui/interface/setting.py" line="351"/>
         <source>Reset Config</source>
         <translation>重設設定</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="348"/>
+        <location filename="../../gui/interface/setting.py" line="352"/>
         <source>Are you sure you want to reset all settings to their default values? This action cannot be undone.</source>
         <translation>確定要將所有設定恢復為預設值嗎？此操作無法復原。</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="368"/>
+        <location filename="../../gui/interface/setting.py" line="372"/>
         <source>Configuration takes effect after restart</source>
         <translation>設定重新啟動後生效</translation>
     </message>
