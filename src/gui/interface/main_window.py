@@ -114,7 +114,7 @@ class MainWindowBase:
         )
 
     def show_terms_of_use(self):
-        from ..dialog.misc.terms import TermsOfUseDialog
+        from ..dialog.main_window.terms import TermsOfUseDialog
 
         dialog = TermsOfUseDialog(self)
 
@@ -448,7 +448,7 @@ class MainWindow(MainWindowBase, MSFluentWindow):
                 return False
             
             case WhenClose.ALWAYS_ASK:
-                from ..dialog.misc.exit import ExitDialog
+                from ..dialog.main_window.exit import ExitDialog
 
                 dialog = ExitDialog(self)
 
@@ -468,7 +468,7 @@ class MainWindow(MainWindowBase, MSFluentWindow):
                 return True
 
     def on_about_click(self):
-        from ..dialog.misc.about import AboutDialog
+        from ..dialog.main_window.about import AboutDialog
 
         dialog = AboutDialog(self)
         dialog.exec()

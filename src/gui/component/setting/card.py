@@ -538,7 +538,7 @@ class OtherAdvancedSettingCard(ExpandGroupSettingCard):
 
     def connect_signals(self):
         self.custom_user_agent_btn.clicked.connect(self.on_custom_user_agent)
-        #self.view_log_btn.clicked.connect(self.on_view_logs)
+        self.view_log_btn.clicked.connect(self.on_view_logs)
 
     def on_custom_user_agent(self):
         from ...dialog.setting.user_agent import UserAgentDialog
@@ -598,3 +598,9 @@ class OtherAdvancedSettingCard(ExpandGroupSettingCard):
 
     def on_open_config_directory(self):
         Directory.open_directory_in_explorer(str(config.file.parent))
+
+    def on_view_logs(self):
+        from ...dialog.log import LogViewerDialog
+
+        dialog = LogViewerDialog(self.parent_window)
+        dialog.show()

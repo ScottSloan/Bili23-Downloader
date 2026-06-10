@@ -78,8 +78,6 @@ class UpdateDialog(FluentDialogBase):
         self.vboxLayout.setSpacing(10)
         self.vboxLayout.addWidget(content_widget)
 
-        StyleSheet.FLUENT_DIALOG.apply(self)
-
         self.set_required(self._info["required"])
 
         self.skip_btn.clicked.connect(self.on_skip)

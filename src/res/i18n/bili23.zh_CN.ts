@@ -55,52 +55,52 @@
 <context>
     <name>AboutDialog</name>
     <message>
-        <location filename="../../gui/dialog/misc/about.py" line="24"/>
+        <location filename="../../gui/dialog/main_window/about.py" line="24"/>
         <source>About {app_name}</source>
         <translation>关于 {app_name}</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/about.py" line="26"/>
+        <location filename="../../gui/dialog/main_window/about.py" line="26"/>
         <source>Version {app_version}</source>
         <translation>版本 {app_version}</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/about.py" line="27"/>
+        <location filename="../../gui/dialog/main_window/about.py" line="27"/>
         <source>Powered by Qt {qt_version} and QFluentWidgets {qfluentwidgets_version}</source>
         <translation>基于 Qt {qt_version} 和 QFluentWidgets {qfluentwidgets_version} 构建</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/about.py" line="28"/>
+        <location filename="../../gui/dialog/main_window/about.py" line="28"/>
         <source>This software is free and open-source, licensed under the GNU General Public License v3 (GPLv3).</source>
         <translation>本软件为免费开源软件，使用 GNU 通用公共许可证第三版（GPLv3）授权。</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/about.py" line="29"/>
+        <location filename="../../gui/dialog/main_window/about.py" line="29"/>
         <source>Copyright © 2022-{year} Scott Sloan. All Rights Reserved.</source>
         <translation>Copyright © 2022-{year} Scott Sloan. All Rights Reserved.</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/about.py" line="31"/>
+        <location filename="../../gui/dialog/main_window/about.py" line="31"/>
         <source>If this project saved you time or solved your problem, consider buying the author a coffee! Don&apos;t forget to star the repository on GitHub to support open-source development.</source>
         <translation>如果这个项目节省了你的时间或解决了你的问题，欢迎通过赞助请作者喝杯咖啡，也别忘了在 GitHub 上点个 Star 支持开源！</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/about.py" line="34"/>
+        <location filename="../../gui/dialog/main_window/about.py" line="34"/>
         <source>Terms of Use</source>
         <translation>使用协议</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/about.py" line="35"/>
+        <location filename="../../gui/dialog/main_window/about.py" line="35"/>
         <source>Documentation</source>
         <translation>帮助文档</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/about.py" line="36"/>
+        <location filename="../../gui/dialog/main_window/about.py" line="36"/>
         <source>Github</source>
         <translation>Github</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/about.py" line="37"/>
+        <location filename="../../gui/dialog/main_window/about.py" line="37"/>
         <source>Sponsor</source>
         <translation>赞助作者</translation>
     </message>
@@ -1484,27 +1484,27 @@ File name: {filename}</source>
 <context>
     <name>ExitDialog</name>
     <message>
-        <location filename="../../gui/dialog/misc/exit.py" line="20"/>
+        <location filename="../../gui/dialog/main_window/exit.py" line="20"/>
         <source>Close the main window</source>
         <translation>关闭主窗口</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/exit.py" line="22"/>
+        <location filename="../../gui/dialog/main_window/exit.py" line="22"/>
         <source>Choose an action</source>
         <translation>选择一个操作</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/exit.py" line="24"/>
+        <location filename="../../gui/dialog/main_window/exit.py" line="24"/>
         <source>Exit the program</source>
         <translation>退出程序</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/exit.py" line="26"/>
+        <location filename="../../gui/dialog/main_window/exit.py" line="26"/>
         <source>Minimize to system tray</source>
         <translation>最小化到系统托盘</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/exit.py" line="34"/>
+        <location filename="../../gui/dialog/main_window/exit.py" line="34"/>
         <source>Don&apos;t ask again</source>
         <translation>不再询问</translation>
     </message>
@@ -1706,6 +1706,14 @@ File name: {filename}</source>
         <location filename="../../gui/dialog/misc/jump_to_page.py" line="19"/>
         <source>Enter page number</source>
         <translation>输入页码</translation>
+    </message>
+</context>
+<context>
+    <name>LogViewerDialog</name>
+    <message>
+        <location filename="../../gui/dialog/log.py" line="10"/>
+        <source>Log Viewer</source>
+        <translation>日志查看器</translation>
     </message>
 </context>
 <context>
@@ -3665,7 +3673,7 @@ Under no circumstances shall the developer be liable for any direct, indirect, i
 <context>
     <name>TermsOfUseDialog</name>
     <message>
-        <location filename="../../gui/dialog/misc/terms.py" line="15"/>
+        <location filename="../../gui/dialog/main_window/terms.py" line="15"/>
         <source>Terms of Use</source>
         <translation>使用协议</translation>
     </message>

@@ -202,12 +202,12 @@ class VideoParser(ParserBase):
         super().__init__()
         
     def get_aid(self):
-        aid = self.find_str(r"av([0-9]+)", self.url)
+        aid = self.find_str(r"(?:av|AV)([0-9]+)", self.url)
 
         return self.aid_to_bvid(int(aid))
 
     def get_bvid(self):
-        bvid = self.find_str(r"BV\w+", self.url)
+        bvid = self.find_str(r"(?:BV|bv)\w+", self.url)
 
         return bvid
     
@@ -235,11 +235,11 @@ class VideoParser(ParserBase):
     def parse(self, url: str, pn: int):
         self.url = url
 
-        match self.find_str(r"av|BV", url):
-            case "av":
+        match self.find_str(r"av|BV|AV|bv", url):
+            case "av" | "AV":
                 self.bvid = self.get_aid()
 
-            case "BV":
+            case "BV" | "bv":
                 self.bvid = self.get_bvid()
 
         self.get_video_info()

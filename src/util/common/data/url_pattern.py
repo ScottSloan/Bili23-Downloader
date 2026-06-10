@@ -14,6 +14,6 @@ url_patterns = [
     ("history", r"bili23://history"),
     ("festival", r"bilibili\.com/festival"),
     ("b23", r"(b23\.tv|bili2233\.cn)"),
-    ("video", r"(BV[a-zA-Z0-9]+|av[0-9]+)"),
+    ("video", r"(?:BV|bv|AV|av)(\w+)"),
     ("bangumi", r"(ep[0-9]+|ss[0-9]+)|md[0-9]+")
 ]

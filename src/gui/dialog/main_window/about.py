@@ -75,7 +75,7 @@ class AboutDialog(DialogBase):
         self.sponsor_btn.clicked.connect(self.on_sponsor)
 
     def on_terms(self):
-        from gui.dialog.misc.terms import TermsOfUseDialog
+        from gui.dialog.main_window.terms import TermsOfUseDialog
 
         dialog = TermsOfUseDialog(self)
         dialog.exec()

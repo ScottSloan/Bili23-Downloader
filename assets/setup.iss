@@ -148,13 +148,9 @@ begin
 
       InstallDir := RemoveQuotes(InstallDir);
 
-      if InstallDir <> '' then
+      if (InstallDir <> '') and DirExists(InstallDir) then
         begin
-          if not DelTree(InstallDir, True, True, True) then
-            begin
-              Result := False;
-              exit;
-            end;
+          DelTree(InstallDir, True, True, True);
         end;
     end;
   Result := True;
