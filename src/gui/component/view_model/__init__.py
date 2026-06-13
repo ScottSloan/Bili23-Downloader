@@ -1,2 +1,2 @@
-from .delegate_base import CoverQueryDelegateBase
+from .delegate_base import CoverQueryDelegateBase, FluentStyledItemDelegate
 from .model_base import CoverQueryModelBase

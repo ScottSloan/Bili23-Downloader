@@ -10,7 +10,7 @@ from qfluentwidgets import (
 from qfluentwidgets.components.settings.expand_setting_card import GroupWidget as _GroupWidget
 
 from .widget import SettingSwitchButton, SettingComboBox, SettingSlider
-from ..dialog import MessageBox
+
 
 from util.common.config import config, isWin11, APPConfig
 from util.thread.pool import GlobalThreadPoolTask
@@ -36,6 +36,8 @@ class GuideSettingCardBase:
         setCustomStyleSheet(self.hyper_label, styleSheet, styleSheet)
 
     def showGuideMessageBox(self, title: str, content: str):
+        from ..dialog import MessageBox
+        
         dialog = MessageBox(
             title = title,
             content = content,

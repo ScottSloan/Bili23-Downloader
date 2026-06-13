@@ -6,7 +6,7 @@ from qfluentwidgets import (
     FlyoutViewBase, FluentIcon, isDarkTheme, ComboBox, PopUpAniStackedWidget, NavigationWidget
 )
 
-from gui.component.entry_list import EntryListView
+from ..entry_list.list_view import EntryListView
 from .button import TransparentToolButton
 from .navigation import NavigationPanel
 from .pager import Pager

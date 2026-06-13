@@ -2,7 +2,7 @@ from PySide6.QtCore import QModelIndex, Qt, QSize, QRect, QEvent
 from PySide6.QtWidgets import QStyleOptionViewItem
 from PySide6.QtGui import QPainter, QPixmap
 
-from gui.component.view_model import CoverQueryDelegateBase
+from ..view_model import CoverQueryDelegateBase
 
 class EntryListItemDelegate(CoverQueryDelegateBase):
     def __init__(self, parent = None):
