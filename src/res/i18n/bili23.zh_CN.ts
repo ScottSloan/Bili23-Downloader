@@ -1716,39 +1716,44 @@ File name: {filename}</source>
         <translation>日志查看器</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/log.py" line="38"/>
+        <location filename="../../gui/dialog/log.py" line="37"/>
         <source>All</source>
-        <translation type="unfinished">全部</translation>
+        <translation>全部</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialog/log.py" line="38"/>
+        <source>Debug</source>
+        <translation>调试</translation>
     </message>
     <message>
         <location filename="../../gui/dialog/log.py" line="39"/>
         <source>Info</source>
-        <translation type="unfinished"></translation>
+        <translation>信息</translation>
     </message>
     <message>
         <location filename="../../gui/dialog/log.py" line="40"/>
         <source>Warning</source>
-        <translation type="unfinished"></translation>
+        <translation>警告</translation>
     </message>
     <message>
         <location filename="../../gui/dialog/log.py" line="41"/>
         <source>Error</source>
-        <translation type="unfinished"></translation>
+        <translation>错误</translation>
     </message>
     <message>
         <location filename="../../gui/dialog/log.py" line="45"/>
         <source>Search logs...</source>
-        <translation type="unfinished"></translation>
+        <translation>搜索日志...</translation>
     </message>
     <message>
         <location filename="../../gui/dialog/log.py" line="47"/>
         <source>Clear Logs</source>
-        <translation type="unfinished"></translation>
+        <translation>清除日志</translation>
     </message>
     <message>
         <location filename="../../gui/dialog/log.py" line="48"/>
         <source>Open Logs Directory</source>
-        <translation type="unfinished"></translation>
+        <translation>打开日志目录</translation>
     </message>
 </context>
 <context>

@@ -30,7 +30,7 @@ class TaskDatabase(Database):
             CREATE TABLE IF NOT EXISTS "download_task" (
                 "id"	INTEGER UNIQUE,
                 "task_id"	TEXT UNIQUE,
-                "hash_id"   TEXT UNIQUE,
+                "hash_id"   TEXT,
                 "cover_id"	TEXT,
                 "title"	TEXT,
                 "created_time"	INTEGER,
@@ -40,13 +40,16 @@ class TaskDatabase(Database):
             CREATE TABLE IF NOT EXISTS "completed_task" (
                 "id"	INTEGER UNIQUE,
                 "task_id"	TEXT UNIQUE,
-                "hash_id"   TEXT UNIQUE,
+                "hash_id"   TEXT,
                 "cover_id"	TEXT,
                 "title"	TEXT,
                 "completed_time"	INTEGER,
                 "data"	TEXT,
                 PRIMARY KEY("id" AUTOINCREMENT)
-            );""")
+            );
+            CREATE INDEX IF NOT EXISTS "idx_download_task_hash_id" ON "download_task" ("hash_id");
+            CREATE INDEX IF NOT EXISTS "idx_completed_task_hash_id" ON "completed_task" ("hash_id");
+            """)
         
     def query_tasks(self, completed: bool = False):
         if completed:

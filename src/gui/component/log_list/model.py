@@ -22,6 +22,9 @@ class LogListModel(QAbstractListModel):
             case Qt.ItemDataRole.UserRole:
                 return record
             
+            case Qt.ItemDataRole.ToolTipRole:
+                return record.get("message", "")
+            
     def appendRow(self, entry):
         row = self.rowCount()
 

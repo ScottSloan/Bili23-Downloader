@@ -2,6 +2,7 @@ from qfluentwidgets import ListView
 
 from .item_delegate import LogListItemDelegate
 from .model import LogListModel
+from .proxy_model import LogListProxyModel
 
 class LogListView(ListView):
     def __init__(self, parent = None):
@@ -9,7 +10,9 @@ class LogListView(ListView):
 
         self._emptyTextTip = self.tr("No logs")
 
-        self._model = LogListModel([], self)
+        self._source_model = LogListModel([], self)
+        self._model = LogListProxyModel(self)
+        self._model.setSourceModel(self._source_model)
         self._delegate = LogListItemDelegate(self)
 
         self.setModel(self._model)
@@ -23,3 +26,9 @@ class LogListView(ListView):
         super().updateGeometries()
 
         self.verticalScrollBar().setSingleStep(30)
+
+    def setLevelFilter(self, level: str):
+        self._model.setLevelFilter(level)
+
+    def setFilterText(self, text: str):
+        self._model.setFilterText(text)

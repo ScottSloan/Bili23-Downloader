@@ -34,12 +34,12 @@ class LogViewerDialog(FluentWidget):
     def init_UI(self):
         self.category_choice = ComboBox(self)
         self.category_choice.setMinimumWidth(150)
-        self.category_choice.addItems([
-            self.tr("All"),
-            self.tr("Info"),
-            self.tr("Warning"),
-            self.tr("Error"),
-        ])
+        self.category_choice.addItem(self.tr("All"), userData = "ALL")
+        self.category_choice.addItem(self.tr("Debug"), userData = "DEBUG")
+        self.category_choice.addItem(self.tr("Info"), userData = "INFO")
+        self.category_choice.addItem(self.tr("Warning"), userData = "WARNING")
+        self.category_choice.addItem(self.tr("Error"), userData = "ERROR")
+        self.category_choice.setCurrentIndex(0)
 
         self.search_box = LineEdit(self)
         self.search_box.setPlaceholderText(self.tr("Search logs..."))
@@ -77,6 +77,8 @@ class LogViewerDialog(FluentWidget):
     def connect_signals(self):
         self.clear_btn.clicked.connect(self.clear_logs)
         self.open_dir_btn.clicked.connect(self.open_logs_directory)
+        self.category_choice.currentIndexChanged.connect(self.on_category_changed)
+        self.search_box.textChanged.connect(self.on_search_changed)
 
     def init_data(self):
         self.log_path = Path(appdata_path) / "Bili23 Downloader" / "logs" / "app.log"
@@ -84,9 +86,27 @@ class LogViewerDialog(FluentWidget):
         log_records = self.parse_log_file(self.log_path)
 
         self.log_list._model.appendRows(log_records)
+        self.apply_filters()
+
+    def apply_filters(self):
+        current_data = self.category_choice.currentData()
+        if current_data is None:
+            current_data = self.category_choice.currentText().upper()
+
+        self.log_list.setLevelFilter(current_data)
+        self.log_list.setFilterText(self.search_box.text())
+
+    def on_category_changed(self, index: int):
+        self.apply_filters()
+
+    def on_search_changed(self, text: str):
+        self.apply_filters()
 
     def parse_log_file(self, filepath: Path) -> list[dict]:
         records = []
+
+        if not filepath.exists():
+            return records
 
         with open(filepath, "r", encoding = "utf-8") as f:
             for line in f:
