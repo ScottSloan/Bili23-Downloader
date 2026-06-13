@@ -15,7 +15,8 @@ import re
 LOG_PATTERN = re.compile(
     r'\[(?P<timestamp>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\] - '
     r'(?P<name>.+?) - '
-    r'(?P<level>\w+): '
+    r'(?P<level>\w+) - '
+    r'(?P<callsite>.+?): '
     r'(?P<message>.*)'
 )
 
@@ -43,6 +44,7 @@ class LogViewerDialog(FluentWidget):
 
         self.search_box = LineEdit(self)
         self.search_box.setPlaceholderText(self.tr("Search logs..."))
+        self.search_box.setClearButtonEnabled(True)
 
         self.clear_btn = PushButton(self.tr("Clear Logs"), self)
         self.open_dir_btn = PushButton(self.tr("Open Logs Directory"), self)

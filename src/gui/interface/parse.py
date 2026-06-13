@@ -28,8 +28,6 @@ from util.download.task.manager import task_manager
 from util.thread.pool import GlobalThreadPoolTask
 from util.thread.async_ import AsyncTask
 
-import re
-
 class ParseBase(QFrame):
     def __init__(self, parent = None):
         super().__init__(parent = parent)
@@ -498,7 +496,7 @@ class ParseInterface(ParseBase):
             url = self.clipboard.text()
 
             for parser_type, pattern in url_patterns:
-                if re.findall(pattern, url):
+                if pattern.search(url):
                     # 置标志位，表示接下来的解析是由监控剪贴板触发的
                     self._triggered_by_clipboard = True
 

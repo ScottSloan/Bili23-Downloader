@@ -21,7 +21,6 @@ from ..common.data.auto_parse import AutoParsePayload
 
 from threading import Event
 import logging
-import re
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +40,7 @@ class WorkerBase:
 
     def get_parser_type(self, url: str):
         for parser_type, pattern in url_patterns:
-            if re.findall(pattern, url):
+            if pattern.search(url):
                 return parser_type
             
         raise ValueError(Translator.ERROR_MESSAGES("INVALID_LINK"))

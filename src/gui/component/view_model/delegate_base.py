@@ -1,6 +1,6 @@
 from PySide6.QtWidgets import QStyledItemDelegate, QStyleOptionViewItem, QApplication, QStyle
 from PySide6.QtGui import QPainter, QColor, QFont, QFontMetrics, QPixmap, QPainterPath
-from PySide6.QtCore import QModelIndex, Qt, QRect, Signal, QPoint
+from PySide6.QtCore import QModelIndex, Qt, QRect, Signal, QPoint, QEvent
 
 from qfluentwidgets import isDarkTheme, setFont, drawIcon, ThemeColor, Theme
 
@@ -207,13 +207,47 @@ class FluentStyledItemDelegate:
         theme = Theme.DARK if not isDarkTheme() else Theme.LIGHT
         return icon.icon(theme)
 
-class CoverQueryDelegateBase(QStyledItemDelegate, FluentStyledItemDelegate):
+class ContextMenuDelegateBase(QStyledItemDelegate, FluentStyledItemDelegate):
+    """
+    具有右键菜单功能的委托基类
+    """
+    contextMenuRequested = Signal(QModelIndex, QPoint)
+
+    def __init__(self, parent = None):
+        super().__init__(parent)
+
+    def _checkHoverRow(self, option: QStyleOptionViewItem, index: QModelIndex):
+        if option.state & QStyle.StateFlag.State_MouseOver:
+            self.hoverRow = index.row()
+
+        elif self.hoverRow == index.row():
+            self.hoverRow = -1
+
+    def editorEvent(self, event, model, option, index):
+        if event.type() == QEvent.Type.MouseButtonRelease:
+            return self._pressEvent(option, index, event)
+
+        return super().editorEvent(event, model, option, index)
+
+    def _pressEvent(self, option: QStyleOptionViewItem, index: QModelIndex, event):
+        if event.button() == Qt.MouseButton.LeftButton:
+            if hasattr(index.model(), "itemClicked"):
+                index.model().itemClicked.emit(index, index.data(Qt.ItemDataRole.UserRole))
+
+            return True
+        
+        if event.button() == Qt.MouseButton.RightButton:
+            # 右键点击，弹出上下文菜单
+            self.contextMenuRequested.emit(index, event.globalPos())
+
+            return True
+
+        return False
+
+class CoverQueryDelegateBase(ContextMenuDelegateBase):
     """
     具有异步封面显示功能的委托基类
     """
-
-    contextMenuRequested = Signal(QModelIndex, QPoint)
-
     def __init__(self, parent = None):
         super().__init__(parent)
 
@@ -231,13 +265,6 @@ class CoverQueryDelegateBase(QStyledItemDelegate, FluentStyledItemDelegate):
         self._paintItemUI(painter, option, index)
 
         painter.restore()
-
-    def _checkHoverRow(self, option: QStyleOptionViewItem, index: QModelIndex):
-        if option.state & QStyle.StateFlag.State_MouseOver:
-            self.hoverRow = index.row()
-
-        elif self.hoverRow == index.row():
-            self.hoverRow = -1
 
     def _queryCover(self, cover_id: str, cover_url: str, index: QModelIndex):
         # 由委托发起查询封面请求

@@ -38,6 +38,7 @@ sources = [
     "src/gui/component/download_list/top_widget.py",
     "src/gui/component/entry_list/entry_item_delegate.py",
     "src/gui/component/entry_list/list_view.py",
+    "src/gui/component/log_list/list_view.py",
     "src/gui/component/parse_list/model.py",
     "src/gui/component/parse_list/tree_view.py",
     "src/gui/component/setting/card.py",

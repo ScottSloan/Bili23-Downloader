@@ -13,14 +13,36 @@ appdata_path = QStandardPaths.writableLocation(QStandardPaths.StandardLocation.A
 log_path = Path(appdata_path) / "Bili23 Downloader" / "logs" / "app.log"
 log_path.parent.mkdir(parents = True, exist_ok = True)
 
+class CompactLogFormatter(logging.Formatter):
+    def format(self, record):
+        record.callsite = f"{record.filename}:{record.lineno} in {record.funcName}"
+        return super().format(record)
+
+    def formatException(self, ei):
+        exc_type, exc_value, _ = ei
+
+        if exc_type is None:
+            return ""
+
+        if exc_value is None:
+            return exc_type.__name__
+
+        return f"{exc_type.__name__}: {exc_value}"
+
+log_formatter = CompactLogFormatter(
+    "[%(asctime)s] - %(name)s - %(levelname)s - at %(callsite)s: %(message)s",
+    datefmt = "%Y-%m-%d %H:%M:%S",
+)
+
+stream_handler = logging.StreamHandler(sys.stdout)
+stream_handler.setFormatter(log_formatter)
+
+file_handler = TimedRotatingFileHandler(log_path, when = "midnight", interval = 1, backupCount = 15, encoding = "utf-8")
+file_handler.setFormatter(log_formatter)
+
 logging.basicConfig(
     level = logging.INFO,
-    format = "[%(asctime)s] - %(name)s - %(levelname)s: %(message)s",
-    datefmt = "%Y-%m-%d %H:%M:%S",
-    handlers = [
-        logging.StreamHandler(sys.stdout),
-        TimedRotatingFileHandler(log_path, when = "midnight", interval = 1, backupCount = 15, encoding = "utf-8")
-    ]
+    handlers = [stream_handler, file_handler]
 )
 
 # --------- Disable PySide6 Warnings ---------

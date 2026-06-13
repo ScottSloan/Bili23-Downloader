@@ -1,12 +1,12 @@
-from PySide6.QtWidgets import QStyledItemDelegate, QStyleOptionViewItem, QStyle
 from PySide6.QtCore import QModelIndex, Qt, QRect, QSize
+from PySide6.QtWidgets import QStyleOptionViewItem
 from PySide6.QtGui import QPainter, QColor
 
 from qfluentwidgets import isDarkTheme
 
-from ..view_model import FluentStyledItemDelegate
+from ..view_model import ContextMenuDelegateBase
 
-class LogListItemDelegate(QStyledItemDelegate, FluentStyledItemDelegate):
+class LogListItemDelegate(ContextMenuDelegateBase):
     def __init__(self, parent = None):
         super().__init__(parent)
 
@@ -33,13 +33,6 @@ class LogListItemDelegate(QStyledItemDelegate, FluentStyledItemDelegate):
 
         painter.restore()
 
-    def _checkHoverRow(self, option: QStyleOptionViewItem, index: QModelIndex):
-        if option.state & QStyle.StateFlag.State_MouseOver:
-            self.hoverRow = index.row()
-
-        elif self.hoverRow == index.row():
-            self.hoverRow = -1
-
     def _paintItemUI(self, painter: QPainter, option: QStyleOptionViewItem, index: QModelIndex):
         record: dict = index.data(Qt.ItemDataRole.UserRole)
 
@@ -64,8 +57,9 @@ class LogListItemDelegate(QStyledItemDelegate, FluentStyledItemDelegate):
         self._drawTextBase(painter, levelRect, level, indicatorColor, 14)
 
         # 绘制记录器名称
+        name = "{name} ({callsite})".format(name = record.get("name", ""), callsite = record.get("callsite", ""))
         nameRect = self.uiRect.getNameRect(levelRect, option)
-        self._drawTextBase(painter, nameRect, record.get("name", ""), timestampColor, 14)
+        self._drawTextBase(painter, nameRect, name, timestampColor, 14)
 
         # 绘制日志消息        
         messageRect = self.uiRect.getMessageRect(timestampRect, option)
@@ -95,7 +89,7 @@ class UIRect:
         self.spacer = 20
 
     def getIndicatorRect(self, option: QStyleOptionViewItem):
-        top = self.margin + option.rect.top() + 4
+        top = self.margin + option.rect.top() + 2
         left = self.margin + option.rect.left() + 4
 
         return QRect(left, top, 16, 16)
@@ -116,10 +110,10 @@ class UIRect:
         top = self.margin + option.rect.top()
         left = levelRect.right() + self.spacer
 
-        return QRect(left, top, 128, 24)
+        return QRect(left, top, 500, 24)
     
     def getMessageRect(self, timestampRect: QRect, option: QStyleOptionViewItem):
         top = timestampRect.bottom() + self.margin / 2
         left = self.margin + option.rect.left() + 5
 
-        return QRect(left, top, option.rect.width() - 2 * self.margin, 24)
+        return QRect(left, top, option.rect.width() - 2 * self.margin, 48)

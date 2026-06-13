@@ -1709,49 +1709,62 @@ File name: {filename}</source>
     </message>
 </context>
 <context>
+    <name>LogListView</name>
+    <message>
+        <location filename="../../gui/component/log_list/list_view.py" line="14"/>
+        <source>No logs</source>
+        <translation>沒有日誌</translation>
+    </message>
+    <message>
+        <location filename="../../gui/component/log_list/list_view.py" line="45"/>
+        <source>Copy</source>
+        <translation>複製</translation>
+    </message>
+</context>
+<context>
     <name>LogViewerDialog</name>
     <message>
-        <location filename="../../gui/dialog/log.py" line="26"/>
+        <location filename="../../gui/dialog/log.py" line="27"/>
         <source>Log Viewer</source>
         <translation>日誌檢視器</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/log.py" line="37"/>
+        <location filename="../../gui/dialog/log.py" line="38"/>
         <source>All</source>
         <translation>全部</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/log.py" line="38"/>
+        <location filename="../../gui/dialog/log.py" line="39"/>
         <source>Debug</source>
         <translation>調試</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/log.py" line="39"/>
+        <location filename="../../gui/dialog/log.py" line="40"/>
         <source>Info</source>
         <translation>資訊</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/log.py" line="40"/>
+        <location filename="../../gui/dialog/log.py" line="41"/>
         <source>Warning</source>
         <translation>警告</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/log.py" line="41"/>
+        <location filename="../../gui/dialog/log.py" line="42"/>
         <source>Error</source>
         <translation>錯誤</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/log.py" line="45"/>
+        <location filename="../../gui/dialog/log.py" line="46"/>
         <source>Search logs...</source>
         <translation>搜尋日誌...</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/log.py" line="47"/>
+        <location filename="../../gui/dialog/log.py" line="49"/>
         <source>Clear Logs</source>
         <translation>清除日誌</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/log.py" line="48"/>
+        <location filename="../../gui/dialog/log.py" line="50"/>
         <source>Open Logs Directory</source>
         <translation>開啟日誌目錄</translation>
     </message>

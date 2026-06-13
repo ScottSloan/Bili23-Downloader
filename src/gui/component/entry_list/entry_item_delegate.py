@@ -27,26 +27,6 @@ class EntryListItemDelegate(CoverQueryDelegateBase):
         countRect = self.uiRect.getCountRect(titleRect, option)
         self._drawDescriptionText(painter, countRect, self.tr("{count} items").format(count = entry["count"]))
 
-    def editorEvent(self, event, model, option, index):
-        if event.type() == QEvent.Type.MouseButtonRelease:
-            return self._pressEvent(option, index, event)
-
-        return super().editorEvent(event, model, option, index)
-    
-    def _pressEvent(self, option: QStyleOptionViewItem, index: QModelIndex, event):
-        if event.button() == Qt.MouseButton.LeftButton:
-            index.model().itemClicked.emit(index, index.data(Qt.ItemDataRole.UserRole))
-
-            return True
-        
-        if event.button() == Qt.MouseButton.RightButton:
-            # 右键点击，弹出上下文菜单
-            self.contextMenuRequested.emit(index, event.globalPos())
-
-            return True
-
-        return False
-
 class UIRect:
     def __init__(self):
         self.margin = 10
