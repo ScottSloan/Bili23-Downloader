@@ -9,6 +9,10 @@ from util.common.signal_bus  import signal_bus
 from util.common.config import config
 from util.auth.user import user_manager
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 class ProfileCard(FlyoutViewBase):
     """
     展示用户信息的组件。
@@ -59,4 +63,6 @@ class ProfileCard(FlyoutViewBase):
 
             # 注销后更新预览信息
             self.main_window.parse_interface.update_previewer_info()
+
+            logger.info("用户已注销登录")
         

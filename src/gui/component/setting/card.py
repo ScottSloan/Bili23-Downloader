@@ -19,6 +19,9 @@ from util.common.io.directory import Directory
 from util.common.translator import Translator
 
 from pathlib import Path
+import logging
+
+logger = logging.getLogger(__name__)
 
 class GuideSettingCardBase:
     def showHyperLinkLabel(self, label: str):
@@ -565,6 +568,8 @@ class OtherAdvancedSettingCard(ExpandGroupSettingCard):
 
         config.appRestartSig.emit()
 
+        logger.info("从文件导入配置成功，路径：%s", file_path)
+
     def on_export_config(self):
         file_path, _ = QFileDialog.getSaveFileName(
             self.parent_window,
@@ -582,6 +587,8 @@ class OtherAdvancedSettingCard(ExpandGroupSettingCard):
 
         temp_config.save()
 
+        logger.info("配置导出成功，路径：%s", file_path)
+
     def on_reset_config(self):
         dialog = MessageBox(
             self.tr("Reset Config"),
@@ -594,6 +601,8 @@ class OtherAdvancedSettingCard(ExpandGroupSettingCard):
             config.file.unlink(missing_ok = True)
             
             config.appRestartSig.emit()
+
+            logger.info("配置重置成功，配置文件已删除：%s", config.file)
 
     def on_open_config_directory(self):
         Directory.open_directory_in_explorer(str(config.file.parent))

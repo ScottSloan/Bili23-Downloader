@@ -21,7 +21,7 @@ class AudioEpisodeParser(EpisodeParserBase):
         self.update_episode_list(node, None)
 
     def audio_menu_parser(self):
-        menu_title = ""
+        menu_title = self.info_data.get("menu_title", "")
         node_data = {
             "number": Translator.EPISODE_TYPE("AUDIO"),
             "title": menu_title
@@ -40,6 +40,7 @@ class AudioEpisodeParser(EpisodeParserBase):
                 "number": self.episode_count,
                 "pubtime": episode["passtime"],
                 "title": episode["title"],
+                "url": "https://www.bilibili.com/audio/au{sid}".format(sid = episode["statistic"]["sid"])
             }
 
             episode_item = TreeItem(episode_item_data)

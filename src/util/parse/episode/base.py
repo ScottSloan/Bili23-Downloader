@@ -23,8 +23,11 @@ class EpisodeParserBase:
         root_node = TreeItem({})
         root_node.add_child(node)
 
-        if node.count() == 1 and node.child(0).attribute & Attribute.VIDEO_BIT:
-            title = node.child(0).title
+        if node.count() == 1:
+            attr = node.child(0).attribute
+
+            if attr & Attribute.VIDEO_BIT or attr & Attribute.AUDIO_BIT:
+                title = node.child(0).title
         else:
             title = node.title
 

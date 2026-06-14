@@ -12,6 +12,10 @@ from util.common.signal_bus import signal_bus, config
 from util.common.icon import ExtendedFluentIcon
 from util.common.config import config
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 class MainWindowBase:
     def run_post_terms_checks(self: "MainWindow") -> None:
         signal_bus.update.check.emit(False)
@@ -122,6 +126,8 @@ class MainWindowBase:
             # 用户不接受使用协议，关闭程序
             self.close()
 
+            logger.warning("用户未接受使用协议，程序已关闭")
+
             return False
 
         self.run_post_terms_checks()
@@ -175,6 +181,8 @@ class MainWindowBase:
                 self.tr("Download Directory Invalid"),
                 self.tr("The current download directory is inaccessible or lacks write permissions. Please reset it.") + f"\n\n{download_path}"
             )
+
+            logger.error("下载目录不可访问或缺少写入权限：%s", download_path)
 
     def check_ffmpeg(self):
         if config.no_ffmpeg_available:

@@ -91,6 +91,8 @@ class ProxyDialog(DialogBase):
 
         worker.set_proxies(proxy.get_proxies())
 
+        self.set_text_btn_status(False)
+
         AsyncTask.run(worker)
 
     def on_test_success(self, response: Dict[str, Any]):
@@ -104,6 +106,10 @@ class ProxyDialog(DialogBase):
 
         location_parts = [part for part in [country, province, city] if part]
         location = " ".join(location_parts) if location_parts else self.tr("Unknown")
+
+        logger.info("代理测试成功，IP: %s, Location: %s, ISP: %s", ip, location, isp)
+
+        self.set_text_btn_status(True)
 
         dialog = MessageBox(
             self.tr("Network Test Result"),
@@ -120,6 +126,8 @@ class ProxyDialog(DialogBase):
 
     def on_test_error(self, error: str):
         logger.exception("代理测试失败: %s", error)
+
+        self.set_text_btn_status(True)
 
         dialog = MessageBox(self.tr("Network Test Failed"), error, self)
         dialog.hideCancelButton()
@@ -144,4 +152,13 @@ class ProxyDialog(DialogBase):
         config.set(config.proxy_password, self.password_box.text())
 
         return super().accept()
+    
+    def set_text_btn_status(self, enabled: bool):
+        if enabled:
+            self.test_btn.setEnabled(True)
+            self.test_btn.setText(self.tr("Test"))
+
+        else:
+            self.test_btn.setEnabled(False)
+            self.test_btn.setText(self.tr("Testing..."))
     

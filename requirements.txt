@@ -1,7 +1,7 @@
 PySide6-Fluent-Widgets==1.11.2
 orjson==3.11.9
 qrcode==8.2
-protobuf==7.35.0
+protobuf==7.35.1
 PySide6==6.10.3
 httpx==0.28.1
 psutil==7.2.2

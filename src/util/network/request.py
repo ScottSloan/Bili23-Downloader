@@ -9,6 +9,8 @@ import httpx
 
 logging.getLogger("httpx").setLevel(logging.WARNING)
 
+logger = logging.getLogger(__name__)
+
 _client = None
 
 def get_mounts(proxies = None):
@@ -27,6 +29,9 @@ def _create_client():
     
     limits = httpx.Limits(max_connections = 10, max_keepalive_connections = 10)
     transport = httpx.HTTPTransport(retries = 3)
+
+    if config.get(config.proxy_enabled):
+        logger.info("已启用代理，类型：%s，服务器：%s:%s", config.get(config.proxy_type), config.get(config.proxy_server), config.get(config.proxy_port))
 
     return httpx.Client(
         limits = limits,

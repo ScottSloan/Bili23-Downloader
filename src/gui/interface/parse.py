@@ -28,6 +28,10 @@ from util.download.task.manager import task_manager
 from util.thread.pool import GlobalThreadPoolTask
 from util.thread.async_ import AsyncTask
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 class ParseBase(QFrame):
     def __init__(self, parent = None):
         super().__init__(parent = parent)
@@ -368,6 +372,8 @@ class ParseInterface(ParseBase):
         worker.success.connect(self.on_parse_success)
         worker.error.connect(self.on_parse_error)
 
+        logger.info("开始解析，链接: %s, 页码: %d", self.url_box.text(), page)
+
         AsyncTask.run(worker)
 
     def on_parse_success(self, category_name: str, extra_data: dict):
@@ -382,6 +388,8 @@ class ParseInterface(ParseBase):
         self.parse_btn.setIndeterminateState(False)
         # 清空搜索关键词
         self.parse_list.search_keywords("")
+
+        logger.info("解析成功，类别: %s", category_name)
 
     def on_parse_error(self, error_message: str):
         self.parse_btn.setIndeterminateState(False)
@@ -502,6 +510,8 @@ class ParseInterface(ParseBase):
 
                     self.url_box.setText(url)
                     self.on_parse()
+
+                    logger.info("检测到复制链接，已自动解析，链接: %s", url)
 
                     return parser_type
 

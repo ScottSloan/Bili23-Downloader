@@ -27,6 +27,8 @@ class AudioParser(ParserBase):
             case "am":
                 sid = self.get_audio_menu_sid()
 
+                # 歌单需要额外获取歌单标题信息
+                self.get_audio_menu_list(sid)
                 self.get_audio_menu_info(sid)
 
             case "au":
@@ -52,6 +54,20 @@ class AudioParser(ParserBase):
         self.info_data = response
 
     def get_audio_menu_info(self, sid: int):
+        params = {
+            "sid": sid
+        }
+
+        url = f"https://www.bilibili.com/audio/music-service-c/web/menu/info?{urlencode(params)}"
+
+        request = SyncNetWorkRequest(url, raise_for_status = self.raise_for_status)
+        response = request.run()
+
+        self.check_response(response)
+
+        self.info_data["data"]["menu_title"] = response["data"]["title"]
+
+    def get_audio_menu_list(self, sid: int):
         params = {
             "sid": sid,
             "pn": 1,

@@ -22,10 +22,13 @@ from .merger import Merger
 
 from threading import Event, Lock
 from pathlib import Path
+import logging
 import orjson
 import errno
 import httpx
 import time
+
+logger = logging.getLogger(__name__)
 
 class TokenBucket:
     """线程安全的令牌桶，用于平滑限制下载速度"""
@@ -118,6 +121,8 @@ class ChunkWorker(QRunnable):
 
     def _invoke_download_error(self, message: str):
         if self.parent:
+            logger.error(message)
+
             QMetaObject.invokeMethod(
                 self.parent,
                 "on_download_error",

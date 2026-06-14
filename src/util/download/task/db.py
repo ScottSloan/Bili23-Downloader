@@ -167,4 +167,10 @@ class TaskDatabase(Database):
                 "ep_id": task_info.Episode.ep_id
             }
 
+        elif attr & Attribute.AUDIO_BIT:
+            # 音乐类
+            metadata = {
+                "sid": task_info.Episode.sid
+            }
+
         return hashlib.md5(orjson.dumps(metadata)).hexdigest()

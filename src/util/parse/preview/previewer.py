@@ -52,6 +52,9 @@ class Previewer(ParserBase):
         elif ep_attr & Attribute.CHEESE_BIT:
             self.get_cheese_info(episode_data)
 
+        elif ep_attr & Attribute.AUDIO_BIT:
+            self.get_audio_info(episode_data)
+
     def on_init_success(self):
         try:
             self.post_process()
@@ -75,6 +78,9 @@ class Previewer(ParserBase):
 
             elif PreviewerInfo.info_data.get("format").startswith("flv"):
                 PreviewerInfo.media_type = MediaType.FLV
+
+            elif PreviewerInfo.info_data.get("format").startswith("m4a"):
+                PreviewerInfo.media_type = MediaType.M4A
 
         self.parse_info()
 
@@ -177,6 +183,32 @@ class Previewer(ParserBase):
         }
 
         url = f"https://api.bilibili.com/pugv/player/web/playurl?{urlencode(params)}"
+
+        worker = NetworkRequestWorker(url)
+        worker.success.connect(on_success)
+        worker.error.connect(self.on_init_error)
+
+        AsyncTask.run(worker)
+
+    def get_audio_info(self, episode_data: dict):
+        def on_success(response: dict):
+            self.check_response(response)
+
+            response["data"]["format"] = "m4a"
+
+            PreviewerInfo.info_data = response.copy()["data"]
+            PreviewerInfo.info_data["parser_type"] = "audio"
+            PreviewerInfo.info_data["query_url"] = url
+
+            self.on_init_success()
+            
+        params = {
+            "sid": episode_data["sid"],
+            "privilege": 2,
+            "quality": 2
+        }
+
+        url = f"https://www.bilibili.com/audio/music-service-c/web/url?{urlencode(params)}"
 
         worker = NetworkRequestWorker(url)
         worker.success.connect(on_success)

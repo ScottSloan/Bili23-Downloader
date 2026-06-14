@@ -7,6 +7,9 @@ from ..thread.async_ import AsyncTask
 from .base import AuthBase
 
 from pathlib import Path
+import logging
+
+logger = logging.getLogger(__name__)
 
 class UserManager(AuthBase):
     def __init__(self):
@@ -25,16 +28,6 @@ class UserManager(AuthBase):
             config.set(config.img_key, Path(img_url).stem, save = False)
             config.set(config.sub_key, Path(sub_url).stem, save = False)
 
-            if not data["isLogin"] and config.get(config.is_login):
-                config.is_expired = True
-
-                self.show_toast_error(
-                    Translator.ERROR_MESSAGES("LOGIN_EXPIRED"),
-                    Translator.ERROR_MESSAGES("LOGIN_EXPIRED_MESSAGE")
-                )
-
-                return
-            
             if data.get("isLogin"):
                 config.user_uname = data.get("uname", "")
                 config.user_uid = data.get("mid")
@@ -42,6 +35,21 @@ class UserManager(AuthBase):
                 self.get_user_avatar(data.get("face", ""))
 
                 signal_bus.emit_signal(signal_bus.parse.update_preview_info)
+
+                logger.info("用户信息获取成功，用户名: %s, UID: %s", config.user_uname, config.user_uid)
+
+            else:
+                if config.get(config.is_login):
+                    config.is_expired = True
+
+                    self.show_toast_error(
+                        Translator.ERROR_MESSAGES("LOGIN_EXPIRED"),
+                        Translator.ERROR_MESSAGES("LOGIN_EXPIRED_MESSAGE")
+                    )
+
+                    return
+                
+                logger.warning("用户未登录，无法获取用户信息")
 
         def on_error(error_message: str):
             self.show_toast_error(Translator.ERROR_MESSAGES("USER_INFO_FAILED"), error_message)

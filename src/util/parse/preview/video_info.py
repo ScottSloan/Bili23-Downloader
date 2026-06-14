@@ -53,7 +53,7 @@ class VideoInfoParser:
             case MediaType.MP4 | MediaType.FLV:
                 return self._get_mp4_available_quality_list()
             
-            case MediaType.UNKNOWN:
+            case MediaType.UNKNOWN | MediaType.M4A:
                 return []
 
     def get_available_codec_list(self, video_quality_id: int):

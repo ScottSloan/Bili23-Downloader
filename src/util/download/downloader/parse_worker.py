@@ -49,14 +49,19 @@ class ParseWorker(QRunnable, ParserBase):
             self.on_parse_error("{}\n\n{}".format(Translator.ERROR_MESSAGES("PARSE_FAILED"), str(e)))
 
     def get_info(self):
-        if self.task_info.Episode.attribute & Attribute.VIDEO_BIT:
+        attr = self.task_info.Episode.attribute
+
+        if attr & Attribute.VIDEO_BIT:
             self.get_video_info()
 
-        elif self.task_info.Episode.attribute & Attribute.BANGUMI_BIT:
+        elif attr & Attribute.BANGUMI_BIT:
             self.get_bangumi_info()
 
-        elif self.task_info.Episode.attribute & Attribute.CHEESE_BIT:
+        elif attr & Attribute.CHEESE_BIT:
             self.get_cheese_info()
+
+        elif attr & Attribute.AUDIO_BIT:
+            self.get_audio_info()
 
         if not self.error:
             if "dash" in self.info_data.keys():
@@ -67,6 +72,9 @@ class ParseWorker(QRunnable, ParserBase):
 
             elif self.info_data.get("format").startswith("flv"):
                 self.task_info.Download.media_type = MediaType.FLV
+
+            elif self.info_data.get("format").startswith("m4a"):
+                self.task_info.Download.media_type = MediaType.M4A
 
     def get_video_info(self):
         params = {
@@ -123,6 +131,24 @@ class ParseWorker(QRunnable, ParserBase):
         response = request.run()
 
         self.check_response(response)
+
+        self.info_data = response.copy()["data"]
+
+    def get_audio_info(self):
+        params = {
+            "sid": self.task_info.Episode.sid,
+            "privilege": 2,
+            "quality": 2
+        }
+
+        url = f"https://www.bilibili.com/audio/music-service-c/web/url?{urlencode(params)}"
+
+        request = SyncNetWorkRequest(url)
+        response = request.run()
+
+        self.check_response(response)
+
+        response["data"]["format"] = "m4a"
 
         self.info_data = response.copy()["data"]
 
@@ -197,4 +223,3 @@ class ParseWorker(QRunnable, ParserBase):
         filtered_download_list = {key: entry for key, entry in download_list.items() if key in self.task_info.Download.queue}
 
         return filtered_download_list
-    

@@ -44,10 +44,24 @@ class AudioInfoParser:
 
         return available_quality_list
 
+    def _get_m4a_available_quality_list(self):
+        # m4a 只支持 192K 码率
+        self.audio_quality_info_map[30280] = {
+            "id": 30280,
+            "codecs": "mp4a.40.2",
+            "backup_url": self.info_data["cdns"],
+            "bandwidth": 192000
+        }
+
+        return [30280]
+
     def get_available_list(self):
         match self.task_info.Download.media_type:
             case MediaType.DASH:
                 return self._get_dash_available_quality_list()
+            
+            case MediaType.M4A:
+                return self._get_m4a_available_quality_list()
             
             case _:
                 return []
