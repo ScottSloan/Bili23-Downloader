@@ -43,6 +43,7 @@ class EpisodeInfo(InfoBase):
     aid: int = 0
     bvid: str = ""
     cid: int = 0
+    sid: int = 0
     cover: str = ""
     ep_id: int = 0
     pubtime: int = 0

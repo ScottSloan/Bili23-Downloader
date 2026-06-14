@@ -79,9 +79,8 @@ class SettingInterface(ScrollArea):
         self.cdn_card = CDNSettingCard(self)
         self.ffmpeg_card = FFmpegSettingCard(self.main_window, self)
         self.proxy_card = ProxySettingCard(self)
+        self.log_card = PushSettingCard(self.tr("View Logs"), FluentIcon.BOOK_SHELF, self.tr("Logs"), self.tr("View application logs"), self)
         self.other_card = OtherAdvancedSettingCard(self.main_window, self)
-
-        #self.config_file_card = ConfigFileSettingCard(self)
 
         # Software Update
         self.update_group = SettingCardGroup(self.tr("Updates"), self)
@@ -118,6 +117,7 @@ class SettingInterface(ScrollArea):
         self.advanced_group.addSettingCard(self.cdn_card)
         self.advanced_group.addSettingCard(self.ffmpeg_card)
         self.advanced_group.addSettingCard(self.proxy_card)
+        self.advanced_group.addSettingCard(self.log_card)
         self.advanced_group.addSettingCard(self.other_card)
 
         # Software Update
@@ -174,6 +174,7 @@ class SettingInterface(ScrollArea):
         self.ffmpeg_card.source_choice.currentIndexChanged.connect(self.on_change_ffmpeg_source)
         self.ffmpeg_card.custom_btn.clicked.connect(self.on_change_ffmpeg_path)
         self.proxy_card.custom_btn.clicked.connect(self.on_custom_proxy)
+        self.log_card.clicked.connect(self.on_view_logs)
 
         # Update
         self.check_update_card.check_now_btn.clicked.connect(self.on_check_update)
@@ -299,6 +300,12 @@ class SettingInterface(ScrollArea):
 
         dialog = ProxyDialog(self.main_window)
         dialog.exec()
+
+    def on_view_logs(self):
+        from ..dialog.log import LogViewerDialog
+
+        dialog = LogViewerDialog(self.main_window)
+        dialog.show()
 
     def on_check_update(self):
         signal_bus.update.check.emit(True)

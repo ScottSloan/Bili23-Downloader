@@ -522,7 +522,6 @@ class OtherAdvancedSettingCard(ExpandGroupSettingCard):
 
         self.custom_user_agent_btn = PushButton(self.tr("Customize…"), self)
         self.config_file_settings_btn = DropDownPushButton(text = self.tr("Configure"), parent = self)
-        self.view_log_btn = PushButton(self.tr("View…"), self)
 
         menu = RoundMenu(parent = self.config_file_settings_btn)
         menu.addAction(Action(ExtendedFluentIcon.IMPORT, self.tr("Import Config"), triggered = self.on_import_config))
@@ -534,13 +533,11 @@ class OtherAdvancedSettingCard(ExpandGroupSettingCard):
 
         self.addGroup("", self.tr("Custom User-Agent"), self.tr("Set a custom User-Agent string for network requests"), self.custom_user_agent_btn)
         self.addGroup("", self.tr("Config File Settings"), self.tr("Import/export configuration files or reset to defaults"), self.config_file_settings_btn)
-        self.addGroup("", self.tr("View Logs"), self.tr("View application logs for troubleshooting"), self.view_log_btn)
         
         self.connect_signals()
 
     def connect_signals(self):
         self.custom_user_agent_btn.clicked.connect(self.on_custom_user_agent)
-        self.view_log_btn.clicked.connect(self.on_view_logs)
 
     def on_custom_user_agent(self):
         from ...dialog.setting.user_agent import UserAgentDialog
@@ -600,9 +597,3 @@ class OtherAdvancedSettingCard(ExpandGroupSettingCard):
 
     def on_open_config_directory(self):
         Directory.open_directory_in_explorer(str(config.file.parent))
-
-    def on_view_logs(self):
-        from ...dialog.log import LogViewerDialog
-
-        dialog = LogViewerDialog(self.parent_window)
-        dialog.show()

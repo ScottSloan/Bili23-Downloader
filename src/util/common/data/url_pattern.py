@@ -18,5 +18,6 @@ url_patterns = [
     ("festival", re.compile(r"bilibili\.com/festival")),
     ("b23", re.compile(r"(b23\.tv|bili2233\.cn)")),
     ("video", re.compile(r"(?:BV|bv|AV|av)(\w+)")),
-    ("bangumi", re.compile(r"(ep[0-9]+|ss[0-9]+)|md[0-9]+"))
+    ("bangumi", re.compile(r"(ep[0-9]+|ss[0-9]+)|md[0-9]+")),
+    ("audio", re.compile(r"(am[0-9]+)|(au[0-9]+)"))
 ]

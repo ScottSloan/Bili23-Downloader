@@ -29,7 +29,6 @@ class CheeseEpisodeParser(EpisodeParserBase):
         cheese_title = self.info_data["title"]
         node_data = {
             "number": Translator.EPISODE_TYPE("COURSE"),
-            "season_id": self.info_data["season_id"],
             "title": cheese_title
         }
 

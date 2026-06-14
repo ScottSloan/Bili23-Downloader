@@ -6,8 +6,8 @@ from qfluentwidgets import FluentWidget, ComboBox, LineEdit, PushButton
 
 from gui.component.log_list.list_view import LogListView
 
+from util.common.config import appdata_path, config
 from util.common.io.directory import Directory
-from util.common.config import appdata_path
 
 from pathlib import Path
 import re
@@ -24,13 +24,16 @@ class LogViewerDialog(FluentWidget):
     def __init__(self, parent = None):
         super().__init__(parent = parent)
 
-        self.setWindowTitle(self.tr("Log Viewer"))
+        self.setWindowTitle(self.tr("Logs"))
         self.setWindowIcon(QIcon(":/bili23/icon/app.svg"))
         self.setMinimumSize(800, 500)
 
         self.init_UI()
 
         self.init_data()
+
+        self.setMicaEffectEnabled(config.get(config.mica_effect))
+        self.setStayOnTop(config.get(config.stay_on_top))
 
     def init_UI(self):
         self.category_choice = ComboBox(self)

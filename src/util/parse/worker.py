@@ -9,6 +9,7 @@ from .parser.history import HistoryParser
 from .parser.bangumi import BangumiParser
 from .parser.dynamic import DynamicParser
 from .parser.cheese import CheeseParser
+from .parser.audio import AudioParser
 from .parser.space import SpaceParser
 from .parser.list import ListParser
 from .parser.b23 import B23Parser
@@ -35,7 +36,8 @@ class WorkerBase:
             "list": ListParser(),
             "popular": PopularParser(),
             "watch_later": WatchLaterParser(),
-            "history": HistoryParser()
+            "history": HistoryParser(),
+            "audio": AudioParser()
         }
 
     def get_parser_type(self, url: str):

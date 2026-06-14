@@ -144,6 +144,7 @@ class ParserType(Enum):
     HISTORY = "HISTORY"
     WATCH_LATER = "WATCH_LATER"
     DYNAMIC = "DYNAMIC"
+    AUDIO = "AUDIO"
     UNKNOWN = "UNKNOWN"
 
 class OriginalFileType(IntEnum):

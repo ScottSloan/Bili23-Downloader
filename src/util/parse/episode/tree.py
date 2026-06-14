@@ -47,6 +47,8 @@ class Attribute(IntFlag):
 
     TREE_NODE_BIT                      = 1 << 15                  # 是否为树节点
 
+    AUDIO_BIT                          = 1 << 16                  # 是否为音频
+
 class TreeItemBase:
     def __init__(self):
         self.parent: TreeItem = None
@@ -160,6 +162,7 @@ class TreeItem(TreeItemBase):
 
         self.aid = item_data.get("aid", 0)
         self.cid = item_data.get("cid", 0)
+        self.sid = item_data.get("sid", 0)
         self.url = item_data.get("url", "")
         self.bvid = item_data.get("bvid", "")
         self.ep_id = item_data.get("ep_id", 0)
@@ -191,6 +194,7 @@ class TreeItem(TreeItemBase):
             "badge": self.badge,                                   # 备注
             "bvid": self.bvid,
             "cid": self.cid,
+            "sid": self.sid,
             "cover": self.cover,
             "duration": self.duration,                             # 时长（s）
             "ep_id": self.ep_id,

@@ -86,7 +86,8 @@ class Translator:
             "FAVORITES": translate("EPISODE_TYPE", "Favorites"),
             "PROFILE": translate("EPISODE_TYPE", "Profile"),
             "WATCH_LATER": translate("EPISODE_TYPE", "Watch Later"),
-            "HISTORY": translate("EPISODE_TYPE", "History")
+            "HISTORY": translate("EPISODE_TYPE", "History"),
+            "AUDIO": translate("EPISODE_TYPE", "Music")
         }
     
     @staticmethod
