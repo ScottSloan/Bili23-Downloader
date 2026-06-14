@@ -211,6 +211,7 @@ class ContextMenuDelegateBase(QStyledItemDelegate, FluentStyledItemDelegate):
     """
     具有右键菜单功能的委托基类
     """
+    itemClicked = Signal(QModelIndex, object)
     contextMenuRequested = Signal(QModelIndex, QPoint)
 
     def __init__(self, parent = None):
@@ -231,8 +232,7 @@ class ContextMenuDelegateBase(QStyledItemDelegate, FluentStyledItemDelegate):
 
     def _pressEvent(self, option: QStyleOptionViewItem, index: QModelIndex, event):
         if event.button() == Qt.MouseButton.LeftButton:
-            if hasattr(index.model(), "itemClicked"):
-                index.model().itemClicked.emit(index, index.data(Qt.ItemDataRole.UserRole))
+            self.itemClicked.emit(index, index.data(Qt.ItemDataRole.UserRole))
 
             return True
         

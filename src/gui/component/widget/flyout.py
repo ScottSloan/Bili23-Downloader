@@ -57,7 +57,7 @@ class EntryWidget(QWidget):
 
         viewLayout.addWidget(self.entry_list)
 
-        self.entry_list._model.itemClicked.connect(self.on_list_item_clicked)
+        self.entry_list._delegate.itemClicked.connect(self.on_list_item_clicked)
         self.entry_list.parse.connect(self.on_list_item_clicked)
 
     def on_list_item_clicked(self, index, entry: dict):
@@ -132,7 +132,7 @@ class FollowWidget(QWidget):
         self.connect_signals()
 
     def connect_signals(self):
-        self.entry_list._model.itemClicked.connect(self.on_list_item_clicked)
+        self.entry_list._delegate.itemClicked.connect(self.on_list_item_clicked)
         self.entry_list.parse.connect(self.on_list_item_clicked)
         self.type_choice.currentIndexChanged.connect(self.update_list)
         self.status_choice.currentIndexChanged.connect(self.update_list)

@@ -1061,7 +1061,7 @@ If you continue, please disable the &quot;Preallocate file space&quot; option. (
 <context>
     <name>Downloader</name>
     <message>
-        <location filename="../../util/download/downloader/downloader.py" line="527"/>
+        <location filename="../../util/download/downloader/downloader.py" line="532"/>
         <source>Audio</source>
         <translation>音訊</translation>
     </message>
@@ -1716,14 +1716,39 @@ File name: {filename}</source>
 <context>
     <name>LogListView</name>
     <message>
-        <location filename="../../gui/component/log_list/list_view.py" line="15"/>
+        <location filename="../../gui/component/log_list/list_view.py" line="18"/>
         <source>No logs</source>
         <translation>沒有日誌</translation>
     </message>
     <message>
-        <location filename="../../gui/component/log_list/list_view.py" line="46"/>
+        <location filename="../../gui/component/log_list/list_view.py" line="49"/>
+        <source>View Details</source>
+        <translation>檢視詳細資料</translation>
+    </message>
+    <message>
+        <location filename="../../gui/component/log_list/list_view.py" line="50"/>
         <source>Copy</source>
         <translation>複製</translation>
+    </message>
+    <message>
+        <location filename="../../gui/component/log_list/list_view.py" line="64"/>
+        <source>Timestamp: {timestamp}
+Level: {level}
+Name: {name} ({callsite})
+
+Message: 
+{message}</source>
+        <translation>時間戳記：{timestamp}
+層級：{level}
+名稱：{name} ({callsite})
+
+訊息：
+{message}</translation>
+    </message>
+    <message>
+        <location filename="../../gui/component/log_list/list_view.py" line="69"/>
+        <source>Log Details</source>
+        <translation>日誌詳細資料</translation>
     </message>
 </context>
 <context>
@@ -2621,17 +2646,17 @@ For example, if you set the video quality priority to 720P &gt; 1080P &gt; 4K, t
 <context>
     <name>ParseBase</name>
     <message>
-        <location filename="../../gui/interface/parse.py" line="185"/>
+        <location filename="../../gui/interface/parse.py" line="189"/>
         <source>{category_name} ({total_count} total)</source>
         <translation>{category_name}（共 {total_count} 項）</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="208"/>
+        <location filename="../../gui/interface/parse.py" line="212"/>
         <source>Auto-parse Pagination</source>
         <translation>自動解析分頁</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="209"/>
+        <location filename="../../gui/interface/parse.py" line="213"/>
         <source>Click here to automatically parse all pages.</source>
         <translation>點擊此處可進行自動解析分頁操作</translation>
     </message>
@@ -2682,87 +2707,87 @@ For example, if you set the video quality priority to 720P &gt; 1080P &gt; 4K, t
 <context>
     <name>ParseInterface</name>
     <message>
-        <location filename="../../gui/interface/parse.py" line="254"/>
+        <location filename="../../gui/interface/parse.py" line="258"/>
         <source>Paste and Parse</source>
         <translation>貼上並解析</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="258"/>
+        <location filename="../../gui/interface/parse.py" line="262"/>
         <source>Link / av / BV / ep / ss / md / Favorites / Profile</source>
         <translation>連結 / av / BV / ep / ss / md / 收藏夾 / 個人空間</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="263"/>
+        <location filename="../../gui/interface/parse.py" line="267"/>
         <source>Parse</source>
         <translation>解析</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="274"/>
+        <location filename="../../gui/interface/parse.py" line="278"/>
         <source>Download Options</source>
         <translation>下載選項</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="278"/>
+        <location filename="../../gui/interface/parse.py" line="282"/>
         <source>More</source>
         <translation>更多</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="293"/>
+        <location filename="../../gui/interface/parse.py" line="297"/>
         <source>Download Selected Items</source>
         <translation>下載所選項目</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="394"/>
+        <location filename="../../gui/interface/parse.py" line="402"/>
         <source>Parse Failed</source>
         <translation>解析失敗</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="423"/>
+        <location filename="../../gui/interface/parse.py" line="431"/>
         <source>Added to download queue</source>
         <translation>已加入下載佇列</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="438"/>
+        <location filename="../../gui/interface/parse.py" line="446"/>
         <source>Search</source>
         <translation>搜尋</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="439"/>
+        <location filename="../../gui/interface/parse.py" line="447"/>
         <source>Batch select</source>
         <translation>批次選取</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="440"/>
+        <location filename="../../gui/interface/parse.py" line="448"/>
         <source>Parsing history</source>
         <translation>解析記錄</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="449"/>
+        <location filename="../../gui/interface/parse.py" line="457"/>
         <source>Jump to page</source>
         <translation>跳至頁面</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="450"/>
+        <location filename="../../gui/interface/parse.py" line="458"/>
         <source>Auto-parse pagination</source>
         <translation>自動解析分頁</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="479"/>
+        <location filename="../../gui/interface/parse.py" line="487"/>
         <source>{category_name} ({selected_count} selected, {total_count} total)</source>
         <translation>{category_name}（已選取 {selected_count} 項，共 {total_count} 項）</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="485"/>
+        <location filename="../../gui/interface/parse.py" line="493"/>
         <source>{category_name} ({total_count} total)</source>
         <translation>{category_name}（共 {total_count} 項）</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="526"/>
+        <location filename="../../gui/interface/parse.py" line="536"/>
         <source>Invalid page number</source>
         <translation>無效的頁碼</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="526"/>
+        <location filename="../../gui/interface/parse.py" line="536"/>
         <source>Please enter a number between 1 and {total_pages}</source>
         <translation>請輸入1到{total_pages}之間的一個數字</translation>
     </message>
@@ -3032,22 +3057,22 @@ For example, if you set the video quality priority to 720P &gt; 1080P &gt; 4K, t
 <context>
     <name>ProfileCard</name>
     <message>
-        <location filename="../../gui/component/profile.py" line="35"/>
+        <location filename="../../gui/component/profile.py" line="39"/>
         <source>Logout</source>
         <translation>登出</translation>
     </message>
     <message>
-        <location filename="../../gui/component/profile.py" line="52"/>
+        <location filename="../../gui/component/profile.py" line="56"/>
         <source>Log Out</source>
         <translation>登出</translation>
     </message>
     <message>
-        <location filename="../../gui/component/profile.py" line="52"/>
+        <location filename="../../gui/component/profile.py" line="56"/>
         <source>Are you sure you want to log out? This will also clear locally stored cookies.</source>
         <translation>確定要登出嗎？這將會同時清除本機儲存的 Cookies。</translation>
     </message>
     <message>
-        <location filename="../../gui/component/profile.py" line="58"/>
+        <location filename="../../gui/component/profile.py" line="62"/>
         <source>Successfully logged out</source>
         <translation>登出成功</translation>
     </message>

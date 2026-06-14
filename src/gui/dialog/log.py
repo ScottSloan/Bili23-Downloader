@@ -1,10 +1,10 @@
 from PySide6.QtWidgets import QHBoxLayout, QVBoxLayout
 from PySide6.QtGui import QIcon
-from PySide6.QtCore import Qt
 
 from qfluentwidgets import FluentWidget, ComboBox, LineEdit, PushButton
 
 from gui.component.log_list.list_view import LogListView
+from gui.component.widget.label import TipLabel
 
 from util.common.config import appdata_path, config
 from util.common.io.directory import Directory
@@ -26,7 +26,7 @@ class LogViewerDialog(FluentWidget):
 
         self.setWindowTitle(self.tr("Logs"))
         self.setWindowIcon(QIcon(":/bili23/icon/app.svg"))
-        self.setMinimumSize(800, 500)
+        self.setMinimumSize(800, 520)
 
         self.init_UI()
 
@@ -54,6 +54,10 @@ class LogViewerDialog(FluentWidget):
 
         self.log_list = LogListView(self)
 
+        tip_label = TipLabel(
+            self.tr("提示：点击日志项可查看详情，右键点击可复制"), self
+        )
+
         top_layout = QHBoxLayout()
         top_layout.addWidget(self.category_choice)
         top_layout.addWidget(self.search_box)
@@ -66,6 +70,8 @@ class LogViewerDialog(FluentWidget):
         main_layout.addLayout(top_layout)
         main_layout.addSpacing(10)
         main_layout.addWidget(self.log_list)
+        main_layout.addSpacing(10)
+        main_layout.addWidget(tip_label)
 
         self.connect_signals()
 

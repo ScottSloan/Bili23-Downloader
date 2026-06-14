@@ -18,17 +18,6 @@ class CompactLogFormatter(logging.Formatter):
         record.callsite = f"{record.filename}:{record.lineno} in {record.funcName}"
         return super().format(record)
 
-    def formatException(self, ei):
-        exc_type, exc_value, _ = ei
-
-        if exc_type is None:
-            return ""
-
-        if exc_value is None:
-            return exc_type.__name__
-
-        return f"{exc_type.__name__}: {exc_value}"
-
 log_formatter = CompactLogFormatter(
     "[%(asctime)s] - %(name)s - %(levelname)s - at %(callsite)s: %(message)s",
     datefmt = "%Y-%m-%d %H:%M:%S",

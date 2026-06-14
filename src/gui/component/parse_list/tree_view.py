@@ -18,7 +18,7 @@ class ParseTreeView(TreeView):
     def __init__(self, main_window, parent = None):
         super().__init__(parent)
 
-        self.main_window = main_window
+        self.main_window = parent
 
         self._model = ParseModel(parent = self)
 
@@ -31,8 +31,6 @@ class ParseTreeView(TreeView):
 
         self.customContextMenuRequested.connect(self.on_context_menu)
         signal_bus.parse.update_column_settings.connect(self._setHeaderWidth)
-
-        self.__set_QSS()
         
         self._setHeaderWidth()
 

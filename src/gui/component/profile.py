@@ -4,6 +4,8 @@ from qfluentwidgets import (
     AvatarWidget, BodyLabel, CaptionLabel, HyperlinkButton, FlyoutViewBase, MessageBox, isDarkTheme
 )
 
+from .widget.label import TipLabel
+
 from util.common.enum import ToastNotificationCategory
 from util.common.signal_bus  import signal_bus
 from util.common.config import config
@@ -30,10 +32,7 @@ class ProfileCard(FlyoutViewBase):
 
         self.uname_lab = BodyLabel(config.user_uname, parent = self)
 
-        color = QColor(206, 206, 206) if isDarkTheme() else QColor(96, 96, 96)
-
-        self.uid_lab = CaptionLabel(f"UID: {config.user_uid}", parent = self)
-        self.uid_lab.setStyleSheet('QLabel{color: ' + color.name() + '}')
+        self.uid_lab = TipLabel(f"UID: {config.user_uid}", parent = self)
 
         self.logout_btn = HyperlinkButton(parent = self)
         self.logout_btn.setText(self.tr("Logout"))

@@ -61,9 +61,10 @@ class LogListItemDelegate(ContextMenuDelegateBase):
         nameRect = self.uiRect.getNameRect(levelRect, option)
         self._drawTextBase(painter, nameRect, name, timestampColor, 14)
 
-        # 绘制日志消息        
+        # 绘制日志消息
+        message = record.get("message", "")
         messageRect = self.uiRect.getMessageRect(timestampRect, option)
-        self._drawText(painter, messageRect, record.get("message", ""))
+        self._drawText(painter, messageRect, self._get_message(message))
 
     def _get_indicator_color(self, level: str) -> QColor:
         dark_palette = {
@@ -82,6 +83,16 @@ class LogListItemDelegate(ContextMenuDelegateBase):
 
         palette = dark_palette if isDarkTheme() else light_palette
         return palette.get(level, QColor(180, 180, 180) if isDarkTheme() else QColor(96, 96, 96))
+
+    def _get_message(self, message: str):
+        # 如果消息长度超过2行，则截断并添加省略号
+        max_lines = 2
+        lines = message.splitlines()
+
+        if len(lines) > max_lines:
+            return "\n".join(lines[:max_lines]) + "..."
+        else:
+            return message
 
 class UIRect:
     def __init__(self):
