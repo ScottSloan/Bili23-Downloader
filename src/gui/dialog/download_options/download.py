@@ -2,7 +2,7 @@ from PySide6.QtWidgets import QVBoxLayout
 
 from qfluentwidgets import SwitchSettingCard
 
-from gui.component.setting import DownloadPathSettingCard, NumberSettingCard
+from gui.component.setting import DownloadPathSettingCard, NumberSettingCard, DownloadFormatCard
 from gui.component.widget import ScrollArea
 from .card import NamingConventionCard
 
@@ -19,12 +19,14 @@ class DownloadSettingsPage(ScrollArea):
 
     def init_UI(self):
         self.download_path_card = DownloadPathSettingCard(self.options_dialog, save = False, parent = self)
+        self.download_format_card = DownloadFormatCard(parent = self)
         self.naming_convention_card = NamingConventionCard(self)
         self.show_dialog_card = SwitchSettingCard(ExtendedFluentIcon.OPTIONS, self.tr("Automatically show this dialog"), self.tr("Automatically show this dialog before downloading to customize settings"), config.show_download_options_dialog, self)
         self.numbering_settings_card = NumberSettingCard(self.options_dialog, self)
 
         main_layout = QVBoxLayout()
         main_layout.addWidget(self.download_path_card)
+        main_layout.addWidget(self.download_format_card)
         main_layout.addWidget(self.naming_convention_card)
         main_layout.addWidget(self.show_dialog_card)
         main_layout.addWidget(self.numbering_settings_card)

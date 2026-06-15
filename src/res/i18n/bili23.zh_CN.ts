@@ -1048,12 +1048,12 @@ If you continue, please disable the &quot;Preallocate file space&quot; option. (
 <context>
     <name>DownloadSettingsPage</name>
     <message>
-        <location filename="../../gui/dialog/download_options/download.py" line="23"/>
+        <location filename="../../gui/dialog/download_options/download.py" line="24"/>
         <source>Automatically show this dialog before downloading to customize settings</source>
         <translation>在开始下载前自动显示此对话框，以便自定义设置</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/download_options/download.py" line="23"/>
+        <location filename="../../gui/dialog/download_options/download.py" line="24"/>
         <source>Automatically show this dialog</source>
         <translation>自动显示此对话框</translation>
     </message>
@@ -1721,17 +1721,17 @@ File name: {filename}</source>
         <translation>暂无日志</translation>
     </message>
     <message>
-        <location filename="../../gui/component/log_list/list_view.py" line="49"/>
+        <location filename="../../gui/component/log_list/list_view.py" line="51"/>
         <source>View Details</source>
         <translation>查看详情</translation>
     </message>
     <message>
-        <location filename="../../gui/component/log_list/list_view.py" line="50"/>
+        <location filename="../../gui/component/log_list/list_view.py" line="52"/>
         <source>Copy</source>
         <translation>复制</translation>
     </message>
     <message>
-        <location filename="../../gui/component/log_list/list_view.py" line="64"/>
+        <location filename="../../gui/component/log_list/list_view.py" line="66"/>
         <source>Timestamp: {timestamp}
 Level: {level}
 Name: {name} ({callsite})
@@ -1746,7 +1746,7 @@ Message:
 {message}</translation>
     </message>
     <message>
-        <location filename="../../gui/component/log_list/list_view.py" line="69"/>
+        <location filename="../../gui/component/log_list/list_view.py" line="71"/>
         <source>Log Details</source>
         <translation>日志详情</translation>
     </message>
@@ -1797,6 +1797,11 @@ Message:
         <location filename="../../gui/dialog/log.py" line="53"/>
         <source>Open Logs Directory</source>
         <translation>打开日志目录</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialog/log.py" line="58"/>
+        <source>Tips: Click on a log entry to view details, right-click to copy</source>
+        <translation>提示：点击日志条目查看详情，右键点击复制</translation>
     </message>
 </context>
 <context>
@@ -2808,62 +2813,62 @@ For example, if you set the video quality priority to 720P &gt; 1080P &gt; 4K, t
 <context>
     <name>ParseTreeView</name>
     <message>
-        <location filename="../../gui/component/parse_list/tree_view.py" line="114"/>
+        <location filename="../../gui/component/parse_list/tree_view.py" line="112"/>
         <source>Check All</source>
         <translation>全选</translation>
     </message>
     <message>
-        <location filename="../../gui/component/parse_list/tree_view.py" line="114"/>
+        <location filename="../../gui/component/parse_list/tree_view.py" line="112"/>
         <source>Uncheck All</source>
         <translation>取消全选</translation>
     </message>
     <message>
-        <location filename="../../gui/component/parse_list/tree_view.py" line="116"/>
+        <location filename="../../gui/component/parse_list/tree_view.py" line="114"/>
         <source>Reverse</source>
         <translation>反选</translation>
     </message>
     <message>
-        <location filename="../../gui/component/parse_list/tree_view.py" line="120"/>
+        <location filename="../../gui/component/parse_list/tree_view.py" line="118"/>
         <source>Check Item</source>
         <translation>勾选</translation>
     </message>
     <message>
-        <location filename="../../gui/component/parse_list/tree_view.py" line="120"/>
+        <location filename="../../gui/component/parse_list/tree_view.py" line="118"/>
         <source>Uncheck Item</source>
         <translation>取消勾选</translation>
     </message>
     <message>
-        <location filename="../../gui/component/parse_list/tree_view.py" line="125"/>
+        <location filename="../../gui/component/parse_list/tree_view.py" line="123"/>
         <source>Open in Browser</source>
         <translation>在浏览器中打开</translation>
     </message>
     <message>
-        <location filename="../../gui/component/parse_list/tree_view.py" line="126"/>
+        <location filename="../../gui/component/parse_list/tree_view.py" line="124"/>
         <source>Download as Single Video</source>
         <translation>下载为单个视频</translation>
     </message>
     <message>
-        <location filename="../../gui/component/parse_list/tree_view.py" line="131"/>
+        <location filename="../../gui/component/parse_list/tree_view.py" line="129"/>
         <source>View Metadata</source>
         <translation>查看元数据</translation>
     </message>
     <message>
-        <location filename="../../gui/component/parse_list/tree_view.py" line="127"/>
+        <location filename="../../gui/component/parse_list/tree_view.py" line="125"/>
         <source>Update Media Info</source>
         <translation>更新媒体信息</translation>
     </message>
     <message>
-        <location filename="../../gui/component/parse_list/tree_view.py" line="152"/>
+        <location filename="../../gui/component/parse_list/tree_view.py" line="150"/>
         <source>Metadata</source>
         <translation>元数据</translation>
     </message>
     <message>
-        <location filename="../../gui/component/parse_list/tree_view.py" line="163"/>
+        <location filename="../../gui/component/parse_list/tree_view.py" line="161"/>
         <source>Added to download queue</source>
         <translation>已加入到下载队列</translation>
     </message>
     <message>
-        <location filename="../../gui/component/parse_list/tree_view.py" line="233"/>
+        <location filename="../../gui/component/parse_list/tree_view.py" line="231"/>
         <source>Updating media info...</source>
         <translation>正在更新媒体信息...</translation>
     </message>
@@ -3057,22 +3062,22 @@ For example, if you set the video quality priority to 720P &gt; 1080P &gt; 4K, t
 <context>
     <name>ProfileCard</name>
     <message>
-        <location filename="../../gui/component/profile.py" line="39"/>
+        <location filename="../../gui/component/profile.py" line="38"/>
         <source>Logout</source>
         <translation>注销</translation>
     </message>
     <message>
-        <location filename="../../gui/component/profile.py" line="56"/>
+        <location filename="../../gui/component/profile.py" line="55"/>
         <source>Log Out</source>
         <translation>注销</translation>
     </message>
     <message>
-        <location filename="../../gui/component/profile.py" line="56"/>
+        <location filename="../../gui/component/profile.py" line="55"/>
         <source>Are you sure you want to log out? This will also clear locally stored cookies.</source>
         <translation>确定要注销登录吗？这将会同时清除本地存储的 Cookies。</translation>
     </message>
     <message>
-        <location filename="../../gui/component/profile.py" line="62"/>
+        <location filename="../../gui/component/profile.py" line="61"/>
         <source>Successfully logged out</source>
         <translation>注销登录成功</translation>
     </message>

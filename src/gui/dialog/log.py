@@ -55,7 +55,7 @@ class LogViewerDialog(FluentWidget):
         self.log_list = LogListView(self)
 
         tip_label = TipLabel(
-            self.tr("提示：点击日志项可查看详情，右键点击可复制"), self
+            self.tr("Tips: Click on a log entry to view details, right-click to copy"), self
         )
 
         top_layout = QHBoxLayout()

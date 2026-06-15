@@ -10,6 +10,9 @@ from .info import PreviewerInfo
 
 from collections import defaultdict
 from typing import Callable
+import logging
+
+logger = logging.getLogger(__name__)
 
 class AudioInfoParser:
     def __init__(self):
@@ -24,14 +27,21 @@ class AudioInfoParser:
         dash_node = PreviewerInfo.info_data["dash"]
 
         if audio_node := self.safe_get(dash_node.copy(), ["flac", "audio"]):
-            quality_id = audio_node["id"]
+            # 30251 为 Hi-Res 无损
+            quality_id = 30251
+            audio_node["id"] = quality_id
 
             available_quality_list.append(quality_id)
 
             self.audio_quality_info_map[quality_id] = audio_node.copy()
 
         if audio_node := self.safe_get(dash_node.copy(), ["dolby", "audio"]):
-            quality_id = audio_node[0]["id"]
+            # 30250 30255 均为杜比全景声，为便于区分，统一为 30250
+            if audio_node[0]["id"] == 30255:
+                logger.info("检测到 audio_quality_id 为 30255 的杜比全景声音频，已统一为 30250 以便区分")
+
+            quality_id = 30250
+            audio_node[0]["id"] = quality_id
 
             available_quality_list.append(quality_id)
 
