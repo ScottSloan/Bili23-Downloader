@@ -183,7 +183,9 @@ class SettingInterface(ScrollArea):
         from ..dialog.setting.parse_list import ParseListSettingsDialog
 
         dialog = ParseListSettingsDialog(self.main_window)
-        dialog.exec()
+
+        if dialog.exec():
+            self.main_window.parse_interface.parse_list.setAlternatingRowColors(config.get(config.parse_list_alternate_row_color))
 
     def on_custom_monitor_clipboard(self):
         from ..dialog.setting.monitor_clipboard import MonitorClipboardDialog

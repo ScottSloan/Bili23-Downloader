@@ -2809,6 +2809,11 @@ For example, if you set the video quality priority to 720P &gt; 1080P &gt; 4K, t
         <source>Select columns to display and drag to reorder</source>
         <translation>選擇要顯示的欄位並拖曳調整順序</translation>
     </message>
+    <message>
+        <location filename="../../gui/dialog/setting/parse_list.py" line="27"/>
+        <source>Enable alternate row colors</source>
+        <translation>啟用交替列顏色</translation>
+    </message>
 </context>
 <context>
     <name>ParseTreeView</name>

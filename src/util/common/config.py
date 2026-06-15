@@ -242,6 +242,8 @@ class APPConfig(QConfig):
 
     # Behavior
     parse_list_column = ConfigItem("Behavior", "parse_list_column", DefaultValue.parse_list_column)
+    parse_list_alternate_row_color = ConfigItem("Behavior", "parse_list_alternate_row_color", True, BoolValidator())
+
     monitor_clipboard = ConfigItem("Behavior", "monitor_clipboard", False, BoolValidator())
     show_download_confirmation_dialog = ConfigItem("Behavior", "show_download_confirmation_dialog", False, BoolValidator())
     auto_select_mode = OptionsConfigItem("Behavior", "auto_select_mode_", AutoSelectMode.CONDITIONAL, OptionsValidator(AutoSelectMode), EnumSerializer(AutoSelectMode))

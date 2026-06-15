@@ -24,8 +24,8 @@ class ParseTreeView(TreeView):
 
         self.setModel(self._model)
         self.setUniformRowHeights(True)
-        self.setAlternatingRowColors(True)
         self.setSortingEnabled(True)
+        self.setAlternatingRowColors(config.get(config.parse_list_alternate_row_color))
         self.setSelectionMode(TreeView.SelectionMode.SingleSelection)
         self.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
 
@@ -251,24 +251,6 @@ class ParseTreeView(TreeView):
     def mark_item_as_downloaded(self, item_list: List[TreeItem]):
         for item in item_list:
             item.downloaded = True
-
-    def __set_QSS(self):
-        light_style = """
-            QTreeView {
-                background-color: transparent;
-                alternate-background-color: #f0f4f9;
-            }
-        """
-
-
-        dark_style = """
-            QTreeView {
-                background-color: transparent;
-                alternate-background-color: #343434;
-            }
-        """
-
-        setCustomStyleSheet(self, light_style, dark_style)
 
     def _check_main_episodes_node(self):
         # 选中剧集类正片部分

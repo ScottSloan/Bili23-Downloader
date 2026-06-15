@@ -1,24 +1,10 @@
 from PySide6.QtCore import QObject, Signal, Slot
 
-from .parser.video import VideoParser, InteractiveVideoParser
-from .parser.watch_later import WatchLaterParser
-from .parser.festival import FestivalParser
-from .parser.popular import PopularParser
-from .parser.favlist import FavlistParser
-from .parser.history import HistoryParser
-from .parser.bangumi import BangumiParser
-from .parser.dynamic import DynamicParser
-from .parser.cheese import CheeseParser
-from .parser.audio import AudioParser
-from .parser.space import SpaceParser
-from .parser.list import ListParser
-from .parser.b23 import B23Parser
-
+from ..common.data.auto_parse import AutoParsePayload
 from ..common.translator import Translator
 from ..common.data import url_patterns
 from ..common.enum import ParserType
 from .episode.tree import EpisodeData
-from ..common.data.auto_parse import AutoParsePayload
 
 from threading import Event
 import logging
@@ -26,19 +12,50 @@ import logging
 logger = logging.getLogger(__name__)
 
 class WorkerBase:
-    def init_parser(self):
-        self.parsers = {
-            "video": VideoParser(),
-            "bangumi": BangumiParser(),
-            "cheese": CheeseParser(),
-            "space": SpaceParser(),
-            "favlist": FavlistParser(),
-            "list": ListParser(),
-            "popular": PopularParser(),
-            "watch_later": WatchLaterParser(),
-            "history": HistoryParser(),
-            "audio": AudioParser()
-        }
+    def get_parser(self, parser_type: str):
+        match parser_type:
+            case "video":
+                from .parser.video import VideoParser
+                return VideoParser()
+            
+            case "bangumi":
+                from .parser.bangumi import BangumiParser
+                return BangumiParser()
+            
+            case "cheese":
+                from .parser.cheese import CheeseParser
+                return CheeseParser()
+            
+            case "space":
+                from .parser.space import SpaceParser
+                return SpaceParser()
+            
+            case "favlist":
+                from .parser.favlist import FavlistParser
+                return FavlistParser()
+            
+            case "list":
+                from .parser.list import ListParser
+                return ListParser()
+            
+            case "popular":
+                from .parser.popular import PopularParser
+                return PopularParser()
+            
+            case "watch_later":
+                from .parser.watch_later import WatchLaterParser
+                return WatchLaterParser()
+            
+            case "history":
+                from .parser.history import HistoryParser
+                return HistoryParser()
+            
+            case "audio":
+                from .parser.audio import AudioParser
+                return AudioParser()
+            
+            case _:
+                raise ValueError("未知的解析类型")
 
     def get_parser_type(self, url: str):
         for parser_type, pattern in url_patterns:
@@ -59,8 +76,6 @@ class ParseWorker(WorkerBase, QObject):
         self.pn = pn
         self.parser_type = ""
 
-        self.init_parser()
-
     @Slot()
     def run(self):
         EpisodeData.clear_cache()
@@ -70,7 +85,7 @@ class ParseWorker(WorkerBase, QObject):
 
             self.get_redirect_url()
 
-            parser: VideoParser = self.parsers.get(self.parser_type)
+            parser = self.get_parser(self.parser_type)
 
             parser.parse(self.url, self.pn)
 
@@ -84,9 +99,12 @@ class ParseWorker(WorkerBase, QObject):
         finally:
             self.finished.emit()
 
-            self.clear_cache()
+            self.deleteLater()
 
     def get_redirect_url(self):
+        from .parser.festival import FestivalParser
+        from .parser.b23 import B23Parser
+
         _parsers = {
             "b23": B23Parser(),
             "festival": FestivalParser()
@@ -97,11 +115,6 @@ class ParseWorker(WorkerBase, QObject):
                 self.url = parser.parse(self.url)
 
                 self.parser_type = self.get_parser_type(self.url)
-
-    def clear_cache(self):
-        self.parsers.clear()
-
-        self.deleteLater()
 
     def on_error(self):
         logger.exception("解析失败")
@@ -147,14 +160,16 @@ class ProgressParseWorker(WorkerBase, QObject):
         raise ValueError(f"Unsupported parser type: {self.data.parser_type}")
 
     def _get_interactive_video_parser(self):
+        from .parser.video import InteractiveVideoParser
+
         return InteractiveVideoParser(self.data.data, self._update_progress_callback, self.stop_event)
 
     def _get_dynamic_parser(self):
-        self.init_parser()
+        from .parser.dynamic import DynamicParser
 
         parser_type = self.get_parser_type(self.data.url)
 
-        base_parser: FavlistParser = self.parsers.get(parser_type)
+        base_parser = self.get_parser(parser_type)
 
         return DynamicParser(self.data, base_parser, self._update_progress_callback, self.stop_event)
 

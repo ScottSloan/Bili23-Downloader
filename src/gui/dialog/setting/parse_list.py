@@ -1,6 +1,6 @@
 from PySide6.QtCore import Qt
 
-from qfluentwidgets import SubtitleLabel, BodyLabel
+from qfluentwidgets import SubtitleLabel, BodyLabel, SwitchButton
 
 from gui.component.widget import CheckableDragListWidget
 from gui.component.dialog import DialogBase
@@ -24,11 +24,16 @@ class ParseListSettingsDialog(DialogBase):
 
         self.drag_list = CheckableDragListWidget(self)
 
+        alternate_row_color_lab = BodyLabel(self.tr("Enable alternate row colors"), self)
+        self.enable_alternate_row_color_switch = SwitchButton(parent = self)
+
         self.viewLayout.addWidget(self.caption_lab)
         self.viewLayout.addSpacing(10)
         self.viewLayout.addWidget(column_lab)
         self.viewLayout.addWidget(self.drag_list)
         self.viewLayout.addSpacing(10)
+        self.viewLayout.addWidget(alternate_row_color_lab)
+        self.viewLayout.addWidget(self.enable_alternate_row_color_switch)
 
         self.widget.setMinimumWidth(400)
 
@@ -43,6 +48,8 @@ class ParseListSettingsDialog(DialogBase):
 
         self.drag_list.setRowEnabled(0, False)   # 禁止隐藏第一列（序号）
         self.drag_list.setMinDragRow(1)          # 保持第一列（序号）在最前面，不允许拖动到其他位置
+
+        self.enable_alternate_row_color_switch.setChecked(config.get(config.parse_list_alternate_row_color))
 
     def accept(self):
         column_list = []
@@ -60,6 +67,7 @@ class ParseListSettingsDialog(DialogBase):
             return
         
         config.set(config.parse_list_column, column_list)
+        config.set(config.parse_list_alternate_row_color, self.enable_alternate_row_color_switch.isChecked())
 
         signal_bus.parse.update_column_settings.emit()
             
