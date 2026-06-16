@@ -204,6 +204,13 @@ class DefaultValue:
             "type": 50,
             "rule": "{space_owner_id}_{space_owner}/{leaf_title}",
             "default": True
+        },
+        {
+            "id": "e1f2a3b4-c5d6-7e8f-9a0b-1c2d3e4f5a6b",
+            "name": "DEFAULT_FOR_AUDIO",
+            "type": 60,
+            "rule": "{parent_title}/{uploader} - {leaf_title}",
+            "default": True
         }
     ]
 
@@ -387,15 +394,18 @@ class APPConfig(QConfig):
 
 def check_need_patch():
     # 检查是否需要修补配置文件
-    with open(config_path, "r", encoding = "utf-8") as f:
-        data = orjson.loads(f.read())
+    if config_path.exists():
+        with open(config_path, "r", encoding = "utf-8") as f:
+            data = orjson.loads(f.read())
 
-        if "config_version" in data.get("Application", {}):
-            config_version = data.get("Application", {}).get("config_version", 0)
+            if "config_version" in data.get("Application", {}):
+                config_version = data.get("Application", {}).get("config_version", 0)
 
-            return config_version < config.app_config_version, config_version
-        else:
-            return True, 0
+                return config_version < config.app_config_version, config_version
+            else:
+                return True, 0
+    else:
+        return False, 0
 
 def patch_config(config_version: int):
     # 配置文件修补

@@ -169,6 +169,7 @@ class TreeItem(TreeItemBase):
         self.badge = item_data.get("badge", "")
         self.cover = item_data.get("cover", "")
         self.title = item_data.get("title", "")
+        self.author = item_data.get("author", "")
         self.number = item_data.get("number", "")
         self.duration = item_data.get("duration", 0)
         self.episode_id = item_data.get("episode_id", "")
@@ -191,6 +192,7 @@ class TreeItem(TreeItemBase):
             "episode_id": self.episode_id,                         # 剧集 ID
             "episode_number": self.episode_number,                 # 剧集序号，仅剧集正片有效
             "aid": self.aid,
+            "author": self.author,                                 # 歌曲作者
             "badge": self.badge,                                   # 备注
             "bvid": self.bvid,
             "cid": self.cid,

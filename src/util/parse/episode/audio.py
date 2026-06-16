@@ -34,12 +34,16 @@ class AudioEpisodeParser(EpisodeParserBase):
             self.episode_count += 1
 
             episode_item_data = {
+                "author": episode["author"],
                 "cover": episode["cover"],
                 "duration": episode["duration"],
                 "sid": episode["statistic"]["sid"],
                 "number": self.episode_count,
                 "pubtime": episode["passtime"],
                 "title": episode["title"],
+                "related_titles": {
+                    "parent_title": menu_title
+                },
                 "url": "https://www.bilibili.com/audio/au{sid}".format(sid = episode["statistic"]["sid"])
             }
 

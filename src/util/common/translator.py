@@ -136,7 +136,8 @@ class Translator:
             "DEFAULT_FOR_BANGUMI": translate("DEFAULT_RULE_NAMES", "Preset: Film & TV"),
             "DEFAULT_FOR_CHEESE": translate("DEFAULT_RULE_NAMES", "Preset: Courses"),
             "DEFAULT_FOR_FAVORITE": translate("DEFAULT_RULE_NAMES", "Preset: Favorites"),
-            "DEFAULT_FOR_SPACE": translate("DEFAULT_RULE_NAMES", "Preset: Profile")
+            "DEFAULT_FOR_SPACE": translate("DEFAULT_RULE_NAMES", "Preset: Profile"),
+            "DEFAULT_FOR_AUDIO": translate("DEFAULT_RULE_NAMES", "Preset: Music")
         }
 
     @staticmethod
@@ -150,7 +151,8 @@ class Translator:
             "BANGUMI": translate("CONVENTION_TYPE", "Film & TV"),
             "CHEESE": translate("CONVENTION_TYPE", "Courses"),
             "FAVORITE": translate("CONVENTION_TYPE", "Favorites"),
-            "SPACE": translate("CONVENTION_TYPE", "Profile")
+            "SPACE": translate("CONVENTION_TYPE", "Profile"),
+            "AUDIO": translate("CONVENTION_TYPE", "Music")
         }
 
     @staticmethod
@@ -163,6 +165,7 @@ class Translator:
             "CREATE_TS": translate("VARIABLE_DESCRIPTION", "Download task creation timestamp"),
             "NUMBER": translate("VARIABLE_DESCRIPTION", "Sequence number"),
             "UPLOADER": translate("VARIABLE_DESCRIPTION", "Uploader name"),
+            "UPLOADER_FOR_AUDIO": translate("VARIABLE_DESCRIPTION", "Author of the song"),
             "UPLOADER_UID": translate("VARIABLE_DESCRIPTION", "Uploader id"),
             "VIDEO_QUALITY": translate("VARIABLE_DESCRIPTION", "Video quality"),
             "AUDIO_QUALITY": translate("VARIABLE_DESCRIPTION", "Audio quality"),
@@ -178,9 +181,11 @@ class Translator:
             "LEAF_TITLE_FOR_PART": translate("VARIABLE_DESCRIPTION", "Current part's title"),
             "LEAF_TITLE_FOR_COLLECTION": translate("VARIABLE_DESCRIPTION", "Content title (video title for single videos, part title for multi-part)"),
             "LEAF_TITLE_FOR_INTERACTIVE_VIDEO": translate("VARIABLE_DESCRIPTION", "Node title"),
+            "LEAF_TITLE_FOR_AUDIO": translate("VARIABLE_DESCRIPTION", "Song title"),
 
             "PARENT_TITLE_FOR_PART": translate("VARIABLE_DESCRIPTION", "Multi-part video main title"),
             "PARENT_TITLE_FOR_COLLECTION": translate("VARIABLE_DESCRIPTION", "Main title if video has multiple parts; otherwise empty"),
+            "PARENT_TITLE_FOR_AUDIO": translate("VARIABLE_DESCRIPTION", "Playlist title"),
 
             "PART_NUMBER_FOR_PART": translate("VARIABLE_DESCRIPTION", "Part number"),
             "PART_NUMBER_FOR_COLLECTION": translate("VARIABLE_DESCRIPTION", "Part number (only for multi-part videos)"),

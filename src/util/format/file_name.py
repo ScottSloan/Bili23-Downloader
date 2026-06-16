@@ -172,6 +172,7 @@ class FileNameFormatter:
             Attribute.POPULAR_BIT: ConventionType.NORMAL,
             Attribute.FAVLIST_BIT: ConventionType.FAVORITE,
             Attribute.SPACE_BIT: ConventionType.SPACE,
+            Attribute.AUDIO_BIT: ConventionType.AUDIO
         }
 
         for attr, type_id in type_map.items():

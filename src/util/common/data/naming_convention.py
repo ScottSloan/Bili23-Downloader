@@ -8,7 +8,8 @@ convention_type_map = {
     "BANGUMI": ConventionType.BANGUMI,
     "CHEESE": ConventionType.CHEESE,
     "FAVORITE": ConventionType.FAVORITE,
-    "SPACE": ConventionType.SPACE
+    "SPACE": ConventionType.SPACE,
+    "AUDIO": ConventionType.AUDIO
 }
 
 reversed_convention_type_map = {v: k for k, v in convention_type_map.items()}
@@ -42,8 +43,9 @@ class VariableListFactory:
 
             case ConventionType.SPACE:
                 return self._base_variable + self._normal_variable + self._space_variable
-        
-        return 
+            
+            case ConventionType.AUDIO:
+                return self._audio_variable
     
     @property
     def _base_variable(self):
@@ -411,5 +413,64 @@ class VariableListFactory:
                 "variable": "{space_owner_id}",
                 "description": "SPACE_OWNER_ID",
                 "example": "12345678"
+            }
+        ]
+
+    @property
+    def _audio_variable(self):
+        return [
+            {
+                "name": "pub_time",
+                "variable": "{pub_time:%Y-%m-%d_%H-%M-%S}",
+                "description": "PUB_TIME",
+                "example": "2026-03-07_12-00-00"
+            },
+            {
+                "name": "pub_ts",
+                "variable": "{pub_ts}",
+                "description": "PUB_TS",
+                "example": "1772841600"
+            },
+            {
+                "name": "create_time",
+                "variable": "{create_time:%Y-%m-%d_%H-%M-%S}",
+                "description": "CREATE_TIME",
+                "example": "2026-03-07_12-00-00"
+            },
+            {
+                "name": "create_ts",
+                "variable": "{create_ts}",
+                "description": "CREATE_TS",
+                "example": "1772841600"
+            },
+            {
+                "name": "number",
+                "variable": "{number}",
+                "description": "NUMBER",
+                "example": "1"
+            },
+            {
+                "name": "leaf_title",
+                "variable": "{leaf_title}",
+                "description": "LEAF_TITLE_FOR_AUDIO",
+                "example": "歌曲名称"
+            },
+            {
+                "name": "uploader",
+                "variable": "{uploader}",
+                "description": "UPLOADER_FOR_AUDIO",
+                "example": "歌手"
+            },
+            {
+                "name": "parent_title",
+                "variable": "{parent_title}",
+                "description": "PARENT_TITLE_FOR_AUDIO",
+                "example": "歌单名称"
+            },
+            {
+                "name": "audio_quality",
+                "variable": "{audio_quality}",
+                "description": "AUDIO_QUALITY",
+                "example": "192K"
             }
         ]

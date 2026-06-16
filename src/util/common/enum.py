@@ -95,6 +95,7 @@ class ConventionType(IntEnum):
     CHEESE = 30
     FAVORITE = 40
     SPACE = 50
+    AUDIO = 60
 
 class MediaType(IntEnum):
     UNKNOWN = 0
