@@ -1,6 +1,8 @@
 <RCC>
     <qresource prefix="/bili23">
         <file>icon/app.svg</file>
+        <file>icon/loading.gif</file>
+        <file>icon/qrcode_placeholder.png</file>
         
         <file>icon/light/pin.svg</file>
         <file>icon/light/todo.svg</file>

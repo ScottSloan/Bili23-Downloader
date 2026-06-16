@@ -192,7 +192,6 @@ class TreeItem(TreeItemBase):
             "episode_id": self.episode_id,                         # 剧集 ID
             "episode_number": self.episode_number,                 # 剧集序号，仅剧集正片有效
             "aid": self.aid,
-            "author": self.author,                                 # 歌曲作者
             "badge": self.badge,                                   # 备注
             "bvid": self.bvid,
             "cid": self.cid,

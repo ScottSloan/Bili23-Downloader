@@ -4,7 +4,7 @@ from PySide6.QtGui import QIcon
 from qfluentwidgets import FluentWidget, ComboBox, LineEdit, PushButton
 
 from gui.component.log_list.list_view import LogListView
-from gui.component.widget.label import TipLabel
+from gui.component.widget import TipLabel
 
 from util.common.config import appdata_path, config
 from util.common.io.directory import Directory

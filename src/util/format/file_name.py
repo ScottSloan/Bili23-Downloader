@@ -9,6 +9,7 @@ from .time import Time
 from pathlib import Path
 from typing import List
 import logging
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -60,6 +61,8 @@ class FileNameFormatter:
     def __normalize_path(self, path_str: str):
         if not path_str:
             return path_str
+        
+        path_str = path_str.removeprefix("/").removeprefix("\\")
 
         path = Path(path_str)
         normalized_parts = []

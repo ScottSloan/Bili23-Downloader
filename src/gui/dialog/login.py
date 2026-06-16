@@ -3,10 +3,10 @@ from PySide6.QtCore import Qt, QTimer
 from PySide6.QtGui import QPixmap
 
 from qfluentwidgets import (
-    BodyLabel, ImageLabel, LineEdit, HyperlinkButton
+    BodyLabel, LineEdit, HyperlinkButton, setCustomStyleSheet
 )
 
-from gui.component.widget import IndeterminateProgressPushButton, CidComboBox, SectionLabel
+from gui.component.widget import IndeterminateProgressPushButton, CidComboBox, SectionLabel, ImageLabel
 from gui.component.dialog import DialogBase
 
 from util.common.enum import ToastNotificationCategory, QRCodeScanStatus
@@ -31,7 +31,9 @@ class LoginDialog(DialogBase):
         scan_lab = SectionLabel(self.tr("Scan QR Code to Log In"))
 
         self.qrcode_img = ImageLabel(self)
+        self.qrcode_img.setPixmap(QPixmap(":/bili23/icon/qrcode_placeholder.png"))
         self.qrcode_img.setFixedSize(160, 160)
+        self.qrcode_img.loading()
         
         self.scan_status_lab = BodyLabel(self.tr("Scan with the Bilibili app to log in"))
         self.scan_status_lab.setMinimumWidth(200)
@@ -221,6 +223,8 @@ class LoginDialog(DialogBase):
 
         # 更新二维码图片
         self.qrcode_img.setPixmap(pixmap)
+
+        self.qrcode_img.stop()
 
     def on_update_scan_status(self, status: int):
         if self._closing:

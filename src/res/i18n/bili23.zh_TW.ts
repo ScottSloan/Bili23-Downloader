@@ -1827,70 +1827,70 @@ Message:
         <translation>掃描 QR Code 登入</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/login.py" line="36"/>
-        <location filename="../../gui/dialog/login.py" line="231"/>
+        <location filename="../../gui/dialog/login.py" line="38"/>
+        <location filename="../../gui/dialog/login.py" line="235"/>
         <source>Scan with the Bilibili app to log in</source>
         <translation>請使用 Bilibili 客戶端掃碼登入</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/login.py" line="47"/>
+        <location filename="../../gui/dialog/login.py" line="49"/>
         <source>SMS Login</source>
         <translation>簡訊登入</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/login.py" line="52"/>
+        <location filename="../../gui/dialog/login.py" line="54"/>
         <source>Enter phone number</source>
         <translation>請輸入手機號碼</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/login.py" line="56"/>
+        <location filename="../../gui/dialog/login.py" line="58"/>
         <source>Enter verification code</source>
         <translation>請輸入驗證碼</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/login.py" line="59"/>
+        <location filename="../../gui/dialog/login.py" line="61"/>
         <source>Log In</source>
         <translation>登入</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/login.py" line="63"/>
-        <location filename="../../gui/dialog/login.py" line="254"/>
+        <location filename="../../gui/dialog/login.py" line="65"/>
+        <location filename="../../gui/dialog/login.py" line="258"/>
         <source>Get Code</source>
         <translation>取得驗證碼</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/login.py" line="180"/>
-        <location filename="../../gui/dialog/login.py" line="201"/>
+        <location filename="../../gui/dialog/login.py" line="182"/>
+        <location filename="../../gui/dialog/login.py" line="203"/>
         <source>Phone number cannot be empty</source>
         <translation>手機號碼不可為空</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/login.py" line="201"/>
+        <location filename="../../gui/dialog/login.py" line="203"/>
         <source>Verification code cannot be empty</source>
         <translation>驗證碼不可為空</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/login.py" line="214"/>
+        <location filename="../../gui/dialog/login.py" line="216"/>
         <source>Successfully logged in via SMS</source>
         <translation>簡訊登入成功</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/login.py" line="234"/>
+        <location filename="../../gui/dialog/login.py" line="238"/>
         <source>Confirm login on your device</source>
         <translation>請於裝置端確認登入</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/login.py" line="237"/>
+        <location filename="../../gui/dialog/login.py" line="241"/>
         <source>Successfully logged in via QR code</source>
         <translation>掃碼登入成功</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/login.py" line="242"/>
+        <location filename="../../gui/dialog/login.py" line="246"/>
         <source>QR code has expired</source>
         <translation>QR Code 已過期</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/login.py" line="259"/>
+        <location filename="../../gui/dialog/login.py" line="263"/>
         <source>Resend({countdown})</source>
         <translation>重新傳送({countdown})</translation>
     </message>
@@ -3087,17 +3087,22 @@ For example, if you set the video quality priority to 720P &gt; 1080P &gt; 4K, t
         <translation>登出</translation>
     </message>
     <message>
-        <location filename="../../gui/component/profile.py" line="55"/>
+        <location filename="../../gui/component/profile.py" line="41"/>
+        <source>Profile</source>
+        <translation>個人空間</translation>
+    </message>
+    <message>
+        <location filename="../../gui/component/profile.py" line="60"/>
         <source>Log Out</source>
         <translation>登出</translation>
     </message>
     <message>
-        <location filename="../../gui/component/profile.py" line="55"/>
+        <location filename="../../gui/component/profile.py" line="60"/>
         <source>Are you sure you want to log out? This will also clear locally stored cookies.</source>
         <translation>確定要登出嗎？這將會同時清除本機儲存的 Cookies。</translation>
     </message>
     <message>
-        <location filename="../../gui/component/profile.py" line="61"/>
+        <location filename="../../gui/component/profile.py" line="66"/>
         <source>Successfully logged out</source>
         <translation>登出成功</translation>
     </message>
