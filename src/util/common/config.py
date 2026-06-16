@@ -171,6 +171,13 @@ class DefaultValue:
             "default": True
         },
         {
+            "id": "e5f8c9d7-3a4b-4c2d-9f1e-6b7a5c4d3e2f",
+            "name": "DEFAULT_FOR_INTERACTIVE_VIDEO",
+            "type": 14,
+            "rule": "{collection_title}/{leaf_title}",
+            "default": True
+        },
+        {
             "id": "b1d4e8e3-ca17-4b41-87cf-cda45254701e",
             "name": "DEFAULT_FOR_BANGUMI",
             "type": 20,
@@ -292,7 +299,7 @@ class APPConfig(QConfig):
     metadata_type = OptionsConfigItem("Additional", "metadata_type", MetadataType.NFO, OptionsValidator(MetadataType), EnumSerializer(MetadataType))
 
     # File Naming
-    naming_rule_list = ConfigItem("File Naming", "naming_convention", DefaultValue.naming_rule_list)
+    naming_rule_list = ConfigItem("File Naming", "naming_rule_list", DefaultValue.naming_rule_list)
     numbering_type = OptionsConfigItem("File Naming", "numbering_type", NumberingType.CONTINUOUS, OptionsValidator(NumberingType), EnumSerializer(NumberingType))
 
     # Advanced
@@ -393,14 +400,7 @@ def check_need_patch():
 def patch_config(config_version: int):
     # 配置文件修补
     if config_version < 2100:
-        naming_rule_list = config.get(config.naming_rule_list)
-        naming_rule_type_list = [rule["type"] for rule in naming_rule_list]
-
-        for rule in DefaultValue.naming_rule_list:
-            if rule["type"] not in naming_rule_type_list:
-                naming_rule_list.append(rule)
-
-        config.set(config.naming_rule_list, naming_rule_list)
+        pass
 
     # 完成修补，写入新的 config_version
     config.set(config.config_version, config.app_config_version)

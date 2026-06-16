@@ -109,7 +109,7 @@ class UIRect:
         top = self.margin + option.rect.top()
         left = self.margin + option.rect.left() + 30
 
-        return QRect(left, top, 128, 24)
+        return QRect(left, top, 180, 24)
     
     def getLevelRect(self, timestampRect: QRect, option: QStyleOptionViewItem):
         top = self.margin + option.rect.top()

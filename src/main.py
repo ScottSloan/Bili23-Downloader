@@ -1,6 +1,7 @@
 from PySide6.QtCore import QStandardPaths
 
 from logging.handlers import TimedRotatingFileHandler
+from datetime import datetime
 from pathlib import Path
 import logging
 import sys
@@ -18,9 +19,17 @@ class CompactLogFormatter(logging.Formatter):
         record.callsite = f"{record.filename}:{record.lineno} in {record.funcName}"
         return super().format(record)
 
+    def formatTime(self, record, datefmt = None):
+        dt = datetime.fromtimestamp(record.created)
+
+        if datefmt:
+            return dt.strftime(datefmt)
+        
+        return dt.isoformat(sep = " ", timespec = "microseconds")
+
 log_formatter = CompactLogFormatter(
     "[%(asctime)s] - %(name)s - %(levelname)s - at %(callsite)s: %(message)s",
-    datefmt = "%Y-%m-%d %H:%M:%S",
+    datefmt = "%Y-%m-%d %H:%M:%S.%f",
 )
 
 stream_handler = logging.StreamHandler(sys.stdout)

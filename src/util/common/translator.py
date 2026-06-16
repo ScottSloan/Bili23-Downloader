@@ -130,9 +130,10 @@ class Translator:
     def DEFAULT_RULE_NAMES(key = None):
         return {
             "DEFAULT_FOR_NORMAL": translate("DEFAULT_RULE_NAMES", "Preset: Single Video"),
-            "DEFAULT_FOR_PART": translate("DEFAULT_RULE_NAMES", "Preset: Multi-part Video"),
+            "DEFAULT_FOR_PART": translate("DEFAULT_RULE_NAMES", "Preset: Multi-part Series"),
             "DEFAULT_FOR_COLLECTION": translate("DEFAULT_RULE_NAMES", "Preset: Collection"),
-            "DEFAULT_FOR_BANGUMI": translate("DEFAULT_RULE_NAMES", "Preset: Series & Shows"),
+            "DEFAULT_FOR_INTERACTIVE_VIDEO": translate("DEFAULT_RULE_NAMES", "Preset: Interactive Video"),
+            "DEFAULT_FOR_BANGUMI": translate("DEFAULT_RULE_NAMES", "Preset: Film & TV"),
             "DEFAULT_FOR_CHEESE": translate("DEFAULT_RULE_NAMES", "Preset: Courses"),
             "DEFAULT_FOR_FAVORITE": translate("DEFAULT_RULE_NAMES", "Preset: Favorites"),
             "DEFAULT_FOR_SPACE": translate("DEFAULT_RULE_NAMES", "Preset: Profile")
@@ -142,11 +143,11 @@ class Translator:
     @get_map_method
     def CONVENTION_TYPE(key = None):
         return {
-            "NORMAL": translate("CONVENTION_TYPE", "User Uploads - Single"),
-            "PART": translate("CONVENTION_TYPE", "User Uploads - Multi-part"),
-            "COLLECTION": translate("CONVENTION_TYPE", "User Uploads - Collection"),
-            "INTERACTIVE": translate("CONVENTION_TYPE", "User Uploads - Interactive"),
-            "BANGUMI": translate("CONVENTION_TYPE", "Series & Shows"),
+            "NORMAL": translate("CONVENTION_TYPE", "Single Video"),
+            "PART": translate("CONVENTION_TYPE", "Multi-part Series"),
+            "COLLECTION": translate("CONVENTION_TYPE", "Collection"),
+            "INTERACTIVE_VIDEO": translate("CONVENTION_TYPE", "Interactive Video"),
+            "BANGUMI": translate("CONVENTION_TYPE", "Film & TV"),
             "CHEESE": translate("CONVENTION_TYPE", "Courses"),
             "FAVORITE": translate("CONVENTION_TYPE", "Favorites"),
             "SPACE": translate("CONVENTION_TYPE", "Profile")
@@ -176,6 +177,7 @@ class Translator:
             "LEAF_TITLE_FOR_NORMAL": translate("VARIABLE_DESCRIPTION", "Full video title"),
             "LEAF_TITLE_FOR_PART": translate("VARIABLE_DESCRIPTION", "Current part's title"),
             "LEAF_TITLE_FOR_COLLECTION": translate("VARIABLE_DESCRIPTION", "Content title (video title for single videos, part title for multi-part)"),
+            "LEAF_TITLE_FOR_INTERACTIVE_VIDEO": translate("VARIABLE_DESCRIPTION", "Node title"),
 
             "PARENT_TITLE_FOR_PART": translate("VARIABLE_DESCRIPTION", "Multi-part video main title"),
             "PARENT_TITLE_FOR_COLLECTION": translate("VARIABLE_DESCRIPTION", "Main title if video has multiple parts; otherwise empty"),
@@ -184,6 +186,8 @@ class Translator:
             "PART_NUMBER_FOR_COLLECTION": translate("VARIABLE_DESCRIPTION", "Part number (only for multi-part videos)"),
 
             "COLLECTION_TITLE": translate("VARIABLE_DESCRIPTION", "Collection title"),
+            "COLLECTION_TITLE_FOR_INTERACTIVE_VIDEO": translate("VARIABLE_DESCRIPTION", "Interactive video title"),
+
             "SECTION_TITLE_FOR_COLLECTION": translate("VARIABLE_DESCRIPTION", "Section title (empty if not divided into sections)"),
             "SECTION_TITLE_FOR_BANGUMI_CHEESE": translate("VARIABLE_DESCRIPTION", "Section title"),
 

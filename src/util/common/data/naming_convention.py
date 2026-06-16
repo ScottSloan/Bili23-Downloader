@@ -4,6 +4,7 @@ convention_type_map = {
     "NORMAL": ConventionType.NORMAL,
     "PART": ConventionType.PART,
     "COLLECTION": ConventionType.COLLECTION,
+    "INTERACTIVE_VIDEO": ConventionType.INTERACTIVE_VIDEO,
     "BANGUMI": ConventionType.BANGUMI,
     "CHEESE": ConventionType.CHEESE,
     "FAVORITE": ConventionType.FAVORITE,
@@ -26,6 +27,9 @@ class VariableListFactory:
             
             case ConventionType.COLLECTION:
                 return self._base_variable + self._collection_variable
+            
+            case ConventionType.INTERACTIVE_VIDEO:
+                return self._base_variable + self._interactive_video_variable
             
             case ConventionType.BANGUMI:
                 return self._base_variable + self._bangumi_variable
@@ -226,6 +230,23 @@ class VariableListFactory:
                 "variable": "{cid}",
                 "description": "CID",
                 "example": "1599644073"
+            }
+        ]
+
+    @property
+    def _interactive_video_variable(self):
+        return [
+            {
+                "name": "leaf_title",
+                "variable": "{leaf_title}",
+                "description": "LEAF_TITLE_FOR_INTERACTIVE_VIDEO",
+                "example": "序幕"
+            },
+            {
+                "name": "collection_title",
+                "variable": "{collection_title}",
+                "description": "COLLECTION_TITLE_FOR_INTERACTIVE_VIDEO",
+                "example": "【互动视频】你能逃出这个房间吗？"
             }
         ]
 

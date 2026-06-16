@@ -90,6 +90,7 @@ class ConventionType(IntEnum):
     NORMAL = 11
     PART = 12
     COLLECTION = 13
+    INTERACTIVE_VIDEO = 14
     BANGUMI = 20
     CHEESE = 30
     FAVORITE = 40

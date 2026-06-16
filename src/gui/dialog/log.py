@@ -13,7 +13,7 @@ from pathlib import Path
 import re
 
 LOG_PATTERN = re.compile(
-    r'\[(?P<timestamp>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\] - '
+    r'\[(?P<timestamp>.*)\] - '
     r'(?P<name>.+?) - '
     r'(?P<level>\w+) - '
     r'(?P<callsite>.+?): '

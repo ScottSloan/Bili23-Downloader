@@ -84,7 +84,6 @@ class FileNameFormatter:
 
         rule_map = {
             Attribute.DOWNLOAD_AS_SINGLE_VIDEO_BIT: "{leaf_title}",
-            Attribute.INTERACTIVE_BIT: "{collection_title}/{leaf_title}",
             Attribute.POPULAR_BIT: "{collection_title}/{leaf_title}",
             Attribute.COLLECTION_LIST_BIT: "{collection_title}/{leaf_title}",
             Attribute.WATCH_LATER_BIT: "{leaf_title}",
@@ -167,6 +166,7 @@ class FileNameFormatter:
             Attribute.NORMAL_BIT: ConventionType.NORMAL,
             Attribute.PART_BIT: ConventionType.PART,
             Attribute.COLLECTION_BIT: ConventionType.COLLECTION,
+            Attribute.INTERACTIVE_BIT: ConventionType.INTERACTIVE_VIDEO,
             Attribute.BANGUMI_BIT: ConventionType.BANGUMI,
             Attribute.CHEESE_BIT: ConventionType.CHEESE,
             Attribute.POPULAR_BIT: ConventionType.NORMAL,
