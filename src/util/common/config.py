@@ -171,10 +171,10 @@ class DefaultValue:
             "default": True
         },
         {
-            "id": "e5f8c9d7-3a4b-4c2d-9f1e-6b7a5c4d3e2f",
+            "id": "1fe25f91-caf0-437e-b132-c9367261ff8b",
             "name": "DEFAULT_FOR_INTERACTIVE_VIDEO",
             "type": 14,
-            "rule": "{collection_title}/{leaf_title}",
+            "rule": "{parent_title}/{leaf_title}",
             "default": True
         },
         {
@@ -192,23 +192,37 @@ class DefaultValue:
             "default": True
         },
         {
-            "id": "cbbacfa4-1b8c-4e5a-9c8d-7a0b3f1e5c3e",
+            "id": "5913e25f-0bf3-4d3c-a608-8416af778a8a",
             "name": "DEFAULT_FOR_FAVORITE",
             "type": 40,
             "rule": "{favorites_owner_id}_{favorites_owner}/{favorites_name}/{leaf_title}",
             "default": True
         },
         {
-            "id": "d9c8e5f7-2a1b-4c3d-9e8f-7a6b5c4d3e2f",
+            "id": "8c48ac82-14c5-4d48-9de7-225d9b53513f",
             "name": "DEFAULT_FOR_SPACE",
             "type": 50,
             "rule": "{space_owner_id}_{space_owner}/{leaf_title}",
             "default": True
         },
         {
-            "id": "e1f2a3b4-c5d6-7e8f-9a0b-1c2d3e4f5a6b",
-            "name": "DEFAULT_FOR_AUDIO",
+            "id": "307ccc8e-ad2f-4195-94f0-162ee9ff1ac0",
+            "name": "DEFAULT_FOR_HISTORY",
             "type": 60,
+            "rule": "{parent_title}/{leaf_title}",
+            "default": True
+        },
+        {
+            "id": "0a72a82b-5684-448e-9db1-a342de933d3e",
+            "name": "DEFAULT_FOR_WATCH_LATER",
+            "type": 70,
+            "rule": "{parent_title}/{leaf_title}",
+            "default": True
+        },
+        {
+            "id": "dc77bd15-be21-4847-856e-68bb3035042f",
+            "name": "DEFAULT_FOR_AUDIO",
+            "type": 80,
             "rule": "{parent_title}/{uploader} - {leaf_title}",
             "default": True
         }

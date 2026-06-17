@@ -9,6 +9,8 @@ convention_type_map = {
     "CHEESE": ConventionType.CHEESE,
     "FAVORITE": ConventionType.FAVORITE,
     "SPACE": ConventionType.SPACE,
+    "HISTORY": ConventionType.HISTORY,
+    "WATCH_LATER": ConventionType.WATCH_LATER,
     "AUDIO": ConventionType.AUDIO
 }
 
@@ -44,9 +46,15 @@ class VariableListFactory:
             case ConventionType.SPACE:
                 return self._base_variable + self._normal_variable + self._space_variable
             
+            case ConventionType.HISTORY:
+                return self._base_variable + self._history_variable
+
+            case ConventionType.WATCH_LATER:
+                return self._base_variable + self._watch_later_variable
+
             case ConventionType.AUDIO:
                 return self._audio_variable
-    
+
     @property
     def _base_variable(self):
         return [
@@ -245,9 +253,9 @@ class VariableListFactory:
                 "example": "序幕"
             },
             {
-                "name": "collection_title",
-                "variable": "{collection_title}",
-                "description": "COLLECTION_TITLE_FOR_INTERACTIVE_VIDEO",
+                "name": "parent_title",
+                "variable": "{parent_title}",
+                "description": "PARENT_TITLE_FOR_INTERACTIVE_VIDEO",
                 "example": "【互动视频】你能逃出这个房间吗？"
             }
         ]
@@ -413,6 +421,40 @@ class VariableListFactory:
                 "variable": "{space_owner_id}",
                 "description": "SPACE_OWNER_ID",
                 "example": "12345678"
+            }
+        ]
+
+    @property
+    def _history_variable(self):
+        return [
+            {
+                "name": "parent_title",
+                "variable": "{parent_title}",
+                "description": "PARENT_TITLE_FOR_HISTORY",
+                "example": "历史记录"
+            },
+            {
+                "name": "leaf_title",
+                "variable": "{leaf_title}",
+                "description": "LEAF_TITLE_FOR_NORMAL",
+                "example": "游戏科学新作《黑神话：钟馗》先导预告"
+            }
+        ]
+    
+    @property
+    def _watch_later_variable(self):
+        return [
+            {
+                "name": "parent_title",
+                "variable": "{parent_title}",
+                "description": "PARENT_TITLE_FOR_WATCH_LATER",
+                "example": "稍后再看"
+            },
+            {
+                "name": "leaf_title",
+                "variable": "{leaf_title}",
+                "description": "LEAF_TITLE_FOR_NORMAL",
+                "example": "游戏科学新作《黑神话：钟馗》先导预告"
             }
         ]
 

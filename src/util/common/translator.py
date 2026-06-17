@@ -137,7 +137,9 @@ class Translator:
             "DEFAULT_FOR_CHEESE": translate("DEFAULT_RULE_NAMES", "Preset: Courses"),
             "DEFAULT_FOR_FAVORITE": translate("DEFAULT_RULE_NAMES", "Preset: Favorites"),
             "DEFAULT_FOR_SPACE": translate("DEFAULT_RULE_NAMES", "Preset: Profile"),
-            "DEFAULT_FOR_AUDIO": translate("DEFAULT_RULE_NAMES", "Preset: Music")
+            "DEFAULT_FOR_AUDIO": translate("DEFAULT_RULE_NAMES", "Preset: Music"),
+            "DEFAULT_FOR_HISTORY": translate("DEFAULT_RULE_NAMES", "Preset: History"),
+            "DEFAULT_FOR_WATCH_LATER": translate("DEFAULT_RULE_NAMES", "Preset: Watch Later")
         }
 
     @staticmethod
@@ -152,6 +154,8 @@ class Translator:
             "CHEESE": translate("CONVENTION_TYPE", "Courses"),
             "FAVORITE": translate("CONVENTION_TYPE", "Favorites"),
             "SPACE": translate("CONVENTION_TYPE", "Profile"),
+            "HISTORY": translate("CONVENTION_TYPE", "History"),
+            "WATCH_LATER": translate("CONVENTION_TYPE", "Watch Later"),
             "AUDIO": translate("CONVENTION_TYPE", "Music")
         }
 
@@ -185,13 +189,15 @@ class Translator:
 
             "PARENT_TITLE_FOR_PART": translate("VARIABLE_DESCRIPTION", "Multi-part video main title"),
             "PARENT_TITLE_FOR_COLLECTION": translate("VARIABLE_DESCRIPTION", "Main title if video has multiple parts; otherwise empty"),
+            "PARENT_TITLE_FOR_INTERACTIVE_VIDEO": translate("VARIABLE_DESCRIPTION", "Interactive video title"),
+            "PARENT_TITLE_FOR_HISTORY": translate("VARIABLE_DESCRIPTION", "History title"),
+            "PARENT_TITLE_FOR_WATCH_LATER": translate("VARIABLE_DESCRIPTION", "Watch Later title"),
             "PARENT_TITLE_FOR_AUDIO": translate("VARIABLE_DESCRIPTION", "Playlist title"),
 
             "PART_NUMBER_FOR_PART": translate("VARIABLE_DESCRIPTION", "Part number"),
             "PART_NUMBER_FOR_COLLECTION": translate("VARIABLE_DESCRIPTION", "Part number (only for multi-part videos)"),
 
             "COLLECTION_TITLE": translate("VARIABLE_DESCRIPTION", "Collection title"),
-            "COLLECTION_TITLE_FOR_INTERACTIVE_VIDEO": translate("VARIABLE_DESCRIPTION", "Interactive video title"),
 
             "SECTION_TITLE_FOR_COLLECTION": translate("VARIABLE_DESCRIPTION", "Section title (empty if not divided into sections)"),
             "SECTION_TITLE_FOR_BANGUMI_CHEESE": translate("VARIABLE_DESCRIPTION", "Section title"),

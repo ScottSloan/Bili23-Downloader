@@ -89,8 +89,6 @@ class FileNameFormatter:
             Attribute.DOWNLOAD_AS_SINGLE_VIDEO_BIT: "{leaf_title}",
             Attribute.POPULAR_BIT: "{collection_title}/{leaf_title}",
             Attribute.COLLECTION_LIST_BIT: "{collection_title}/{leaf_title}",
-            Attribute.WATCH_LATER_BIT: "{leaf_title}",
-            Attribute.HISTORY_BIT: "{leaf_title}",
         }
 
         for attr, rule in rule_map.items():
@@ -156,8 +154,6 @@ class FileNameFormatter:
 
     def get_type_id_from_attribute(self, attribute: int):
         unsupported_attr = [
-            Attribute.WATCH_LATER_BIT,
-            Attribute.HISTORY_BIT,
             Attribute.COLLECTION_LIST_BIT
         ]
 
@@ -175,6 +171,8 @@ class FileNameFormatter:
             Attribute.POPULAR_BIT: ConventionType.NORMAL,
             Attribute.FAVLIST_BIT: ConventionType.FAVORITE,
             Attribute.SPACE_BIT: ConventionType.SPACE,
+            Attribute.HISTORY_BIT: ConventionType.HISTORY,
+            Attribute.WATCH_LATER_BIT: ConventionType.WATCH_LATER,
             Attribute.AUDIO_BIT: ConventionType.AUDIO
         }
 
