@@ -1,6 +1,6 @@
 from PySide6.QtCore import Qt, QModelIndex
 
-from qfluentwidgets import TreeView, RoundMenu, Action, FluentIcon, MessageBox, setCustomStyleSheet
+from qfluentwidgets import TreeView, RoundMenu, Action, FluentIcon
 
 from .model import ParseModel
 
@@ -143,6 +143,8 @@ class ParseTreeView(TreeView):
             webbrowser.open(item.url)
 
     def on_view_metadata(self, item: TreeItem):
+        from ..dialog import MessageBox
+
         info = item.to_dict()
 
         info_str = "\n".join(f"{key}: {value}" for key, value in info.items())

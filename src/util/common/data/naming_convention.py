@@ -404,6 +404,18 @@ class VariableListFactory:
                 "variable": "{favorites_owner_id}",
                 "description": "FAVORITES_OWNER_ID",
                 "example": "12345678"
+            },
+            {
+                "name": "fav_time",
+                "variable": "{fav_time:%Y-%m-%d_%H-%M-%S}",
+                "description": "FAVTIME",
+                "example": "2026-03-07_12-00-00"
+            },
+            {
+                "name": "fav_ts",
+                "variable": "{fav_ts}",
+                "description": "FAV_TS",
+                "example": "1772841600"
             }
         ]
     
@@ -438,6 +450,18 @@ class VariableListFactory:
                 "variable": "{leaf_title}",
                 "description": "LEAF_TITLE_FOR_NORMAL",
                 "example": "游戏科学新作《黑神话：钟馗》先导预告"
+            },
+            {
+                "name": "last_watched_time",
+                "variable": "{last_watched_time:%Y-%m-%d_%H-%M-%S}",
+                "description": "LAST_WATCHED_TIME",
+                "example": "2026-03-07_12-00-00"
+            },
+            {
+                "name": "last_watched_ts",
+                "variable": "{last_watched_ts}",
+                "description": "LAST_WATCHED_TS",
+                "example": "1772841600"
             }
         ]
     
@@ -455,6 +479,18 @@ class VariableListFactory:
                 "variable": "{leaf_title}",
                 "description": "LEAF_TITLE_FOR_NORMAL",
                 "example": "游戏科学新作《黑神话：钟馗》先导预告"
+            },
+            {
+                "name": "fav_time",
+                "variable": "{fav_time:%Y-%m-%d_%H-%M-%S}",
+                "description": "FAVTIME",
+                "example": "2026-03-07_12-00-00"
+            },
+            {
+                "name": "fav_ts",
+                "variable": "{fav_ts}",
+                "description": "FAV_TS",
+                "example": "1772841600"
             }
         ]
 

@@ -202,6 +202,7 @@ class TreeItem(TreeItemBase):
             "number": self.number,                                 # 在解析列表中显示的序号
             "pubtime": self.pubtime,                               # 发布时间（时间戳）
             "favtime": self.favtime,                               # 收藏时间（时间戳）
+            "viewtime": self.viewtime,                             # 观看时间（时间戳）
             "part_number": self.part_number,                       # 分P序号，仅分P有效
             "related_titles": self.related_titles,                 # 相关标题，如合集标题、章节标题等
             "title": self.title,                                   # 标题

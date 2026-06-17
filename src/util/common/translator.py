@@ -167,6 +167,10 @@ class Translator:
             "PUB_TS": translate("VARIABLE_DESCRIPTION", "Video publish timestamp"),
             "CREATE_TIME": translate("VARIABLE_DESCRIPTION", "Download task creation time"),
             "CREATE_TS": translate("VARIABLE_DESCRIPTION", "Download task creation timestamp"),
+            "FAV_TIME": translate("VARIABLE_DESCRIPTION", "Favorite time"),
+            "FAV_TS": translate("VARIABLE_DESCRIPTION", "Favorite timestamp"),
+            "LAST_WATCHED_TIME": translate("VARIABLE_DESCRIPTION", "Last watched time"),
+            "LAST_WATCHED_TS": translate("VARIABLE_DESCRIPTION", "Last watched timestamp"),
             "NUMBER": translate("VARIABLE_DESCRIPTION", "Sequence number"),
             "UPLOADER": translate("VARIABLE_DESCRIPTION", "Uploader name"),
             "UPLOADER_FOR_AUDIO": translate("VARIABLE_DESCRIPTION", "Author of the song"),
@@ -225,10 +229,10 @@ class Translator:
             "title": translate("COLUMN_NAME", "Title"),
             "badge": translate("COLUMN_NAME", "Notes"),
             "duration": translate("COLUMN_NAME", "Duration"),
-            "dyn_time": translate("COLUMN_NAME", "Publish / Favorite / Watch Time"),
+            "dyn_time": translate("COLUMN_NAME", "Publish Time / Favorite Time / Last Watched"),
             "pubtime": translate("COLUMN_NAME", "Publish Time"),
             "favtime": translate("COLUMN_NAME", "Favorite Time"),
-            "viewtime": translate("COLUMN_NAME", "Watch Time"),
+            "viewtime": translate("COLUMN_NAME", "Last Watched"),
         }
         
         if key == "pub_fav_time" and category_name is not None:

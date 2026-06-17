@@ -47,6 +47,8 @@ class EpisodeInfo(InfoBase):
     cover: str = ""
     ep_id: int = 0
     pubtime: int = 0
+    favtime: int = 0
+    viewtime: int = 0
     number: str = ""
     part_number: int = 0
     episode_number: int = 0

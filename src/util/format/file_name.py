@@ -38,7 +38,7 @@ class FileNameFormatter:
                 name = entry.get("name")
                 example = entry.get("example")
 
-                if name in ["pub_time", "create_time"]:
+                if name in ["pub_time", "create_time", "last_watched_time", "fav_time"]:
                     example = Time.from_timestamp(1772841600)
 
                 self.variable_data[name] = example
@@ -88,7 +88,6 @@ class FileNameFormatter:
         rule_map = {
             Attribute.DOWNLOAD_AS_SINGLE_VIDEO_BIT: "{leaf_title}",
             Attribute.POPULAR_BIT: "{collection_title}/{leaf_title}",
-            Attribute.COLLECTION_LIST_BIT: "{collection_title}/{leaf_title}",
         }
 
         for attr, rule in rule_map.items():
@@ -114,6 +113,10 @@ class FileNameFormatter:
             "pub_ts": task_info.Episode.pubtime,
             "create_time": Time.from_timestamp(task_info.Basic.created_time),
             "create_ts": task_info.Basic.created_time,
+            "fav_time": Time.from_timestamp(task_info.Episode.favtime),
+            "fav_ts": task_info.Episode.favtime,
+            "last_watched_time": Time.from_timestamp(task_info.Episode.viewtime),
+            "last_watched_ts": task_info.Episode.viewtime,
             "number": task_info.Episode.number,
             "uploader": task_info.Episode.uploader,
             "uploader_uid": task_info.Episode.uploader_uid,
@@ -153,14 +156,6 @@ class FileNameFormatter:
         return self.get_type_id_from_attribute(task_info.Episode.attribute)
 
     def get_type_id_from_attribute(self, attribute: int):
-        unsupported_attr = [
-            Attribute.COLLECTION_LIST_BIT
-        ]
-
-        for attr in unsupported_attr:
-            if attribute & attr:
-                return None
-
         type_map = {
             Attribute.NORMAL_BIT: ConventionType.NORMAL,
             Attribute.PART_BIT: ConventionType.PART,

@@ -44,7 +44,7 @@ class ListEpisodeParser(EpisodeParserBase):
             }
 
             item = TreeItem(item_data)
-            item.set_attribute(Attribute.COLLECTION_LIST_BIT | Attribute.VIDEO_BIT | Attribute.NEED_PARSE_BIT)
+            item.set_attribute(Attribute.COLLECTION_LIST_BIT | Attribute.COLLECTION_BIT | Attribute.VIDEO_BIT | Attribute.NEED_PARSE_BIT)
 
             root_node.add_child(item)
         
