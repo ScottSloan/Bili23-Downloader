@@ -28,7 +28,7 @@ class Attribute(IntFlag):
     VIDEO_BIT                          = 1 << 0                   # 是否为投稿视频
     BANGUMI_BIT                        = 1 << 1                   # 是否为剧集
     CHEESE_BIT                         = 1 << 2                   # 是否为课程
-    POPULAR_BIT                        = 1 << 3                   # 是否为每周必看
+    WEEKLY_BIT                         = 1 << 3                   # 是否为每周必看
     COLLECTION_LIST_BIT                = 1 << 4                   # 是否为合集列表
     SPACE_BIT                          = 1 << 5                   # 是否为个人空间
     FAVLIST_BIT                        = 1 << 6                   # 是否为收藏夹

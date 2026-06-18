@@ -220,9 +220,16 @@ class DefaultValue:
             "default": True
         },
         {
+            "id": "4d28285d-65ca-4c5c-bbb3-b3b5b570c52a",
+            "name": "DEFAULT_FOR_WEEKLY",
+            "type": 80,
+            "rule": "{parent_title}/{leaf_title}",
+            "default": True
+        },
+        {
             "id": "dc77bd15-be21-4847-856e-68bb3035042f",
             "name": "DEFAULT_FOR_AUDIO",
-            "type": 80,
+            "type": 90,
             "rule": "{parent_title}/{uploader} - {leaf_title}",
             "default": True
         }

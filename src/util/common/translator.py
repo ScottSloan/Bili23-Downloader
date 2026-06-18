@@ -139,6 +139,7 @@ class Translator:
             "DEFAULT_FOR_SPACE": translate("DEFAULT_RULE_NAMES", "Preset: Profile"),
             "DEFAULT_FOR_AUDIO": translate("DEFAULT_RULE_NAMES", "Preset: Music"),
             "DEFAULT_FOR_HISTORY": translate("DEFAULT_RULE_NAMES", "Preset: History"),
+            "DEFAULT_FOR_WEEKLY": translate("DEFAULT_RULE_NAMES", "Preset: Weekly Picks"),
             "DEFAULT_FOR_WATCH_LATER": translate("DEFAULT_RULE_NAMES", "Preset: Watch Later")
         }
 
@@ -156,6 +157,7 @@ class Translator:
             "SPACE": translate("CONVENTION_TYPE", "Profile"),
             "HISTORY": translate("CONVENTION_TYPE", "History"),
             "WATCH_LATER": translate("CONVENTION_TYPE", "Watch Later"),
+            "WEEKLY": translate("CONVENTION_TYPE", "Weekly Picks"),
             "AUDIO": translate("CONVENTION_TYPE", "Music")
         }
 
@@ -196,6 +198,7 @@ class Translator:
             "PARENT_TITLE_FOR_INTERACTIVE_VIDEO": translate("VARIABLE_DESCRIPTION", "Interactive video title"),
             "PARENT_TITLE_FOR_HISTORY": translate("VARIABLE_DESCRIPTION", "History title"),
             "PARENT_TITLE_FOR_WATCH_LATER": translate("VARIABLE_DESCRIPTION", "Watch Later title"),
+            "PARENT_TITLE_FOR_WEEKLY": translate("VARIABLE_DESCRIPTION", "Weekly Picks title"),
             "PARENT_TITLE_FOR_AUDIO": translate("VARIABLE_DESCRIPTION", "Playlist title"),
 
             "PART_NUMBER_FOR_PART": translate("VARIABLE_DESCRIPTION", "Part number"),

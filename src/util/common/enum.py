@@ -97,7 +97,8 @@ class ConventionType(IntEnum):
     SPACE = 50
     HISTORY = 60
     WATCH_LATER = 70
-    AUDIO = 80
+    WEEKLY = 80
+    AUDIO = 90
 
 class MediaType(IntEnum):
     UNKNOWN = 0

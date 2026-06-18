@@ -1,3 +1,5 @@
+from ...common.translator import Translator
+
 from .tree import TreeItem, Attribute
 from .base import EpisodeParserBase
 
@@ -21,7 +23,7 @@ class ListEpisodeParser(EpisodeParserBase):
     def seasons_archives_list_parser(self):
         collection_title = self.get_node_title()
         node_data = {
-            "number": "合集",
+            "number": Translator.EPISODE_TYPE("COLLECTION_LIST"),
             "title": collection_title
         }
 

@@ -9,7 +9,6 @@ from .time import Time
 from pathlib import Path
 from typing import List
 import logging
-import os
 
 logger = logging.getLogger(__name__)
 
@@ -79,15 +78,11 @@ class FileNameFormatter:
         return str(Path(*normalized_parts))
 
     def get_special_rule(self):
-        # 判断是否为特殊类型的视频：互动视频、每周必看、合集列表、稍后再看、历史记录
-        # 这些类型不支持自定义，直接使用内部预设规则
-
         if self.rule is None:
             self.rule = ""
 
         rule_map = {
             Attribute.DOWNLOAD_AS_SINGLE_VIDEO_BIT: "{leaf_title}",
-            Attribute.POPULAR_BIT: "{collection_title}/{leaf_title}",
         }
 
         for attr, rule in rule_map.items():
@@ -157,18 +152,19 @@ class FileNameFormatter:
 
     def get_type_id_from_attribute(self, attribute: int):
         type_map = {
+            Attribute.FAVLIST_BIT: ConventionType.FAVORITE,
+            Attribute.SPACE_BIT: ConventionType.SPACE,
+            Attribute.HISTORY_BIT: ConventionType.HISTORY,
+            Attribute.WATCH_LATER_BIT: ConventionType.WATCH_LATER,
+            Attribute.WEEKLY_BIT: ConventionType.WEEKLY,
+            Attribute.AUDIO_BIT: ConventionType.AUDIO,
+
             Attribute.NORMAL_BIT: ConventionType.NORMAL,
             Attribute.PART_BIT: ConventionType.PART,
             Attribute.COLLECTION_BIT: ConventionType.COLLECTION,
             Attribute.INTERACTIVE_BIT: ConventionType.INTERACTIVE_VIDEO,
             Attribute.BANGUMI_BIT: ConventionType.BANGUMI,
             Attribute.CHEESE_BIT: ConventionType.CHEESE,
-            Attribute.POPULAR_BIT: ConventionType.NORMAL,
-            Attribute.FAVLIST_BIT: ConventionType.FAVORITE,
-            Attribute.SPACE_BIT: ConventionType.SPACE,
-            Attribute.HISTORY_BIT: ConventionType.HISTORY,
-            Attribute.WATCH_LATER_BIT: ConventionType.WATCH_LATER,
-            Attribute.AUDIO_BIT: ConventionType.AUDIO
         }
 
         for attr, type_id in type_map.items():

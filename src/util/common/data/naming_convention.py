@@ -11,6 +11,7 @@ convention_type_map = {
     "SPACE": ConventionType.SPACE,
     "HISTORY": ConventionType.HISTORY,
     "WATCH_LATER": ConventionType.WATCH_LATER,
+    "WEEKLY": ConventionType.WEEKLY,
     "AUDIO": ConventionType.AUDIO
 }
 
@@ -51,6 +52,9 @@ class VariableListFactory:
 
             case ConventionType.WATCH_LATER:
                 return self._base_variable + self._watch_later_variable
+            
+            case ConventionType.WEEKLY:
+                return self._base_variable + self._weekly_variable
 
             case ConventionType.AUDIO:
                 return self._audio_variable
@@ -491,6 +495,23 @@ class VariableListFactory:
                 "variable": "{fav_ts}",
                 "description": "FAV_TS",
                 "example": "1772841600"
+            }
+        ]
+
+    @property
+    def _weekly_variable(self):
+        return [
+            {
+                "name": "parent_title",
+                "variable": "{parent_title}",
+                "description": "PARENT_TITLE_FOR_WEEKLY",
+                "example": "第377期(0612更新)"
+            },
+            {
+                "name": "leaf_title",
+                "variable": "{leaf_title}",
+                "description": "LEAF_TITLE_FOR_NORMAL",
+                "example": "游戏科学新作《黑神话：钟馗》先导预告"
             }
         ]
 
