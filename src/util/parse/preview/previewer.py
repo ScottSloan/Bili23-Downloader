@@ -24,14 +24,18 @@ class Previewer(ParserBase):
     def __init__(self):
         super().__init__()
 
+        self.show_toast = False
+
         self.video_info_parser = VideoInfoParser()
         self.audio_info_parser = AudioInfoParser()
 
         signal_bus.parse.preview_init.connect(self.on_init)
 
-    def on_init(self, episode_data: dict):
+    def on_init(self, episode_data: dict, show_toast: bool):
         if episode_data is None:
             return
+        
+        self.show_toast = show_toast
         
         self.clear_cache()
 
@@ -58,6 +62,9 @@ class Previewer(ParserBase):
     def on_init_success(self):
         try:
             self.post_process()
+
+            if self.show_toast:
+                signal_bus.toast.show.emit(ToastNotificationCategory.SUCCESS, "", Translator.TIP_MESSAGES("MEDIA_INFO_UPDATED"))
 
         except Exception as e:
             self.on_init_error(str(e))

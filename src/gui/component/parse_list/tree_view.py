@@ -122,7 +122,7 @@ class ParseTreeView(TreeView):
         if item.count() == 0:
             menu.addAction(self._create_action(FluentIcon.GLOBE, self.tr("Open in Browser"), lambda: self.on_open_in_browser(item)))
             menu.addAction(self._create_action(FluentIcon.DOWNLOAD, self.tr("Download as Single Video"), lambda: self.on_download_as_single_video(item)))
-            menu.addAction(self._create_action(ExtendedFluentIcon.RETRY, self.tr("Update Media Info"), lambda: self.update_media_info(item.to_dict())))
+            menu.addAction(self._create_action(ExtendedFluentIcon.RETRY, self.tr("Update Media Info"), lambda: self.on_update_media_info(item.to_dict())))
 
         # 4. 元数据信息
         menu.addSeparator()
@@ -229,10 +229,8 @@ class ParseTreeView(TreeView):
 
         self.update_check_state()
 
-    def update_media_info(self, episode_data: dict):
-        signal_bus.toast.show.emit(ToastNotificationCategory.INFO, "", self.tr("Updating media info..."))
-
-        signal_bus.parse.preview_init.emit(episode_data)
+    def on_update_media_info(self, episode_data: dict):
+        signal_bus.parse.preview_init.emit(episode_data, True)
 
     def shift_select_range(self, new_index: QModelIndex):
         if self._model.last_changed_index.isValid():

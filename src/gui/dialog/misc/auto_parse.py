@@ -9,6 +9,10 @@ from util.common.enum import ToastNotificationCategory, ParserType
 from util.common.data.auto_parse import AutoParsePayload
 from util.common.config import config
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 class AutoParseDialog(DialogBase):
     def __init__(self, url: str, total_pages: int, current_page: int, parent = None):
         super().__init__(parent)
@@ -118,6 +122,8 @@ class AutoParseDialog(DialogBase):
 
         # 保存设置
         self.save_config()
+
+        logger.info("开始自动解析，起始页: %d，结束页: %d", self.payload.start_page, self.payload.end_page)
 
         return super().accept()
     

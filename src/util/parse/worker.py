@@ -141,6 +141,8 @@ class ProgressParseWorker(WorkerBase, QObject):
 
             self.success.emit(parser.get_category_name(), {})
 
+            logger.info("自动解析完成")
+
         except Exception as e:
             logger.exception("解析失败")
 
