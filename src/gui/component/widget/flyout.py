@@ -114,7 +114,8 @@ class FollowWidget(QWidget):
         self.entry_list.set_cover_size(QSize(123, 164))
         self.entry_list.setWrappingView()
 
-        self.pager = Pager(self)
+        self.pager = Pager(self.parent_widget, self)
+        self.pager.set_menu_actions(can_jump_page = True, can_auto_parse = False)
 
         filter_box = QHBoxLayout()
         filter_box.setContentsMargins(5, 5, 5, 5)
@@ -163,6 +164,9 @@ class FollowWidget(QWidget):
         self.pn = page
 
         self.update_list()
+
+    def on_jump_to_page(self):
+        pass
 
     def update_list(self):
         self.entry_list._model.clearData()

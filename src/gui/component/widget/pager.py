@@ -1,26 +1,37 @@
-from PySide6.QtWidgets import QWidget, QHBoxLayout
+from PySide6.QtWidgets import QWidget, QHBoxLayout, QApplication
 from PySide6.QtCore import QSize, Signal
 
-from qfluentwidgets import FluentIcon, BodyLabel
+from qfluentwidgets import FluentIcon, BodyLabel, RoundMenu, Action
 
 from .button import PagerNumberButton, TransparentToolButton, ToolButton
+
+from util.common.enum import ToastNotificationCategory
+from util.common.icon import ExtendedFluentIcon
+from util.common.signal_bus import signal_bus
 
 from typing import List
 
 class Pager(QWidget):
     pageChanged = Signal(int)
 
-    def __init__(self, parent = None):
+    def __init__(self, parent_window: QWidget, parent = None):
         super().__init__(parent)
+
+        self.parent_window = parent_window
 
         self.total_pages = 1
         self.current_page = 1
+
+        self.can_jump_page = False
+        self.can_auto_parse = False
 
         self.btn_list: List[PagerNumberButton] = []
 
         self.init_UI()
 
         self.update_buttons()
+
+        self.menu_btn.clicked.connect(self.on_show_more_menu)
 
     def init_UI(self):
         self.prev_btn = TransparentToolButton(FluentIcon.CARE_LEFT_SOLID)
@@ -145,3 +156,40 @@ class Pager(QWidget):
         ))
 
         self.update_buttons()
+
+    def on_show_more_menu(self):
+        menu = RoundMenu(parent = self)
+
+        if self.can_jump_page:
+            menu.addAction(self._create_action(FluentIcon.DOCUMENT, self.tr("Jump to page"), self.on_jump_to_page))
+
+        if self.can_auto_parse:
+            menu.addAction(self._create_action(ExtendedFluentIcon.AUTOMATION, self.tr("Auto-parse pagination"), self.parent_window.on_auto_parse))
+
+        pos = self.menu_btn.mapToGlobal(self.menu_btn.rect().bottomLeft())
+
+        menu.exec(pos)
+
+    def _create_action(self, icon, text, slot):
+        action = Action(icon = icon, text = text, parent = self)
+        action.triggered.connect(slot)
+
+        return action
+    
+    def on_jump_to_page(self):
+        from ...dialog.misc.jump_to_page import JumpToPageDialog
+
+        dialog = JumpToPageDialog(self.parent_window)
+
+        if dialog.exec():
+            page_number = dialog.page
+
+            if 1 <= page_number <= self.total_pages:
+                self.on_change_page(page_number)
+
+            else:
+                signal_bus.toast.show.emit(ToastNotificationCategory.WARNING, self.tr("Invalid page number"), self.tr("Please enter a number between 1 and {total_pages}").format(total_pages = self.total_pages))
+    
+    def set_menu_actions(self, can_jump_page: bool, can_auto_parse: bool):
+        self.can_jump_page = can_jump_page
+        self.can_auto_parse = can_auto_parse

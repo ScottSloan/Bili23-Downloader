@@ -4,9 +4,10 @@ from PySide6.QtGui import QIcon
 from qfluentwidgets import FluentWidget, ComboBox, LineEdit, PushButton
 
 from gui.component.log_list.list_view import LogListView
-from gui.component.widget import TipLabel
+from gui.component.widget import TipLabel, ToolButton
 
 from util.common.config import appdata_path, config
+from util.common.icon import ExtendedFluentIcon
 from util.common.io.directory import Directory
 
 from pathlib import Path
@@ -49,6 +50,9 @@ class LogViewerDialog(FluentWidget):
         self.search_box.setPlaceholderText(self.tr("Search logs..."))
         self.search_box.setClearButtonEnabled(True)
 
+        self.refresh_btn = ToolButton(ExtendedFluentIcon.RETRY, self)
+        self.refresh_btn.setToolTip(self.tr("Refresh"))
+
         self.clear_btn = PushButton(self.tr("Clear Logs"), self)
         self.open_dir_btn = PushButton(self.tr("Open Logs Directory"), self)
 
@@ -61,6 +65,7 @@ class LogViewerDialog(FluentWidget):
         top_layout = QHBoxLayout()
         top_layout.addWidget(self.category_choice)
         top_layout.addWidget(self.search_box)
+        top_layout.addWidget(self.refresh_btn)
         top_layout.addWidget(self.clear_btn)
         top_layout.addWidget(self.open_dir_btn)
         top_layout.addStretch()
@@ -90,6 +95,7 @@ class LogViewerDialog(FluentWidget):
         self.open_dir_btn.clicked.connect(self.open_logs_directory)
         self.category_choice.currentIndexChanged.connect(self.on_category_changed)
         self.search_box.textChanged.connect(self.on_search_changed)
+        self.refresh_btn.clicked.connect(self.refresh_logs)
 
     def init_data(self):
         self.log_path = Path(appdata_path) / "Bili23 Downloader" / "logs" / "app.log"
@@ -141,3 +147,7 @@ class LogViewerDialog(FluentWidget):
     def open_logs_directory(self):
         Directory.open_directory_in_explorer(self.log_path.parent)
 
+    def refresh_logs(self):
+        self.log_list._model.clearData()
+
+        self.init_data()

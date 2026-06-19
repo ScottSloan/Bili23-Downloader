@@ -345,7 +345,6 @@ class ParseInterface(ParseBase):
 
         self.segmented_widget.search_widget.scrollToItem.connect(self.scroll_to_item)
         self.segmented_widget.search_widget.checkMatches.connect(self.check_matches)
-        self.segmented_widget.pager_widget.menu_btn.clicked.connect(self.on_pager_show_more_menu)
 
         self.season_choice.changeSeason.connect(self.on_season_changed)
 
@@ -451,16 +450,6 @@ class ParseInterface(ParseBase):
 
         menu.exec(pos)
 
-    def on_pager_show_more_menu(self, page):
-        menu = RoundMenu(parent = self)
-
-        menu.addAction(self._create_action(FluentIcon.DOCUMENT, self.tr("Jump to page"), self.on_jump_to_page))
-        menu.addAction(self._create_action(ExtendedFluentIcon.AUTOMATION, self.tr("Auto-parse pagination"), self.on_auto_parse))
-
-        pos = self.pager.menu_btn.mapToGlobal(self.pager.menu_btn.rect().bottomLeft())
-
-        menu.exec(pos)
-
     def on_search(self):
         from ..dialog.misc.search import SearchDialog
 
@@ -520,20 +509,6 @@ class ParseInterface(ParseBase):
 
         dialog = ParseHistoryDialog(self.main_window)
         dialog.exec()
-
-    def on_jump_to_page(self):
-        from ..dialog.misc.jump_to_page import JumpToPageDialog
-
-        dialog = JumpToPageDialog(self.main_window)
-
-        if dialog.exec():
-            page_number = dialog.page
-
-            if 1 <= page_number <= self.pager.total_pages:
-                self.segmented_widget.pager_widget.on_change_page(page_number)
-
-            else:
-                signal_bus.toast.show.emit(ToastNotificationCategory.WARNING, self.tr("Invalid page number"), self.tr("Please enter a number between 1 and {total_pages}").format(total_pages = self.pager.total_pages))
 
     def keyPressEvent(self, event: QKeyEvent):
         if event.modifiers() == Qt.KeyboardModifier.ControlModifier and event.key() == Qt.Key.Key_A:

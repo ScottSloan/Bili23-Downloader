@@ -1,6 +1,6 @@
-from PySide6.QtWidgets import QWidget, QHBoxLayout, QStackedWidget
+from PySide6.QtWidgets import QWidget, QHBoxLayout
 
-from qfluentwidgets import FluentIcon, RoundMenu, Action
+from qfluentwidgets import FluentIcon, RoundMenu, Action, PopUpAniStackedWidget
 
 from .button import ToolButton
 from .search import SearchWidget
@@ -12,6 +12,8 @@ class SegmentedWidget(QWidget):
     def __init__(self, parent = None):
         super().__init__(parent)
 
+        self.parent_window = parent
+
         self.setFixedHeight(32)
 
         self.init_UI()
@@ -21,12 +23,13 @@ class SegmentedWidget(QWidget):
 
         self.choice_btn = ToolButton(ExtendedFluentIcon.SINGLE_CHOICE, self)
 
-        self.stack_widget = QStackedWidget(self)
+        self.stack_widget = PopUpAniStackedWidget(self)
         self.stack_widget.setContentsMargins(0, 0, 0, 0)
         self.stack_widget.setFixedHeight(32)
 
         self.search_widget = SearchWidget(self)
-        self.pager_widget = Pager(self)
+        self.pager_widget = Pager(self.parent_window, self)
+        self.pager_widget.set_menu_actions(can_jump_page = True, can_auto_parse = True)
 
         self.stack_widget.addWidget(self.search_widget)
         self.stack_widget.addWidget(self.pager_widget)

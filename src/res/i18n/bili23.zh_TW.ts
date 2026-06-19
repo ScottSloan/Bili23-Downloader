@@ -1722,17 +1722,17 @@ File name: {filename}</source>
 <context>
     <name>InteractiveVideoDialog</name>
     <message>
-        <location filename="../../gui/dialog/misc/interactive_video.py" line="19"/>
+        <location filename="../../gui/dialog/misc/interactive_video.py" line="23"/>
         <source>Interactive Video</source>
         <translation>互動影片</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/interactive_video.py" line="21"/>
+        <location filename="../../gui/dialog/misc/interactive_video.py" line="25"/>
         <source>Detection of interactive video, please select an operation</source>
         <translation>偵測到互動式影片，請選擇一項操作</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/interactive_video.py" line="23"/>
+        <location filename="../../gui/dialog/misc/interactive_video.py" line="27"/>
         <source>Automatically parse all nodes</source>
         <translation>自動解析所有節點</translation>
     </message>
@@ -1799,52 +1799,57 @@ Message:
 <context>
     <name>LogViewerDialog</name>
     <message>
-        <location filename="../../gui/dialog/log.py" line="27"/>
+        <location filename="../../gui/dialog/log.py" line="28"/>
         <source>Logs</source>
         <translation>日誌</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/log.py" line="41"/>
+        <location filename="../../gui/dialog/log.py" line="42"/>
         <source>All</source>
         <translation>全部</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/log.py" line="42"/>
+        <location filename="../../gui/dialog/log.py" line="43"/>
         <source>Debug</source>
         <translation>調試</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/log.py" line="43"/>
+        <location filename="../../gui/dialog/log.py" line="44"/>
         <source>Info</source>
         <translation>資訊</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/log.py" line="44"/>
+        <location filename="../../gui/dialog/log.py" line="45"/>
         <source>Warning</source>
         <translation>警告</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/log.py" line="45"/>
+        <location filename="../../gui/dialog/log.py" line="46"/>
         <source>Error</source>
         <translation>錯誤</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/log.py" line="49"/>
+        <location filename="../../gui/dialog/log.py" line="50"/>
         <source>Search logs...</source>
         <translation>搜尋日誌...</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/log.py" line="52"/>
+        <location filename="../../gui/dialog/log.py" line="54"/>
+        <source>Refresh</source>
+        <translation>刷新</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialog/log.py" line="56"/>
         <source>Clear Logs</source>
         <translation>清除日誌</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/log.py" line="53"/>
+        <location filename="../../gui/dialog/log.py" line="57"/>
         <source>Open Logs Directory</source>
         <translation>開啟日誌目錄</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/log.py" line="58"/>
+        <location filename="../../gui/dialog/log.py" line="62"/>
         <source>Tips: Click on a log entry to view details, right-click to copy</source>
         <translation>提示：點擊日誌條目查看詳細資料，右鍵點擊複製</translation>
     </message>
@@ -2670,19 +2675,39 @@ For example, if you set the video quality priority to 720P &gt; 1080P &gt; 4K, t
 <context>
     <name>Pager</name>
     <message>
-        <location filename="../../gui/component/widget/pager.py" line="28"/>
+        <location filename="../../gui/component/widget/pager.py" line="37"/>
         <source>Previous page</source>
         <translation>上一頁</translation>
     </message>
     <message>
-        <location filename="../../gui/component/widget/pager.py" line="32"/>
+        <location filename="../../gui/component/widget/pager.py" line="41"/>
         <source>Next page</source>
         <translation>下一頁</translation>
     </message>
     <message>
-        <location filename="../../gui/component/widget/pager.py" line="142"/>
+        <location filename="../../gui/component/widget/pager.py" line="151"/>
         <source>{total_pages} total / {total_items} items</source>
         <translation>共 {total_pages} 頁 / {total_items} 個</translation>
+    </message>
+    <message>
+        <location filename="../../gui/component/widget/pager.py" line="162"/>
+        <source>Jump to page</source>
+        <translation>跳至頁面</translation>
+    </message>
+    <message>
+        <location filename="../../gui/component/widget/pager.py" line="165"/>
+        <source>Auto-parse pagination</source>
+        <translation>自動解析分頁</translation>
+    </message>
+    <message>
+        <location filename="../../gui/component/widget/pager.py" line="189"/>
+        <source>Invalid page number</source>
+        <translation>無效的頁碼</translation>
+    </message>
+    <message>
+        <location filename="../../gui/component/widget/pager.py" line="189"/>
+        <source>Please enter a number between 1 and {total_pages}</source>
+        <translation>請輸入1到{total_pages}之間的一個數字</translation>
     </message>
 </context>
 <context>
@@ -2787,59 +2812,39 @@ For example, if you set the video quality priority to 720P &gt; 1080P &gt; 4K, t
         <translation>下載所選項目</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="402"/>
+        <location filename="../../gui/interface/parse.py" line="401"/>
         <source>Parse Failed</source>
         <translation>解析失敗</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="431"/>
+        <location filename="../../gui/interface/parse.py" line="430"/>
         <source>Added to download queue</source>
         <translation>已加入下載佇列</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="446"/>
+        <location filename="../../gui/interface/parse.py" line="445"/>
         <source>Search</source>
         <translation>搜尋</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="447"/>
+        <location filename="../../gui/interface/parse.py" line="446"/>
         <source>Batch select</source>
         <translation>批次選取</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="448"/>
+        <location filename="../../gui/interface/parse.py" line="447"/>
         <source>Parsing history</source>
         <translation>解析記錄</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="457"/>
-        <source>Jump to page</source>
-        <translation>跳至頁面</translation>
-    </message>
-    <message>
-        <location filename="../../gui/interface/parse.py" line="458"/>
-        <source>Auto-parse pagination</source>
-        <translation>自動解析分頁</translation>
-    </message>
-    <message>
-        <location filename="../../gui/interface/parse.py" line="487"/>
+        <location filename="../../gui/interface/parse.py" line="476"/>
         <source>{category_name} ({selected_count} selected, {total_count} total)</source>
         <translation>{category_name}（已選取 {selected_count} 項，共 {total_count} 項）</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="493"/>
+        <location filename="../../gui/interface/parse.py" line="482"/>
         <source>{category_name} ({total_count} total)</source>
         <translation>{category_name}（共 {total_count} 項）</translation>
-    </message>
-    <message>
-        <location filename="../../gui/interface/parse.py" line="536"/>
-        <source>Invalid page number</source>
-        <translation>無效的頁碼</translation>
-    </message>
-    <message>
-        <location filename="../../gui/interface/parse.py" line="536"/>
-        <source>Please enter a number between 1 and {total_pages}</source>
-        <translation>請輸入1到{total_pages}之間的一個數字</translation>
     </message>
 </context>
 <context>
@@ -3413,12 +3418,12 @@ ISP：{isp}</translation>
 <context>
     <name>SegmentedWidget</name>
     <message>
-        <location filename="../../gui/component/widget/segment.py" line="45"/>
+        <location filename="../../gui/component/widget/segment.py" line="46"/>
         <source>Search</source>
         <translation>搜尋</translation>
     </message>
     <message>
-        <location filename="../../gui/component/widget/segment.py" line="46"/>
+        <location filename="../../gui/component/widget/segment.py" line="47"/>
         <source>Page</source>
         <translation>頁面</translation>
     </message>
