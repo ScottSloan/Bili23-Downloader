@@ -2,14 +2,15 @@ from PySide6.QtCore import Qt, QSize
 
 from qfluentwidgets import SubtitleLabel, BodyLabel, CommandBar, Action, FluentIcon
 
-from gui.dialog.setting.edit_host import EditHostDialog
 from gui.component.setting import EditActionWidget
 from gui.component.widget import DragTreeWidget
 from gui.component.dialog import DialogBase
+from .edit_host import EditHostDialog
 
 from util.common.config import config, DefaultValue
 from util.common.icon import ExtendedFluentIcon
 from util.common.translator import Translator
+from util.network.cdn import CDN
 
 class CDNServerDialog(DialogBase):
     def __init__(self, parent = None):
@@ -17,7 +18,7 @@ class CDNServerDialog(DialogBase):
 
         self.init_UI()
 
-        self.cdn_list = config.get(config.cdn_server_list).copy()
+        self.cdn_list = CDN.get_cdn_server_list()
 
         self.init_cdn_list()
 
@@ -137,7 +138,7 @@ class CDNServerDialog(DialogBase):
             self.cdn_server_list.setItemWidget(item, 2, widget)
 
     def accept(self):
-        config.set(config.cdn_server_list, self.cdn_list.copy())
+        CDN.set_cdn_server_list(self.cdn_list)
 
         return super().accept()
     

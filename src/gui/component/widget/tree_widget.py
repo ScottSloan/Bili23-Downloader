@@ -82,6 +82,11 @@ class DragTreeWidget(TreeWidget):
             # 发送信号，通知外部更新数据和重新绑定 Widget
             self.itemMoved.emit(current_row, target_row)
 
+    def updateGeometries(self):
+        super().updateGeometries()
+
+        self.verticalScrollBar().setSingleStep(30)
+
 class ColumnTreeWidget(TreeWidget):
     def __init__(self, parent = None):
         super().__init__(parent)    

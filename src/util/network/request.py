@@ -4,6 +4,7 @@ from ..common.config import config
 
 from enum import Enum
 import logging
+from threading import Lock
 import orjson
 import httpx
 
@@ -12,6 +13,7 @@ logging.getLogger("httpx").setLevel(logging.WARNING)
 logger = logging.getLogger(__name__)
 
 _client = None
+_client_lock = Lock()
 
 def get_mounts(proxies = None):
     if proxies:
@@ -60,8 +62,10 @@ def _ensure_client():
     global _client
 
     if _client is None:
-        _client = _create_client()
-        _apply_cookies(_client, _load_persisted_cookies())
+        with _client_lock:
+            if _client is None:
+                _client = _create_client()
+                _apply_cookies(_client, _load_persisted_cookies())
 
     return _client
 

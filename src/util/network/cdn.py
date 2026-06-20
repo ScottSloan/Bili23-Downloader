@@ -1,7 +1,7 @@
 from ..common.config import config
+from ..common.enum import Area
 
 from urllib.parse import urlparse
-
 
 class CDN:
     @staticmethod
@@ -43,7 +43,7 @@ class CDN:
         new_url_list = []
 
         for url in url_list:
-            for entry in config.get(config.cdn_server_list):
+            for entry in CDN.get_cdn_server_list():
                 node = entry.get("host")
 
                 new_url = CDN.replace_netloc(url, node)
@@ -61,3 +61,18 @@ class CDN:
         new_parsed_url = parsed_url._replace(netloc = new_netloc)
 
         return new_parsed_url.geturl()
+    
+    @staticmethod
+    def get_cdn_server_list():
+        if config.get(config.area) == Area.CN:
+            return config.get(config.cn_cdn_server_list)
+        else:
+            return config.get(config.ov_cdn_server_list)
+        
+    @staticmethod
+    def set_cdn_server_list(cdn_list: list[dict]):
+        if config.get(config.area) == Area.CN:
+            config.set(config.cn_cdn_server_list, cdn_list)
+        else:
+            config.set(config.ov_cdn_server_list, cdn_list)
+    

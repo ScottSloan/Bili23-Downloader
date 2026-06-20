@@ -19,8 +19,6 @@ from util.common.signal_bus import signal_bus
 from util.common.translator import Translator
 from util.common.config import config
 
-from pathlib import Path
-
 class SettingInterface(ScrollArea):
     def __init__(self, parent = None):
         super().__init__(parent = parent)
@@ -76,7 +74,7 @@ class SettingInterface(ScrollArea):
         # Advanced
         self.advanced_group = SettingCardGroup(self.tr("Advanced"), self)
 
-        self.cdn_card = CDNSettingCard(self)
+        self.cdn_card = CDNSettingCard(self.main_window, self)
         self.ffmpeg_card = FFmpegSettingCard(self.main_window, self)
         self.proxy_card = ProxySettingCard(self)
         self.log_card = PushSettingCard(self.tr("View Logs"), FluentIcon.BOOK_SHELF, self.tr("Logs"), self.tr("View application logs"), self)
@@ -170,7 +168,7 @@ class SettingInterface(ScrollArea):
         self.naming_convention_setting_card.clicked.connect(self.on_custom_naming_rule)
 
         # Advanced
-        self.cdn_card.custom_btn.clicked.connect(self.on_custom_cdn_server_list)
+        self.cdn_card.custom_provider_btn.clicked.connect(self.on_custom_cdn_server_list)
         self.ffmpeg_card.source_choice.currentIndexChanged.connect(self.on_change_ffmpeg_source)
         self.ffmpeg_card.custom_btn.clicked.connect(self.on_change_ffmpeg_path)
         self.proxy_card.custom_btn.clicked.connect(self.on_custom_proxy)

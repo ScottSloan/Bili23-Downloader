@@ -397,18 +397,29 @@ class NumberSettingCard(ExpandGroupSettingCard):
         self.get_global_starting_number_content(config.global_starting_number)
 
 class CDNSettingCard(ExpandGroupSettingCard):
-    def __init__(self, parent = None):
+    def __init__(self, parent_window, parent = None):
         super().__init__(FluentIcon.CLOUD_DOWNLOAD, self.tr("CDN Settings"), self.tr("Adjust CDN settings used for downloading"), parent)
 
-        self.prefer_server_provider_switch = SettingSwitchButton(config.prefer_cdn_server_provider, parent = self)
+        self.parent_window = parent_window
 
-        self.custom_btn = PushButton(self.tr("Customize…"), self)
+        self.prefer_server_provider_switch = SettingSwitchButton(config.prefer_cdn_server_provider, parent = self)
+        self.configure_area_btn = PushButton(self.tr("Configure…"), self)
+        self.custom_provider_btn = PushButton(self.tr("Customize…"), self)
 
         self.viewLayout.setContentsMargins(0, 0, 0, 0)
         self.viewLayout.setSpacing(0)
 
         self.addGroup("", self.tr("Prefer Service Provider CDN"), self.tr("Prefer CDN provided by cloud service providers to improve download stability"), self.prefer_server_provider_switch)
-        self.addGroup("", self.tr("Customize Service Provider CDN"), self.tr("Customize the list and priority of service provider CDNs"), self.custom_btn)
+        self.addGroup("", self.tr("Select Geographic Location"), self.tr("Select your actual location to automatically match a more suitable CDN server and improve download speed"), self.configure_area_btn)
+        self.addGroup("", self.tr("Customize Service Provider CDN"), self.tr("Customize the list and priority of service provider CDNs"), self.custom_provider_btn)
+
+        self.configure_area_btn.clicked.connect(self.show_select_area_dialog)
+
+    def show_select_area_dialog(self):
+        from ...dialog.setting.select_area import SelectAreaDialog
+
+        dialog = SelectAreaDialog(self.parent_window)
+        dialog.exec()
 
 class ProxySettingCard(ExpandGroupSettingCard):
     def __init__(self, parent = None):

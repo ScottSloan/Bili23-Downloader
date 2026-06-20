@@ -358,12 +358,13 @@ class APPConfig(QConfig):
     # Advanced
     prefer_cdn_server_provider = ConfigItem("Advanced", "prefer_cdn_server_provider_", True, BoolValidator())
     area = OptionsConfigItem("Advanced", "area", Area.CN, OptionsValidator(Area), EnumSerializer(Area))
-    cdn_server_list = ConfigItem("Advanced", "cdn_server_list", DefaultValue.cn_cdn_server_list)
+    cn_cdn_server_list = ConfigItem("Advanced", "cn_cdn_server_list", DefaultValue.cn_cdn_server_list)
+    ov_cdn_server_list = ConfigItem("Advanced", "ov_cdn_server_list", DefaultValue.ov_cdn_server_list)
 
     ffmpeg_source = OptionsConfigItem("Advanced", "ffmpeg_source", FFmpegSource.BUNDLED, OptionsValidator(FFmpegSource), EnumSerializer(FFmpegSource), restart = True)
     custom_ffmpeg_path = ConfigItem("Advanced", "custom_ffmpeg_path", "", restart = True)
 
-    proxy_enabled = ConfigItem("Advanced", "proxy_enabled", False, BoolValidator())
+    proxy_enabled = ConfigItem("Advanced", "proxy_enabled", False, BoolValidator(), restart = True)
     proxy_type = OptionsConfigItem("Advanced", "proxy_type", ProxyType.HTTP, OptionsValidator(ProxyType), EnumSerializer(ProxyType))
     proxy_server = ConfigItem("Advanced", "proxy_server", "")
     proxy_port = ConfigItem("Advanced", "proxy_port", 80)
