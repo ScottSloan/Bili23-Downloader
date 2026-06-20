@@ -46,7 +46,8 @@ class FavlistEpisodeParser(EpisodeParserBase):
                 "number": self.episode_count,
                 "pubtime": episode["pubtime"],
                 "favtime": episode["fav_time"],
-                "title": self.get_episode_title(episode)
+                "title": self.get_episode_title(episode),
+                "url": "https://www.bilibili.com/video/{bvid}".format(bvid = episode["bvid"])
             }
 
             item = TreeItem(item_data)

@@ -97,7 +97,7 @@ class CDNServerDialog(DialogBase):
             self.cdn_server_list.scrollToBottom()
 
     def on_reset_to_default(self):
-        self.cdn_list = DefaultValue.cdn_server_list.copy()
+        self.cdn_list = DefaultValue.cn_cdn_server_list.copy()
 
         self.init_cdn_list()
 

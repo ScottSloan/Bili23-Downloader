@@ -75,6 +75,7 @@ sources = [
     "src/gui/dialog/setting/priority.py",
     "src/gui/dialog/setting/proxy.py",
     "src/gui/dialog/setting/rule_list.py",
+    "src/gui/dialog/setting/select_area.py",
     "src/gui/dialog/setting/speed_limit.py",
     "src/gui/dialog/setting/starting_number.py",
     "src/gui/dialog/setting/subtitles_language.py",

@@ -23,8 +23,15 @@ class CDN:
         # 过滤 pcdn、mcdn 等劣质链接
         filtered_url_list = []
 
+        blacklist = [
+            "mcdn",
+            "pcdn",
+            "szbdyd.com",
+            "mountaintoys.cn",
+        ]
+
         for url in url_list:
-            if "szbdyd.com" in url or "mcdn" in url:
+            if any(domain in url for domain in blacklist):
                 continue
 
             filtered_url_list.append(url)

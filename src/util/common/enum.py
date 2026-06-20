@@ -162,3 +162,7 @@ class AutoSelectMode(Enum):
     MANUAL = 0
     SELECT_ALL = 1
     CONDITIONAL = 2
+
+class Area(Enum):
+    CN = "cn"
+    OV = "ov"

@@ -48,7 +48,7 @@ class WatchLaterEpisodeParser(EpisodeParserBase):
                 "pubtime": episode["pubdate"],
                 "favtime": episode["add_at"],
                 "title": episode["title"],
-                "url": "https://www.bilibili.com/video/" + episode["bvid"],
+                "url": "https://www.bilibili.com/video/{bvid}".format(bvid = episode["bvid"])
             }
 
             item = TreeItem(item_data)

@@ -412,7 +412,7 @@ class VariableListFactory:
             {
                 "name": "fav_time",
                 "variable": "{fav_time:%Y-%m-%d_%H-%M-%S}",
-                "description": "FAVTIME",
+                "description": "FAV_TIME",
                 "example": "2026-03-07_12-00-00"
             },
             {

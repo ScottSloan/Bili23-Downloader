@@ -46,8 +46,7 @@ class HistoryEpisodeParser(EpisodeParserBase):
                 "number": self.episode_count,
                 "viewtime": episode["view_at"],
                 "title": self.get_episode_title(episode),
-                
-                "url": "https://www.bilibili.com/video/" + episode["history"]["bvid"],
+                "url": "https://www.bilibili.com/video/{bvid}".format(bvid = episode["history"]["bvid"]),
                 "expired": episode["duration"] == 0
             }
 

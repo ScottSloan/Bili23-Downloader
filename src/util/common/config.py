@@ -9,7 +9,7 @@ from qfluentwidgets import (
 from .serializer import LanguageSerializer, ScalingSerializer
 from .enum import (
     Language, WhenClose, DanmakuType, SubtitleType, CoverType, MetadataType, ProxyType, FFmpegSource, NumberingType,
-    Scaling, FileConflictResolution, VideoContainer, AutoSelectMode
+    Scaling, FileConflictResolution, VideoContainer, AutoSelectMode, Area
 )
 
 from pathlib import Path
@@ -235,13 +235,18 @@ class DefaultValue:
         }
     ]
 
-    cdn_server_list = [
+    # 国内 CDN 服务器列表
+    cn_cdn_server_list = [
         {
             "host": "upos-sz-mirror08c.bilivideo.com",
             "provider": "HUAWEI"
         },
         {
             "host": "upos-sz-mirrorhw.bilivideo.com",
+            "provider": "HUAWEI"
+        },
+        {
+            "host": "upos-sz-mirrorhwb.bilivideo.com",
             "provider": "HUAWEI"
         },
         {
@@ -253,12 +258,32 @@ class DefaultValue:
             "provider": "TENCENT"
         },
         {
+            "host": "upos-sz-mirrorcoso1.bilivideo.com",
+            "provider": "TENCENT"
+        },
+        {
             "host": "upos-sz-mirrorali.bilivideo.com",
             "provider": "ALIYUN"
         },
         {
             "host": "upos-sz-mirroralib.bilivideo.com",
             "provider": "ALIYUN"
+        }
+    ]
+    
+    # 海外 CDN 服务器列表
+    ov_cdn_server_list = [
+        {
+            "host": "upos-hz-mirrorakam.akamaized.net",
+            "provider": "AKAMAI"
+        },
+        {
+            "host": "upos-sz-mirroraliov.bilivideo.com",
+            "provider": "ALIYUN"
+        },
+        {
+            "host": "upos-sz-mirrorcosov.bilivideo.com",
+            "provider": "TENCENT"
         }
     ]
 
@@ -332,7 +357,8 @@ class APPConfig(QConfig):
 
     # Advanced
     prefer_cdn_server_provider = ConfigItem("Advanced", "prefer_cdn_server_provider_", True, BoolValidator())
-    cdn_server_list = ConfigItem("Advanced", "cdn_server_list", DefaultValue.cdn_server_list)
+    area = OptionsConfigItem("Advanced", "area", Area.CN, OptionsValidator(Area), EnumSerializer(Area))
+    cdn_server_list = ConfigItem("Advanced", "cdn_server_list", DefaultValue.cn_cdn_server_list)
 
     ffmpeg_source = OptionsConfigItem("Advanced", "ffmpeg_source", FFmpegSource.BUNDLED, OptionsValidator(FFmpegSource), EnumSerializer(FFmpegSource), restart = True)
     custom_ffmpeg_path = ConfigItem("Advanced", "custom_ffmpeg_path", "", restart = True)
@@ -412,6 +438,7 @@ class APPConfig(QConfig):
     auto_parse_teaching_tip_shown = ConfigItem("Misc", "auto_parse_teaching_tip_shown_", False, BoolValidator())
 
     tutorial_dialog_shown = ConfigItem("Misc", "tutorial_dialog_shown", False, BoolValidator())
+    select_area_dialog_shown = ConfigItem("Misc", "select_area_dialog_shown", False, BoolValidator())
 
 def check_need_patch():
     # 检查是否需要修补配置文件

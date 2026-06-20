@@ -3,8 +3,7 @@ from PySide6.QtGui import QIcon, QPixmap
 from PySide6.QtCore import Qt, QTimer
 
 from qfluentwidgets import (
-    MSFluentWindow, SystemThemeListener, NavigationItemPosition,
-    FluentIcon, InfoBadge, qrouter
+    MSFluentWindow, SystemThemeListener, NavigationItemPosition, FluentIcon, InfoBadge, qrouter
 )
 
 from util.common.enum import ToastNotificationCategory, WhenClose
@@ -21,13 +20,17 @@ class MainWindowBase:
         signal_bus.update.check.emit(False)
 
         if not config.get(config.tutorial_dialog_shown):
-            QTimer.singleShot(0, self.show_tutorial_dialog)
+            self.show_tutorial_dialog()
 
             config.set(config.tutorial_dialog_shown, True)
 
-        else:
-            if not config.get(config.is_login):
-                QTimer.singleShot(0, self.show_login_teaching_tip)
+        if not config.get(config.select_area_dialog_shown):
+            self.show_select_area_dialog()
+
+            config.set(config.select_area_dialog_shown, True)
+
+        if not config.get(config.is_login):
+            self.show_login_teaching_tip()
 
         QTimer.singleShot(0, self.check_download_path)
         QTimer.singleShot(0, self.check_ffmpeg)
@@ -100,9 +103,6 @@ class MainWindowBase:
 
             webbrowser.open("https://bili23.scott-sloan.cn/doc/introduction.html")
 
-        if not config.get(config.is_login):
-            QTimer.singleShot(0, self.show_login_teaching_tip)
-
     def show_login_teaching_tip(self: "MainWindow"):
         from qfluentwidgets import TeachingTip, TeachingTipTailPosition
 
@@ -138,6 +138,12 @@ class MainWindowBase:
         from ..dialog.update import UpdateDialog
 
         dialog = UpdateDialog(info, self)
+        dialog.exec()
+
+    def show_select_area_dialog(self):
+        from ..dialog.setting.select_area import SelectAreaDialog
+
+        dialog = SelectAreaDialog(self)
         dialog.exec()
 
     def center_on_screen(self: "MainWindow", show = True):

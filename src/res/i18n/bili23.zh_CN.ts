@@ -1610,37 +1610,37 @@ File name: {filename}</source>
 <context>
     <name>FavoriteFlyoutWidget</name>
     <message>
-        <location filename="../../gui/component/widget/flyout.py" line="193"/>
+        <location filename="../../gui/component/widget/flyout.py" line="197"/>
         <source>Refresh</source>
         <translation>刷新</translation>
     </message>
     <message>
-        <location filename="../../gui/component/widget/flyout.py" line="197"/>
+        <location filename="../../gui/component/widget/flyout.py" line="201"/>
         <source>Open in Browser</source>
         <translation>在浏览器中打开</translation>
     </message>
     <message>
-        <location filename="../../gui/component/widget/flyout.py" line="242"/>
+        <location filename="../../gui/component/widget/flyout.py" line="246"/>
         <source>Favorites</source>
         <translation>收藏夹</translation>
     </message>
     <message>
-        <location filename="../../gui/component/widget/flyout.py" line="248"/>
+        <location filename="../../gui/component/widget/flyout.py" line="252"/>
         <source>Subscriptions</source>
         <translation>订阅合集</translation>
     </message>
     <message>
-        <location filename="../../gui/component/widget/flyout.py" line="254"/>
+        <location filename="../../gui/component/widget/flyout.py" line="258"/>
         <source>Anime &amp; Series</source>
         <translation>追番追剧</translation>
     </message>
     <message>
-        <location filename="../../gui/component/widget/flyout.py" line="261"/>
+        <location filename="../../gui/component/widget/flyout.py" line="265"/>
         <source>Watch later</source>
         <translation>稍后再看</translation>
     </message>
     <message>
-        <location filename="../../gui/component/widget/flyout.py" line="268"/>
+        <location filename="../../gui/component/widget/flyout.py" line="272"/>
         <source>History</source>
         <translation>历史记录</translation>
     </message>
@@ -1973,27 +1973,27 @@ B站的视频通常将视频流和音频流分开存储和传输，下载时需�
 <context>
     <name>MainWindow</name>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="296"/>
+        <location filename="../../gui/interface/main_window.py" line="302"/>
         <source>Parser</source>
         <translation>解析</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="302"/>
+        <location filename="../../gui/interface/main_window.py" line="308"/>
         <source>Downloads</source>
         <translation>下载</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="313"/>
+        <location filename="../../gui/interface/main_window.py" line="319"/>
         <source>Favorites</source>
         <translation>收藏</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="322"/>
+        <location filename="../../gui/interface/main_window.py" line="328"/>
         <source>About</source>
         <translation>关于</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="340"/>
+        <location filename="../../gui/interface/main_window.py" line="346"/>
         <source>Settings</source>
         <translation>设置</translation>
     </message>
@@ -2041,22 +2041,22 @@ B站的视频通常将视频流和音频流分开存储和传输，下载时需�
 <context>
     <name>MainWindowBase</name>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="91"/>
+        <location filename="../../gui/interface/main_window.py" line="94"/>
         <source>Welcome to Bili23 Downloader</source>
         <translation>欢迎使用 Bili23 Downloader</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="92"/>
+        <location filename="../../gui/interface/main_window.py" line="95"/>
         <source>It is recommended to read the user guide and FAQs when using for the first time, to help you get started quickly and make full use of all features.</source>
         <translation>首次使用时建议先查看使用说明和常见问题，帮助你更快上手并充分利用各项功能。</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="95"/>
+        <location filename="../../gui/interface/main_window.py" line="98"/>
         <source>View</source>
         <translation>查看</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="96"/>
+        <location filename="../../gui/interface/main_window.py" line="99"/>
         <source>Skip</source>
         <translation>跳过</translation>
     </message>
@@ -2072,32 +2072,32 @@ Download functionality will be limited if you&apos;re not logged in.</source>
         <translation>点击头像登录哔哩哔哩账号，未登录状态下下载功能将受限</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="181"/>
+        <location filename="../../gui/interface/main_window.py" line="187"/>
         <source>Download Directory Invalid</source>
         <translation>下载目录无效</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="182"/>
+        <location filename="../../gui/interface/main_window.py" line="188"/>
         <source>The current download directory is inaccessible or lacks write permissions. Please reset it.</source>
         <translation>当前下载目录无法访问或没有写入权限，请重新设置。</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="191"/>
+        <location filename="../../gui/interface/main_window.py" line="197"/>
         <source>FFmpeg Not Found</source>
         <translation>未找到 FFmpeg</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="192"/>
+        <location filename="../../gui/interface/main_window.py" line="198"/>
         <source>No FFmpeg executable found. Please ensure FFmpeg is installed and configured correctly.</source>
         <translation>未找到 FFmpeg 可执行文件。请确保已正确安装并配置 FFmpeg。</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="201"/>
+        <location filename="../../gui/interface/main_window.py" line="207"/>
         <source>Login Required</source>
         <translation>需要登录</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="202"/>
+        <location filename="../../gui/interface/main_window.py" line="208"/>
         <source>Please log in to your account first.</source>
         <translation>请先登录账号</translation>
     </message>
@@ -2675,37 +2675,37 @@ For example, if you set the video quality priority to 720P &gt; 1080P &gt; 4K, t
 <context>
     <name>Pager</name>
     <message>
-        <location filename="../../gui/component/widget/pager.py" line="37"/>
+        <location filename="../../gui/component/widget/pager.py" line="39"/>
         <source>Previous page</source>
         <translation>上一页</translation>
     </message>
     <message>
-        <location filename="../../gui/component/widget/pager.py" line="41"/>
+        <location filename="../../gui/component/widget/pager.py" line="43"/>
         <source>Next page</source>
         <translation>下一页</translation>
     </message>
     <message>
-        <location filename="../../gui/component/widget/pager.py" line="151"/>
+        <location filename="../../gui/component/widget/pager.py" line="153"/>
         <source>{total_pages} total / {total_items} items</source>
         <translation>共 {total_pages} 页 / {total_items} 个</translation>
     </message>
     <message>
-        <location filename="../../gui/component/widget/pager.py" line="162"/>
+        <location filename="../../gui/component/widget/pager.py" line="164"/>
         <source>Jump to page</source>
         <translation>跳转到页面</translation>
     </message>
     <message>
-        <location filename="../../gui/component/widget/pager.py" line="165"/>
+        <location filename="../../gui/component/widget/pager.py" line="167"/>
         <source>Auto-parse pagination</source>
         <translation>自动解析分页</translation>
     </message>
     <message>
-        <location filename="../../gui/component/widget/pager.py" line="189"/>
+        <location filename="../../gui/component/widget/pager.py" line="191"/>
         <source>Invalid page number</source>
         <translation>无效页码</translation>
     </message>
     <message>
-        <location filename="../../gui/component/widget/pager.py" line="189"/>
+        <location filename="../../gui/component/widget/pager.py" line="191"/>
         <source>Please enter a number between 1 and {total_pages}</source>
         <translation>请输入一个介于1和{total_pages}之间的数字</translation>
     </message>
@@ -3418,14 +3418,42 @@ ISP：{isp}</translation>
 <context>
     <name>SegmentedWidget</name>
     <message>
-        <location filename="../../gui/component/widget/segment.py" line="46"/>
+        <location filename="../../gui/component/widget/segment.py" line="48"/>
         <source>Search</source>
         <translation>搜索</translation>
     </message>
     <message>
-        <location filename="../../gui/component/widget/segment.py" line="47"/>
+        <location filename="../../gui/component/widget/segment.py" line="49"/>
         <source>Page</source>
         <translation>页面</translation>
+    </message>
+</context>
+<context>
+    <name>SelectAreaDialog</name>
+    <message>
+        <location filename="../../gui/dialog/setting/select_area.py" line="15"/>
+        <source>Select Geographic Location</source>
+        <translation>选择地理位置</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialog/setting/select_area.py" line="17"/>
+        <source>Please select your actual location. The program will automatically match a more suitable CDN server accordingly to improve download speed.</source>
+        <translation>请选择你的实际所在地，程序会据此自动匹配更合适的 CDN 服务器，以提升下载速度。</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialog/setting/select_area.py" line="19"/>
+        <source>Tip: If you are using a proxy, please select the region where the proxy server is located.</source>
+        <translation>提示：如果正在使用代理，请选择代理服务器所在区域。</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialog/setting/select_area.py" line="21"/>
+        <source>Mainland China</source>
+        <translation>中国大陆</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialog/setting/select_area.py" line="24"/>
+        <source>Overseas</source>
+        <translation>海外</translation>
     </message>
 </context>
 <context>
