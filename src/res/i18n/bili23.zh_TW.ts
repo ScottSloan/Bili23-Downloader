@@ -1154,32 +1154,32 @@ If you continue, please disable the &quot;Preallocate file space&quot; option. (
 <context>
     <name>DuplicateDownloadDialog</name>
     <message>
-        <location filename="../../gui/dialog/misc/duplicate_download.py" line="14"/>
+        <location filename="../../gui/dialog/misc/duplicate_download.py" line="18"/>
         <source>Duplicate Download Detected</source>
         <translation>偵測到重複下載</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/duplicate_download.py" line="16"/>
+        <location filename="../../gui/dialog/misc/duplicate_download.py" line="20"/>
         <source>A duplicate download task already exists in the download list. Do you want to continue downloading?</source>
         <translation>偵測到下載清單中已存在相同的下載任務，是否繼續下載？</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/duplicate_download.py" line="17"/>
+        <location filename="../../gui/dialog/misc/duplicate_download.py" line="21"/>
         <source>Task Name: {task_title}</source>
         <translation>任務名稱：{task_title}</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/duplicate_download.py" line="20"/>
+        <location filename="../../gui/dialog/misc/duplicate_download.py" line="24"/>
         <source>Don&apos;t ask again</source>
         <translation>不再詢問</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/duplicate_download.py" line="27"/>
+        <location filename="../../gui/dialog/misc/duplicate_download.py" line="32"/>
         <source>Continue</source>
         <translation>繼續下載</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/duplicate_download.py" line="28"/>
+        <location filename="../../gui/dialog/misc/duplicate_download.py" line="33"/>
         <source>Skip</source>
         <translation>跳過下載</translation>
     </message>
@@ -2794,19 +2794,24 @@ For example, if you set the video quality priority to 720P &gt; 1080P &gt; 4K, t
 <context>
     <name>ParseBase</name>
     <message>
-        <location filename="../../gui/interface/parse.py" line="191"/>
+        <location filename="../../gui/interface/parse.py" line="192"/>
         <source>{category_name} ({total_count} total)</source>
         <translation>{category_name}（共 {total_count} 項）</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="214"/>
+        <location filename="../../gui/interface/parse.py" line="215"/>
         <source>Auto-parse Pagination</source>
         <translation>自動解析分頁</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="215"/>
+        <location filename="../../gui/interface/parse.py" line="216"/>
         <source>Click here to automatically parse all pages.</source>
         <translation>點擊此處可進行自動解析分頁操作</translation>
+    </message>
+    <message>
+        <location filename="../../gui/interface/parse.py" line="287"/>
+        <source>Skipped duplicate download: {task_title}</source>
+        <translation>已跳過重複下載的任務：{task_title}</translation>
     </message>
 </context>
 <context>
@@ -2855,67 +2860,67 @@ For example, if you set the video quality priority to 720P &gt; 1080P &gt; 4K, t
 <context>
     <name>ParseInterface</name>
     <message>
-        <location filename="../../gui/interface/parse.py" line="274"/>
+        <location filename="../../gui/interface/parse.py" line="310"/>
         <source>Paste and Parse</source>
         <translation>貼上並解析</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="278"/>
+        <location filename="../../gui/interface/parse.py" line="314"/>
         <source>Link / av / BV / ep / ss / md / Favorites / Profile</source>
         <translation>連結 / av / BV / ep / ss / md / 收藏夾 / 個人空間</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="283"/>
+        <location filename="../../gui/interface/parse.py" line="319"/>
         <source>Parse</source>
         <translation>解析</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="294"/>
+        <location filename="../../gui/interface/parse.py" line="330"/>
         <source>Download Options</source>
         <translation>下載選項</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="298"/>
+        <location filename="../../gui/interface/parse.py" line="334"/>
         <source>More</source>
         <translation>更多</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="313"/>
+        <location filename="../../gui/interface/parse.py" line="349"/>
         <source>Download Selected Items</source>
         <translation>下載所選項目</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="418"/>
+        <location filename="../../gui/interface/parse.py" line="456"/>
         <source>Parse Failed</source>
         <translation>解析失敗</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="447"/>
+        <location filename="../../gui/interface/parse.py" line="485"/>
         <source>Added to download queue</source>
         <translation>已加入下載佇列</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="462"/>
+        <location filename="../../gui/interface/parse.py" line="500"/>
         <source>Search</source>
         <translation>搜尋</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="463"/>
+        <location filename="../../gui/interface/parse.py" line="501"/>
         <source>Batch select</source>
         <translation>批次選取</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="464"/>
+        <location filename="../../gui/interface/parse.py" line="502"/>
         <source>Parsing history</source>
         <translation>解析記錄</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="493"/>
+        <location filename="../../gui/interface/parse.py" line="531"/>
         <source>{category_name} ({selected_count} selected, {total_count} total)</source>
         <translation>{category_name}（已選取 {selected_count} 項，共 {total_count} 項）</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="499"/>
+        <location filename="../../gui/interface/parse.py" line="537"/>
         <source>{category_name} ({total_count} total)</source>
         <translation>{category_name}（共 {total_count} 項）</translation>
     </message>

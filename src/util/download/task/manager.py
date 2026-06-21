@@ -287,6 +287,8 @@ class TaskManager:
                 case DuplicateDownloadResolution.SKIP:
                     # 返回 True 表示跳过下载
                     logger.info("已跳过重复下载任务: %s", episode_info.get("title", ""))
+
+                    signal_bus.download.show_skip_duplicate_download_toast.emit(episode_info.get("title", ""))
                     
                     return True
                 

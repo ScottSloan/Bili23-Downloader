@@ -24,8 +24,6 @@ from util.parse.preview.previewer import Previewer
 from util.parse.preview.info import PreviewerInfo
 
 from util.misc.history import history_manager
-from util.download.task.manager import task_manager
-from util.thread.pool import GlobalThreadPoolTask
 from util.thread.async_ import AsyncTask
 
 from collections import deque
@@ -41,6 +39,7 @@ class ParseBase(QFrame):
         self.category_name = ""
         self.duplicate_download_queue = deque()
         self.processing_duplicate_download = False
+        self.duplicate_download_toast_shown = False
 
     def check_extra_data(self: "ParseInterface", extra_data: dict):
         if extra_data:
@@ -261,7 +260,12 @@ class ParseBase(QFrame):
         try:
             if config.get(config.duplicate_download_resolution) != DuplicateDownloadResolution.ALWAYS_ASK:
                 # 根据设置自动处理重复下载的情况，无论是跳过还是继续下载，都不再弹出对话框
-                result_info["skip"] = (config.get(config.duplicate_download_resolution) == DuplicateDownloadResolution.SKIP)
+                skip = (config.get(config.duplicate_download_resolution) == DuplicateDownloadResolution.SKIP)
+
+                result_info["skip"] = skip
+
+                if skip:
+                    self.show_skip_duplicate_download_toast(episode_info.get("title", ""))
 
             else:
                 from ..dialog.misc.duplicate_download import DuplicateDownloadDialog
@@ -272,6 +276,21 @@ class ParseBase(QFrame):
         finally:
             done_event.set()
             QTimer.singleShot(0, self._process_next_duplicate_download)
+
+    def show_skip_duplicate_download_toast(self: "ParseInterface", task_title: str):
+        if not self.duplicate_download_toast_shown:
+            self.duplicate_download_toast_shown = True
+
+            signal_bus.toast.show.emit(
+                ToastNotificationCategory.INFO,
+                "",
+                self.tr("Skipped duplicate download: {task_title}").format(task_title = task_title)
+            )
+
+            QTimer.singleShot(3000, self._reset_duplicate_download_toast_flag)
+
+    def _reset_duplicate_download_toast_flag(self: "ParseInterface"):
+        self.duplicate_download_toast_shown = False
 
 class ParseInterface(ParseBase):
     def __init__(self, parent = None):
@@ -375,7 +394,9 @@ class ParseInterface(ParseBase):
         signal_bus.parse.search_keyword.connect(self.parse_list.search_keywords)
         signal_bus.parse.show_interactive_video_dialog.connect(self.on_show_interactive_video_dialog)
         signal_bus.parse.preview_finish.connect(self.on_preview_info_finished)
+
         signal_bus.download.show_duplicate_download_dialog.connect(self.on_show_duplicate_download_dialog)
+        signal_bus.download.show_skip_duplicate_download_toast.connect(self.show_skip_duplicate_download_toast)
 
         self.segmented_widget.search_widget.scrollToItem.connect(self.scroll_to_item)
         self.segmented_widget.search_widget.checkMatches.connect(self.check_matches)

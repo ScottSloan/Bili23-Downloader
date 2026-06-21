@@ -51,4 +51,3 @@ class DuplicateDownloadDialog(DialogBase):
 
         if self.never_ask_check.isChecked():
             config.set(config.duplicate_download_resolution, DuplicateDownloadResolution.SKIP if self.result_info["skip"] else DuplicateDownloadResolution.CONTINUE)
-            print("111")

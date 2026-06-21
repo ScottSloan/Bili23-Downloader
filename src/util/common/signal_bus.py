@@ -37,6 +37,7 @@ class SignalBus:
         create_task = Signal(list)
 
         show_duplicate_download_dialog = Signal(object, object, object)
+        show_skip_duplicate_download_toast = Signal(str)
 
         add_to_downloading_list = Signal(list)
         auto_manage_concurrent_downloads = Signal()
