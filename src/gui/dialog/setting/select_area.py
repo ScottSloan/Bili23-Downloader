@@ -21,7 +21,7 @@ class SelectAreaDialog(DialogBase):
         self.cn_radio = RadioButton(self.tr("Mainland China"), self)
         self.cn_radio.setChecked(config.get(config.area) == Area.CN)
         
-        self.ov_radio = RadioButton(self.tr("Overseas"), self)
+        self.ov_radio = RadioButton(self.tr("Outside Mainland China (Including Hong Kong, Macau, and Taiwan)"), self)
         self.ov_radio.setChecked(config.get(config.area) == Area.OV)
 
         self.viewLayout.addWidget(caption_lab)

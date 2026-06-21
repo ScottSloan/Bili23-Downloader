@@ -1,14 +1,14 @@
 from PySide6.QtWidgets import QHBoxLayout, QVBoxLayout
-from PySide6.QtGui import QIcon
 
-from qfluentwidgets import FluentWidget, ComboBox, LineEdit, PushButton
+from qfluentwidgets import ComboBox, LineEdit, PushButton
 
 from gui.component.log_list.list_view import LogListView
 from gui.component.widget import TipLabel, ToolButton
+from gui.component.dialog import FluentWidget
 
-from util.common.config import appdata_path, config
 from util.common.icon import ExtendedFluentIcon
 from util.common.io.directory import Directory
+from util.common.config import appdata_path
 
 from pathlib import Path
 import re
@@ -26,15 +26,13 @@ class LogViewerDialog(FluentWidget):
         super().__init__(parent = parent)
 
         self.setWindowTitle(self.tr("Logs"))
-        self.setWindowIcon(QIcon(":/bili23/icon/app.svg"))
         self.setMinimumSize(800, 520)
 
         self.init_UI()
 
         self.init_data()
 
-        self.setMicaEffectEnabled(config.get(config.mica_effect))
-        self.setStayOnTop(config.get(config.stay_on_top))
+        self._init_common()
 
     def init_UI(self):
         self.category_choice = ComboBox(self)
@@ -47,6 +45,7 @@ class LogViewerDialog(FluentWidget):
         self.category_choice.setCurrentIndex(0)
 
         self.search_box = LineEdit(self)
+        self.search_box.setMinimumWidth(250)
         self.search_box.setPlaceholderText(self.tr("Search logs..."))
         self.search_box.setClearButtonEnabled(True)
 
@@ -71,7 +70,7 @@ class LogViewerDialog(FluentWidget):
         top_layout.addStretch()
 
         main_layout = QVBoxLayout(self)
-        main_layout.setContentsMargins(15, 38, 15, 15)
+        main_layout.setContentsMargins(15, self.titleBar.height(), 15, 15)
         main_layout.addLayout(top_layout)
         main_layout.addSpacing(10)
         main_layout.addWidget(self.log_list)
@@ -79,16 +78,6 @@ class LogViewerDialog(FluentWidget):
         main_layout.addWidget(tip_label)
 
         self.connect_signals()
-
-    def showEvent(self, event):
-        parent_rect = self.parent().geometry()
-
-        new_left = parent_rect.left() + (parent_rect.width() - self.size().width()) // 2
-        new_top = parent_rect.top() + (parent_rect.height() - self.size().height()) // 2
-
-        self.move(new_left, new_top)
-
-        super().showEvent(event)
 
     def connect_signals(self):
         self.clear_btn.clicked.connect(self.clear_logs)

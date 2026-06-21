@@ -407,7 +407,7 @@
     <message>
         <location filename="../../gui/component/setting/card.py" line="413"/>
         <source>Select your actual location to automatically match a more suitable CDN server and improve download speed</source>
-        <translation type="unfinished"></translation>
+        <translation>選擇實際位置，以自動匹配更合適的 CDN 伺服器並提升下載速度</translation>
     </message>
     <message>
         <location filename="../../gui/component/setting/card.py" line="414"/>
@@ -1819,52 +1819,52 @@ Message:
         <translation>日誌</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/log.py" line="42"/>
+        <location filename="../../gui/dialog/log.py" line="40"/>
         <source>All</source>
         <translation>全部</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/log.py" line="43"/>
+        <location filename="../../gui/dialog/log.py" line="41"/>
         <source>Debug</source>
         <translation>調試</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/log.py" line="44"/>
+        <location filename="../../gui/dialog/log.py" line="42"/>
         <source>Info</source>
         <translation>資訊</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/log.py" line="45"/>
+        <location filename="../../gui/dialog/log.py" line="43"/>
         <source>Warning</source>
         <translation>警告</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/log.py" line="46"/>
+        <location filename="../../gui/dialog/log.py" line="44"/>
         <source>Error</source>
         <translation>錯誤</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/log.py" line="50"/>
+        <location filename="../../gui/dialog/log.py" line="49"/>
         <source>Search logs...</source>
         <translation>搜尋日誌...</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/log.py" line="54"/>
+        <location filename="../../gui/dialog/log.py" line="53"/>
         <source>Refresh</source>
         <translation>刷新</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/log.py" line="56"/>
+        <location filename="../../gui/dialog/log.py" line="55"/>
         <source>Clear Logs</source>
         <translation>清除日誌</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/log.py" line="57"/>
+        <location filename="../../gui/dialog/log.py" line="56"/>
         <source>Open Logs Directory</source>
         <translation>開啟日誌目錄</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/log.py" line="62"/>
+        <location filename="../../gui/dialog/log.py" line="61"/>
         <source>Tips: Click on a log entry to view details, right-click to copy</source>
         <translation>提示：點擊日誌條目查看詳細資料，右鍵點擊複製</translation>
     </message>
@@ -2883,57 +2883,67 @@ For example, if you set the video quality priority to 720P &gt; 1080P &gt; 4K, t
 <context>
     <name>ParseTreeView</name>
     <message>
-        <location filename="../../gui/component/parse_list/tree_view.py" line="112"/>
+        <location filename="../../gui/component/parse_list/tree_view.py" line="113"/>
         <source>Check All</source>
         <translation>全選</translation>
     </message>
     <message>
-        <location filename="../../gui/component/parse_list/tree_view.py" line="112"/>
+        <location filename="../../gui/component/parse_list/tree_view.py" line="113"/>
         <source>Uncheck All</source>
         <translation>取消全選</translation>
     </message>
     <message>
-        <location filename="../../gui/component/parse_list/tree_view.py" line="114"/>
+        <location filename="../../gui/component/parse_list/tree_view.py" line="115"/>
         <source>Reverse</source>
         <translation>反選</translation>
     </message>
     <message>
-        <location filename="../../gui/component/parse_list/tree_view.py" line="118"/>
+        <location filename="../../gui/component/parse_list/tree_view.py" line="119"/>
         <source>Check Item</source>
         <translation>勾選</translation>
     </message>
     <message>
-        <location filename="../../gui/component/parse_list/tree_view.py" line="118"/>
+        <location filename="../../gui/component/parse_list/tree_view.py" line="119"/>
         <source>Uncheck Item</source>
         <translation>取消勾選</translation>
     </message>
     <message>
-        <location filename="../../gui/component/parse_list/tree_view.py" line="123"/>
+        <location filename="../../gui/component/parse_list/tree_view.py" line="124"/>
         <source>Open in Browser</source>
         <translation>於瀏覽器中開啟</translation>
     </message>
     <message>
-        <location filename="../../gui/component/parse_list/tree_view.py" line="124"/>
+        <location filename="../../gui/component/parse_list/tree_view.py" line="125"/>
         <source>Download as Single Video</source>
         <translation>下載為單個影片</translation>
     </message>
     <message>
-        <location filename="../../gui/component/parse_list/tree_view.py" line="129"/>
+        <location filename="../../gui/component/parse_list/tree_view.py" line="130"/>
         <source>View Metadata</source>
         <translation>檢視元數據</translation>
     </message>
     <message>
-        <location filename="../../gui/component/parse_list/tree_view.py" line="125"/>
+        <location filename="../../gui/component/parse_list/tree_view.py" line="126"/>
         <source>Update Media Info</source>
         <translation>更新媒體資訊</translation>
     </message>
     <message>
-        <location filename="../../gui/component/parse_list/tree_view.py" line="152"/>
+        <location filename="../../gui/component/parse_list/tree_view.py" line="133"/>
+        <source>View Cover</source>
+        <translation>查看封面</translation>
+    </message>
+    <message>
+        <location filename="../../gui/component/parse_list/tree_view.py" line="160"/>
         <source>Metadata</source>
         <translation>元數據</translation>
     </message>
     <message>
-        <location filename="../../gui/component/parse_list/tree_view.py" line="163"/>
+        <location filename="../../gui/component/parse_list/tree_view.py" line="162"/>
+        <source>Copy</source>
+        <translation>複製</translation>
+    </message>
+    <message>
+        <location filename="../../gui/component/parse_list/tree_view.py" line="175"/>
         <source>Added to download queue</source>
         <translation>已加入下載佇列</translation>
     </message>
@@ -3467,8 +3477,8 @@ ISP：{isp}</translation>
     </message>
     <message>
         <location filename="../../gui/dialog/setting/select_area.py" line="24"/>
-        <source>Overseas</source>
-        <translation>海外</translation>
+        <source>Outside Mainland China (Including Hong Kong, Macau, and Taiwan)</source>
+        <translation>中國大陸以外地區（包括香港、澳門及台灣）</translation>
     </message>
 </context>
 <context>
@@ -3854,12 +3864,12 @@ Under no circumstances shall the developer be liable for any direct, indirect, i
 <context>
     <name>TopNavigationDialogBase</name>
     <message>
-        <location filename="../../gui/component/dialog.py" line="179"/>
+        <location filename="../../gui/component/dialog.py" line="200"/>
         <source>OK</source>
         <translation>確定</translation>
     </message>
     <message>
-        <location filename="../../gui/component/dialog.py" line="183"/>
+        <location filename="../../gui/component/dialog.py" line="204"/>
         <source>Cancel</source>
         <translation>取消</translation>
     </message>
@@ -4313,6 +4323,25 @@ Under no circumstances shall the developer be liable for any direct, indirect, i
         <location filename="../../util/common/translator.py" line="46"/>
         <source>360P</source>
         <translation>360P 流暢</translation>
+    </message>
+</context>
+<context>
+    <name>ViewCoverDialog</name>
+    <message>
+        <location filename="../../gui/dialog/misc/view_cover.py" line="16"/>
+        <source>Cover</source>
+        <translation>封面</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialog/misc/view_cover.py" line="29"/>
+        <location filename="../../gui/dialog/misc/view_cover.py" line="74"/>
+        <source>Save As</source>
+        <translation>另存為</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialog/misc/view_cover.py" line="75"/>
+        <source>JPEG Image (*.jpg);;PNG Image (*.png);;WebP Image (*.webp)</source>
+        <translation>JPEG 圖像 (*.jpg);;PNG 圖像 (*.png);;WebP 圖像 (*.webp)</translation>
     </message>
 </context>
 <context>

@@ -1,4 +1,5 @@
 from PySide6.QtCore import Qt, QModelIndex
+from PySide6.QtWidgets import QApplication
 
 from qfluentwidgets import TreeView, RoundMenu, Action, FluentIcon
 
@@ -18,7 +19,7 @@ class ParseTreeView(TreeView):
     def __init__(self, main_window, parent = None):
         super().__init__(parent)
 
-        self.main_window = parent
+        self.main_window = main_window
 
         self._model = ParseModel(parent = self)
 
@@ -128,6 +129,9 @@ class ParseTreeView(TreeView):
         menu.addSeparator()
         menu.addAction(self._create_action(FluentIcon.DOCUMENT, self.tr("View Metadata"), lambda: self.on_view_metadata(item)))
 
+        if item.count() == 0:
+            menu.addAction(self._create_action(FluentIcon.PHOTO, self.tr("View Cover"), lambda: self.on_view_cover(item)))
+
         menu.exec(global_pos)
 
     def on_toggle_check_all_items(self):
@@ -143,6 +147,10 @@ class ParseTreeView(TreeView):
             webbrowser.open(item.url)
 
     def on_view_metadata(self, item: TreeItem):
+        def on_copy_metadata(info_str):
+            clipboard = QApplication.clipboard()
+            clipboard.setText(info_str)
+
         from ..dialog import MessageBox
 
         info = item.to_dict()
@@ -150,7 +158,11 @@ class ParseTreeView(TreeView):
         info_str = "\n".join(f"{key}: {value}" for key, value in info.items())
 
         dialog = MessageBox(title = self.tr("Metadata"), content = info_str, parent = self.main_window)
-        dialog.hideCancelButton()
+
+        dialog.cancelButton.setText(self.tr("Copy"))
+        dialog.cancelButton.clicked.disconnect()
+        dialog.cancelButton.clicked.connect(lambda: on_copy_metadata(info_str))
+
         dialog.exec()
 
     def on_download_as_single_video(self, item: TreeItem):
@@ -259,3 +271,9 @@ class ParseTreeView(TreeView):
             
         except IndexError:
             pass
+    
+    def on_view_cover(self, item: TreeItem):
+        from ...dialog.misc.view_cover import ViewCoverDialog
+
+        dialog = ViewCoverDialog(item.cover, parent = self.main_window)
+        dialog.show()

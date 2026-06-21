@@ -1,8 +1,9 @@
 from PySide6.QtWidgets import QVBoxLayout, QHBoxLayout, QWidget, QApplication
 from PySide6.QtCore import Qt, QEventLoop, QSize
+from PySide6.QtGui import QIcon
 
 from qfluentwidgets import (
-    MessageBoxBase, FluentWidgetTitleBar, FluentWidget, PrimaryPushButton, PushButton,
+    MessageBoxBase, FluentWidgetTitleBar, PrimaryPushButton, PushButton, FluentWidget as _FluentWidget,
     PopUpAniStackedWidget, InfoBar, InfoBarPosition, MessageBox as _MessageBox
 )
 from .widget import PivotItem, Pivot, ScrollArea
@@ -83,7 +84,27 @@ class DialogBase(Base, MessageBoxBase):
         if config.get(config.stay_on_top):
             self.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint, True)
 
-class FluentDialogBase(Base, FluentWidget):
+class FluentWidget(_FluentWidget):
+    def __init__(self, parent = None):
+        super().__init__(parent)
+
+    def _init_common(self):
+        self.setWindowIcon(QIcon(":/bili23/icon/app.svg"))
+
+        self.setMicaEffectEnabled(config.get(config.mica_effect))
+        self.setStayOnTop(config.get(config.stay_on_top))
+
+    def showEvent(self, event):
+        parent_rect = self.parent().geometry()
+
+        new_left = parent_rect.left() + (parent_rect.width() - self.size().width()) // 2
+        new_top = parent_rect.top() + (parent_rect.height() - self.size().height()) // 2
+
+        self.move(new_left, new_top)
+
+        super().showEvent(event)
+
+class FluentDialogBase(Base, _FluentWidget):
     """
     通过 FluentWidget 实现的模态对话框基类，提供了 Fluent 风格的标题栏和窗口效果。
     """
