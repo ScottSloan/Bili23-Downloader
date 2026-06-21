@@ -15,19 +15,25 @@ from .reparse_worker import ReparseWorker
 from .db import TaskDatabase
 from .info import TaskInfo
 
+from threading import Event
 from pathlib import Path
 from typing import List
 from uuid import uuid4
-from threading import Event
+import logging
 import hashlib
 import orjson
 import re
+
+logger = logging.getLogger(__name__)
 
 class TaskManager:
     def __init__(self):
         self.db_manager = TaskDatabase()
 
-        signal_bus.download.create_task.connect(self.create)
+        signal_bus.download.create_task.connect(self._create_async)
+
+    def _create_async(self, episode_info_list: List[dict]):
+        GlobalThreadPoolTask.run_func(self.create, episode_info_list)
 
     def __episode_info_to_task_info(self, episode_info: dict, number) -> TaskInfo:
         task_info = TaskInfo()
@@ -274,24 +280,28 @@ class TaskManager:
             match config.get(config.duplicate_download_resolution):
                 case DuplicateDownloadResolution.CONTINUE:
                     # 返回 False 表示继续下载
+                    logger.info("已继续重复下载任务: %s", episode_info.get("title", ""))
+
                     return False
 
                 case DuplicateDownloadResolution.SKIP:
                     # 返回 True 表示跳过下载
+                    logger.info("已跳过重复下载任务: %s", episode_info.get("title", ""))
+                    
                     return True
                 
                 case DuplicateDownloadResolution.ALWAYS_ASK:
                     # 询问用户是否继续下载。后台线程等待主线程弹窗返回结果。
-                    result_box = {"skip": True}
+                    result_info = {"skip": True, "not_ask_again": False}
                     done_event = Event()
 
-                    signal_bus.download.show_duplicate_download_dialog.emit(episode_info, result_box, done_event)
+                    signal_bus.download.show_duplicate_download_dialog.emit(episode_info, result_info, done_event)
                     done_event.wait()
 
-                    return result_box["skip"]
-                    
-        print("检测重复下载，hash_id:", hash_id, "结果:", result)
+                    logger.info("用户选择%s重复下载任务: %s", "跳过" if result_info["skip"] else "继续", episode_info.get("title", ""))
 
+                    return result_info["skip"]
+                    
         return result
 
     def _calc_hash_id(self, episode_info: dict):

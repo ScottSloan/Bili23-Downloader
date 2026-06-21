@@ -6,14 +6,13 @@ from qfluentwidgets import (
     LineEdit, BodyLabel, FluentIcon, RoundMenu, Action, PrimaryPushButton, InfoBarIcon,
     TeachingTipTailPosition, TeachingTip
 )
-from qfluentwidgets.components.material import AcrylicMenu
 
 from gui.component.widget import (
     TransparentToolButton, SegmentedWidget, IndeterminateProgressPushButton, SeasonComboBox, ProgressTipWidget,
 )
 from gui.component.parse_list import ParseTreeView
 
-from util.common.enum import ToastNotificationCategory, AutoSelectMode, ParserType
+from util.common.enum import ToastNotificationCategory, AutoSelectMode, ParserType, DuplicateDownloadResolution
 from util.common.signal_bus import signal_bus, config
 from util.common.icon import ExtendedFluentIcon
 from util.common.translator import Translator
@@ -29,6 +28,8 @@ from util.download.task.manager import task_manager
 from util.thread.pool import GlobalThreadPoolTask
 from util.thread.async_ import AsyncTask
 
+from collections import deque
+from threading import Event
 import logging
 
 logger = logging.getLogger(__name__)
@@ -38,6 +39,8 @@ class ParseBase(QFrame):
         super().__init__(parent = parent)
 
         self.category_name = ""
+        self.duplicate_download_queue = deque()
+        self.processing_duplicate_download = False
 
     def check_extra_data(self: "ParseInterface", extra_data: dict):
         if extra_data:
@@ -241,19 +244,34 @@ class ParseBase(QFrame):
             if self.parse_list.get_checked_items_count() > 0:
                 self.on_download()
 
-    def show_duplicate_download_dialog(self: "ParseInterface", episode_info: dict):
-        from ..dialog.misc.duplicate_download import DuplicateDownloadDialog
+    def on_show_duplicate_download_dialog(self: "ParseInterface", episode_info: dict, result_info: dict, done_event: Event):
+        self.duplicate_download_queue.append((episode_info, result_info, done_event))
 
-        dialog = DuplicateDownloadDialog(episode_info, self.main_window)
+        if not self.processing_duplicate_download:
+            self.processing_duplicate_download = True
+            QTimer.singleShot(0, self._process_next_duplicate_download)
 
-        return dialog
+    def _process_next_duplicate_download(self: "ParseInterface"):
+        if not self.duplicate_download_queue:
+            self.processing_duplicate_download = False
+            return
 
-    def on_show_duplicate_download_dialog(self, episode_info: dict, result_box: dict, done_event):
+        episode_info, result_info, done_event = self.duplicate_download_queue.popleft()
+
         try:
-            dialog = self.show_duplicate_download_dialog(episode_info)
-            result_box["skip"] = not dialog.exec()
+            if config.get(config.duplicate_download_resolution) != DuplicateDownloadResolution.ALWAYS_ASK:
+                # 根据设置自动处理重复下载的情况，无论是跳过还是继续下载，都不再弹出对话框
+                result_info["skip"] = (config.get(config.duplicate_download_resolution) == DuplicateDownloadResolution.SKIP)
+
+            else:
+                from ..dialog.misc.duplicate_download import DuplicateDownloadDialog
+
+                dialog = DuplicateDownloadDialog(episode_info, result_info, self.main_window)
+                dialog.exec()
+
         finally:
             done_event.set()
+            QTimer.singleShot(0, self._process_next_duplicate_download)
 
 class ParseInterface(ParseBase):
     def __init__(self, parent = None):
@@ -441,7 +459,7 @@ class ParseInterface(ParseBase):
         config.current_starting_number = 1
 
         # 添加到下载队列
-        GlobalThreadPoolTask.run_func(task_manager.create, checked_episodes_list)
+        signal_bus.download.create_task.emit(checked_episodes_list)
 
         signal_bus.toast.show.emit(ToastNotificationCategory.SUCCESS, "", self.tr("Added to download queue"))
 

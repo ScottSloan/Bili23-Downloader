@@ -80,7 +80,7 @@ class MainWindowBase:
             content = content,
             orient = Qt.Orientation.Vertical,
             isClosable = True,
-            duration = -1,
+            duration = 5000,
             position = InfoBarPosition.BOTTOM_RIGHT,
             parent = self,
             contentMaxHeight = 200
