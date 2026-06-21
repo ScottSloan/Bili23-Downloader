@@ -1,9 +1,10 @@
-from PySide6.QtWidgets import QVBoxLayout, QSizePolicy, QLabel, QFileDialog
+from PySide6.QtWidgets import QVBoxLayout, QSizePolicy, QFileDialog
 from PySide6.QtGui import QImage, QPixmap
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QRect
 
 from qfluentwidgets import PushButton, FluentIcon
 
+from gui.component.widget.label import ImageLabel
 from gui.component.dialog import FluentWidget
 
 from util.network.request import NetworkRequestWorker, ResponseType
@@ -14,7 +15,7 @@ class ViewCoverDialog(FluentWidget):
         super().__init__(parent)
 
         self.setWindowTitle(self.tr("Cover"))
-        self.setMinimumSize(600, 400)
+        self.resize(650, 360)
 
         self.cover_url = cover_url
         self.cover_pixmap = None
@@ -31,9 +32,11 @@ class ViewCoverDialog(FluentWidget):
         self.save_as_btn.setFixedSize(120, 30)
         self.save_as_btn.clicked.connect(self.on_save_as)
 
-        self.image_lab = QLabel(parent = self)
+        self.image_lab = ImageLabel(parent = self)
         self.image_lab.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.image_lab.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        self.image_lab.resize(640, 340)
+        self.image_lab.loading()
 
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(10, self.titleBar.height(), 10, 10)
@@ -51,6 +54,8 @@ class ViewCoverDialog(FluentWidget):
         image.loadFromData(data)
 
         self.cover_pixmap = QPixmap.fromImage(image)
+        self.image_lab.stop()
+
         self._update_cover_pixmap()
 
     def _update_cover_pixmap(self):

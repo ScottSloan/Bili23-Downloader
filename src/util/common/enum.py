@@ -166,3 +166,8 @@ class AutoSelectMode(Enum):
 class Area(Enum):
     CN = "cn"
     OV = "ov"
+
+class DuplicateDownloadResolution(Enum):
+    CONTINUE = 0
+    SKIP = 1
+    ALWAYS_ASK = 2

@@ -36,6 +36,8 @@ class SignalBus:
     class Download(QObject):
         create_task = Signal(list)
 
+        show_duplicate_download_dialog = Signal(object, object, object)
+
         add_to_downloading_list = Signal(list)
         auto_manage_concurrent_downloads = Signal()
         add_to_completed_list = Signal(list)

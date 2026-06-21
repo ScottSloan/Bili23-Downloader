@@ -108,6 +108,17 @@ class TaskDatabase(Database):
                 DELETE FROM download_task WHERE task_id = ?
             """, (task_id,))
 
+    def check_duplicate(self, hash_id: str):
+        completed_result = self.query("""
+            SELECT title FROM completed_task WHERE hash_id = ?
+        """, (hash_id,))
+    
+        download_result = self.query("""
+            SELECT title FROM download_task WHERE hash_id = ?
+        """, (hash_id,))
+
+        return len(completed_result) > 0 or len(download_result) > 0
+
     def _upgrade(self):
         def _to_task_list(result):
             _task_info_list = []
@@ -139,7 +150,7 @@ class TaskDatabase(Database):
         self.add_tasks(_to_task_list(completed_tasks), completed = True)
 
     def _calc_hash_id(self, task_info: TaskInfo):
-        # 计算 hash_id
+        # 根据 task_info 计算 hash_id
         attr = task_info.Episode.attribute
 
         if attr & Attribute.VIDEO_BIT:

@@ -110,7 +110,7 @@ class FluentDialogBase(Base, _FluentWidget):
     """
     def __init__(self, size: QSize, parent = None):
         Base.__init__(self)
-        FluentWidget.__init__(self, parent)
+        _FluentWidget.__init__(self, parent)
 
         self._size = size
         self._setup_title_bar()

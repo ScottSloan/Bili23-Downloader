@@ -3,7 +3,7 @@ from PySide6.QtCore import Qt, QTimer
 from PySide6.QtGui import QPixmap
 
 from qfluentwidgets import (
-    BodyLabel, LineEdit, HyperlinkButton, setCustomStyleSheet
+    BodyLabel, LineEdit, HyperlinkButton
 )
 
 from gui.component.widget import IndeterminateProgressPushButton, CidComboBox, SectionLabel, ImageLabel
@@ -31,7 +31,6 @@ class LoginDialog(DialogBase):
         scan_lab = SectionLabel(self.tr("Scan QR Code to Log In"))
 
         self.qrcode_img = ImageLabel(self)
-        self.qrcode_img.setPixmap(QPixmap(":/bili23/icon/qrcode_placeholder.png"))
         self.qrcode_img.setFixedSize(160, 160)
         self.qrcode_img.loading()
         

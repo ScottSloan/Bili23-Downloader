@@ -9,7 +9,7 @@ from qfluentwidgets import (
 from .serializer import LanguageSerializer, ScalingSerializer
 from .enum import (
     Language, WhenClose, DanmakuType, SubtitleType, CoverType, MetadataType, ProxyType, FFmpegSource, NumberingType,
-    Scaling, FileConflictResolution, VideoContainer, AutoSelectMode, Area
+    Scaling, FileConflictResolution, VideoContainer, AutoSelectMode, Area, DuplicateDownloadResolution
 )
 
 from pathlib import Path
@@ -315,7 +315,9 @@ class APPConfig(QConfig):
     when_close_window = OptionsConfigItem("Behavior", "when_close_window", WhenClose.ALWAYS_ASK, OptionsValidator(WhenClose), EnumSerializer(WhenClose))
 
     show_download_options_dialog = ConfigItem("Behavior", "show_download_options_dialog", True, BoolValidator())
+    show_notification = ConfigItem("Behavior", "show_notification", False, BoolValidator())
     preallocate_file_space = ConfigItem("Behavior", "preallocate_file_space", True, BoolValidator())
+    duplicate_download_resolution = OptionsConfigItem("Behavior", "duplicate_download_resolution", DuplicateDownloadResolution.ALWAYS_ASK, OptionsValidator(DuplicateDownloadResolution), EnumSerializer(DuplicateDownloadResolution))
     file_conflict_resolution = OptionsConfigItem("Behavior", "file_conflict_resolution", FileConflictResolution.AUTO_RENAME, OptionsValidator(FileConflictResolution), EnumSerializer(FileConflictResolution))
 
     # Download
@@ -324,8 +326,6 @@ class APPConfig(QConfig):
     download_parallel = RangeConfigItem("Download", "download_parallel", 1, RangeValidator(1, 10))
     speed_limit_enabled = ConfigItem("Download", "speed_limit_enabled", False, BoolValidator())
     speed_limit_rate = ConfigItem("Download", "speed_limit_rate", 10.0)
-
-    show_notification = ConfigItem("Download", "show_notification", False, BoolValidator())
 
     video_quality_priority = ConfigItem("Download", "video_quality_priority", DefaultValue.video_quality_priority)
     audio_quality_priority = ConfigItem("Download", "audio_quality_priority", DefaultValue.audio_quality_priority)

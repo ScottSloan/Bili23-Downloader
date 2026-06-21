@@ -6,6 +6,7 @@ from qfluentwidgets import (
     LineEdit, BodyLabel, FluentIcon, RoundMenu, Action, PrimaryPushButton, InfoBarIcon,
     TeachingTipTailPosition, TeachingTip
 )
+from qfluentwidgets.components.material import AcrylicMenu
 
 from gui.component.widget import (
     TransparentToolButton, SegmentedWidget, IndeterminateProgressPushButton, SeasonComboBox, ProgressTipWidget,
@@ -240,6 +241,20 @@ class ParseBase(QFrame):
             if self.parse_list.get_checked_items_count() > 0:
                 self.on_download()
 
+    def show_duplicate_download_dialog(self: "ParseInterface", episode_info: dict):
+        from ..dialog.misc.duplicate_download import DuplicateDownloadDialog
+
+        dialog = DuplicateDownloadDialog(episode_info, self.main_window)
+
+        return dialog
+
+    def on_show_duplicate_download_dialog(self, episode_info: dict, result_box: dict, done_event):
+        try:
+            dialog = self.show_duplicate_download_dialog(episode_info)
+            result_box["skip"] = not dialog.exec()
+        finally:
+            done_event.set()
+
 class ParseInterface(ParseBase):
     def __init__(self, parent = None):
         super().__init__(parent = parent)
@@ -342,6 +357,7 @@ class ParseInterface(ParseBase):
         signal_bus.parse.search_keyword.connect(self.parse_list.search_keywords)
         signal_bus.parse.show_interactive_video_dialog.connect(self.on_show_interactive_video_dialog)
         signal_bus.parse.preview_finish.connect(self.on_preview_info_finished)
+        signal_bus.download.show_duplicate_download_dialog.connect(self.on_show_duplicate_download_dialog)
 
         self.segmented_widget.search_widget.scrollToItem.connect(self.scroll_to_item)
         self.segmented_widget.search_widget.checkMatches.connect(self.check_matches)

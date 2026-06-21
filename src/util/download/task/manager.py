@@ -1,5 +1,5 @@
 from ...common.data import reversed_video_quality_map, reversed_audio_quality_map, video_codec_str_map
-from ...common.enum import DownloadStatus, DownloadType, NumberingType
+from ...common.enum import DownloadStatus, DownloadType, NumberingType, DuplicateDownloadResolution
 from ...common.timestamp import get_timestamp_ms
 from ...common.translator import Translator
 from ...common.signal_bus import signal_bus
@@ -15,10 +15,11 @@ from .reparse_worker import ReparseWorker
 from .db import TaskDatabase
 from .info import TaskInfo
 
-from threading import Lock
 from pathlib import Path
 from typing import List
 from uuid import uuid4
+from threading import Event
+import hashlib
 import orjson
 import re
 
@@ -167,7 +168,8 @@ class TaskManager:
                 continue
 
             # 判断是否重复下载
-            # TODO: 重复下载逻辑
+            if self._check_duplicate(episode_info):
+                continue
 
             # 先判断重复下载，再分配编号
             number = self.__get_number(episode_info)
@@ -262,4 +264,71 @@ class TaskManager:
 
         self.__update_file_name_info(task_info)
 
+    def _check_duplicate(self, episode_info: dict):
+        hash_id = self._calc_hash_id(episode_info)
+
+        result = self.db_manager.check_duplicate(hash_id)
+
+        if result:
+            # 触发重复下载，根据用户设置执行相应的操作
+            match config.get(config.duplicate_download_resolution):
+                case DuplicateDownloadResolution.CONTINUE:
+                    # 返回 False 表示继续下载
+                    return False
+
+                case DuplicateDownloadResolution.SKIP:
+                    # 返回 True 表示跳过下载
+                    return True
+                
+                case DuplicateDownloadResolution.ALWAYS_ASK:
+                    # 询问用户是否继续下载。后台线程等待主线程弹窗返回结果。
+                    result_box = {"skip": True}
+                    done_event = Event()
+
+                    signal_bus.download.show_duplicate_download_dialog.emit(episode_info, result_box, done_event)
+                    done_event.wait()
+
+                    return result_box["skip"]
+                    
+        print("检测重复下载，hash_id:", hash_id, "结果:", result)
+
+        return result
+
+    def _calc_hash_id(self, episode_info: dict):
+        # 根据 episode_info 计算 hash_id
+        attr = episode_info.get("attribute", 0)
+
+        if attr & Attribute.VIDEO_BIT:
+            # 投稿视频
+            metadata = {
+                "bvid": episode_info.get("bvid"),
+                "cid": episode_info.get("cid"),
+                "aid": episode_info.get("aid")
+            }
+
+        elif attr & Attribute.BANGUMI_BIT:
+            # 剧集类
+            metadata = {
+                "bvid": episode_info.get("bvid"),
+                "cid": episode_info.get("cid"),
+                "aid": episode_info.get("aid"),
+                "ep_id": episode_info.get("ep_id")
+            }
+
+        elif attr & Attribute.CHEESE_BIT:
+            # 课程类
+            metadata = {
+                "aid": episode_info.get("aid"),
+                "cid": episode_info.get("cid"),
+                "ep_id": episode_info.get("ep_id")
+            }
+
+        elif attr & Attribute.AUDIO_BIT:
+            # 音乐类
+            metadata = {
+                "sid": episode_info.get("sid")
+            }
+
+        return hashlib.md5(orjson.dumps(metadata)).hexdigest()
+    
 task_manager = TaskManager()

@@ -493,12 +493,14 @@ class DownloadHandlingSettingCard(ExpandGroupSettingCard):
 
         self.show_download_options_dialog_switch = SettingSwitchButton(config.show_download_options_dialog, parent = self)
         self.show_notification_switch = SettingSwitchButton(config.show_notification, parent = self)
+        self.duplicate_download_resolution_choice = SettingComboBox(config.duplicate_download_resolution, [self.tr("Continue"), self.tr("Skip"), self.tr("Always ask")], parent = self)
         self.file_conflict_resolution_choice = SettingComboBox(config.file_conflict_resolution, [self.tr("Auto-rename"), self.tr("Overwrite")], parent = self)
         self.prelocation_switch = SettingSwitchButton(config.preallocate_file_space, parent = self)
 
         self.addGroup("", self.tr("Show Download Options Dialog"), self.tr("Show a dialog before starting the download to customize settings for this task"), self.show_download_options_dialog_switch)
         self.addGroup("", self.tr("Show Notifications"), self.tr("Show notifications when downloads complete"), self.show_notification_switch)
         preallocate_group = self.addGroup("", self.tr("Preallocate File Space"), self.tr("Preallocate file space before downloading to improve performance"), self.prelocation_switch)
+        self.addGroup("", self.tr("Duplicate Download Resolution"), self.tr("Choose the action when a duplicate download is detected"), self.duplicate_download_resolution_choice)
         self.addGroup("", self.tr("File Conflict Resolution"), self.tr("Choose the action when a file with the same name already exists"), self.file_conflict_resolution_choice)
 
         preallocate_group.showHyperLinkLabel(self.tr("About Preallocating File Space"))
