@@ -14,6 +14,7 @@ from util.format.file_name import FileNameFormatter
 
 from functools import wraps
 from pathlib import Path
+import string
 import re
 import os
 
@@ -158,7 +159,7 @@ class EditRuleDialog(DialogBase):
             else:
                 desc_str = desc
 
-            self._add_item(entry["variable"], desc_str, entry["example"])
+            self._add_item(entry["variable"], desc_str, str(entry["example"]))
             
         self.file_name_formatter.set_variable_data(variable_list)
 
@@ -228,13 +229,17 @@ class EditRuleDialog(DialogBase):
 
         elif rule.startswith(("/", ".", "..")) or rule.endswith(("/", ".")):
             return False, self.tr("""Rule must not start or end with '/' or '.'""")
+
+        validate, message = self._validate_rule_template(rule)
+
+        if not validate:
+            return False, message
         
         self.file_name_formatter.set_rule(rule)
 
         result = self.file_name_formatter.format()
 
         if result:
-
             for part in result.split(os.sep):
                 if re.search(r'[<>:\\"|?*\x00-\x1f]', part):
                     return False, self.tr("""Rule contains illegal characters: <>:\\"|?* or control characters""")
@@ -245,6 +250,17 @@ class EditRuleDialog(DialogBase):
                 return True, Path(result)
         
         else:
+            return False, self.tr("Invalid naming rule")
+
+    def _validate_rule_template(self, rule: str):
+        try:
+            for literal_text, _, _, _ in string.Formatter().parse(rule):
+                if literal_text and re.search(r'[<>:\\"|?*\x00-\x1f]', literal_text):
+                    return False, self.tr("""Rule contains illegal characters: <>:\\"|?* or control characters""")
+
+            return True, None
+
+        except (ValueError, KeyError):
             return False, self.tr("Invalid naming rule")
 
     def on_context_menu(self, pos):

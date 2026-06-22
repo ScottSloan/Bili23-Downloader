@@ -90,7 +90,7 @@ class VariableListFactory:
                 "name": "number",
                 "variable": "{number}",
                 "description": "NUMBER",
-                "example": "1"
+                "example": 1
             },
             {
                 "name": "uploader",
@@ -166,7 +166,7 @@ class VariableListFactory:
                 "name": "p",
                 "variable": "{p}",
                 "description": "PART_NUMBER_FOR_PART",
-                "example": "4"
+                "example": 4
             },
             {
                 "name": "leaf_title",
@@ -225,7 +225,7 @@ class VariableListFactory:
                 "name": "p",
                 "variable": "{p}",
                 "description": "PART_NUMBER_FOR_COLLECTION",
-                "example": "3"
+                "example": 3
             },
             {
                 "name": "aid",
@@ -295,13 +295,13 @@ class VariableListFactory:
                 "name": "season_number",
                 "variable": "{season_number}",
                 "description": "SEASON_NUMBER",
-                "example": "2"
+                "example": 2
             },
             {
                 "name": "episode_number",
                 "variable": "{episode_number}",
                 "description": "EPISODE_NUMBER",
-                "example": "18"
+                "example": 18
             },
             {
                 "name": "aid",

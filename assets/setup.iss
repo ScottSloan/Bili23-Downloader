@@ -3,8 +3,8 @@
 ; Non-commercial use only
 
 #define MyAppName "Bili23 Downloader"
-#define MyAppVersion "2.10.0"
-#define MyAppVersionName "2.10.0"
+#define MyAppVersion "2.10.1"
+#define MyAppVersionName "2.10.1"
 #define MyAppPublisher "Scott Sloan"
 #define MyAppURL "https://bili23.scott-sloan.cn"
 #define MyAppExeName "Bili23.exe"
