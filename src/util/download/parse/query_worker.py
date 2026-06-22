@@ -54,7 +54,7 @@ class QueryWorker:
 
             _file_size = int(content_length)
 
-            if _file_size <= 10240:
+            if _file_size <= 1024:
                 # 如果文件极小（例如某些 CDN 拦截时返回的 1KB 左右错误文本），视为无效链接跳过
                 continue
 
@@ -62,7 +62,7 @@ class QueryWorker:
             break
         
         if _file_size == 0:
-            raise Exception("无法获取有效的下载链接")
+            raise RuntimeError("无法获取有效的下载链接")
 
         return {
             "url": resolved_url,

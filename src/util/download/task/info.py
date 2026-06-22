@@ -1,9 +1,15 @@
 from dataclasses import dataclass, field, fields, asdict
+from functools import lru_cache
+
+
+@lru_cache(maxsize=None)
+def _field_names(cls) -> frozenset[str]:
+    return frozenset(f.name for f in fields(cls))
 
 @dataclass
 class InfoBase:
     def from_dict(self, data: dict) -> None:
-        field_names = {f.name for f in fields(self)}
+        field_names = _field_names(type(self))
 
         for k, v in data.items():
             if k in field_names:
@@ -37,9 +43,12 @@ class EpisodeInfo(InfoBase):
     aid: int = 0
     bvid: str = ""
     cid: int = 0
+    sid: int = 0
     cover: str = ""
     ep_id: int = 0
     pubtime: int = 0
+    favtime: int = 0
+    viewtime: int = 0
     number: str = ""
     part_number: int = 0
     episode_number: int = 0

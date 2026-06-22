@@ -12,7 +12,7 @@ from .base import AdditionalParserBase
 
 from dataclasses import asdict
 from pathlib import Path
-import json
+import orjson
 
 class MetadataParser(AdditionalParserBase):
     def __init__(self, task_info: TaskInfo):
@@ -51,7 +51,7 @@ class MetadataParser(AdditionalParserBase):
         # 过滤掉空值
         filtered_data = {k: v for k, v in data.items() if v not in [None, "", [], {}, 0]}
 
-        return json.dumps(filtered_data, ensure_ascii = False, indent = 4)
+        return orjson.dumps(filtered_data, option = orjson.OPT_INDENT_2).decode("utf-8")
 
     def _save_poster(self):
         path = Path(self.task_info.File.download_path, self.task_info.File.folder, "poster.jpg")

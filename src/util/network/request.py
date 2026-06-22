@@ -4,11 +4,16 @@ from ..common.config import config
 
 from enum import Enum
 import logging
+from threading import Lock
+import orjson
 import httpx
 
 logging.getLogger("httpx").setLevel(logging.WARNING)
 
+logger = logging.getLogger(__name__)
+
 _client = None
+_client_lock = Lock()
 
 def get_mounts(proxies = None):
     if proxies:
@@ -26,6 +31,9 @@ def _create_client():
     
     limits = httpx.Limits(max_connections = 10, max_keepalive_connections = 10)
     transport = httpx.HTTPTransport(retries = 3)
+
+    if config.get(config.proxy_enabled):
+        logger.info("已启用代理，类型：%s，服务器：%s:%s", config.get(config.proxy_type), config.get(config.proxy_server), config.get(config.proxy_port))
 
     return httpx.Client(
         limits = limits,
@@ -54,8 +62,10 @@ def _ensure_client():
     global _client
 
     if _client is None:
-        _client = _create_client()
-        _apply_cookies(_client, _load_persisted_cookies())
+        with _client_lock:
+            if _client is None:
+                _client = _create_client()
+                _apply_cookies(_client, _load_persisted_cookies())
 
     return _client
 
@@ -133,7 +143,7 @@ class SyncNetWorkRequest:
                 return response.text
 
             case ResponseType.JSON:
-                return response.json()
+                return orjson.loads(response.text)
 
             case ResponseType.BYTES:
                 return response.content

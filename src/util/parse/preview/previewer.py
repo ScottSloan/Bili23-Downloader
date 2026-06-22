@@ -1,5 +1,6 @@
 from ...common.enum import MediaType, ToastNotificationCategory
 from ...common.signal_bus import signal_bus
+from ...common.translator import Translator
 from ...common.config import config
 
 from ...network.request import NetworkRequestWorker
@@ -23,14 +24,18 @@ class Previewer(ParserBase):
     def __init__(self):
         super().__init__()
 
+        self.show_toast = False
+
         self.video_info_parser = VideoInfoParser()
         self.audio_info_parser = AudioInfoParser()
 
         signal_bus.parse.preview_init.connect(self.on_init)
 
-    def on_init(self, episode_data: dict):
+    def on_init(self, episode_data: dict, show_toast: bool):
         if episode_data is None:
             return
+        
+        self.show_toast = show_toast
         
         self.clear_cache()
 
@@ -51,9 +56,15 @@ class Previewer(ParserBase):
         elif ep_attr & Attribute.CHEESE_BIT:
             self.get_cheese_info(episode_data)
 
+        elif ep_attr & Attribute.AUDIO_BIT:
+            self.get_audio_info(episode_data)
+
     def on_init_success(self):
         try:
             self.post_process()
+
+            if self.show_toast:
+                signal_bus.toast.show.emit(ToastNotificationCategory.SUCCESS, "", Translator.TIP_MESSAGES("MEDIA_INFO_UPDATED"))
 
         except Exception as e:
             self.on_init_error(str(e))
@@ -61,7 +72,7 @@ class Previewer(ParserBase):
     def post_process(self):
         # 判断是否为 DRM
         if PreviewerInfo.info_data.get("is_drm", False):
-            raise Exception("不支持下载受 DRM 保护的媒体")
+            raise RuntimeError("不支持下载受 DRM 保护的媒体")
 
         # 判断媒体类型（dash or mp4），前面不需要解析的视频类型在这里 media_type 仍然是 UNKNOWN
         # 不会影响后续流程
@@ -74,6 +85,9 @@ class Previewer(ParserBase):
 
             elif PreviewerInfo.info_data.get("format").startswith("flv"):
                 PreviewerInfo.media_type = MediaType.FLV
+
+            elif PreviewerInfo.info_data.get("format").startswith("m4a"):
+                PreviewerInfo.media_type = MediaType.M4A
 
         self.parse_info()
 
@@ -183,6 +197,32 @@ class Previewer(ParserBase):
 
         AsyncTask.run(worker)
 
+    def get_audio_info(self, episode_data: dict):
+        def on_success(response: dict):
+            self.check_response(response)
+
+            response["data"]["format"] = "m4a"
+
+            PreviewerInfo.info_data = response.copy()["data"]
+            PreviewerInfo.info_data["parser_type"] = "audio"
+            PreviewerInfo.info_data["query_url"] = url
+
+            self.on_init_success()
+            
+        params = {
+            "sid": episode_data["sid"],
+            "privilege": 2,
+            "quality": 2
+        }
+
+        url = f"https://www.bilibili.com/audio/music-service-c/web/url?{urlencode(params)}"
+
+        worker = NetworkRequestWorker(url)
+        worker.success.connect(on_success)
+        worker.error.connect(self.on_init_error)
+
+        AsyncTask.run(worker)
+
     def check_need_parse(self, ep_attr: int):
         attr_list = [
             Attribute.SPACE_BIT,
@@ -199,12 +239,17 @@ class Previewer(ParserBase):
         return True
 
     def check_response(self, response: dict):
-        if response.get("code", -1) != 0:
-            message = response.get("message", "未知错误")
+        code = response.get("code", -1)
+
+        if code != 0:
+            if code in Translator.ERROR_CODE_EXPLANATION():
+                message = Translator.ERROR_CODE_EXPLANATION(code)
+            else:
+                message = response.get("message", "未知错误")
 
             self.on_init_error(message)
 
-            raise Exception(message)
+            raise RuntimeError(message)
 
     def clear_cache(self):
         PreviewerInfo.info_data = {}

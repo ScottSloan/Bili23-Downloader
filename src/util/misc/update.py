@@ -7,6 +7,10 @@ from ..common.translator import Translator
 from ..thread.async_ import AsyncTask
 from ..common.config import config
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 class Updater(QObject):
     def __init__(self, parent = None):
         super().__init__(parent)
@@ -30,6 +34,8 @@ class Updater(QObject):
                 return
             
             signal_bus.update.show_dialog.emit(info)
+
+            logger.info("检测到新版本：%s，当前版本：%s", version, config.get(config.app_version))
 
         else:
             if self.manual:

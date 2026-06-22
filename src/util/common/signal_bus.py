@@ -1,5 +1,4 @@
 from PySide6.QtCore import Signal, QObject
-from PySide6.QtGui import QPixmap
 
 from .enum import ToastNotificationCategory
 from .config import config
@@ -19,7 +18,7 @@ class SignalBus:
         update_parse_list = Signal(str, str, object, object)
         update_parse_list_count = Signal(str, int)
 
-        preview_init = Signal(dict)
+        preview_init = Signal(dict, bool)
         preview_finish = Signal()
 
         query_video_info = Signal(int, int, object)
@@ -36,6 +35,9 @@ class SignalBus:
 
     class Download(QObject):
         create_task = Signal(list)
+
+        show_duplicate_download_dialog = Signal(object, object, object)
+        show_skip_duplicate_download_toast = Signal(str)
 
         add_to_downloading_list = Signal(list)
         auto_manage_concurrent_downloads = Signal()

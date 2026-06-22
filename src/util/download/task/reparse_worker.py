@@ -1,9 +1,9 @@
 from PySide6.QtCore import QRunnable
 
 from ...parse.episode.bangumi import BangumiEpisodeParser
+from ...parse.episode.tree import EpisodeData, Attribute
 from ...parse.episode.cheese import CheeseEpisodeParser
 from ...parse.episode.video import VideoEpisodeParser
-from ...parse.episode.tree import EpisodeData, Attribute
 from ...parse.parser.base import ParserBase
 
 from ...common.data.bangumi_type import bangumi_type_map

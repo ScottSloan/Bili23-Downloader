@@ -1,3 +1,4 @@
+from PySide6.QtWidgets import QWidget, QHBoxLayout
 from PySide6.QtCore import Qt
 
 from qfluentwidgets import (
@@ -5,9 +6,11 @@ from qfluentwidgets import (
 )
 
 from gui.component.setting.card import ExpandGroupSettingCard
-from gui.component.widget import DictComboBox
+from gui.component.widget import DictComboBox, ToolButton
 
-from util.common.data import reversed_video_quality_map, reversed_audio_quality_map, reversed_video_codec_map, reversed_audio_codec_map
+from util.common.data import (
+    reversed_video_quality_map, reversed_audio_quality_map, reversed_video_codec_map, reversed_audio_codec_map
+)
 from util.common.icon import ExtendedFluentIcon
 from util.common.translator import Translator
 from util.common.enum import MediaType
@@ -17,40 +20,61 @@ from util.parse.preview.info import PreviewerInfo
 from util.format.file_name import FileNameFormatter
 from util.format.units import Units
 
+class ChoiceWidget(QWidget):
+    def __init__(self, parent = None):
+        super().__init__(parent)
+
+        self.init_UI()
+
+    def init_UI(self):
+        self.setContentsMargins(0, 0, 0, 0)
+
+        self.choice = DictComboBox(parent = self)
+        self.custom_btn = ToolButton(FluentIcon.SETTING, parent = self)
+        self.custom_btn.setToolTip(self.tr("Customize Priority"))
+
+        self.hBoxLayout = QHBoxLayout(self)
+        self.hBoxLayout.setContentsMargins(0, 0, 0, 0)
+        self.hBoxLayout.addWidget(self.choice)
+        self.hBoxLayout.addWidget(self.custom_btn)
+
 class MediaInfoCard(ExpandGroupSettingCard):
     def __init__(self, parent_window, parent = None):
         super().__init__(FluentIcon.INFO, self.tr("Media Info"), self.tr("Configure download video quality, audio quality, and codec settings"), parent)
 
         self.parent_window = parent_window
 
-        self.video_quality_choice = DictComboBox(parent = self)
-        self.audio_quality_choice = DictComboBox(parent = self)
-        self.video_codec_choice = DictComboBox(parent = self)
+        self.video_quality_widget = ChoiceWidget(parent = self)
+        self.audio_quality_widget = ChoiceWidget(parent = self)
+        self.video_codec_widget = ChoiceWidget(parent = self)
 
         self.viewLayout.setContentsMargins(0, 0, 0, 0)
         self.viewLayout.setSpacing(0)
 
-        self.video_quality_group = self.addGroup(FluentIcon.VIDEO, self.tr("Video Quality"), "", self.video_quality_choice)
-        self.audio_quality_group = self.addGroup(FluentIcon.MUSIC, self.tr("Audio Quality"), "", self.audio_quality_choice)
-        self.video_codec_group = self.addGroup(FluentIcon.CODE, self.tr("Video Codec"), "", self.video_codec_choice)
+        self.video_quality_group = self.addGroup(FluentIcon.VIDEO, self.tr("Video Quality"), "", self.video_quality_widget)
+        self.audio_quality_group = self.addGroup(FluentIcon.MUSIC, self.tr("Audio Quality"), "", self.audio_quality_widget)
+        self.video_codec_group = self.addGroup(FluentIcon.CODE, self.tr("Video Codec"), "", self.video_codec_widget)
 
         self.showHyperLinkLabel(self.tr("About Media Info"))
 
+        self.connect_signals()
+
+    def connect_signals(self):
         self.hyper_label.clicked.connect(lambda: self.showGuideMessageBox(self.tr("Instructions"), Translator.MEDIA_INFO_GUIDE()))
 
     def on_load(self):
-        self.video_quality_choice.set_current_data(config.video_quality_id)
-        self.audio_quality_choice.set_current_data(config.audio_quality_id)
-        self.video_codec_choice.set_current_data(config.video_codec_id)
+        self.video_quality_widget.choice.set_current_data(config.video_quality_id)
+        self.audio_quality_widget.choice.set_current_data(config.audio_quality_id)
+        self.video_codec_widget.choice.set_current_data(config.video_codec_id)
 
     def update_choice_data(self, video_data: dict, audio_data: dict, codec_data: dict):
-        self.video_quality_choice.clear()
-        self.audio_quality_choice.clear()
-        self.video_codec_choice.clear()
+        self.video_quality_widget.choice.clear()
+        self.audio_quality_widget.choice.clear()
+        self.video_codec_widget.choice.clear()
 
-        self.video_quality_choice.init_dict_data(video_data, Translator.VIDEO_QUALITY())
-        self.audio_quality_choice.init_dict_data(audio_data, Translator.AUDIO_QUALITY())
-        self.video_codec_choice.init_dict_data(codec_data, Translator.VIDEO_CODEC())
+        self.video_quality_widget.choice.init_dict_data(video_data, Translator.VIDEO_QUALITY())
+        self.audio_quality_widget.choice.init_dict_data(audio_data, Translator.AUDIO_QUALITY())
+        self.video_codec_widget.choice.init_dict_data(codec_data, Translator.VIDEO_CODEC())
 
         self.on_load()
 
@@ -144,15 +168,15 @@ class MediaInfoCard(ExpandGroupSettingCard):
 
     @property
     def video_quality_id(self):
-        return self.video_quality_choice.currentData()
+        return self.video_quality_widget.choice.currentData()
     
     @property
     def audio_quality_id(self):
-        return self.audio_quality_choice.currentData()
+        return self.audio_quality_widget.choice.currentData()
     
     @property
     def video_codec_id(self):
-        return self.video_codec_choice.currentData()
+        return self.video_codec_widget.choice.currentData()
 
 class MediaOptionsCard(ExpandGroupSettingCard):
     def __init__(self, parent_window, parent = None):
@@ -278,4 +302,4 @@ class NamingConventionCard(SettingCard):
         else:
             self.rule_choice.addItem(self.tr("Not available"))
             self.rule_choice.setEnabled(False)
-            self.setContent(self.tr("Custom naming rules are not supported for favorites and profiles"))
+            self.setContent(self.tr("Custom naming rules are not available for this type of media"))

@@ -5,7 +5,7 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 from urllib.parse import urlparse
 from threading import Event, Thread
 import queue
-import json
+import orjson
 
 def run_server(host, port, req_queue, res_queue, stop_event):
     class CallbackHandler(BaseHTTPRequestHandler):
@@ -32,7 +32,7 @@ def run_server(host, port, req_queue, res_queue, stop_event):
                                 "challenge": msg["challenge"],
                                 "gt": msg["gt"],
                             }
-                            self.make_response(200, json.dumps(data), is_json=True)
+                            self.make_response(200, orjson.dumps(data).decode("utf-8"), is_json=True)
                             break
                     except queue.Empty:
                         continue
@@ -47,7 +47,7 @@ def run_server(host, port, req_queue, res_queue, stop_event):
                 
                 if self.headers.get("Content-Type") == "application/json;charset=UTF-8":
                     post_data = self.rfile.read(content_length).decode("utf-8")
-                    json_data = json.loads(post_data)
+                    json_data = orjson.loads(post_data)
 
                     # 发送回主进程保存，并触发信号
                     req_queue.put({

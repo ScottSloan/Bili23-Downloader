@@ -1,6 +1,6 @@
 from PySide6.QtWidgets import QStyledItemDelegate, QStyleOptionViewItem, QApplication, QStyle
 from PySide6.QtGui import QPainter, QColor, QFont, QFontMetrics, QPixmap, QPainterPath
-from PySide6.QtCore import QModelIndex, Qt, QRect, Signal, QPoint
+from PySide6.QtCore import QModelIndex, Qt, QRect, Signal, QPoint, QEvent
 
 from qfluentwidgets import isDarkTheme, setFont, drawIcon, ThemeColor, Theme
 
@@ -26,7 +26,7 @@ class FluentStyledItemDelegate:
             if index.row() == self.pressedRow:
                 self.pressedRow = -1
 
-    def _drawBackground(self, painter: QPainter, option: QStyleOptionViewItem, index: QModelIndex):
+    def _drawBackground(self, painter: QPainter, rect: QRect, index: QModelIndex):
         painter.setPen(Qt.PenStyle.NoPen)
 
         isHover = self.hoverRow == index.row()
@@ -49,12 +49,20 @@ class FluentStyledItemDelegate:
             else:
                 alpha = 17
 
-        if index.data(Qt.ItemDataRole.BackgroundRole):
-            painter.setBrush(index.data(Qt.ItemDataRole.BackgroundRole))
-        else:
-            painter.setBrush(QColor(c, c, c, alpha))
+        painter.setBrush(QColor(c, c, c, alpha))
+        painter.drawRoundedRect(rect, 5, 5)
 
-        painter.drawRoundedRect(option.rect, 5, 5)
+    def _drawPressedBackground(self, painter: QPainter, rect: QRect, index: QModelIndex):
+        # 绘制可见的按下背景
+        painter.setPen(Qt.PenStyle.NoPen)
+
+        isDark = isDarkTheme()
+
+        c = 255 if isDark else 0
+        alpha = 15 if isDark else 9
+
+        painter.setBrush(QColor(c, c, c, alpha))
+        painter.drawRoundedRect(rect, 5, 5)
 
     def _drawPrimaryButton(self, painter: QPainter, rect: QRect, icon, hover = False):
         if hover:
@@ -153,7 +161,10 @@ class FluentStyledItemDelegate:
         else:
             textColor = QColor(0, 0, 0)
 
-        setFont(painter, 14)
+        self._drawTextBase(painter, rect, text, textColor, 14)
+
+    def _drawTextBase(self, painter: QPainter, rect: QRect, text: str, textColor: QColor, fontSize: int, textFlags = None):
+        setFont(painter, fontSize)
 
         font = painter.font()
 
@@ -163,7 +174,10 @@ class FluentStyledItemDelegate:
         painter.setFont(font)
         painter.setPen(textColor)
 
-        painter.drawText(rect, elided_title)
+        if textFlags:
+            painter.drawText(rect, textFlags, elided_title)
+        else:
+            painter.drawText(rect, elided_title)
 
     def _drawDescriptionText(self, painter: QPainter, rect: QRect, text: str, error = False):
         if error:
@@ -171,17 +185,16 @@ class FluentStyledItemDelegate:
         else:
             textColor = QColor(206, 206, 206) if isDarkTheme() else QColor(96, 96, 96)
 
-        setFont(painter, 14)
+        textFlags = Qt.TextFlag.TextWordWrap | Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter
 
-        font = painter.font()
-
-        metrics = QFontMetrics(font)
-        elided_text = metrics.elidedText(text, Qt.TextElideMode.ElideRight, rect.width())
-
-        painter.setFont(font)
-        painter.setPen(textColor)
         # 自动换行并左对齐、垂直居中
-        painter.drawText(rect, Qt.TextFlag.TextWordWrap | Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter, elided_text)
+        self._drawTextBase(painter, rect, text, textColor, 14, textFlags)
+
+    def _drawIndicator(self, painter: QPainter, rect: QRect, color: QColor):
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.setBrush(color)
+
+        painter.drawEllipse(rect)
 
     def _getFont(self, size: int):
         font = QApplication.font()
@@ -194,13 +207,47 @@ class FluentStyledItemDelegate:
         theme = Theme.DARK if not isDarkTheme() else Theme.LIGHT
         return icon.icon(theme)
 
-class CoverQueryDelegateBase(QStyledItemDelegate, FluentStyledItemDelegate):
+class ContextMenuDelegateBase(QStyledItemDelegate, FluentStyledItemDelegate):
+    """
+    具有右键菜单功能的委托基类
+    """
+    itemClicked = Signal(QModelIndex, object)
+    contextMenuRequested = Signal(QModelIndex, QPoint)
+
+    def __init__(self, parent = None):
+        super().__init__(parent)
+
+    def _checkHoverRow(self, option: QStyleOptionViewItem, index: QModelIndex):
+        if option.state & QStyle.StateFlag.State_MouseOver:
+            self.hoverRow = index.row()
+
+        elif self.hoverRow == index.row():
+            self.hoverRow = -1
+
+    def editorEvent(self, event, model, option, index):
+        if event.type() == QEvent.Type.MouseButtonRelease:
+            return self._pressEvent(option, index, event)
+
+        return super().editorEvent(event, model, option, index)
+
+    def _pressEvent(self, option: QStyleOptionViewItem, index: QModelIndex, event):
+        if event.button() == Qt.MouseButton.LeftButton:
+            self.itemClicked.emit(index, index.data(Qt.ItemDataRole.UserRole))
+
+            return True
+        
+        if event.button() == Qt.MouseButton.RightButton:
+            # 右键点击，弹出上下文菜单
+            self.contextMenuRequested.emit(index, event.globalPos())
+
+            return True
+
+        return False
+
+class CoverQueryDelegateBase(ContextMenuDelegateBase):
     """
     具有异步封面显示功能的委托基类
     """
-
-    contextMenuRequested = Signal(QModelIndex, QPoint)
-
     def __init__(self, parent = None):
         super().__init__(parent)
 
@@ -213,18 +260,11 @@ class CoverQueryDelegateBase(QStyledItemDelegate, FluentStyledItemDelegate):
 
         self._checkHoverRow(option, index)
 
-        self._drawBackground(painter, option, index)
+        self._drawBackground(painter, option.rect, index)
 
         self._paintItemUI(painter, option, index)
 
         painter.restore()
-
-    def _checkHoverRow(self, option: QStyleOptionViewItem, index: QModelIndex):
-        if option.state & QStyle.StateFlag.State_MouseOver:
-            self.hoverRow = index.row()
-
-        elif self.hoverRow == index.row():
-            self.hoverRow = -1
 
     def _queryCover(self, cover_id: str, cover_url: str, index: QModelIndex):
         # 由委托发起查询封面请求

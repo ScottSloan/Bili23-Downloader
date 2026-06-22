@@ -86,7 +86,8 @@ class Translator:
             "FAVORITES": translate("EPISODE_TYPE", "Favorites"),
             "PROFILE": translate("EPISODE_TYPE", "Profile"),
             "WATCH_LATER": translate("EPISODE_TYPE", "Watch Later"),
-            "HISTORY": translate("EPISODE_TYPE", "History")
+            "HISTORY": translate("EPISODE_TYPE", "History"),
+            "AUDIO": translate("EPISODE_TYPE", "Music")
         }
     
     @staticmethod
@@ -129,22 +130,35 @@ class Translator:
     def DEFAULT_RULE_NAMES(key = None):
         return {
             "DEFAULT_FOR_NORMAL": translate("DEFAULT_RULE_NAMES", "Preset: Single Video"),
-            "DEFAULT_FOR_PART": translate("DEFAULT_RULE_NAMES", "Preset: Multi-part Video"),
+            "DEFAULT_FOR_PART": translate("DEFAULT_RULE_NAMES", "Preset: Multi-part Series"),
             "DEFAULT_FOR_COLLECTION": translate("DEFAULT_RULE_NAMES", "Preset: Collection"),
-            "DEFAULT_FOR_BANGUMI": translate("DEFAULT_RULE_NAMES", "Preset: Series & Shows"),
-            "DEFAULT_FOR_CHEESE": translate("DEFAULT_RULE_NAMES", "Preset: Courses")
+            "DEFAULT_FOR_INTERACTIVE_VIDEO": translate("DEFAULT_RULE_NAMES", "Preset: Interactive Video"),
+            "DEFAULT_FOR_BANGUMI": translate("DEFAULT_RULE_NAMES", "Preset: Film & TV"),
+            "DEFAULT_FOR_CHEESE": translate("DEFAULT_RULE_NAMES", "Preset: Courses"),
+            "DEFAULT_FOR_FAVORITE": translate("DEFAULT_RULE_NAMES", "Preset: Favorites"),
+            "DEFAULT_FOR_SPACE": translate("DEFAULT_RULE_NAMES", "Preset: Profile"),
+            "DEFAULT_FOR_AUDIO": translate("DEFAULT_RULE_NAMES", "Preset: Music"),
+            "DEFAULT_FOR_HISTORY": translate("DEFAULT_RULE_NAMES", "Preset: History"),
+            "DEFAULT_FOR_WEEKLY": translate("DEFAULT_RULE_NAMES", "Preset: Weekly Picks"),
+            "DEFAULT_FOR_WATCH_LATER": translate("DEFAULT_RULE_NAMES", "Preset: Watch Later")
         }
 
     @staticmethod
     @get_map_method
     def CONVENTION_TYPE(key = None):
         return {
-            "NORMAL": translate("CONVENTION_TYPE", "User Uploads - Single"),
-            "PART": translate("CONVENTION_TYPE", "User Uploads - Multi-part"),
-            "COLLECTION": translate("CONVENTION_TYPE", "User Uploads - Collection"),
-            "INTERACTIVE": translate("CONVENTION_TYPE", "User Uploads - Interactive"),
-            "BANGUMI": translate("CONVENTION_TYPE", "Series & Shows"),
+            "NORMAL": translate("CONVENTION_TYPE", "Single Video"),
+            "PART": translate("CONVENTION_TYPE", "Multi-part Series"),
+            "COLLECTION": translate("CONVENTION_TYPE", "Collection"),
+            "INTERACTIVE_VIDEO": translate("CONVENTION_TYPE", "Interactive Video"),
+            "BANGUMI": translate("CONVENTION_TYPE", "Film & TV"),
             "CHEESE": translate("CONVENTION_TYPE", "Courses"),
+            "FAVORITE": translate("CONVENTION_TYPE", "Favorites"),
+            "SPACE": translate("CONVENTION_TYPE", "Profile"),
+            "HISTORY": translate("CONVENTION_TYPE", "History"),
+            "WATCH_LATER": translate("CONVENTION_TYPE", "Watch Later"),
+            "WEEKLY": translate("CONVENTION_TYPE", "Weekly Picks"),
+            "AUDIO": translate("CONVENTION_TYPE", "Music")
         }
 
     @staticmethod
@@ -155,9 +169,14 @@ class Translator:
             "PUB_TS": translate("VARIABLE_DESCRIPTION", "Video publish timestamp"),
             "CREATE_TIME": translate("VARIABLE_DESCRIPTION", "Download task creation time"),
             "CREATE_TS": translate("VARIABLE_DESCRIPTION", "Download task creation timestamp"),
+            "FAV_TIME": translate("VARIABLE_DESCRIPTION", "Favorite time"),
+            "FAV_TS": translate("VARIABLE_DESCRIPTION", "Favorite timestamp"),
+            "LAST_WATCHED_TIME": translate("VARIABLE_DESCRIPTION", "Last watched time"),
+            "LAST_WATCHED_TS": translate("VARIABLE_DESCRIPTION", "Last watched timestamp"),
             "NUMBER": translate("VARIABLE_DESCRIPTION", "Sequence number"),
             "UPLOADER": translate("VARIABLE_DESCRIPTION", "Uploader name"),
-            "UPLOADER_UID": translate("VARIABLE_DESCRIPTION", "Uploader UID"),
+            "UPLOADER_FOR_AUDIO": translate("VARIABLE_DESCRIPTION", "Author of the song"),
+            "UPLOADER_UID": translate("VARIABLE_DESCRIPTION", "Uploader id"),
             "VIDEO_QUALITY": translate("VARIABLE_DESCRIPTION", "Video quality"),
             "AUDIO_QUALITY": translate("VARIABLE_DESCRIPTION", "Audio quality"),
             "VIDEO_CODEC": translate("VARIABLE_DESCRIPTION", "Video codec"),
@@ -171,14 +190,22 @@ class Translator:
             "LEAF_TITLE_FOR_NORMAL": translate("VARIABLE_DESCRIPTION", "Full video title"),
             "LEAF_TITLE_FOR_PART": translate("VARIABLE_DESCRIPTION", "Current part's title"),
             "LEAF_TITLE_FOR_COLLECTION": translate("VARIABLE_DESCRIPTION", "Content title (video title for single videos, part title for multi-part)"),
+            "LEAF_TITLE_FOR_INTERACTIVE_VIDEO": translate("VARIABLE_DESCRIPTION", "Node title"),
+            "LEAF_TITLE_FOR_AUDIO": translate("VARIABLE_DESCRIPTION", "Song title"),
 
             "PARENT_TITLE_FOR_PART": translate("VARIABLE_DESCRIPTION", "Multi-part video main title"),
             "PARENT_TITLE_FOR_COLLECTION": translate("VARIABLE_DESCRIPTION", "Main title if video has multiple parts; otherwise empty"),
+            "PARENT_TITLE_FOR_INTERACTIVE_VIDEO": translate("VARIABLE_DESCRIPTION", "Interactive video title"),
+            "PARENT_TITLE_FOR_HISTORY": translate("VARIABLE_DESCRIPTION", "History title"),
+            "PARENT_TITLE_FOR_WATCH_LATER": translate("VARIABLE_DESCRIPTION", "Watch Later title"),
+            "PARENT_TITLE_FOR_WEEKLY": translate("VARIABLE_DESCRIPTION", "Weekly Picks title"),
+            "PARENT_TITLE_FOR_AUDIO": translate("VARIABLE_DESCRIPTION", "Playlist title"),
 
             "PART_NUMBER_FOR_PART": translate("VARIABLE_DESCRIPTION", "Part number"),
             "PART_NUMBER_FOR_COLLECTION": translate("VARIABLE_DESCRIPTION", "Part number (only for multi-part videos)"),
 
             "COLLECTION_TITLE": translate("VARIABLE_DESCRIPTION", "Collection title"),
+
             "SECTION_TITLE_FOR_COLLECTION": translate("VARIABLE_DESCRIPTION", "Section title (empty if not divided into sections)"),
             "SECTION_TITLE_FOR_BANGUMI_CHEESE": translate("VARIABLE_DESCRIPTION", "Section title"),
 
@@ -188,6 +215,14 @@ class Translator:
             "EPISODE_TITLE": translate("VARIABLE_DESCRIPTION", "Episode title"),
             "SEASON_NUMBER": translate("VARIABLE_DESCRIPTION", "Season number"),
             "EPISODE_NUMBER": translate("VARIABLE_DESCRIPTION", "Episode number"),
+
+            "FAVORITES_NAME": translate("VARIABLE_DESCRIPTION", "Favorites name"),
+            "FAVORITES_ID": translate("VARIABLE_DESCRIPTION", "Favorites id"),
+            "FAVORITES_OWNER": translate("VARIABLE_DESCRIPTION", "Favorites owner"),
+            "FAVORITES_OWNER_ID": translate("VARIABLE_DESCRIPTION", "Favorites owner id"),
+
+            "SPACE_OWNER": translate("VARIABLE_DESCRIPTION", "User name"),
+            "SPACE_OWNER_ID": translate("VARIABLE_DESCRIPTION", "User id")
         }
 
     @staticmethod
@@ -197,10 +232,10 @@ class Translator:
             "title": translate("COLUMN_NAME", "Title"),
             "badge": translate("COLUMN_NAME", "Notes"),
             "duration": translate("COLUMN_NAME", "Duration"),
-            "dyn_time": translate("COLUMN_NAME", "Publish / Favorite / Watch Time"),
+            "dyn_time": translate("COLUMN_NAME", "Publish Time / Favorite Time / Last Watched"),
             "pubtime": translate("COLUMN_NAME", "Publish Time"),
             "favtime": translate("COLUMN_NAME", "Favorite Time"),
-            "viewtime": translate("COLUMN_NAME", "Watch Time"),
+            "viewtime": translate("COLUMN_NAME", "Last Watched"),
         }
         
         if key == "pub_fav_time" and category_name is not None:
@@ -268,6 +303,7 @@ class Translator:
             "SCRAPING_METADATA": translate("TIP_MESSAGES", "Scraping Metadata..."),
             "PARSING_INTERACTIVE_VIDEO_NODE": translate("TIP_MESSAGES", "Parsing node: {title}"),
             "PARSING_PAGE": translate("TIP_MESSAGES", "Parsing page {page}, total {total_page} pages, progress: {progress}%"),
+            "MEDIA_INFO_UPDATED": translate("TIP_MESSAGES", "Media info updated"),
         }
 
     @staticmethod
@@ -284,7 +320,6 @@ class Translator:
         return translate("MEDIA_INFO_GUIDE", """The media info shown here defaults to the first video in the parsed results. If multiple videos are available, this information may not exactly match the one you download—use it for reference only.
 
 To view detailed media info for a specific video, right-click its entry in the parse list and select "Update Media Info".
-To customize the priority settings, go to the Settings page.
 
 Note: Videos protected by DRM can only be downloaded up to 1080P; higher qualities are unavailable.""")
     
@@ -339,7 +374,7 @@ For example, if you set the video quality priority to 720P > 1080P > 4K, the pro
         return translate("NUMBERING_GUIDE", """This setting affects the value of the {number} variable in the naming rule. By default, the program’s preset naming rule does not include {number}. If you want to use numbering, please add {number} to your naming rule first.
 
 The meaning of each "Numbering Mode" option is as follows:
-1. Start from specified number (per batch): Every time a new download task begins, numbering restarts from the starting number you set. For example, if the starting number is 1, the first item will be numbered 1, the second 2, and so on. Suitable for scenarios where each batch should have independent numbering.
+1. Sequential numbering starting from 1 per batch: Every time a new download task begins, numbering restarts from 1. Suitable for scenarios where each batch should have independent numbering.
 
 2. Use the index from the parsed list: The numbering directly reflects the original position in the parsed list and won’t change based on download order. For example, items at positions 3, 5, and 6 in the list will be numbered 3, 5, and 6 respectively. Suitable when you want numbering to match the parsing result exactly.
 
@@ -350,3 +385,16 @@ The meaning of each "Numbering Mode" option is as follows:
         return translate("PREALLOCATE_GUIDE", """Preallocating file space can improve download performance, especially for large files. When enabled, the program will allocate the required disk space before the download starts, reducing performance overhead caused by repeatedly expanding the file during download and minimizing disk fragmentation.
 
 Note: If the download path is on an external storage device such as a USB drive, and the file system does not support sparse files (e.g., FAT32 or exFAT), please disable this feature—otherwise, the program may become unresponsive.""")
+    
+    @staticmethod
+    def DUPLICATE_DOWNLOAD_GUIDE():
+        return translate("DUPLICATE_DOWNLOAD_GUIDE", """This feature detects duplicates based on unique video identifiers (e.g., BV/av IDs), not filenames.
+Please note that download history is the sole basis for recognizing downloaded videos. Clearing it will prevent the system from identifying existing downloads, which may result in duplicate downloads.""")
+
+    @staticmethod
+    @get_map_method
+    def ERROR_CODE_EXPLANATION(key = None):
+        return {
+            412: translate("ERROR_CODE_EXPLANATION", "Request blocked, client IP has been banned"),
+            87008: translate("ERROR_CODE_EXPLANATION", "Paid content requires purchasing")
+        }

@@ -27,11 +27,12 @@ audio_quality_map = {
 reversed_audio_quality_map = {v: k for k, v in audio_quality_map.items()}
 
 audio_reorder_map = {
-    30251: 0,
-    30250: 1,
-    30280: 2,
-    30232: 3,
-    30216: 4
+    30255: 0,
+    30251: 1,
+    30250: 2,
+    30280: 3,
+    30232: 4,
+    30216: 5
 }
 
 audio_codec_map = {

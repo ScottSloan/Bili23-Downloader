@@ -11,7 +11,7 @@ class WatchLaterEpisodeParser(EpisodeParserBase):
         self.category_name = category_name
 
     def parse(self, update_episode_list = True):
-        self._init_episode_data()
+        self.episode_data_parser()
 
         node = self.list_parser()
 
@@ -48,7 +48,7 @@ class WatchLaterEpisodeParser(EpisodeParserBase):
                 "pubtime": episode["pubdate"],
                 "favtime": episode["add_at"],
                 "title": episode["title"],
-                "url": "https://www.bilibili.com/video/" + episode["bvid"],
+                "url": "https://www.bilibili.com/video/{bvid}".format(bvid = episode["bvid"])
             }
 
             item = TreeItem(item_data)
@@ -58,6 +58,14 @@ class WatchLaterEpisodeParser(EpisodeParserBase):
             root_node.add_child(item)
 
         return root_node
+    
+    def episode_data_parser(self):
+        if self.episode_id:
+            return
+        
+        episode_data = self._init_episode_data()
+
+        episode_data["parent_title"] = Translator.EPISODE_TYPE("WATCH_LATER")
 
     def get_episode_badge(self, episode_data: dict):
         if episode_data.get("bangumi"):

@@ -1,15 +1,16 @@
 [project]
 name = "bili23-downloader"
-version = "2.00.2"
-description = "跨平台的 B 站视频下载工具，支持现代 UI、音视频流分离下载、多线程下载、弹幕与字幕获取、封面提取及元数据刮削，可自定义文件命名与分类，兼容 Windows（含 Win7）、Linux 和 macOS。"
+version = "2.10.0"
+description = "开源、免费、跨平台的 B 站视频下载工具，支持多线程加速、音视频分离、弹幕元数据获取、自定义命名与分类等功能。Open Source, Free, Cross-Platform Bilibili Video Downloader."
 readme = "README.md"
 license = "GPL-3.0"
 requires-python = ">=3.9"
 dependencies = [
     "PySide6==6.10.3",
     "PySide6-Fluent-Widgets==1.11.2",
+    "orjson==3.11.9",
     "qrcode==8.2",
-    "protobuf==7.35.0",
+    "protobuf==7.35.1",
     "httpx==0.28.1",
     "psutil==7.2.2",
 ]

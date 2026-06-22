@@ -7,6 +7,10 @@ from gui.component.dialog import DialogBase
 from util.common.data.auto_parse import AutoParsePayload
 from util.common.enum import ParserType
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 class InteractiveVideoDialog(DialogBase):
     def __init__(self, data: dict, parent = None):
         super().__init__(parent)
@@ -41,6 +45,8 @@ class InteractiveVideoDialog(DialogBase):
 
     def accept(self):
         self.payload = self.get_data()
+
+        logger.info("开始自动解析互动视频节点")
         
         return super().accept()
 

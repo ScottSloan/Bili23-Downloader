@@ -1,4 +1,6 @@
 from ...common.signal_bus import signal_bus
+from ...common.enum import AutoSelectMode
+from ...common.config import config
 from ...format.units import Units
 
 from .tree import TreeItem, EpisodeData, Attribute
@@ -21,10 +23,16 @@ class EpisodeParserBase:
         root_node = TreeItem({})
         root_node.add_child(node)
 
-        if node.count() == 1 and node.child(0).attribute & Attribute.VIDEO_BIT:
-            title = node.child(0).title
+        if node.count() == 1:
+            attr = node.child(0).attribute
+
+            if attr & Attribute.VIDEO_BIT or attr & Attribute.AUDIO_BIT:
+                title = node.child(0).title
         else:
             title = node.title
+
+        if config.get(config.auto_select_mode) == AutoSelectMode.MANUAL:
+            current_episode_data = None
 
         signal_bus.parse.update_parse_list.emit(title, self.category_name, root_node, current_episode_data)
 

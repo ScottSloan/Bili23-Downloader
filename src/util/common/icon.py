@@ -13,6 +13,8 @@ class ExtendedFluentIcon(FluentIconBase, Enum):
     ALBUM = "album"
     CLEAR = "clear"
     RETRY = "retry"
+    IMPORT = "import"
+    EXPORT = "export"
     SELECT = "select"
     RENAME = "rename"
     SERVER = "server"

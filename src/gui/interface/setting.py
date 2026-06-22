@@ -8,19 +8,16 @@ from qfluentwidgets import (
 
 from gui.component.setting import (
     PrioritySettingCard, DanmakuSettingCard, SubtitleSettingCard, CoverSettingCard, MetadataSettingCard, CDNSettingCard, ProxySettingCard,
-    FFmpegSettingCard, NumberSettingCard, DownloadFormatCard, DownloadPathSettingCard, ParsingSettingCard, ConfigFileSettingCard,
-    WindowBehaviorSettingCard, DownloadHandlingSettingCard, DownloadConcurrencySettingCard, PersonalizationCard,
-    CheckUpdateSettingCard
+    FFmpegSettingCard, NumberSettingCard, DownloadFormatCard, DownloadPathSettingCard, ParsingSettingCard, WindowBehaviorSettingCard,
+    DownloadHandlingSettingCard, DownloadConcurrencySettingCard, PersonalizationCard, CheckUpdateSettingCard, OtherAdvancedSettingCard
 )
 
 from util.common.data import video_quality_map, audio_quality_map, video_codec_map
 from util.common.enum import ToastNotificationCategory
-from util.common.config import config, APPConfig
 from util.common.style_sheet import StyleSheet
 from util.common.signal_bus import signal_bus
 from util.common.translator import Translator
-
-from pathlib import Path
+from util.common.config import config
 
 class SettingInterface(ScrollArea):
     def __init__(self, parent = None):
@@ -77,11 +74,11 @@ class SettingInterface(ScrollArea):
         # Advanced
         self.advanced_group = SettingCardGroup(self.tr("Advanced"), self)
 
-        self.cdn_card = CDNSettingCard(self)
+        self.cdn_card = CDNSettingCard(self.main_window, self)
         self.ffmpeg_card = FFmpegSettingCard(self.main_window, self)
         self.proxy_card = ProxySettingCard(self)
-        self.config_file_card = ConfigFileSettingCard(self)
-        self.user_agent_card = PushSettingCard(self.tr("Customize…"), FluentIcon.GLOBE, "User-Agent", self.tr("Customize the User-Agent used for parsing and downloading"), self)
+        self.log_card = PushSettingCard(self.tr("View Logs"), FluentIcon.BOOK_SHELF, self.tr("Logs"), self.tr("View application logs"), self)
+        self.other_card = OtherAdvancedSettingCard(self.main_window, self)
 
         # Software Update
         self.update_group = SettingCardGroup(self.tr("Updates"), self)
@@ -118,8 +115,8 @@ class SettingInterface(ScrollArea):
         self.advanced_group.addSettingCard(self.cdn_card)
         self.advanced_group.addSettingCard(self.ffmpeg_card)
         self.advanced_group.addSettingCard(self.proxy_card)
-        self.advanced_group.addSettingCard(self.config_file_card)
-        self.advanced_group.addSettingCard(self.user_agent_card)
+        self.advanced_group.addSettingCard(self.log_card)
+        self.advanced_group.addSettingCard(self.other_card)
 
         # Software Update
         self.update_group.addSettingCard(self.check_update_card)
@@ -169,17 +166,13 @@ class SettingInterface(ScrollArea):
 
         # File Naming
         self.naming_convention_setting_card.clicked.connect(self.on_custom_naming_rule)
-        self.numbering_setting_card.starting_number_btn.clicked.connect(self.on_custom_starting_number)
 
         # Advanced
-        self.cdn_card.custom_btn.clicked.connect(self.on_custom_cdn_server_list)
+        self.cdn_card.custom_provider_btn.clicked.connect(self.on_custom_cdn_server_list)
         self.ffmpeg_card.source_choice.currentIndexChanged.connect(self.on_change_ffmpeg_source)
         self.ffmpeg_card.custom_btn.clicked.connect(self.on_change_ffmpeg_path)
         self.proxy_card.custom_btn.clicked.connect(self.on_custom_proxy)
-        self.config_file_card.import_btn.clicked.connect(self.on_import_config)
-        self.config_file_card.export_btn.clicked.connect(self.on_export_config)
-        self.config_file_card.reset_btn.clicked.connect(self.on_reset_config)
-        self.user_agent_card.clicked.connect(self.on_custom_user_agent)
+        self.log_card.clicked.connect(self.on_view_logs)
 
         # Update
         self.check_update_card.check_now_btn.clicked.connect(self.on_check_update)
@@ -188,7 +181,9 @@ class SettingInterface(ScrollArea):
         from ..dialog.setting.parse_list import ParseListSettingsDialog
 
         dialog = ParseListSettingsDialog(self.main_window)
-        dialog.exec()
+
+        if dialog.exec():
+            self.main_window.parse_interface.parse_list.setAlternatingRowColors(config.get(config.parse_list_alternate_row_color))
 
     def on_custom_monitor_clipboard(self):
         from ..dialog.setting.monitor_clipboard import MonitorClipboardDialog
@@ -265,14 +260,6 @@ class SettingInterface(ScrollArea):
         dialog = RuleListDialog(self.main_window)
         dialog.exec()
 
-    def on_custom_starting_number(self):
-        from ..dialog.setting.starting_number import StartingNumberDialog
-
-        dialog = StartingNumberDialog(self.main_window)
-
-        if dialog.exec():
-            self.numbering_setting_card.set_current_starting_number(dialog.starting_number)
-
     def on_custom_cdn_server_list(self):
         from ..dialog.setting.cdn_server import CDNServerDialog
 
@@ -314,61 +301,11 @@ class SettingInterface(ScrollArea):
         dialog = ProxyDialog(self.main_window)
         dialog.exec()
 
-    def on_import_config(self):
-        file_path, _ = QFileDialog.getOpenFileName(
-            self.main_window,
-            self.tr("Import Config File"),
-            "",
-            self.tr("Config Files (*.json)")
-        )
+    def on_view_logs(self):
+        from ..dialog.log import LogViewerDialog
 
-        if not file_path:
-            return
-        
-        original_file = config.file
-        
-        config.load(file_path)
-        config.file = original_file  # 恢复原来的配置文件路径，避免误覆盖
-        
-        config.save()
-
-        self.show_restart_message()
-
-    def on_export_config(self):
-        file_path, _ = QFileDialog.getSaveFileName(
-            self.main_window,
-            self.tr("Export Config File"),
-            "",
-            self.tr("Config Files (*.json)")
-        )
-
-        if not file_path:
-            return
-        
-        temp_config = APPConfig()
-        temp_config.load(config.file)
-        temp_config.file = Path(file_path)
-
-        temp_config.save()
-
-    def on_reset_config(self):
-        dialog = MessageBox(
-            self.tr("Reset Config"),
-            self.tr("Are you sure you want to reset all settings to their default values? This action cannot be undone."),
-            self.main_window
-        )
-
-        if dialog.exec():
-            # 直接删除配置文件，程序会在下次启动时自动创建一个新的默认配置文件
-            config.file.unlink(missing_ok = True)
-            
-            self.show_restart_message()
-
-    def on_custom_user_agent(self):
-        from ..dialog.setting.user_agent import UserAgentDialog
-
-        dialog = UserAgentDialog(self.main_window)
-        dialog.exec()
+        dialog = LogViewerDialog(self.main_window)
+        dialog.show()
 
     def on_check_update(self):
         signal_bus.update.check.emit(True)

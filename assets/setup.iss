@@ -3,8 +3,8 @@
 ; Non-commercial use only
 
 #define MyAppName "Bili23 Downloader"
-#define MyAppVersion "2.00.7"
-#define MyAppVersionName "2.00.7"
+#define MyAppVersion "2.10.0"
+#define MyAppVersionName "2.10.0"
 #define MyAppPublisher "Scott Sloan"
 #define MyAppURL "https://bili23.scott-sloan.cn"
 #define MyAppExeName "Bili23.exe"
@@ -148,13 +148,9 @@ begin
 
       InstallDir := RemoveQuotes(InstallDir);
 
-      if InstallDir <> '' then
+      if (InstallDir <> '') and DirExists(InstallDir) then
         begin
-          if not DelTree(InstallDir, True, True, True) then
-            begin
-              Result := False;
-              exit;
-            end;
+          DelTree(InstallDir, True, True, True);
         end;
     end;
   Result := True;

@@ -23,6 +23,8 @@ class QueryWorker(QObject):
         try:
             self.query()
 
+            logger.info("从数据库中查询下载任务成功")
+
         except Exception as e:
             logger.exception("从数据库中查询下载任务失败")
 

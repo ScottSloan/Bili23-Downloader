@@ -90,14 +90,22 @@ class ConventionType(IntEnum):
     NORMAL = 11
     PART = 12
     COLLECTION = 13
+    INTERACTIVE_VIDEO = 14
     BANGUMI = 20
     CHEESE = 30
+    FAVORITE = 40
+    SPACE = 50
+    HISTORY = 60
+    WATCH_LATER = 70
+    WEEKLY = 80
+    AUDIO = 90
 
 class MediaType(IntEnum):
     UNKNOWN = 0
     DASH = 1
     MP4 = 2
     FLV = 3
+    M4A = 4
 
 class DownloadStatus(IntEnum):
     QUEUED = 0                      # 排队中
@@ -142,6 +150,7 @@ class ParserType(Enum):
     HISTORY = "HISTORY"
     WATCH_LATER = "WATCH_LATER"
     DYNAMIC = "DYNAMIC"
+    AUDIO = "AUDIO"
     UNKNOWN = "UNKNOWN"
 
 class OriginalFileType(IntEnum):
@@ -153,3 +162,12 @@ class AutoSelectMode(Enum):
     MANUAL = 0
     SELECT_ALL = 1
     CONDITIONAL = 2
+
+class Area(Enum):
+    CN = "cn"
+    OV = "ov"
+
+class DuplicateDownloadResolution(Enum):
+    CONTINUE = 0
+    SKIP = 1
+    ALWAYS_ASK = 2

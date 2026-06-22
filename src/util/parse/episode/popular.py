@@ -1,3 +1,5 @@
+from ...common.translator import Translator
+
 from .tree import TreeItem, Attribute
 from .base import EpisodeParserBase
 
@@ -18,7 +20,7 @@ class PopularEpisodeParser(EpisodeParserBase):
     def list_parser(self):
         weekly_title = self.info_data["config"]["label"]
         node_data = {
-            "number": "每周必看",
+            "number": Translator.EPISODE_TYPE("WEEKLY"),
             "title": weekly_title
         }
 
@@ -39,13 +41,13 @@ class PopularEpisodeParser(EpisodeParserBase):
                 "episode_id": self.episode_id,
                 "title": episode["title"],
                 "related_titles": {
-                    "collection_title": weekly_title
+                    "parent_title": weekly_title
                 },
                 "url": "https://www.bilibili.com/video/{bvid}".format(bvid = episode["bvid"])
             }
 
             item = TreeItem(item_data)
-            item.set_attribute(Attribute.VIDEO_BIT | Attribute.POPULAR_BIT)
+            item.set_attribute(Attribute.VIDEO_BIT | Attribute.WEEKLY_BIT)
 
             root_node.add_child(item)
 

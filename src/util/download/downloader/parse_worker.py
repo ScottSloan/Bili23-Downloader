@@ -14,7 +14,7 @@ from ..task.info import TaskInfo
 
 from urllib.parse import urlencode
 import logging
-import json
+import orjson
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +34,7 @@ class ParseWorker(QRunnable, ParserBase):
 
             if not self.error:
                 download_info = self.parse_download_info()
-                download_info_json = json.dumps(download_info, ensure_ascii = False)
+                download_info_json = orjson.dumps(download_info).decode("utf-8")
 
                 QMetaObject.invokeMethod(
                     self.parent,
@@ -43,20 +43,25 @@ class ParseWorker(QRunnable, ParserBase):
                     Q_ARG(str, download_info_json)     # 由于不支持直接传递字典，所以传递 json 字符串，在主线程再转换回来
                 )
 
-        except:
+        except Exception as e:
             logger.exception("解析下载链接失败")
 
-            self.on_parse_error(Translator.ERROR_MESSAGES("PARSE_FAILED"))
+            self.on_parse_error("{}\n\n{}".format(Translator.ERROR_MESSAGES("PARSE_FAILED"), str(e)))
 
     def get_info(self):
-        if self.task_info.Episode.attribute & Attribute.VIDEO_BIT:
+        attr = self.task_info.Episode.attribute
+
+        if attr & Attribute.VIDEO_BIT:
             self.get_video_info()
 
-        elif self.task_info.Episode.attribute & Attribute.BANGUMI_BIT:
+        elif attr & Attribute.BANGUMI_BIT:
             self.get_bangumi_info()
 
-        elif self.task_info.Episode.attribute & Attribute.CHEESE_BIT:
+        elif attr & Attribute.CHEESE_BIT:
             self.get_cheese_info()
+
+        elif attr & Attribute.AUDIO_BIT:
+            self.get_audio_info()
 
         if not self.error:
             if "dash" in self.info_data.keys():
@@ -67,6 +72,9 @@ class ParseWorker(QRunnable, ParserBase):
 
             elif self.info_data.get("format").startswith("flv"):
                 self.task_info.Download.media_type = MediaType.FLV
+
+            elif self.info_data.get("format").startswith("m4a"):
+                self.task_info.Download.media_type = MediaType.M4A
 
     def get_video_info(self):
         params = {
@@ -126,6 +134,24 @@ class ParseWorker(QRunnable, ParserBase):
 
         self.info_data = response.copy()["data"]
 
+    def get_audio_info(self):
+        params = {
+            "sid": self.task_info.Episode.sid,
+            "privilege": 2,
+            "quality": 2
+        }
+
+        url = f"https://www.bilibili.com/audio/music-service-c/web/url?{urlencode(params)}"
+
+        request = SyncNetWorkRequest(url)
+        response = request.run()
+
+        self.check_response(response)
+
+        response["data"]["format"] = "m4a"
+
+        self.info_data = response.copy()["data"]
+
     def parse_download_info(self):
         total_size = 0
         download_list = {}
@@ -174,7 +200,7 @@ class ParseWorker(QRunnable, ParserBase):
 
             self.on_parse_error(message)
 
-            raise Exception(message)
+            raise RuntimeError(message)
         
     def get_output_file_ext(self):
         has_video = self.task_info.Download.type & DownloadType.VIDEO != 0
@@ -197,4 +223,3 @@ class ParseWorker(QRunnable, ParserBase):
         filtered_download_list = {key: entry for key, entry in download_list.items() if key in self.task_info.Download.queue}
 
         return filtered_download_list
-    

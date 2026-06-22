@@ -1,21 +1,27 @@
-from PySide6.QtWidgets import QHBoxLayout, QVBoxLayout, QLabel
+from PySide6.QtWidgets import QHBoxLayout, QVBoxLayout, QLabel, QFileDialog
 from PySide6.QtCore import QTimer, Signal, Qt
 from PySide6.QtGui import QColor
 
 from qfluentwidgets import (
     PushButton, FluentIcon, PushSettingCard, qconfig, ColorDialog, PrimaryPushButton, setCustomStyleSheet,
-    MessageBox, ExpandGroupSettingCard as _ExpandGroupSettingCard, HyperlinkLabel
+    MessageBox, ExpandGroupSettingCard as _ExpandGroupSettingCard, HyperlinkLabel, DropDownPushButton,
+    RoundMenu, Action
 )
 from qfluentwidgets.components.settings.expand_setting_card import GroupWidget as _GroupWidget
 
 from .widget import SettingSwitchButton, SettingComboBox, SettingSlider
-from ..dialog import MessageBox
 
+
+from util.common.config import config, isWin11, APPConfig
 from util.thread.pool import GlobalThreadPoolTask
 from util.common.icon import ExtendedFluentIcon
-from util.common.config import config, isWin11
 from util.common.io.directory import Directory
 from util.common.translator import Translator
+
+from pathlib import Path
+import logging
+
+logger = logging.getLogger(__name__)
 
 class GuideSettingCardBase:
     def showHyperLinkLabel(self, label: str):
@@ -33,6 +39,8 @@ class GuideSettingCardBase:
         setCustomStyleSheet(self.hyper_label, styleSheet, styleSheet)
 
     def showGuideMessageBox(self, title: str, content: str):
+        from ..dialog import MessageBox
+        
         dialog = MessageBox(
             title = title,
             content = content,
@@ -326,13 +334,13 @@ class NumberSettingCard(ExpandGroupSettingCard):
         self.numbering_type_choice = SettingComboBox(
             config.numbering_type,
             [
-                self.tr("Start from specified number (per batch)"),
+                self.tr("Sequential numbering starting from 1 per batch"),
                 self.tr("Use the index from the parse list"),
                 self.tr("Global sequential numbering")
             ],
             parent = self
         )
-        self.starting_number_btn = PushButton(self.tr("Customize…"), self)
+        self.custom_global_starting_number_btn = PushButton(self.tr("Customize…"), self)
 
         self.addGroup(
             "",
@@ -340,49 +348,78 @@ class NumberSettingCard(ExpandGroupSettingCard):
             self.tr("Select how the {number} variable is formatted and incremented"),
             self.numbering_type_choice
         )
-        self.starting_number_group = self.addGroup(
+        
+        self.global_number_group = self.addGroup(
             "",
-            self.tr("Starting Number"),
-            self.get_starting_number_content(config.get(config.starting_number)),
-            self.starting_number_btn
+            self.tr("Global Sequential Starting Number"),
+            self.get_global_starting_number_content(config.global_starting_number),
+            self.custom_global_starting_number_btn
         )
 
         self.showHyperLinkLabel(self.tr("About Numbering Settings"))
 
+        self.connect_signals()
+
+        self.global_number_group.setEnabled(self.numbering_type_choice.currentIndex() == 2)
+
+    def connect_signals(self):
         self.hyper_label.clicked.connect(lambda: self.showGuideMessageBox(self.tr("Instructions"), Translator.NUMBERING_GUIDE()))
         self.numbering_type_choice.currentIndexChanged.connect(self.on_change_numbering_type)
 
-        self.starting_number_group.setEnabled(self.numbering_type_choice.currentIndex() == 0)
+        self.card.expandButton.clicked.connect(self._update_global_starting_number)
+
+        self.custom_global_starting_number_btn.clicked.connect(self.show_custom_starting_number_dialog)
 
     def on_change_numbering_type(self, type_index: int):
-        self.starting_number_group.setEnabled(type_index == 0)
+        self.global_number_group.setEnabled(type_index == 2)
 
-        # 重置当前起始数字，避免在切换编号类型后出现不符合预期的数字
-        config.current_starting_number = None
+    def set_current_global_starting_number(self, value: int):
+        config.global_starting_number = value
 
-    def set_current_starting_number(self, value: int):
-        config.set(config.starting_number, value)
+        self.global_number_group.setContent(self.get_global_starting_number_content(value))
 
-        self.starting_number_group.setContent(self.get_starting_number_content(value))
+    def get_global_starting_number_content(self, value: int):
+        return self.tr("Set global sequential starting number. Current: {current}").format(current = value)
 
-        config.current_starting_number = None
+    def show_custom_starting_number_dialog(self):
+        from ...dialog.setting.starting_number import StartingNumberDialog
 
-    def get_starting_number_content(self, value: int):
-        return self.tr("Set initial number for per-batch. Current: {current}").format(current = value)
+        dialog = StartingNumberDialog(
+            self.tr("Customize Global Sequential Starting Number"), 
+            config.global_starting_number, 
+            self.parent_window
+        )
+
+        if dialog.exec():
+            self.set_current_global_starting_number(dialog.starting_number)
+
+    def _update_global_starting_number(self):
+        self.get_global_starting_number_content(config.global_starting_number)
 
 class CDNSettingCard(ExpandGroupSettingCard):
-    def __init__(self, parent = None):
+    def __init__(self, parent_window, parent = None):
         super().__init__(FluentIcon.CLOUD_DOWNLOAD, self.tr("CDN Settings"), self.tr("Adjust CDN settings used for downloading"), parent)
 
-        self.prefer_server_provider_switch = SettingSwitchButton(config.prefer_cdn_server_provider, parent = self)
+        self.parent_window = parent_window
 
-        self.custom_btn = PushButton(self.tr("Customize…"), self)
+        self.prefer_server_provider_switch = SettingSwitchButton(config.prefer_cdn_server_provider, parent = self)
+        self.configure_area_btn = PushButton(self.tr("Configure…"), self)
+        self.custom_provider_btn = PushButton(self.tr("Customize…"), self)
 
         self.viewLayout.setContentsMargins(0, 0, 0, 0)
         self.viewLayout.setSpacing(0)
 
         self.addGroup("", self.tr("Prefer Service Provider CDN"), self.tr("Prefer CDN provided by cloud service providers to improve download stability"), self.prefer_server_provider_switch)
-        self.addGroup("", self.tr("Customize Service Provider CDN"), self.tr("Customize the list and priority of service provider CDNs"), self.custom_btn)
+        self.addGroup("", self.tr("Select Geographic Location"), self.tr("Select your actual location to automatically match a more suitable CDN server and improve download speed"), self.configure_area_btn)
+        self.addGroup("", self.tr("Customize Service Provider CDN"), self.tr("Customize the list and priority of service provider CDNs"), self.custom_provider_btn)
+
+        self.configure_area_btn.clicked.connect(self.show_select_area_dialog)
+
+    def show_select_area_dialog(self):
+        from ...dialog.setting.select_area import SelectAreaDialog
+
+        dialog = SelectAreaDialog(self.parent_window)
+        dialog.exec()
 
 class ProxySettingCard(ExpandGroupSettingCard):
     def __init__(self, parent = None):
@@ -436,29 +473,6 @@ class ParsingSettingCard(ExpandGroupSettingCard):
         self.addGroup("", self.tr("Auto-select Download Items Settings"), self.tr("Configure how items in the parse list are automatically selected after parsing"), self.custom_auto_select_btn)
         self.addGroup("", self.tr("Save Parse History"), self.tr("Save the history of parsed links"), self.parse_history_switch)
 
-class ConfigFileSettingCard(ExpandGroupSettingCard):
-    def __init__(self, parent = None):
-        super().__init__(ExtendedFluentIcon.FILE_SETTINGS, self.tr("Config File"), self.tr("Import or export configuration files"), parent)
-
-        self.import_btn = PushButton(self.tr("Browse..."), self)
-        self.import_btn.setMinimumWidth(90)
-        self.export_btn = PushButton(self.tr("Browse..."), self)
-        self.export_btn.setMinimumWidth(90)
-        self.reset_btn = PushButton(self.tr("Reset"), self)
-        self.reset_btn.setMinimumWidth(90)
-        self.open_dir_btn = PushButton(self.tr("Open"), self)
-        self.open_dir_btn.setMinimumWidth(90)
-
-        self.addGroup("", self.tr("Import Config"), self.tr("Import settings from a configuration file"), self.import_btn)
-        self.addGroup("", self.tr("Export Config"), self.tr("Export settings to a configuration file"), self.export_btn)
-        self.addGroup("", self.tr("Reset Config"), self.tr("Reset all settings to default values"), self.reset_btn)
-        self.addGroup("", self.tr("Open Config Directory"), "", self.open_dir_btn)
-
-        self.open_dir_btn.clicked.connect(self.on_open_config_directory)
-
-    def on_open_config_directory(self):
-        Directory.open_directory_in_explorer(str(config.file.parent))
-
 class WindowBehaviorSettingCard(ExpandGroupSettingCard):
     def __init__(self, parent = None):
         super().__init__(ExtendedFluentIcon.APPLICATION_WINDOW, self.tr("Window Behavior"), self.tr("Adjust the behavior of the main window during startup, runtime, and shutdown"), parent)
@@ -479,16 +493,22 @@ class DownloadHandlingSettingCard(ExpandGroupSettingCard):
 
         self.show_download_options_dialog_switch = SettingSwitchButton(config.show_download_options_dialog, parent = self)
         self.show_notification_switch = SettingSwitchButton(config.show_notification, parent = self)
+        self.duplicate_download_resolution_choice = SettingComboBox(config.duplicate_download_resolution, [self.tr("Continue"), self.tr("Skip"), self.tr("Always ask")], parent = self)
         self.file_conflict_resolution_choice = SettingComboBox(config.file_conflict_resolution, [self.tr("Auto-rename"), self.tr("Overwrite")], parent = self)
         self.prelocation_switch = SettingSwitchButton(config.preallocate_file_space, parent = self)
 
         self.addGroup("", self.tr("Show Download Options Dialog"), self.tr("Show a dialog before starting the download to customize settings for this task"), self.show_download_options_dialog_switch)
         self.addGroup("", self.tr("Show Notifications"), self.tr("Show notifications when downloads complete"), self.show_notification_switch)
         preallocate_group = self.addGroup("", self.tr("Preallocate File Space"), self.tr("Preallocate file space before downloading to improve performance"), self.prelocation_switch)
+        duplicate_group = self.addGroup("", self.tr("Duplicate Download Resolution"), self.tr("Choose the action when a duplicate download is detected"), self.duplicate_download_resolution_choice)
+
         self.addGroup("", self.tr("File Conflict Resolution"), self.tr("Choose the action when a file with the same name already exists"), self.file_conflict_resolution_choice)
 
         preallocate_group.showHyperLinkLabel(self.tr("About Preallocating File Space"))
         preallocate_group.hyper_label.clicked.connect(lambda: preallocate_group.showGuideMessageBox(self.tr("Instructions"), Translator.PREALLOCATE_GUIDE()))
+
+        duplicate_group.showHyperLinkLabel(self.tr("About Duplicate Download Resolution"))
+        duplicate_group.hyper_label.clicked.connect(lambda: duplicate_group.showGuideMessageBox(self.tr("Instructions"), Translator.DUPLICATE_DOWNLOAD_GUIDE()))
 
 class DownloadConcurrencySettingCard(ExpandGroupSettingCard):
     def __init__(self, parent = None):
@@ -513,3 +533,93 @@ class CheckUpdateSettingCard(ExpandGroupSettingCard):
         self.card.addWidget(self.check_now_btn)
 
         self.addGroup("", self.tr("Include Prerelease Versions"), self.tr("Include prerelease versions in update checks (may be unstable)"), self.include_prerelease_switch)
+
+class OtherAdvancedSettingCard(ExpandGroupSettingCard):
+    def __init__(self, parent_window, parent = None):
+        super().__init__(FluentIcon.SETTING, self.tr("Other Advanced Settings"), self.tr("Configure other advanced settings"), parent)
+
+        self.parent_window = parent_window
+
+        self.custom_user_agent_btn = PushButton(self.tr("Customize…"), self)
+        self.config_file_settings_btn = DropDownPushButton(text = self.tr("Configure"), parent = self)
+
+        menu = RoundMenu(parent = self.config_file_settings_btn)
+        menu.addAction(Action(ExtendedFluentIcon.IMPORT, self.tr("Import Config"), triggered = self.on_import_config))
+        menu.addAction(Action(ExtendedFluentIcon.EXPORT, self.tr("Export Config"), triggered = self.on_export_config))
+        menu.addAction(Action(ExtendedFluentIcon.RETRY, self.tr("Reset Config"), triggered = self.on_reset_config))
+        menu.addAction(Action(FluentIcon.FOLDER, self.tr("Open Config Directory"), triggered = self.on_open_config_directory))
+
+        self.config_file_settings_btn.setMenu(menu)
+
+        self.addGroup("", self.tr("Custom User-Agent"), self.tr("Set a custom User-Agent string for network requests"), self.custom_user_agent_btn)
+        self.addGroup("", self.tr("Config File Settings"), self.tr("Import/export configuration files or reset to defaults"), self.config_file_settings_btn)
+        
+        self.connect_signals()
+
+    def connect_signals(self):
+        self.custom_user_agent_btn.clicked.connect(self.on_custom_user_agent)
+
+    def on_custom_user_agent(self):
+        from ...dialog.setting.user_agent import UserAgentDialog
+
+        dialog = UserAgentDialog(self.parent_window)
+        dialog.exec()
+
+    def on_import_config(self):
+        file_path, _ = QFileDialog.getOpenFileName(
+            self.parent_window,
+            self.tr("Import Config File"),
+            "",
+            self.tr("Config Files (*.json)")
+        )
+
+        if not file_path:
+            return
+        
+        original_file = config.file
+        
+        config.load(file_path)
+        config.file = original_file  # 恢复原来的配置文件路径，避免误覆盖
+        
+        config.save()
+
+        config.appRestartSig.emit()
+
+        logger.info("从文件导入配置成功，路径：%s", file_path)
+
+    def on_export_config(self):
+        file_path, _ = QFileDialog.getSaveFileName(
+            self.parent_window,
+            self.tr("Export Config File"),
+            "",
+            self.tr("Config Files (*.json)")
+        )
+
+        if not file_path:
+            return
+        
+        temp_config = APPConfig()
+        temp_config.load(config.file)
+        temp_config.file = Path(file_path)
+
+        temp_config.save()
+
+        logger.info("配置导出成功，路径：%s", file_path)
+
+    def on_reset_config(self):
+        dialog = MessageBox(
+            self.tr("Reset Config"),
+            self.tr("Are you sure you want to reset all settings to their default values? This action cannot be undone."),
+            self.parent_window
+        )
+
+        if dialog.exec():
+            # 直接删除配置文件，程序会在下次启动时自动创建一个新的默认配置文件
+            config.file.unlink(missing_ok = True)
+            
+            config.appRestartSig.emit()
+
+            logger.info("配置重置成功，配置文件已删除：%s", config.file)
+
+    def on_open_config_directory(self):
+        Directory.open_directory_in_explorer(str(config.file.parent))

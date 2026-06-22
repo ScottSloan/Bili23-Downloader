@@ -1,13 +1,19 @@
-from PySide6.QtGui import QColor, QPixmap
+from PySide6.QtGui import QPixmap
 
 from qfluentwidgets import (
-    AvatarWidget, BodyLabel, CaptionLabel, HyperlinkButton, FlyoutViewBase, MessageBox, isDarkTheme
+    AvatarWidget, BodyLabel, HyperlinkButton, FlyoutViewBase, MessageBox
 )
+
+from .widget import TipLabel
 
 from util.common.enum import ToastNotificationCategory
 from util.common.signal_bus  import signal_bus
 from util.common.config import config
 from util.auth.user import user_manager
+
+import logging
+
+logger = logging.getLogger(__name__)
 
 class ProfileCard(FlyoutViewBase):
     """
@@ -26,25 +32,27 @@ class ProfileCard(FlyoutViewBase):
 
         self.uname_lab = BodyLabel(config.user_uname, parent = self)
 
-        color = QColor(206, 206, 206) if isDarkTheme() else QColor(96, 96, 96)
-
-        self.uid_lab = CaptionLabel(f"UID: {config.user_uid}", parent = self)
-        self.uid_lab.setStyleSheet('QLabel{color: ' + color.name() + '}')
+        self.uid_lab = TipLabel(f"UID: {config.user_uid}", parent = self)
 
         self.logout_btn = HyperlinkButton(parent = self)
         self.logout_btn.setText(self.tr("Logout"))
 
+        self.open_profile_btn = HyperlinkButton(parent = self)
+        self.open_profile_btn.setText(self.tr("Profile"))
+
         self.avatar.move(12, 10)
         self.uname_lab.move(74, 12)
         self.uid_lab.move(74, 31)
-        self.logout_btn.move(62, 48)
+        self.open_profile_btn.move(62, 48)
+        self.logout_btn.move(150, 48)
 
-        self.setFixedSize(250, 90)
+        self.setFixedSize(260, 90)
 
         self.connect_signals()
 
     def connect_signals(self):
         self.logout_btn.clicked.connect(self.on_logout)
+        self.open_profile_btn.clicked.connect(self.on_open_profile)
 
     def on_logout(self):
         self.close()
@@ -59,4 +67,12 @@ class ProfileCard(FlyoutViewBase):
 
             # 注销后更新预览信息
             self.main_window.parse_interface.update_previewer_info()
-        
+
+            logger.info("用户已注销登录")
+
+    def on_open_profile(self):
+        import webbrowser
+
+        url = "https://space.bilibili.com/{uid}".format(uid = config.user_uid)
+
+        webbrowser.open(url)

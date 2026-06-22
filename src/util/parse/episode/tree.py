@@ -28,7 +28,7 @@ class Attribute(IntFlag):
     VIDEO_BIT                          = 1 << 0                   # 是否为投稿视频
     BANGUMI_BIT                        = 1 << 1                   # 是否为剧集
     CHEESE_BIT                         = 1 << 2                   # 是否为课程
-    POPULAR_BIT                        = 1 << 3                   # 是否为每周必看
+    WEEKLY_BIT                         = 1 << 3                   # 是否为每周必看
     COLLECTION_LIST_BIT                = 1 << 4                   # 是否为合集列表
     SPACE_BIT                          = 1 << 5                   # 是否为个人空间
     FAVLIST_BIT                        = 1 << 6                   # 是否为收藏夹
@@ -46,6 +46,8 @@ class Attribute(IntFlag):
     HISTORY_BIT                        = 1 << 14                  # 是否为历史记录
 
     TREE_NODE_BIT                      = 1 << 15                  # 是否为树节点
+
+    AUDIO_BIT                          = 1 << 16                  # 是否为音频
 
 class TreeItemBase:
     def __init__(self):
@@ -160,12 +162,14 @@ class TreeItem(TreeItemBase):
 
         self.aid = item_data.get("aid", 0)
         self.cid = item_data.get("cid", 0)
+        self.sid = item_data.get("sid", 0)
         self.url = item_data.get("url", "")
         self.bvid = item_data.get("bvid", "")
         self.ep_id = item_data.get("ep_id", 0)
         self.badge = item_data.get("badge", "")
         self.cover = item_data.get("cover", "")
         self.title = item_data.get("title", "")
+        self.author = item_data.get("author", "")
         self.number = item_data.get("number", "")
         self.duration = item_data.get("duration", 0)
         self.episode_id = item_data.get("episode_id", "")
@@ -191,12 +195,14 @@ class TreeItem(TreeItemBase):
             "badge": self.badge,                                   # 备注
             "bvid": self.bvid,
             "cid": self.cid,
+            "sid": self.sid,
             "cover": self.cover,
             "duration": self.duration,                             # 时长（s）
             "ep_id": self.ep_id,
             "number": self.number,                                 # 在解析列表中显示的序号
             "pubtime": self.pubtime,                               # 发布时间（时间戳）
             "favtime": self.favtime,                               # 收藏时间（时间戳）
+            "viewtime": self.viewtime,                             # 观看时间（时间戳）
             "part_number": self.part_number,                       # 分P序号，仅分P有效
             "related_titles": self.related_titles,                 # 相关标题，如合集标题、章节标题等
             "title": self.title,                                   # 标题

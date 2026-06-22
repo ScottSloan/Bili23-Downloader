@@ -7,6 +7,10 @@ from qfluentwidgets import LineEdit, SubtitleLabel
 from util.common.enum import ToastNotificationCategory
 from util.common.config import config
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 class UserAgentDialog(DialogBase):
     def __init__(self, parent = None):
         super().__init__(parent)
@@ -40,6 +44,8 @@ class UserAgentDialog(DialogBase):
     
     def accept(self):
         config.set(config.user_agent, self.user_agent_box.text())
+
+        logger.info("User-Agent 已更新为：%s", self.user_agent_box.text())
 
         return super().accept()
     

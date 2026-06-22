@@ -12,7 +12,7 @@ from gui.component.widget import (
 )
 from gui.component.parse_list import ParseTreeView
 
-from util.common.enum import ToastNotificationCategory, NumberingType, AutoSelectMode, ParserType
+from util.common.enum import ToastNotificationCategory, AutoSelectMode, ParserType, DuplicateDownloadResolution
 from util.common.signal_bus import signal_bus, config
 from util.common.icon import ExtendedFluentIcon
 from util.common.translator import Translator
@@ -24,19 +24,24 @@ from util.parse.preview.previewer import Previewer
 from util.parse.preview.info import PreviewerInfo
 
 from util.misc.history import history_manager
-from util.download.task.manager import task_manager
-from util.thread.pool import GlobalThreadPoolTask
 from util.thread.async_ import AsyncTask
 
-import re
+from collections import deque
+from threading import Event
+import logging
+
+logger = logging.getLogger(__name__)
 
 class ParseBase(QFrame):
     def __init__(self, parent = None):
         super().__init__(parent = parent)
 
         self.category_name = ""
+        self.duplicate_download_queue = deque()
+        self.processing_duplicate_download = False
+        self.duplicate_download_toast_shown = False
 
-    def check_extra_data(self, extra_data: dict):
+    def check_extra_data(self: "ParseInterface", extra_data: dict):
         if extra_data:
             # 判断是否显示分页组件
             if extra_data.get("pagination"):
@@ -44,10 +49,7 @@ class ParseBase(QFrame):
 
                 # 具有分页信息，且总页数大于 1 时，根据设置弹出自动解析分页对话框
                 if extra_data["pagination_data"]["total_pages"] > 1:
-                    if not config.get(config.auto_parse_teaching_tip_shown):
-                        # 仅提示一次
-                        config.set(config.auto_parse_teaching_tip_shown, True)
-
+                    if not config.get(config.auto_parse_teaching_tip_shown) and not config.get(config.show_auto_parse_dialog):
                         QTimer.singleShot(0, self.show_auto_parse_teaching_tip)
 
                     if config.get(config.show_auto_parse_dialog):
@@ -66,7 +68,7 @@ class ParseBase(QFrame):
 
             self.season_choice.hide()
 
-    def apply_auto_select(self, category_name: str):
+    def apply_auto_select(self: "ParseInterface", category_name: str):
         match config.get(config.auto_select_mode):
             case AutoSelectMode.SELECT_ALL:
                 # 选中全部项目
@@ -111,35 +113,30 @@ class ParseBase(QFrame):
                         if conditions.get("other") == 1:
                             self.parse_list.check_all_items()
 
-    def check_starting_number(self):
-        # 更新当前起始编号，如果尚未设置
-        if config.current_starting_number is None and config.get(config.numbering_type) == NumberingType.CONTINUOUS:
-            config.current_starting_number = config.global_starting_number
-
-    def reset_search(self):
+    def reset_search(self: "ParseInterface"):
         self.parse_list.search_keywords(None)
 
         self.segmented_widget.hide_search()
 
-    def reset_parse_list(self):
+    def reset_parse_list(self: "ParseInterface"):
         PreviewerInfo.error_occurred = True
 
         self.parse_list.clear_tree()
 
         self.item_count_label.setText("")
 
-    def scroll_to_item(self, tree_item):
+    def scroll_to_item(self: "ParseInterface", tree_item):
         self.parse_list.scroll_to_item(tree_item)
 
-    def check_matches(self, items):
+    def check_matches(self: "ParseInterface", items):
         self.parse_list.check_items(items)
 
-    def update_previewer_info(self):
+    def update_previewer_info(self: "ParseInterface"):
         if first_episode_info := self.parse_list.get_first_item_info():
             # 获取解析结果中第一个视频的信息，作为预览的媒体信息
-            signal_bus.parse.preview_init.emit(first_episode_info)
+            signal_bus.parse.preview_init.emit(first_episode_info, False)
 
-    def check_preview_info(self):
+    def check_preview_info(self: "ParseInterface"):
         if PreviewerInfo.error_occurred:
             # 只有存在 error_message 时才显示通知
 
@@ -150,17 +147,17 @@ class ParseBase(QFrame):
         else:
             return True
 
-    def adjust_column_width(self):
+    def adjust_column_width(self: "ParseInterface"):
         header = self.parse_list.header()
 
         header.setSectionResizeMode(1, header.ResizeMode.Stretch)
 
-    def reparse(self, url: str):
+    def reparse(self: "ParseInterface", url: str):
         self.url_box.setText(url)
         
         self.on_parse()
 
-    def on_show_interactive_video_dialog(self, data: dict):
+    def on_show_interactive_video_dialog(self: "ParseInterface", data: dict):
         # 显示互动视频对话框，询问用户是否探查所有节点
         from gui.dialog.misc.interactive_video import InteractiveVideoDialog
 
@@ -169,7 +166,7 @@ class ParseBase(QFrame):
         if dialog.exec():
             self.start_progress_parse_worker(dialog.payload)
 
-    def start_progress_parse_worker(self, data: dict):
+    def start_progress_parse_worker(self: "ParseInterface", data: dict):
         # 启动专门用于解析互动视频的后台线程，并连接进度更新信号
         worker = ProgressParseWorker(data)
         worker.success.connect(self.on_parse_success)
@@ -182,13 +179,13 @@ class ParseBase(QFrame):
 
         AsyncTask.run(worker)
 
-    def on_progress_parse_finished(self):
+    def on_progress_parse_finished(self: "ParseInterface"):
         self.progress_widget.hide_tip()
 
-    def on_progress_update(self, message: str):
+    def on_progress_update(self: "ParseInterface", message: str):
         self.progress_widget.update_text(message)
 
-    def on_update_parse_list_count(self, category_name: str, count: int):
+    def on_update_parse_list_count(self: "ParseInterface", category_name: str, count: int):
         # 更新解析结果总数的显示
         self.category_name = Translator.EPISODE_TYPE(category_name)
 
@@ -199,7 +196,7 @@ class ParseBase(QFrame):
 
         self.item_count_label.setText(text_label)
 
-    def on_auto_parse(self):
+    def on_auto_parse(self: "ParseInterface"):
         from gui.dialog.misc.auto_parse import AutoParseDialog
 
         dialog = AutoParseDialog(self.url_box.text(), self.pager.total_pages, self.pager.current_page, self.main_window)
@@ -207,10 +204,12 @@ class ParseBase(QFrame):
         if dialog.exec():
             # 开始解析前，隐藏分页组件
             self.segmented_widget.hide_pager()
+
+            config.current_starting_number = 1
             
             self.start_progress_parse_worker(dialog.payload)
 
-    def show_auto_parse_teaching_tip(self):
+    def show_auto_parse_teaching_tip(self: "ParseInterface"):
         TeachingTip.create(
             target = self.segmented_widget.pager_widget.menu_btn,
             title = self.tr("Auto-parse Pagination"),
@@ -222,20 +221,20 @@ class ParseBase(QFrame):
             parent = self.main_window
         )
 
-    def post_parse_success_check(self, category_name: str, extra_data: dict):
+    def post_parse_success_check(self: "ParseInterface", category_name: str, extra_data: dict):
         # 根据解析结果判断是否显示分页组件
         self.check_extra_data(extra_data)
 
         self.apply_auto_select(category_name)
 
-    def show_download_options_dialog(self):
+    def show_download_options_dialog(self: "ParseInterface"):
         from ..dialog.download_options.dialog import DownloadOptionsDialog
 
         dialog = DownloadOptionsDialog(self.main_window)
         
         return dialog
 
-    def on_preview_info_finished(self):
+    def on_preview_info_finished(self: "ParseInterface"):
         if config.get(config.show_download_confirmation_dialog) and self._triggered_by_clipboard:
             # 重置标志位
             self._triggered_by_clipboard = False
@@ -243,6 +242,56 @@ class ParseBase(QFrame):
             # 如果有选中项才会显示下载确认对话框
             if self.parse_list.get_checked_items_count() > 0:
                 self.on_download()
+
+    def on_show_duplicate_download_dialog(self: "ParseInterface", episode_info: dict, result_info: dict, done_event: Event):
+        self.duplicate_download_queue.append((episode_info, result_info, done_event))
+
+        if not self.processing_duplicate_download:
+            self.processing_duplicate_download = True
+            QTimer.singleShot(0, self._process_next_duplicate_download)
+
+    def _process_next_duplicate_download(self: "ParseInterface"):
+        if not self.duplicate_download_queue:
+            self.processing_duplicate_download = False
+            return
+
+        episode_info, result_info, done_event = self.duplicate_download_queue.popleft()
+
+        try:
+            if config.get(config.duplicate_download_resolution) != DuplicateDownloadResolution.ALWAYS_ASK:
+                # 根据设置自动处理重复下载的情况，无论是跳过还是继续下载，都不再弹出对话框
+                skip = (config.get(config.duplicate_download_resolution) == DuplicateDownloadResolution.SKIP)
+
+                result_info["skip"] = skip
+
+                if skip:
+                    self.show_skip_duplicate_download_toast(episode_info.get("title", ""))
+
+            else:
+                from ..dialog.misc.duplicate_download import DuplicateDownloadDialog
+
+                dialog = DuplicateDownloadDialog(episode_info, result_info, self.main_window)
+                dialog.exec()
+
+        finally:
+            # 继续处理下一个重复下载的情况，直到队列为空
+            done_event.set()
+            QTimer.singleShot(0, self._process_next_duplicate_download)
+
+    def show_skip_duplicate_download_toast(self: "ParseInterface", task_title: str):
+        if not self.duplicate_download_toast_shown:
+            self.duplicate_download_toast_shown = True
+
+            signal_bus.toast.show.emit(
+                ToastNotificationCategory.INFO,
+                "",
+                self.tr("Skipped duplicate download: {task_title}").format(task_title = task_title)
+            )
+
+            QTimer.singleShot(3000, self._reset_duplicate_download_toast_flag)
+
+    def _reset_duplicate_download_toast_flag(self: "ParseInterface"):
+        self.duplicate_download_toast_shown = False
 
 class ParseInterface(ParseBase):
     def __init__(self, parent = None):
@@ -347,9 +396,11 @@ class ParseInterface(ParseBase):
         signal_bus.parse.show_interactive_video_dialog.connect(self.on_show_interactive_video_dialog)
         signal_bus.parse.preview_finish.connect(self.on_preview_info_finished)
 
+        signal_bus.download.show_duplicate_download_dialog.connect(self.on_show_duplicate_download_dialog)
+        signal_bus.download.show_skip_duplicate_download_toast.connect(self.show_skip_duplicate_download_toast)
+
         self.segmented_widget.search_widget.scrollToItem.connect(self.scroll_to_item)
         self.segmented_widget.search_widget.checkMatches.connect(self.check_matches)
-        self.segmented_widget.pager_widget.menu_btn.clicked.connect(self.on_pager_show_more_menu)
 
         self.season_choice.changeSeason.connect(self.on_season_changed)
 
@@ -358,8 +409,6 @@ class ParseInterface(ParseBase):
 
         self.clipboard = QApplication.clipboard()
         self.clipboard.changed.connect(self.on_copy_url)
-
-        self.check_starting_number()
 
     def on_paste_and_parse(self):
         url = self.clipboard.text()
@@ -378,6 +427,8 @@ class ParseInterface(ParseBase):
         worker.success.connect(self.on_parse_success)
         worker.error.connect(self.on_parse_error)
 
+        logger.info("开始解析，链接: %s, 页码: %d", self.url_box.text(), page)
+
         AsyncTask.run(worker)
 
     def on_parse_success(self, category_name: str, extra_data: dict):
@@ -392,6 +443,8 @@ class ParseInterface(ParseBase):
         self.parse_btn.setIndeterminateState(False)
         # 清空搜索关键词
         self.parse_list.search_keywords("")
+
+        logger.info("解析成功，类别: %s", category_name)
 
     def on_parse_error(self, error_message: str):
         self.parse_btn.setIndeterminateState(False)
@@ -421,10 +474,14 @@ class ParseInterface(ParseBase):
 
             if not dialog.exec():
                 return
-            
+
+        # 获取选中的下载项    
         checked_episodes_list = self.parse_list.get_checked_items(to_dict = True, mark_as_downloaded = True)
 
-        GlobalThreadPoolTask.run_func(task_manager.create, checked_episodes_list)
+        config.current_starting_number = 1
+
+        # 添加到下载队列
+        signal_bus.download.create_task.emit(checked_episodes_list)
 
         signal_bus.toast.show.emit(ToastNotificationCategory.SUCCESS, "", self.tr("Added to download queue"))
 
@@ -446,16 +503,6 @@ class ParseInterface(ParseBase):
         menu.addAction(self._create_action(FluentIcon.HISTORY, self.tr("Parsing history"), self.on_history))
 
         pos = self.show_more_btn.mapToGlobal(self.show_more_btn.rect().bottomLeft())
-
-        menu.exec(pos)
-
-    def on_pager_show_more_menu(self, page):
-        menu = RoundMenu(parent = self)
-
-        menu.addAction(self._create_action(FluentIcon.DOCUMENT, self.tr("Jump to page"), self.on_jump_to_page))
-        menu.addAction(self._create_action(ExtendedFluentIcon.AUTOMATION, self.tr("Auto-parse pagination"), self.on_auto_parse))
-
-        pos = self.pager.menu_btn.mapToGlobal(self.pager.menu_btn.rect().bottomLeft())
 
         menu.exec(pos)
 
@@ -502,12 +549,14 @@ class ParseInterface(ParseBase):
             url = self.clipboard.text()
 
             for parser_type, pattern in url_patterns:
-                if re.findall(pattern, url):
+                if pattern.search(url):
                     # 置标志位，表示接下来的解析是由监控剪贴板触发的
                     self._triggered_by_clipboard = True
 
                     self.url_box.setText(url)
                     self.on_parse()
+
+                    logger.info("检测到复制链接，已自动解析，链接: %s", url)
 
                     return parser_type
 
@@ -516,20 +565,6 @@ class ParseInterface(ParseBase):
 
         dialog = ParseHistoryDialog(self.main_window)
         dialog.exec()
-
-    def on_jump_to_page(self):
-        from ..dialog.misc.jump_to_page import JumpToPageDialog
-
-        dialog = JumpToPageDialog(self.main_window)
-
-        if dialog.exec():
-            page_number = dialog.page
-
-            if 1 <= page_number <= self.pager.total_pages:
-                self.segmented_widget.pager_widget.on_change_page(page_number)
-
-            else:
-                signal_bus.toast.show.emit(ToastNotificationCategory.WARNING, self.tr("Invalid page number"), self.tr("Please enter a number between 1 and {total_pages}").format(total_pages = self.pager.total_pages))
 
     def keyPressEvent(self, event: QKeyEvent):
         if event.modifiers() == Qt.KeyboardModifier.ControlModifier and event.key() == Qt.Key.Key_A:

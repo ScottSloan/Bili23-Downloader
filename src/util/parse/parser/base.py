@@ -7,7 +7,7 @@ from functools import reduce
 from hashlib import md5
 import urllib.parse
 import logging
-import json
+import orjson
 import time
 import re
 
@@ -69,12 +69,15 @@ class ParserBase:
 
     def check_response(self, response: dict):
         if self.error_message:
-            raise Exception(self.error_message)
+            raise RuntimeError(self.error_message)
         
         if response.get("code", -1) != 0:
-            logger.error("接口请求错误：\n{response}".format(response = json.dumps(response, ensure_ascii = False, indent = 4)))
+            logger.error("接口请求错误：\n{response}".format(
+                response = orjson.dumps(response, option = orjson.OPT_INDENT_2).decode("utf-8")
+                )
+            )
 
-            raise Exception(response.get("message", "未知错误"))
+            raise RuntimeError(response.get("message", "未知错误"))
     
     def get_extra_data(self) -> dict:
         return {}
@@ -93,5 +96,5 @@ class ParserBase:
                 Translator.ERROR_MESSAGES("LOGIN_REQUIRED_MESSAGE")
             )
 
-            raise Exception("Please log in to your account first.")
+            raise RuntimeError("Please log in to your account first.")
     

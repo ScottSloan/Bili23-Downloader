@@ -30,4 +30,4 @@ class B23Parser:
         return url[https_pos:]
     
     def on_error(self, error: str):
-        raise Exception(error)
+        raise RuntimeError(error)

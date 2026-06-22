@@ -1,10 +1,8 @@
-from PySide6.QtCore import QModelIndex, Qt, Signal, QSize
+from PySide6.QtCore import QModelIndex, Qt, QSize
 
 from gui.component.view_model import CoverQueryModelBase
 
 class EntryListModel(CoverQueryModelBase):
-    itemClicked = Signal(QModelIndex, object)
-
     def __init__(self, entry_list: list, parent = None):
         super().__init__(parent)
 

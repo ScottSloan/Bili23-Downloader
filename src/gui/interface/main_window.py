@@ -3,8 +3,7 @@ from PySide6.QtGui import QIcon, QPixmap
 from PySide6.QtCore import Qt, QTimer
 
 from qfluentwidgets import (
-    MSFluentWindow, SystemThemeListener, NavigationItemPosition,
-    FluentIcon, InfoBadge, qrouter
+    MSFluentWindow, SystemThemeListener, NavigationItemPosition, FluentIcon, InfoBadge, qrouter
 )
 
 from util.common.enum import ToastNotificationCategory, WhenClose
@@ -12,18 +11,26 @@ from util.common.signal_bus import signal_bus, config
 from util.common.icon import ExtendedFluentIcon
 from util.common.config import config
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 class MainWindowBase:
     def run_post_terms_checks(self: "MainWindow") -> None:
         signal_bus.update.check.emit(False)
 
         if not config.get(config.tutorial_dialog_shown):
-            QTimer.singleShot(0, self.show_tutorial_dialog)
+            self.show_tutorial_dialog()
 
             config.set(config.tutorial_dialog_shown, True)
 
-        else:
-            if not config.get(config.is_login):
-                QTimer.singleShot(0, self.show_login_teaching_tip)
+        if not config.get(config.select_area_dialog_shown):
+            self.show_select_area_dialog()
+
+            config.set(config.select_area_dialog_shown, True)
+
+        if not config.get(config.is_login):
+            self.show_login_teaching_tip()
 
         QTimer.singleShot(0, self.check_download_path)
         QTimer.singleShot(0, self.check_ffmpeg)
@@ -73,7 +80,7 @@ class MainWindowBase:
             content = content,
             orient = Qt.Orientation.Vertical,
             isClosable = True,
-            duration = -1,
+            duration = 5000,
             position = InfoBarPosition.BOTTOM_RIGHT,
             parent = self,
             contentMaxHeight = 200
@@ -96,9 +103,6 @@ class MainWindowBase:
 
             webbrowser.open("https://bili23.scott-sloan.cn/doc/introduction.html")
 
-        if not config.get(config.is_login):
-            QTimer.singleShot(0, self.show_login_teaching_tip)
-
     def show_login_teaching_tip(self: "MainWindow"):
         from qfluentwidgets import TeachingTip, TeachingTipTailPosition
 
@@ -114,13 +118,15 @@ class MainWindowBase:
         )
 
     def show_terms_of_use(self):
-        from ..dialog.misc.terms import TermsOfUseDialog
+        from ..dialog.main_window.terms import TermsOfUseDialog
 
         dialog = TermsOfUseDialog(self)
 
         if not dialog.exec():
             # 用户不接受使用协议，关闭程序
             self.close()
+
+            logger.warning("用户未接受使用协议，程序已关闭")
 
             return False
 
@@ -132,6 +138,12 @@ class MainWindowBase:
         from ..dialog.update import UpdateDialog
 
         dialog = UpdateDialog(info, self)
+        dialog.exec()
+
+    def show_select_area_dialog(self):
+        from ..dialog.setting.select_area import SelectAreaDialog
+
+        dialog = SelectAreaDialog(self)
         dialog.exec()
 
     def center_on_screen(self: "MainWindow", show = True):
@@ -175,6 +187,8 @@ class MainWindowBase:
                 self.tr("Download Directory Invalid"),
                 self.tr("The current download directory is inaccessible or lacks write permissions. Please reset it.") + f"\n\n{download_path}"
             )
+
+            logger.error("下载目录不可访问或缺少写入权限：%s", download_path)
 
     def check_ffmpeg(self):
         if config.no_ffmpeg_available:
@@ -448,7 +462,7 @@ class MainWindow(MainWindowBase, MSFluentWindow):
                 return False
             
             case WhenClose.ALWAYS_ASK:
-                from ..dialog.misc.exit import ExitDialog
+                from ..dialog.main_window.exit import ExitDialog
 
                 dialog = ExitDialog(self)
 
@@ -468,7 +482,7 @@ class MainWindow(MainWindowBase, MSFluentWindow):
                 return True
 
     def on_about_click(self):
-        from ..dialog.misc.about import AboutDialog
+        from ..dialog.main_window.about import AboutDialog
 
         dialog = AboutDialog(self)
         dialog.exec()

@@ -1,6 +1,7 @@
 from PySide6.QtCore import Qt, QModelIndex
+from PySide6.QtWidgets import QApplication
 
-from qfluentwidgets import TreeView, RoundMenu, Action, FluentIcon, MessageBox, setCustomStyleSheet
+from qfluentwidgets import TreeView, RoundMenu, Action, FluentIcon
 
 from .model import ParseModel
 
@@ -24,15 +25,13 @@ class ParseTreeView(TreeView):
 
         self.setModel(self._model)
         self.setUniformRowHeights(True)
-        self.setAlternatingRowColors(True)
         self.setSortingEnabled(True)
+        self.setAlternatingRowColors(config.get(config.parse_list_alternate_row_color))
         self.setSelectionMode(TreeView.SelectionMode.SingleSelection)
         self.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
 
         self.customContextMenuRequested.connect(self.on_context_menu)
         signal_bus.parse.update_column_settings.connect(self._setHeaderWidth)
-
-        self.__set_QSS()
         
         self._setHeaderWidth()
 
@@ -124,11 +123,14 @@ class ParseTreeView(TreeView):
         if item.count() == 0:
             menu.addAction(self._create_action(FluentIcon.GLOBE, self.tr("Open in Browser"), lambda: self.on_open_in_browser(item)))
             menu.addAction(self._create_action(FluentIcon.DOWNLOAD, self.tr("Download as Single Video"), lambda: self.on_download_as_single_video(item)))
-            menu.addAction(self._create_action(ExtendedFluentIcon.RETRY, self.tr("Update Media Info"), lambda: self.update_media_info(item.to_dict())))
+            menu.addAction(self._create_action(ExtendedFluentIcon.RETRY, self.tr("Update Media Info"), lambda: self.on_update_media_info(item.to_dict())))
 
         # 4. 元数据信息
         menu.addSeparator()
         menu.addAction(self._create_action(FluentIcon.DOCUMENT, self.tr("View Metadata"), lambda: self.on_view_metadata(item)))
+
+        if item.count() == 0:
+            menu.addAction(self._create_action(FluentIcon.PHOTO, self.tr("View Cover"), lambda: self.on_view_cover(item)))
 
         menu.exec(global_pos)
 
@@ -145,12 +147,22 @@ class ParseTreeView(TreeView):
             webbrowser.open(item.url)
 
     def on_view_metadata(self, item: TreeItem):
+        def on_copy_metadata(info_str):
+            clipboard = QApplication.clipboard()
+            clipboard.setText(info_str)
+
+        from ..dialog import MessageBox
+
         info = item.to_dict()
 
         info_str = "\n".join(f"{key}: {value}" for key, value in info.items())
 
         dialog = MessageBox(title = self.tr("Metadata"), content = info_str, parent = self.main_window)
-        dialog.hideCancelButton()
+
+        dialog.cancelButton.setText(self.tr("Copy"))
+        dialog.cancelButton.clicked.disconnect()
+        dialog.cancelButton.clicked.connect(lambda: on_copy_metadata(info_str))
+
         dialog.exec()
 
     def on_download_as_single_video(self, item: TreeItem):
@@ -229,10 +241,8 @@ class ParseTreeView(TreeView):
 
         self.update_check_state()
 
-    def update_media_info(self, episode_data: dict):
-        signal_bus.toast.show.emit(ToastNotificationCategory.INFO, "", self.tr("Updating media info..."))
-
-        signal_bus.parse.preview_init.emit(episode_data)
+    def on_update_media_info(self, episode_data: dict):
+        signal_bus.parse.preview_init.emit(episode_data, True)
 
     def shift_select_range(self, new_index: QModelIndex):
         if self._model.last_changed_index.isValid():
@@ -254,24 +264,6 @@ class ParseTreeView(TreeView):
         for item in item_list:
             item.downloaded = True
 
-    def __set_QSS(self):
-        light_style = """
-            QTreeView {
-                background-color: transparent;
-                alternate-background-color: #f0f4f9;
-            }
-        """
-
-
-        dark_style = """
-            QTreeView {
-                background-color: transparent;
-                alternate-background-color: #343434;
-            }
-        """
-
-        setCustomStyleSheet(self, light_style, dark_style)
-
     def _check_main_episodes_node(self):
         # 选中剧集类正片部分
         try:
@@ -279,3 +271,9 @@ class ParseTreeView(TreeView):
             
         except IndexError:
             pass
+    
+    def on_view_cover(self, item: TreeItem):
+        from ...dialog.misc.view_cover import ViewCoverDialog
+
+        dialog = ViewCoverDialog(item.cover, parent = self.main_window)
+        dialog.show()

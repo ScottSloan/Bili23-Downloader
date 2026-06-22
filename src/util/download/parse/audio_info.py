@@ -5,6 +5,9 @@ from ..parse.query_worker import QueryWorker
 from ..task.info import TaskInfo
 
 from collections import defaultdict
+import logging
+
+logger = logging.getLogger(__name__)
 
 class AudioInfoParser:
     def __init__(self, info_data: dict, task_info: TaskInfo):
@@ -19,14 +22,19 @@ class AudioInfoParser:
         dash_node = self.info_data["dash"]
 
         if audio_node := self.safe_get(dash_node.copy(), ["flac", "audio"]):
-            quality_id = audio_node["id"]
+            quality_id = 30251
+            audio_node["id"] = quality_id
 
             available_quality_list.append(quality_id)
 
             self.audio_quality_info_map[quality_id] = audio_node.copy()
 
         if audio_node := self.safe_get(dash_node.copy(), ["dolby", "audio"]):
-            quality_id = audio_node[0]["id"]
+            if audio_node[0]["id"] == 30255:
+                logger.info("检测到 audio_quality_id 为 30255 的杜比全景声音频，已统一为 30250 以便区分")
+
+            quality_id = 30250
+            audio_node[0]["id"] = quality_id
 
             available_quality_list.append(quality_id)
 
@@ -44,10 +52,24 @@ class AudioInfoParser:
 
         return available_quality_list
 
+    def _get_m4a_available_quality_list(self):
+        # m4a 只支持 192K 码率
+        self.audio_quality_info_map[30280] = {
+            "id": 30280,
+            "codecs": "mp4a.40.2",
+            "backup_url": self.info_data["cdns"],
+            "bandwidth": 192000
+        }
+
+        return [30280]
+
     def get_available_list(self):
         match self.task_info.Download.media_type:
             case MediaType.DASH:
                 return self._get_dash_available_quality_list()
+            
+            case MediaType.M4A:
+                return self._get_m4a_available_quality_list()
             
             case _:
                 return []

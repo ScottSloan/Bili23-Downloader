@@ -1,7 +1,7 @@
 from ..common.config import config
+from ..common.enum import Area
 
 from urllib.parse import urlparse
-
 
 class CDN:
     @staticmethod
@@ -11,9 +11,9 @@ class CDN:
 
         if config.get(config.prefer_cdn_server_provider):
             # 将替换后的 URL 列表放在前面，原始 URL 列表放在后面，以便优先使用替换后的 URL
-            url_list = replaced_url_list + url_list
+            url_list = replaced_url_list + filtered_url_list
         else:
-            url_list = url_list + replaced_url_list
+            url_list = filtered_url_list + replaced_url_list
 
         # 去重并保持顺序
         return list(dict.fromkeys(url_list))
@@ -23,8 +23,15 @@ class CDN:
         # 过滤 pcdn、mcdn 等劣质链接
         filtered_url_list = []
 
+        blacklist = [
+            "mcdn",
+            "pcdn",
+            "szbdyd.com",
+            "mountaintoys.cn",
+        ]
+
         for url in url_list:
-            if "szbdyd.com" in url or "mcdn" in url:
+            if any(domain in url for domain in blacklist):
                 continue
 
             filtered_url_list.append(url)
@@ -36,7 +43,7 @@ class CDN:
         new_url_list = []
 
         for url in url_list:
-            for entry in config.get(config.cdn_server_list):
+            for entry in CDN.get_cdn_server_list():
                 node = entry.get("host")
 
                 new_url = CDN.replace_netloc(url, node)
@@ -54,3 +61,18 @@ class CDN:
         new_parsed_url = parsed_url._replace(netloc = new_netloc)
 
         return new_parsed_url.geturl()
+    
+    @staticmethod
+    def get_cdn_server_list():
+        if config.get(config.area) == Area.CN:
+            return config.get(config.cn_cdn_server_list)
+        else:
+            return config.get(config.ov_cdn_server_list)
+        
+    @staticmethod
+    def set_cdn_server_list(cdn_list: list[dict]):
+        if config.get(config.area) == Area.CN:
+            config.set(config.cn_cdn_server_list, cdn_list)
+        else:
+            config.set(config.ov_cdn_server_list, cdn_list)
+    

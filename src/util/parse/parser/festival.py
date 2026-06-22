@@ -1,7 +1,7 @@
 from ...network.request import SyncNetWorkRequest, ResponseType
 from .base import ParserBase
 
-import json
+import orjson
 import re
 
 class FestivalParser(ParserBase):
@@ -16,7 +16,7 @@ class FestivalParser(ParserBase):
         if new_url:
             return new_url
         else:
-            raise Exception("无效的链接")
+            raise RuntimeError("无效的链接")
 
     def get_festival_info(self):
         request = SyncNetWorkRequest(self.url, response_type = ResponseType.TEXT, raise_for_status = self.raise_for_status)
@@ -29,16 +29,16 @@ class FestivalParser(ParserBase):
             json_data = match.group(1)
             
             try:
-                info_data: dict = json.loads(json_data)
+                info_data: dict = orjson.loads(json_data)
                 
                 bvid = info_data["videoInfo"]["bvid"]
 
                 return f"https://www.bilibili.com/video/{bvid}"
 
             except Exception as e:
-                raise Exception("JSON 解码失败: " + str(e))
+                raise RuntimeError("JSON 解码失败: " + str(e))
 
         else:
-            raise Exception("无效的链接")
+            raise RuntimeError("无效的链接")
 
         

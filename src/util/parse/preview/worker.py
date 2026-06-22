@@ -28,8 +28,12 @@ class QueryInfoWorker(QObject):
                 case MediaType.MP4 | MediaType.FLV:
                     self.query_mp4_file_size()
 
+                case MediaType.M4A:
+                    # m4a 借用 dash 的查询方法，虽然实际上 m4a 只有一个质量级别，但仍然需要获取文件大小等信息
+                    self.query_dash_file_size()
+
             if self.file_size == 0:
-                raise Exception("无法获取文件大小")
+                raise RuntimeError("无法获取文件大小")
             
             self.success.emit(self.media_info, self.file_size)
         

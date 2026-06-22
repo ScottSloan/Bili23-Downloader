@@ -6,7 +6,7 @@ from qfluentwidgets import (
     FlyoutViewBase, FluentIcon, isDarkTheme, ComboBox, PopUpAniStackedWidget, NavigationWidget
 )
 
-from gui.component.entry_list import EntryListView
+from ..entry_list.list_view import EntryListView
 from .button import TransparentToolButton
 from .navigation import NavigationPanel
 from .pager import Pager
@@ -57,7 +57,7 @@ class EntryWidget(QWidget):
 
         viewLayout.addWidget(self.entry_list)
 
-        self.entry_list._model.itemClicked.connect(self.on_list_item_clicked)
+        self.entry_list._delegate.itemClicked.connect(self.on_list_item_clicked)
         self.entry_list.parse.connect(self.on_list_item_clicked)
 
     def on_list_item_clicked(self, index, entry: dict):
@@ -114,7 +114,8 @@ class FollowWidget(QWidget):
         self.entry_list.set_cover_size(QSize(123, 164))
         self.entry_list.setWrappingView()
 
-        self.pager = Pager(self)
+        self.pager = Pager(self.parent_widget, self)
+        self.pager.set_menu_actions(can_jump_page = True, can_auto_parse = False)
 
         filter_box = QHBoxLayout()
         filter_box.setContentsMargins(5, 5, 5, 5)
@@ -132,7 +133,7 @@ class FollowWidget(QWidget):
         self.connect_signals()
 
     def connect_signals(self):
-        self.entry_list._model.itemClicked.connect(self.on_list_item_clicked)
+        self.entry_list._delegate.itemClicked.connect(self.on_list_item_clicked)
         self.entry_list.parse.connect(self.on_list_item_clicked)
         self.type_choice.currentIndexChanged.connect(self.update_list)
         self.status_choice.currentIndexChanged.connect(self.update_list)
@@ -163,6 +164,9 @@ class FollowWidget(QWidget):
         self.pn = page
 
         self.update_list()
+
+    def on_jump_to_page(self):
+        pass
 
     def update_list(self):
         self.entry_list._model.clearData()

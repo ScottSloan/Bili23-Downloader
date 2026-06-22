@@ -9,11 +9,12 @@ from qfluentwidgets import (
 from .serializer import LanguageSerializer, ScalingSerializer
 from .enum import (
     Language, WhenClose, DanmakuType, SubtitleType, CoverType, MetadataType, ProxyType, FFmpegSource, NumberingType,
-    Scaling, FileConflictResolution, VideoContainer, AutoSelectMode
+    Scaling, FileConflictResolution, VideoContainer, AutoSelectMode, Area, DuplicateDownloadResolution
 )
 
 from pathlib import Path
 import logging
+import orjson
 import sys
 
 logger = logging.getLogger(__name__)
@@ -170,6 +171,13 @@ class DefaultValue:
             "default": True
         },
         {
+            "id": "1fe25f91-caf0-437e-b132-c9367261ff8b",
+            "name": "DEFAULT_FOR_INTERACTIVE_VIDEO",
+            "type": 14,
+            "rule": "{parent_title}/{leaf_title}",
+            "default": True
+        },
+        {
             "id": "b1d4e8e3-ca17-4b41-87cf-cda45254701e",
             "name": "DEFAULT_FOR_BANGUMI",
             "type": 20,
@@ -182,16 +190,63 @@ class DefaultValue:
             "type": 30,
             "rule": "{series_title}/{episode_title}",
             "default": True
+        },
+        {
+            "id": "5913e25f-0bf3-4d3c-a608-8416af778a8a",
+            "name": "DEFAULT_FOR_FAVORITE",
+            "type": 40,
+            "rule": "{favorites_owner_id}_{favorites_owner}/{favorites_name}/{leaf_title}",
+            "default": True
+        },
+        {
+            "id": "8c48ac82-14c5-4d48-9de7-225d9b53513f",
+            "name": "DEFAULT_FOR_SPACE",
+            "type": 50,
+            "rule": "{space_owner_id}_{space_owner}/{leaf_title}",
+            "default": True
+        },
+        {
+            "id": "307ccc8e-ad2f-4195-94f0-162ee9ff1ac0",
+            "name": "DEFAULT_FOR_HISTORY",
+            "type": 60,
+            "rule": "{parent_title}/{leaf_title}",
+            "default": True
+        },
+        {
+            "id": "0a72a82b-5684-448e-9db1-a342de933d3e",
+            "name": "DEFAULT_FOR_WATCH_LATER",
+            "type": 70,
+            "rule": "{parent_title}/{leaf_title}",
+            "default": True
+        },
+        {
+            "id": "4d28285d-65ca-4c5c-bbb3-b3b5b570c52a",
+            "name": "DEFAULT_FOR_WEEKLY",
+            "type": 80,
+            "rule": "{parent_title}/{leaf_title}",
+            "default": True
+        },
+        {
+            "id": "dc77bd15-be21-4847-856e-68bb3035042f",
+            "name": "DEFAULT_FOR_AUDIO",
+            "type": 90,
+            "rule": "{parent_title}/{uploader} - {leaf_title}",
+            "default": True
         }
     ]
 
-    cdn_server_list = [
+    # 国内 CDN 服务器列表
+    cn_cdn_server_list = [
         {
             "host": "upos-sz-mirror08c.bilivideo.com",
             "provider": "HUAWEI"
         },
         {
             "host": "upos-sz-mirrorhw.bilivideo.com",
+            "provider": "HUAWEI"
+        },
+        {
+            "host": "upos-sz-mirrorhwb.bilivideo.com",
             "provider": "HUAWEI"
         },
         {
@@ -203,6 +258,10 @@ class DefaultValue:
             "provider": "TENCENT"
         },
         {
+            "host": "upos-sz-mirrorcoso1.bilivideo.com",
+            "provider": "TENCENT"
+        },
+        {
             "host": "upos-sz-mirrorali.bilivideo.com",
             "provider": "ALIYUN"
         },
@@ -211,12 +270,30 @@ class DefaultValue:
             "provider": "ALIYUN"
         }
     ]
+    
+    # 海外 CDN 服务器列表
+    ov_cdn_server_list = [
+        {
+            "host": "upos-hz-mirrorakam.akamaized.net",
+            "provider": "AKAMAI"
+        },
+        {
+            "host": "upos-sz-mirroraliov.bilivideo.com",
+            "provider": "ALIYUN"
+        },
+        {
+            "host": "upos-sz-mirrorcosov.bilivideo.com",
+            "provider": "TENCENT"
+        }
+    ]
 
 class APPConfig(QConfig):
     # APP
     app_name = "Bili23 Downloader"
-    app_version = "2.00.7"
-    app_comparable_version = "2.00.7"
+    app_version = "2.10.0"
+    app_comparable_version = "2.10.0"
+    app_config_version = 2100
+    config_version = ConfigItem("Application", "config_version", app_config_version)
 
     # Interface
     language = OptionsConfigItem("Interface", "language", Language.AUTO, OptionsValidator(Language), LanguageSerializer(), restart = True)
@@ -225,9 +302,11 @@ class APPConfig(QConfig):
 
     # Behavior
     parse_list_column = ConfigItem("Behavior", "parse_list_column", DefaultValue.parse_list_column)
+    parse_list_alternate_row_color = ConfigItem("Behavior", "parse_list_alternate_row_color", True, BoolValidator())
+
     monitor_clipboard = ConfigItem("Behavior", "monitor_clipboard", False, BoolValidator())
     show_download_confirmation_dialog = ConfigItem("Behavior", "show_download_confirmation_dialog", False, BoolValidator())
-    auto_select_mode = OptionsConfigItem("Behavior", "auto_select_mode", AutoSelectMode.MANUAL, OptionsValidator(AutoSelectMode), EnumSerializer(AutoSelectMode))
+    auto_select_mode = OptionsConfigItem("Behavior", "auto_select_mode_", AutoSelectMode.CONDITIONAL, OptionsValidator(AutoSelectMode), EnumSerializer(AutoSelectMode))
     auto_select_conditions = ConfigItem("Behavior", "auto_select_conditions", DefaultValue.auto_select_conditions)
     parse_history = ConfigItem("Behavior", "parse_history", True, BoolValidator())
 
@@ -236,7 +315,9 @@ class APPConfig(QConfig):
     when_close_window = OptionsConfigItem("Behavior", "when_close_window", WhenClose.ALWAYS_ASK, OptionsValidator(WhenClose), EnumSerializer(WhenClose))
 
     show_download_options_dialog = ConfigItem("Behavior", "show_download_options_dialog", True, BoolValidator())
+    show_notification = ConfigItem("Behavior", "show_notification", False, BoolValidator())
     preallocate_file_space = ConfigItem("Behavior", "preallocate_file_space", True, BoolValidator())
+    duplicate_download_resolution = OptionsConfigItem("Behavior", "duplicate_download_resolution", DuplicateDownloadResolution.ALWAYS_ASK, OptionsValidator(DuplicateDownloadResolution), EnumSerializer(DuplicateDownloadResolution))
     file_conflict_resolution = OptionsConfigItem("Behavior", "file_conflict_resolution", FileConflictResolution.AUTO_RENAME, OptionsValidator(FileConflictResolution), EnumSerializer(FileConflictResolution))
 
     # Download
@@ -245,8 +326,6 @@ class APPConfig(QConfig):
     download_parallel = RangeConfigItem("Download", "download_parallel", 1, RangeValidator(1, 10))
     speed_limit_enabled = ConfigItem("Download", "speed_limit_enabled", False, BoolValidator())
     speed_limit_rate = ConfigItem("Download", "speed_limit_rate", 10.0)
-
-    show_notification = ConfigItem("Download", "show_notification", False, BoolValidator())
 
     video_quality_priority = ConfigItem("Download", "video_quality_priority", DefaultValue.video_quality_priority)
     audio_quality_priority = ConfigItem("Download", "audio_quality_priority", DefaultValue.audio_quality_priority)
@@ -273,18 +352,19 @@ class APPConfig(QConfig):
     metadata_type = OptionsConfigItem("Additional", "metadata_type", MetadataType.NFO, OptionsValidator(MetadataType), EnumSerializer(MetadataType))
 
     # File Naming
-    naming_rule_list = ConfigItem("File Naming", "naming_convention", DefaultValue.naming_rule_list)
+    naming_rule_list = ConfigItem("File Naming", "naming_rule_list", DefaultValue.naming_rule_list)
     numbering_type = OptionsConfigItem("File Naming", "numbering_type", NumberingType.CONTINUOUS, OptionsValidator(NumberingType), EnumSerializer(NumberingType))
-    starting_number = ConfigItem("File Naming", "starting_number", 1)
 
     # Advanced
-    prefer_cdn_server_provider = ConfigItem("Advanced", "prefer_cdn_server", True, BoolValidator())
-    cdn_server_list = ConfigItem("Advanced", "cdn_server_list", DefaultValue.cdn_server_list)
+    prefer_cdn_server_provider = ConfigItem("Advanced", "prefer_cdn_server_provider_", True, BoolValidator())
+    area = OptionsConfigItem("Advanced", "area", Area.CN, OptionsValidator(Area), EnumSerializer(Area))
+    cn_cdn_server_list = ConfigItem("Advanced", "cn_cdn_server_list", DefaultValue.cn_cdn_server_list)
+    ov_cdn_server_list = ConfigItem("Advanced", "ov_cdn_server_list", DefaultValue.ov_cdn_server_list)
 
     ffmpeg_source = OptionsConfigItem("Advanced", "ffmpeg_source", FFmpegSource.BUNDLED, OptionsValidator(FFmpegSource), EnumSerializer(FFmpegSource), restart = True)
     custom_ffmpeg_path = ConfigItem("Advanced", "custom_ffmpeg_path", "", restart = True)
 
-    proxy_enabled = ConfigItem("Advanced", "proxy_enabled", False, BoolValidator())
+    proxy_enabled = ConfigItem("Advanced", "proxy_enabled", False, BoolValidator(), restart = True)
     proxy_type = OptionsConfigItem("Advanced", "proxy_type", ProxyType.HTTP, OptionsValidator(ProxyType), EnumSerializer(ProxyType))
     proxy_server = ConfigItem("Advanced", "proxy_server", "")
     proxy_port = ConfigItem("Advanced", "proxy_port", 80)
@@ -318,13 +398,15 @@ class APPConfig(QConfig):
     is_login = ConfigItem("Cookie", "is_login", False, BoolValidator())
     is_expired = False
 
+    # Application
+    should_upgrade_config = False
+    accepted_terms = ConfigItem("Application", "accepted_terms", False, BoolValidator())
+    skip_version = ConfigItem("Application", "skip_version", "")
+
     # User
     user_uname: str = ""
     user_uid: str = ""
     user_avatar_pixmap: QPixmap = None
-
-    accepted_terms = ConfigItem("Application", "accepted_terms", False, BoolValidator())
-    skip_version = ConfigItem("Application", "skip_version", "")
 
     # FFmpeg
     ffmpeg_executable = ""
@@ -354,9 +436,34 @@ class APPConfig(QConfig):
     auto_add_to_download_list = ConfigItem("Misc", "auto_add_to_download_list", False, BoolValidator())
     auto_parse_interval = ConfigItem("Misc", "auto_parse_interval", 2.0)
 
-    auto_parse_teaching_tip_shown = ConfigItem("Misc", "auto_parse_teaching_tip_shown", False, BoolValidator())
+    auto_parse_teaching_tip_shown = ConfigItem("Misc", "auto_parse_teaching_tip_shown_", False, BoolValidator())
 
     tutorial_dialog_shown = ConfigItem("Misc", "tutorial_dialog_shown", False, BoolValidator())
+    select_area_dialog_shown = ConfigItem("Misc", "select_area_dialog_shown", False, BoolValidator())
+
+def check_need_patch():
+    # 检查是否需要修补配置文件
+    if config_path.exists():
+        with open(config_path, "r", encoding = "utf-8") as f:
+            data = orjson.loads(f.read())
+
+            if "config_version" in data.get("Application", {}):
+                config_version = data.get("Application", {}).get("config_version", 0)
+
+                return config_version < config.app_config_version, config_version
+            else:
+                return True, 0
+    else:
+        return False, 0
+
+def patch_config(config_version: int):
+    # 配置文件修补
+    if config_version < 2100:
+        pass
+
+    # 完成修补，写入新的 config_version
+    config.set(config.config_version, config.app_config_version)
+    config.save()
 
 config = APPConfig()
 config.themeMode.value = Theme.AUTO
@@ -368,3 +475,13 @@ if not config_path.exists():
     logger.warning("配置文件不存在，将创建新配置文件")
 
 qconfig.load(config_path, config)
+
+# 判断是否需要修补配置文件
+need_patch, config_version = check_need_patch()
+
+if need_patch:
+    logger.info("检测到旧版本配置文件，正在进行修补")
+
+    config.should_upgrade_config = True
+
+    patch_config(config_version)

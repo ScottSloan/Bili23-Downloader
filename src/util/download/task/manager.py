@@ -1,5 +1,5 @@
 from ...common.data import reversed_video_quality_map, reversed_audio_quality_map, video_codec_str_map
-from ...common.enum import DownloadStatus, DownloadType, NumberingType
+from ...common.enum import DownloadStatus, DownloadType, NumberingType, DuplicateDownloadResolution
 from ...common.timestamp import get_timestamp_ms
 from ...common.translator import Translator
 from ...common.signal_bus import signal_bus
@@ -15,17 +15,25 @@ from .reparse_worker import ReparseWorker
 from .db import TaskDatabase
 from .info import TaskInfo
 
+from threading import Event
 from pathlib import Path
 from typing import List
 from uuid import uuid4
-import json
+import logging
+import hashlib
+import orjson
 import re
+
+logger = logging.getLogger(__name__)
 
 class TaskManager:
     def __init__(self):
         self.db_manager = TaskDatabase()
 
-        signal_bus.download.create_task.connect(self.create)
+        signal_bus.download.create_task.connect(self._create_async)
+
+    def _create_async(self, episode_info_list: List[dict]):
+        GlobalThreadPoolTask.run_func(self.create, episode_info_list)
 
     def __episode_info_to_task_info(self, episode_info: dict, number) -> TaskInfo:
         task_info = TaskInfo()
@@ -50,6 +58,9 @@ class TaskManager:
         task_info.Episode.from_dict(self.__update_episode_info(episode_info, number))
 
         # FileNameInfo
+        # 下载目录在生成 TaskInfo 时就确定，后续即便修改了下载目录的设置，也不会影响已生成的 TaskInfo 中的下载目录，避免下载过程中下载目录发生变化导致的问题
+        task_info.File.download_path = config.get(config.download_path)
+
         self.__update_file_name_info(task_info)
 
         return task_info
@@ -77,11 +88,12 @@ class TaskManager:
         extra_data = EpisodeData.get_episode_data(episode_info.get("episode_id", ""))
 
         title = episode_info.get("title", "")
-
         attr = episode_info.get("attribute", 0)
 
+        # 对于任何类型视频，都保存一个 leaf_title 备用，供下载收藏夹和个人空间时使用
         episode_info["leaf_title"] = title
 
+        # 对于剧集和课程，使用 episode_title 表示剧集名称或课程名称，leaf_title 表示分P标题
         if attr & Attribute.BANGUMI_BIT != 0 or attr & Attribute.CHEESE_BIT != 0:
             episode_info["episode_title"] = title
 
@@ -108,8 +120,6 @@ class TaskManager:
         path = Path(formatter.format())
 
         task_info.File.name = str(path.name)
-
-        task_info.File.download_path = config.get(config.download_path)
         task_info.File.folder = str(path.parent)
 
     def __check_reparse_needed(self, episode_info: dict):
@@ -139,39 +149,43 @@ class TaskManager:
                 # 过滤文件系统非法字符
                 episode_info[title] = re.sub(r'[\/\\\:\*\?\"\<\>\|]', '_', episode_info.get(title, ""))
 
+    def __get_number(self, episode_info: dict = None):
+        match config.get(config.numbering_type):
+            case NumberingType.CONTINUOUS:
+                # 全局顺序编号
+                return config.global_starting_number
+            
+            case NumberingType.FROM_SPECIFIED:
+                # 返回 current_starting_number，然后自增
+                _current = config.current_starting_number
+                config.current_starting_number += 1
+
+                return _current
+            
+            case _:
+                return episode_info.get("number", "")
+
     def create(self, episode_info_list: List[dict]):
         task_info_list = []
 
-        numbering_type = config.get(config.numbering_type)
-
-        if numbering_type == NumberingType.CONTINUOUS:
-            if config.current_starting_number is None:
-                config.current_starting_number = config.global_starting_number
-
-            next_number = config.current_starting_number
-
-        elif numbering_type == NumberingType.FROM_SPECIFIED:
-            next_number = config.get(config.starting_number)
-
-        else:
-            next_number = None
-
         for episode_info in episode_info_list:
+            # 判断是否需要重新解析
             if self.__check_reparse_needed(episode_info):
                 continue
 
-            if numbering_type == NumberingType.USE_PARSE_LIST:
-                number = episode_info.get("number", "")
-            else:
-                number = next_number
-                next_number += 1
+            # 判断是否重复下载
+            if self._check_duplicate(episode_info):
+                continue
+
+            # 先判断重复下载，再分配编号
+            number = self.__get_number(episode_info)
 
             task_info = self.__episode_info_to_task_info(episode_info, number)
 
             task_info_list.append(task_info)
 
-        if numbering_type == NumberingType.CONTINUOUS and next_number is not None:
-            config.current_starting_number = next_number
+            # 全局起始编号自增
+            config.global_starting_number += 1
 
         if task_info_list:
             # 存储到数据库，并添加到下载列表
@@ -189,7 +203,7 @@ class TaskManager:
             data = entry[0]  # 获取 data 列
 
             task_info = TaskInfo()
-            task_info.from_dict(json.loads(data))
+            task_info.from_dict(orjson.loads(data))
 
             task_info_list.append(task_info)
 
@@ -256,4 +270,77 @@ class TaskManager:
 
         self.__update_file_name_info(task_info)
 
+    def _check_duplicate(self, episode_info: dict):
+        hash_id = self._calc_hash_id(episode_info)
+
+        result = self.db_manager.check_duplicate(hash_id)
+
+        if result:
+            # 触发重复下载，根据用户设置执行相应的操作
+            match config.get(config.duplicate_download_resolution):
+                case DuplicateDownloadResolution.CONTINUE:
+                    # 返回 False 表示继续下载
+                    logger.info("已继续重复下载任务: %s", episode_info.get("title", ""))
+
+                    return False
+
+                case DuplicateDownloadResolution.SKIP:
+                    # 返回 True 表示跳过下载
+                    logger.info("已跳过重复下载任务: %s", episode_info.get("title", ""))
+
+                    signal_bus.download.show_skip_duplicate_download_toast.emit(episode_info.get("title", ""))
+                    
+                    return True
+                
+                case DuplicateDownloadResolution.ALWAYS_ASK:
+                    # 询问用户是否继续下载。后台线程等待主线程弹窗返回结果。
+                    result_info = {"skip": True, "not_ask_again": False}
+                    done_event = Event()
+
+                    signal_bus.download.show_duplicate_download_dialog.emit(episode_info, result_info, done_event)
+                    done_event.wait()
+
+                    logger.info("用户选择%s重复下载任务: %s", "跳过" if result_info["skip"] else "继续", episode_info.get("title", ""))
+
+                    return result_info["skip"]
+                    
+        return result
+
+    def _calc_hash_id(self, episode_info: dict):
+        # 根据 episode_info 计算 hash_id
+        attr = episode_info.get("attribute", 0)
+
+        if attr & Attribute.VIDEO_BIT:
+            # 投稿视频
+            metadata = {
+                "bvid": episode_info.get("bvid"),
+                "cid": episode_info.get("cid"),
+                "aid": episode_info.get("aid")
+            }
+
+        elif attr & Attribute.BANGUMI_BIT:
+            # 剧集类
+            metadata = {
+                "bvid": episode_info.get("bvid"),
+                "cid": episode_info.get("cid"),
+                "aid": episode_info.get("aid"),
+                "ep_id": episode_info.get("ep_id")
+            }
+
+        elif attr & Attribute.CHEESE_BIT:
+            # 课程类
+            metadata = {
+                "aid": episode_info.get("aid"),
+                "cid": episode_info.get("cid"),
+                "ep_id": episode_info.get("ep_id")
+            }
+
+        elif attr & Attribute.AUDIO_BIT:
+            # 音乐类
+            metadata = {
+                "sid": episode_info.get("sid")
+            }
+
+        return hashlib.md5(orjson.dumps(metadata)).hexdigest()
+    
 task_manager = TaskManager()

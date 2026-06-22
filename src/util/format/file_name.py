@@ -37,7 +37,7 @@ class FileNameFormatter:
                 name = entry.get("name")
                 example = entry.get("example")
 
-                if name in ["pub_time", "create_time"]:
+                if name in ["pub_time", "create_time", "last_watched_time", "fav_time"]:
                     example = Time.from_timestamp(1772841600)
 
                 self.variable_data[name] = example
@@ -60,6 +60,8 @@ class FileNameFormatter:
     def __normalize_path(self, path_str: str):
         if not path_str:
             return path_str
+        
+        path_str = path_str.removeprefix("/").removeprefix("\\")
 
         path = Path(path_str)
         normalized_parts = []
@@ -76,20 +78,11 @@ class FileNameFormatter:
         return str(Path(*normalized_parts))
 
     def get_special_rule(self):
-        # 判断是否为特殊类型的视频：互动视频、每周必看、收藏夹、个人空间
-        # 这些类型不支持自定义，直接使用内部预设规则
-
         if self.rule is None:
             self.rule = ""
 
         rule_map = {
             Attribute.DOWNLOAD_AS_SINGLE_VIDEO_BIT: "{leaf_title}",
-            Attribute.INTERACTIVE_BIT: "{collection_title}/{leaf_title}",
-            Attribute.POPULAR_BIT: "{collection_title}/{leaf_title}",
-            Attribute.COLLECTION_LIST_BIT: "{collection_title}/{leaf_title}",
-            Attribute.FAVLIST_BIT: Path("{favorites_owner_id}_{favorites_owner}") / self.rule,
-            Attribute.SPACE_BIT: Path("{space_owner_id}_{space_owner}") / self.rule,
-            Attribute.WATCH_LATER_BIT: "{leaf_title}"
         }
 
         for attr, rule in rule_map.items():
@@ -115,6 +108,10 @@ class FileNameFormatter:
             "pub_ts": task_info.Episode.pubtime,
             "create_time": Time.from_timestamp(task_info.Basic.created_time),
             "create_ts": task_info.Basic.created_time,
+            "fav_time": Time.from_timestamp(task_info.Episode.favtime),
+            "fav_ts": task_info.Episode.favtime,
+            "last_watched_time": Time.from_timestamp(task_info.Episode.viewtime),
+            "last_watched_ts": task_info.Episode.viewtime,
             "number": task_info.Episode.number,
             "uploader": task_info.Episode.uploader,
             "uploader_uid": task_info.Episode.uploader_uid,
@@ -155,12 +152,19 @@ class FileNameFormatter:
 
     def get_type_id_from_attribute(self, attribute: int):
         type_map = {
+            Attribute.FAVLIST_BIT: ConventionType.FAVORITE,
+            Attribute.SPACE_BIT: ConventionType.SPACE,
+            Attribute.HISTORY_BIT: ConventionType.HISTORY,
+            Attribute.WATCH_LATER_BIT: ConventionType.WATCH_LATER,
+            Attribute.WEEKLY_BIT: ConventionType.WEEKLY,
+            Attribute.AUDIO_BIT: ConventionType.AUDIO,
+
             Attribute.NORMAL_BIT: ConventionType.NORMAL,
             Attribute.PART_BIT: ConventionType.PART,
             Attribute.COLLECTION_BIT: ConventionType.COLLECTION,
+            Attribute.INTERACTIVE_BIT: ConventionType.INTERACTIVE_VIDEO,
             Attribute.BANGUMI_BIT: ConventionType.BANGUMI,
             Attribute.CHEESE_BIT: ConventionType.CHEESE,
-            Attribute.POPULAR_BIT: ConventionType.NORMAL
         }
 
         for attr, type_id in type_map.items():

@@ -205,7 +205,7 @@ class RuleListDialog(DialogBase):
         parent_size: QSize = self.parent().size()
 
         width = parent_size.width() * 0.55
-        height = parent_size.height() * 0.65
+        height = parent_size.height() * 0.70
 
         self.widget.setMinimumWidth(max(700, width))
         self.widget.setMinimumHeight(max(450, height))

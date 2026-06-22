@@ -43,7 +43,7 @@ class SpaceEpisodeParser(EpisodeParserBase):
                 "number": self.episode_count,
                 "pubtime": episode["created"],
                 "title": episode["title"],
-                "url": "https://www.bilibili.com/video/" + episode["bvid"],
+                "url": "https://www.bilibili.com/video/{bvid}".format(bvid = episode["bvid"])
             }
 
             item = TreeItem(item_data)

@@ -7,7 +7,8 @@ from gui.dialog.download_options.card import MediaInfoCard, MediaOptionsCard
 from gui.component.widget import ScrollArea
 
 from util.parse.preview.info import PreviewerInfo
-from util.common.enum import OriginalFileType
+from util.common.data import video_quality_map, audio_quality_map, video_codec_map
+from util.common.translator import Translator
 from util.common.signal_bus import signal_bus
 from util.common.config import config
 
@@ -35,9 +36,13 @@ class MediaSettingsPage(ScrollArea):
         self.setScrollLayout(main_layout)
     
     def connect_signals(self):
-        self.media_info_card.video_quality_choice.currentIndexChanged.connect(self.on_change_video_info_choice)
-        self.media_info_card.audio_quality_choice.currentIndexChanged.connect(self.on_change_audio_info_choice)
-        self.media_info_card.video_codec_choice.currentIndexChanged.connect(self.on_change_video_info_choice)
+        self.media_info_card.video_quality_widget.choice.currentIndexChanged.connect(self.on_change_video_info_choice)
+        self.media_info_card.audio_quality_widget.choice.currentIndexChanged.connect(self.on_change_audio_info_choice)
+        self.media_info_card.video_codec_widget.choice.currentIndexChanged.connect(self.on_change_video_info_choice)
+
+        self.media_info_card.video_quality_widget.custom_btn.clicked.connect(self.on_adjust_video_quality_priority)
+        self.media_info_card.audio_quality_widget.custom_btn.clicked.connect(self.on_adjust_audio_quality_priority)
+        self.media_info_card.video_codec_widget.custom_btn.clicked.connect(self.on_adjust_video_codec_priority)
 
     def init_media_info(self):
         self.media_info_card.update_choice_data(PreviewerInfo.video_quality_choice_data, PreviewerInfo.audio_quality_choice_data, PreviewerInfo.video_codec_choice_data)
@@ -109,3 +114,39 @@ class MediaSettingsPage(ScrollArea):
             self.media_options_card.download_video_stream or
             self.media_options_card.download_audio_stream
         )
+    
+    def on_adjust_video_quality_priority(self):
+        from ..setting.priority import PriorityDialog
+
+        map_reversed = {v: Translator.VIDEO_QUALITY(k) for k, v in video_quality_map.items()}
+
+        dialog = PriorityDialog(map_reversed, config.get(config.video_quality_priority), self.options_dialog)
+
+        if dialog.exec():
+            config.set(config.video_quality_priority, dialog.config_value)
+
+            self.on_change_video_info_choice()
+
+    def on_adjust_audio_quality_priority(self):
+        from ..setting.priority import PriorityDialog
+
+        map_reversed = {v: Translator.AUDIO_QUALITY(k) for k, v in audio_quality_map.items()}
+
+        dialog = PriorityDialog(map_reversed, config.get(config.audio_quality_priority), self.options_dialog)
+
+        if dialog.exec():
+            config.set(config.audio_quality_priority, dialog.config_value)
+
+            self.on_change_audio_info_choice()
+
+    def on_adjust_video_codec_priority(self):
+        from ..setting.priority import PriorityDialog
+
+        map_reversed = {v: k for k, v in video_codec_map.items()}
+
+        dialog = PriorityDialog(map_reversed, config.get(config.video_codec_priority), self.options_dialog )
+
+        if dialog.exec():
+            config.set(config.video_codec_priority, dialog.config_value)
+
+            self.on_change_video_info_choice()
