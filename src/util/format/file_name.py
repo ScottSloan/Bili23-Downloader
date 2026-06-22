@@ -112,7 +112,7 @@ class FileNameFormatter:
             "fav_ts": task_info.Episode.favtime,
             "last_watched_time": Time.from_timestamp(task_info.Episode.viewtime),
             "last_watched_ts": task_info.Episode.viewtime,
-            "number": task_info.Episode.number,
+            "number": int(task_info.Episode.number),
             "uploader": task_info.Episode.uploader,
             "uploader_uid": task_info.Episode.uploader_uid,
             "video_quality": task_info.Episode.video_quality,

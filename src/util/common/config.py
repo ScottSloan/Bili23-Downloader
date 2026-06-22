@@ -290,8 +290,8 @@ class DefaultValue:
 class APPConfig(QConfig):
     # APP
     app_name = "Bili23 Downloader"
-    app_version = "2.10.0"
-    app_comparable_version = "2.10.0"
+    app_version = "2.10.1"
+    app_comparable_version = "2.10.1"
     app_config_version = 2100
     config_version = ConfigItem("Application", "config_version", app_config_version)
 
@@ -458,8 +458,8 @@ def check_need_patch():
 
 def patch_config(config_version: int):
     # 配置文件修补
-    if config_version < 2100:
-        pass
+    # if config_version < 2100:
+    #     pass
 
     # 完成修补，写入新的 config_version
     config.set(config.config_version, config.app_config_version)

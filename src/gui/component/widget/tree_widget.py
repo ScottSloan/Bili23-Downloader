@@ -113,7 +113,7 @@ class ColumnTreeWidget(TreeWidget):
 
         if self.tooltipEnabled:
             for index, text in enumerate(args):
-                item.setToolTip(index, text)
+                item.setToolTip(index, str(text))
 
         if userData is not None:
             item.setData(0, Qt.ItemDataRole.UserRole, userData)
