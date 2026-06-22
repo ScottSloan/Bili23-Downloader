@@ -320,7 +320,6 @@ class Translator:
         return translate("MEDIA_INFO_GUIDE", """The media info shown here defaults to the first video in the parsed results. If multiple videos are available, this information may not exactly match the one you download—use it for reference only.
 
 To view detailed media info for a specific video, right-click its entry in the parse list and select "Update Media Info".
-To customize the priority settings, go to the Settings page.
 
 Note: Videos protected by DRM can only be downloaded up to 1080P; higher qualities are unavailable.""")
     
@@ -387,6 +386,11 @@ The meaning of each "Numbering Mode" option is as follows:
 
 Note: If the download path is on an external storage device such as a USB drive, and the file system does not support sparse files (e.g., FAT32 or exFAT), please disable this feature—otherwise, the program may become unresponsive.""")
     
+    @staticmethod
+    def DUPLICATE_DOWNLOAD_GUIDE():
+        return translate("DUPLICATE_DOWNLOAD_GUIDE", """This feature detects duplicates based on unique video identifiers (e.g., BV/av IDs), not filenames.
+Please note that download history is the sole basis for recognizing downloaded videos. Clearing it will prevent the system from identifying existing downloads, which may result in duplicate downloads.""")
+
     @staticmethod
     @get_map_method
     def ERROR_CODE_EXPLANATION(key = None):

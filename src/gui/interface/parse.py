@@ -274,6 +274,7 @@ class ParseBase(QFrame):
                 dialog.exec()
 
         finally:
+            # 继续处理下一个重复下载的情况，直到队列为空
             done_event.set()
             QTimer.singleShot(0, self._process_next_duplicate_download)
 

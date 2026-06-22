@@ -552,27 +552,27 @@
 <context>
     <name>CheckUpdateSettingCard</name>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="524"/>
+        <location filename="../../gui/component/setting/card.py" line="528"/>
         <source>Check for Updates</source>
         <translation>检查更新</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="524"/>
+        <location filename="../../gui/component/setting/card.py" line="528"/>
         <source>Check if a new version is available</source>
         <translation>检查是否有新版本可用</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="526"/>
+        <location filename="../../gui/component/setting/card.py" line="530"/>
         <source>Check Now</source>
         <translation>立即检查</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="531"/>
+        <location filename="../../gui/component/setting/card.py" line="535"/>
         <source>Include Prerelease Versions</source>
         <translation>包含预发布版本</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="531"/>
+        <location filename="../../gui/component/setting/card.py" line="535"/>
         <source>Include prerelease versions in update checks (may be unstable)</source>
         <translation>在更新检查中包含预发布版本（可能不稳定）</translation>
     </message>
@@ -768,6 +768,16 @@
     </message>
 </context>
 <context>
+    <name>DUPLICATE_DOWNLOAD_GUIDE</name>
+    <message>
+        <location filename="../../util/common/translator.py" line="391"/>
+        <source>This feature detects duplicates based on unique video identifiers (e.g., BV/av IDs), not filenames.
+Please note that download history is the sole basis for recognizing downloaded videos. Clearing it will prevent the system from identifying existing downloads, which may result in duplicate downloads.</source>
+        <translation>本功能通过视频唯一标识（如 BV号、av号）判断是否重复，与文件名无关。
+请注意下载记录是识别已下载视频的唯一依据，如果清除下载记录，系统将无法识别已下载内容，可能导致重复下载。</translation>
+    </message>
+</context>
+<context>
     <name>DanmakuSettingCard</name>
     <message>
         <location filename="../../gui/component/setting/card.py" line="236"/>
@@ -808,47 +818,47 @@
 <context>
     <name>DownloadConcurrencySettingCard</name>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="511"/>
+        <location filename="../../gui/component/setting/card.py" line="515"/>
         <source>Download Concurrency</source>
         <translation>下载并发</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="511"/>
+        <location filename="../../gui/component/setting/card.py" line="515"/>
         <source>Adjust per-task threads, concurrent downloads, and speed limits</source>
         <translation>调整每任务线程数、并发下载数和速度限制</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="516"/>
+        <location filename="../../gui/component/setting/card.py" line="520"/>
         <source>Configure…</source>
         <translation>设置…</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="518"/>
+        <location filename="../../gui/component/setting/card.py" line="522"/>
         <source>Number of Threads</source>
         <translation>多线程数</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="519"/>
+        <location filename="../../gui/component/setting/card.py" line="523"/>
         <source>Number of Parallel Downloads</source>
         <translation>并行下载数</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="520"/>
+        <location filename="../../gui/component/setting/card.py" line="524"/>
         <source>Speed Limit Settings</source>
         <translation>速度限制设置</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="518"/>
+        <location filename="../../gui/component/setting/card.py" line="522"/>
         <source>Adjust the number of threads used per task (default: 4)</source>
         <translation>调整单个任务使用的线程数，默认为 4</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="519"/>
+        <location filename="../../gui/component/setting/card.py" line="523"/>
         <source>Adjust the number of tasks downloaded simultaneously (default: 1)</source>
         <translation>调整同时下载的任务数，默认为 1</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="520"/>
+        <location filename="../../gui/component/setting/card.py" line="524"/>
         <source>Configure speed limit settings for downloads</source>
         <translation>配置下载的速度限制设置</translation>
     </message>
@@ -949,17 +959,23 @@
         <translation>选择检测到重复下载时的操作</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="506"/>
+        <location filename="../../gui/component/setting/card.py" line="510"/>
+        <source>About Duplicate Download Resolution</source>
+        <translation>有关重复下载处理的说明</translation>
+    </message>
+    <message>
+        <location filename="../../gui/component/setting/card.py" line="507"/>
         <source>About Preallocating File Space</source>
         <translation>有关预分配文件空间的说明</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="507"/>
+        <location filename="../../gui/component/setting/card.py" line="508"/>
+        <location filename="../../gui/component/setting/card.py" line="511"/>
         <source>Instructions</source>
         <translation>说明</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="504"/>
+        <location filename="../../gui/component/setting/card.py" line="505"/>
         <source>File Conflict Resolution</source>
         <translation>同名文件处理</translation>
     </message>
@@ -979,7 +995,7 @@
         <translation>下载前预分配文件空间以提升性能</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="504"/>
+        <location filename="../../gui/component/setting/card.py" line="505"/>
         <source>Choose the action when a file with the same name already exists</source>
         <translation>选择当目标位置已存在同名文件时的操作</translation>
     </message>
@@ -1270,12 +1286,12 @@ If you continue, please disable the &quot;Preallocate file space&quot; option. (
 <context>
     <name>ERROR_CODE_EXPLANATION</name>
     <message>
-        <location filename="../../util/common/translator.py" line="394"/>
+        <location filename="../../util/common/translator.py" line="398"/>
         <source>Request blocked, client IP has been banned</source>
         <translation>请求被阻止，客户端IP已被封禁</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="395"/>
+        <location filename="../../util/common/translator.py" line="399"/>
         <source>Paid content requires purchasing</source>
         <translation>付费内容需要购买</translation>
     </message>
@@ -2010,13 +2026,11 @@ Message:
         <source>The media info shown here defaults to the first video in the parsed results. If multiple videos are available, this information may not exactly match the one you download—use it for reference only.
 
 To view detailed media info for a specific video, right-click its entry in the parse list and select &quot;Update Media Info&quot;.
-To customize the priority settings, go to the Settings page.
 
 Note: Videos protected by DRM can only be downloaded up to 1080P; higher qualities are unavailable.</source>
         <translation>此处显示的媒体信息默认来自解析结果中的首个视频。若存在多个视频，所展示的信息可能与最终下载的视频不完全一致，仅供参考。
 
 如需查看特定视频的详细媒体信息，请右键点击解析列表中的对应条目，选择&quot;更新媒体信息&quot;。
-如需修改优先级设置，请转到设置页面修改。
 
 注意：受 DRM 加密保护的视频最高仅支持下载 1080P 画质，更高画质不可用。</translation>
     </message>
@@ -2024,7 +2038,7 @@ Note: Videos protected by DRM can only be downloaded up to 1080P; higher qualiti
 <context>
     <name>MEDIA_OPTIONS_GUIDE</name>
     <message>
-        <location filename="../../util/common/translator.py" line="329"/>
+        <location filename="../../util/common/translator.py" line="328"/>
         <source>Media options control how video and audio streams are downloaded and whether they are automatically merged after download.
 Videos on Bilibili typically store and transmit video and audio streams separately. During download, both parts must be fetched individually and can then be merged into a complete video file using FFmpeg. These settings determine which streams to download and whether to keep the original unmerged files.
 
@@ -2492,7 +2506,7 @@ To get a single complete video file, please enable &quot;Merge video and audio&q
 <context>
     <name>NAMING_RULE_GUIDE</name>
     <message>
-        <location filename="../../util/common/translator.py" line="340"/>
+        <location filename="../../util/common/translator.py" line="339"/>
         <source>Customize the file name and folder structure using variables.
 
 Rules:
@@ -2526,7 +2540,7 @@ For advanced usage, see the help documentation.</source>
 <context>
     <name>NUMBERING_GUIDE</name>
     <message>
-        <location filename="../../util/common/translator.py" line="375"/>
+        <location filename="../../util/common/translator.py" line="374"/>
         <source>This setting affects the value of the {number} variable in the naming rule. By default, the program’s preset naming rule does not include {number}. If you want to use numbering, please add {number} to your naming rule first.
 
 The meaning of each &quot;Numbering Mode&quot; option is as follows:
@@ -2639,84 +2653,84 @@ The meaning of each &quot;Numbering Mode&quot; option is as follows:
 <context>
     <name>OtherAdvancedSettingCard</name>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="535"/>
+        <location filename="../../gui/component/setting/card.py" line="539"/>
         <source>Other Advanced Settings</source>
         <translation>其他高级设置</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="535"/>
+        <location filename="../../gui/component/setting/card.py" line="539"/>
         <source>Configure other advanced settings</source>
         <translation>配置其他高级设置</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="539"/>
+        <location filename="../../gui/component/setting/card.py" line="543"/>
         <source>Customize…</source>
         <translation>自定义…</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="540"/>
+        <location filename="../../gui/component/setting/card.py" line="544"/>
         <source>Configure</source>
         <translation>配置</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="543"/>
+        <location filename="../../gui/component/setting/card.py" line="547"/>
         <source>Import Config</source>
         <translation>导入配置</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="544"/>
+        <location filename="../../gui/component/setting/card.py" line="548"/>
         <source>Export Config</source>
         <translation>导出配置</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="545"/>
-        <location filename="../../gui/component/setting/card.py" line="607"/>
+        <location filename="../../gui/component/setting/card.py" line="549"/>
+        <location filename="../../gui/component/setting/card.py" line="611"/>
         <source>Reset Config</source>
         <translation>重置配置</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="546"/>
+        <location filename="../../gui/component/setting/card.py" line="550"/>
         <source>Open Config Directory</source>
         <translation>打开配置目录</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="550"/>
+        <location filename="../../gui/component/setting/card.py" line="554"/>
         <source>Custom User-Agent</source>
         <translation>自定义 User-Agent</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="550"/>
+        <location filename="../../gui/component/setting/card.py" line="554"/>
         <source>Set a custom User-Agent string for network requests</source>
         <translation>为网络请求设置自定义 User-Agent 字符串</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="551"/>
+        <location filename="../../gui/component/setting/card.py" line="555"/>
         <source>Config File Settings</source>
         <translation>配置文件设置</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="551"/>
+        <location filename="../../gui/component/setting/card.py" line="555"/>
         <source>Import/export configuration files or reset to defaults</source>
         <translation>导入/导出配置文件或重置为默认值</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="567"/>
+        <location filename="../../gui/component/setting/card.py" line="571"/>
         <source>Import Config File</source>
         <translation>导入配置文件</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="569"/>
-        <location filename="../../gui/component/setting/card.py" line="591"/>
+        <location filename="../../gui/component/setting/card.py" line="573"/>
+        <location filename="../../gui/component/setting/card.py" line="595"/>
         <source>Config Files (*.json)</source>
         <translation>配置文件 (*.json)</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="589"/>
+        <location filename="../../gui/component/setting/card.py" line="593"/>
         <source>Export Config File</source>
         <translation>导出配置文件</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="608"/>
+        <location filename="../../gui/component/setting/card.py" line="612"/>
         <source>Are you sure you want to reset all settings to their default values? This action cannot be undone.</source>
         <translation>确定要将所有设置恢复为默认值吗？此操作无法撤销。</translation>
     </message>
@@ -2724,7 +2738,7 @@ The meaning of each &quot;Numbering Mode&quot; option is as follows:
 <context>
     <name>PREALLOCATE_GUIDE</name>
     <message>
-        <location filename="../../util/common/translator.py" line="386"/>
+        <location filename="../../util/common/translator.py" line="385"/>
         <source>Preallocating file space can improve download performance, especially for large files. When enabled, the program will allocate the required disk space before the download starts, reducing performance overhead caused by repeatedly expanding the file during download and minimizing disk fragmentation.
 
 Note: If the download path is on an external storage device such as a USB drive, and the file system does not support sparse files (e.g., FAT32 or exFAT), please disable this feature—otherwise, the program may become unresponsive.</source>
@@ -2736,7 +2750,7 @@ Note: If the download path is on an external storage device such as a USB drive,
 <context>
     <name>PRIORITY_GUIDE</name>
     <message>
-        <location filename="../../util/common/translator.py" line="369"/>
+        <location filename="../../util/common/translator.py" line="368"/>
         <source>The program will attempt downloads in the order of your configured priority. The actual video quality, audio quality, or codec you can download still depends on what is available in the video itself—priority only determines which option is tried first among multiple available choices.
 
 For example, if you set the video quality priority to 720P &gt; 1080P &gt; 4K, the program will first try to download 720P; if 720P is unavailable, it will then try 1080P and then 4K in sequence.</source>
@@ -3797,7 +3811,7 @@ ISP：{isp}</translation>
 <context>
     <name>TERMS_OF_USE</name>
     <message>
-        <location filename="../../util/common/translator.py" line="357"/>
+        <location filename="../../util/common/translator.py" line="356"/>
         <source>&lt;html&gt;This software is intended solely for personal learning and research purposes. Any content downloaded through this project &lt;b&gt;is strictly limited to personal, non-commercial use and must not be used for any commercial purpose, public distribution, sharing, resale, or unlawful profit.&lt;/b&gt;
 &lt;br&gt;&lt;br&gt;
 This software operates exclusively based on the user&apos;s own legitimate account access rights and &lt;b&gt;does not bypass any paywalls, membership restrictions, or technical protection measures.&lt;/b&gt; You may only download content that you are authorized to access through your normal login on the target platform. If your account does not have permission to access certain content, this software must not be used to obtain it.
