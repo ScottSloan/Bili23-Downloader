@@ -49,6 +49,8 @@ class ParseHistoryDialog(DialogBase):
         self.adjust_widget_size()
 
     def init_history_list(self):
+        self.history_list.clear()
+
         self.history_list.setColumnHeaders(
             [
                 self.tr("No."),
@@ -78,7 +80,7 @@ class ParseHistoryDialog(DialogBase):
                 Time.format_timestamp(created_time, "%Y-%m-%d %H:%M:%S"),
             )
 
-            widget = self._create_action_widget(index, url, history_id)
+            widget = self._create_action_widget(url, history_id)
 
             self.history_list.setItemWidget(item, 4, widget)
 
@@ -89,20 +91,27 @@ class ParseHistoryDialog(DialogBase):
 
         signal_bus.parse.parse_url.emit(url)
 
-    def on_delete(self, index: int, history_id: str):
-        self.history_list.takeTopLevelItem(index - 1)
-
+    def on_delete(self, history_id: str):
         history_manager.delete_history(history_id)
+
+        # 从列表中查找 history_id 对应的项并删除
+        for row in range(self.history_list.topLevelItemCount()):
+            item = self.history_list.topLevelItem(row)
+            widget = self.history_list.itemWidget(item, 4)
+
+            if widget and widget.history_id == history_id:
+                self.history_list.takeTopLevelItem(row)
+                break
 
     def on_clear_history(self):
         self.history_list.clear()
 
         history_manager.clear_history()
 
-    def _create_action_widget(self, index: int, url: str, history_id: str):
-        action_widget = ParseActionWidget(self.history_list)
+    def _create_action_widget(self, url: str, history_id: str):
+        action_widget = ParseActionWidget(history_id, self.history_list)
         action_widget.edit_btn.clicked.connect(lambda: self.on_parse(url))
-        action_widget.delete_btn.clicked.connect(lambda: self.on_delete(index, history_id))
+        action_widget.delete_btn.clicked.connect(lambda: self.on_delete(history_id))
 
         return action_widget
     
