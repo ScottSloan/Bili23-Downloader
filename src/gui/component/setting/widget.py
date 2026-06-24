@@ -100,8 +100,10 @@ class EditActionWidget(QWidget):
         action_layout.addWidget(self.delete_btn)
 
 class ParseActionWidget(EditActionWidget):
-    def __init__(self, parent = None):
+    def __init__(self, history_id: str, parent = None):
         super().__init__(parent)
+
+        self.history_id = history_id
 
         self.edit_btn.setIcon(FluentIcon.SEARCH)
         self.edit_btn.setToolTip(self.tr("Parse"))

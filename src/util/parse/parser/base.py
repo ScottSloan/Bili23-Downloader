@@ -1,13 +1,13 @@
 from ...common.enum import ParserType, ToastNotificationCategory
 from ...common.translator import Translator
 from ...common.signal_bus import signal_bus
+from ...common._json import json_dumps
 from ...common.config import config
 
 from functools import reduce
 from hashlib import md5
 import urllib.parse
 import logging
-import orjson
 import time
 import re
 
@@ -73,7 +73,7 @@ class ParserBase:
         
         if response.get("code", -1) != 0:
             logger.error("接口请求错误：\n{response}".format(
-                response = orjson.dumps(response, option = orjson.OPT_INDENT_2).decode("utf-8")
+                response = json_dumps(response, indent = 2)
                 )
             )
 

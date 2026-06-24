@@ -1,7 +1,8 @@
 from PySide6.QtCore import Qt, QModelIndex
 from PySide6.QtWidgets import QApplication
+from PySide6.QtGui import QColor
 
-from qfluentwidgets import TreeView, RoundMenu, Action, FluentIcon
+from qfluentwidgets import TreeView, RoundMenu, Action, FluentIcon, isDarkTheme
 
 from .model import ParseModel
 
@@ -34,6 +35,7 @@ class ParseTreeView(TreeView):
         signal_bus.parse.update_column_settings.connect(self._setHeaderWidth)
         
         self._setHeaderWidth()
+        self._update_palette()
 
     def _setHeaderWidth(self):
         for index, entry in enumerate(config.get(config.parse_list_column)):
@@ -277,3 +279,14 @@ class ParseTreeView(TreeView):
 
         dialog = ViewCoverDialog(item.cover, parent = self.main_window)
         dialog.show()
+
+    def _update_palette(self):
+        palette = self.palette()
+
+        if isDarkTheme():
+            palette.setColor(palette.ColorRole.AlternateBase, QColor(255, 255, 255, 13))
+
+        else:
+            palette.setColor(palette.ColorRole.AlternateBase, QColor(0, 0, 0, 5))
+
+        self.setPalette(palette)

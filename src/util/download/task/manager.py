@@ -1,5 +1,6 @@
 from ...common.data import reversed_video_quality_map, reversed_audio_quality_map, video_codec_str_map
 from ...common.enum import DownloadStatus, DownloadType, NumberingType, DuplicateDownloadResolution
+from ...common._json import json_dumps, json_loads
 from ...common.timestamp import get_timestamp_ms
 from ...common.translator import Translator
 from ...common.signal_bus import signal_bus
@@ -21,7 +22,6 @@ from typing import List
 from uuid import uuid4
 import logging
 import hashlib
-import orjson
 import re
 
 logger = logging.getLogger(__name__)
@@ -203,7 +203,7 @@ class TaskManager:
             data = entry[0]  # 获取 data 列
 
             task_info = TaskInfo()
-            task_info.from_dict(orjson.loads(data))
+            task_info.from_dict(json_loads(data))
 
             task_info_list.append(task_info)
 
@@ -341,6 +341,6 @@ class TaskManager:
                 "sid": episode_info.get("sid")
             }
 
-        return hashlib.md5(orjson.dumps(metadata)).hexdigest()
+        return hashlib.md5(json_dumps(metadata)).hexdigest()
     
 task_manager = TaskManager()

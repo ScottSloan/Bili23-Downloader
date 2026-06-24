@@ -6,6 +6,7 @@ from ...parse.parser.base import ParserBase
 
 from ...common.enum import DownloadType, MediaType
 from ...common.translator import Translator
+from ...common._json import json_dumps
 from ...common.config import config
 
 from ..parse.video_info import VideoInfoParser
@@ -14,7 +15,6 @@ from ..task.info import TaskInfo
 
 from urllib.parse import urlencode
 import logging
-import orjson
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +34,7 @@ class ParseWorker(QRunnable, ParserBase):
 
             if not self.error:
                 download_info = self.parse_download_info()
-                download_info_json = orjson.dumps(download_info).decode("utf-8")
+                download_info_json = json_dumps(download_info)
 
                 QMetaObject.invokeMethod(
                     self.parent,
