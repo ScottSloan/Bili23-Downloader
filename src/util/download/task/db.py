@@ -184,4 +184,4 @@ class TaskDatabase(Database):
                 "sid": task_info.Episode.sid
             }
 
-        return hashlib.md5(json_dumps(metadata)).hexdigest()
+        return hashlib.md5(json_dumps(metadata).encode("utf-8")).hexdigest()

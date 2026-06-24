@@ -341,6 +341,6 @@ class TaskManager:
                 "sid": episode_info.get("sid")
             }
 
-        return hashlib.md5(json_dumps(metadata)).hexdigest()
+        return hashlib.md5(json_dumps(metadata).encode("utf-8")).hexdigest()
     
 task_manager = TaskManager()
