@@ -91,12 +91,12 @@ jobs:
           Start-Process "is.exe" -Wait -ArgumentList "/VERYSILENT"
 
           # 简中语言包
-          $lang_zh_cn_url = "https://raw.githubusercontent.com/jrsoftware/issrc/refs/heads/main/Files/Languages/Unofficial/ChineseSimplified.isl"
+          $lang_zh_cn_url = "https://raw.githubusercontent.com/jrsoftware/issrc/refs/heads/main/Files/Languages/ChineseSimplified.isl"
           Invoke-WebRequest -Uri $lang_zh_cn_url -OutFile "ChineseSimplified.isl"
           Move-Item -Path "ChineseSimplified.isl" -Destination "C:\Program Files (x86)\Inno Setup 6\Languages\ChineseSimplified.isl"
 
           # 繁中语言包
-          $lang_zh_tw_url = "https://raw.githubusercontent.com/jrsoftware/issrc/refs/heads/main/Files/Languages/Unofficial/ChineseTraditional.isl"
+          $lang_zh_tw_url = "https://raw.githubusercontent.com/jrsoftware/issrc/refs/heads/main/Files/Languages/ChineseTraditional.isl"
           Invoke-WebRequest -Uri $lang_zh_tw_url -OutFile "ChineseTraditional.isl"
           Move-Item -Path "ChineseTraditional.isl" -Destination "C:\Program Files (x86)\Inno Setup 6\Languages\ChineseTraditional.isl"
 
