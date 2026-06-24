@@ -23,13 +23,13 @@ class EpisodeParserBase:
         root_node = TreeItem({})
         root_node.add_child(node)
 
-        if node.count() == 1:
+        title = node.title
+
+        if not title:
             attr = node.child(0).attribute
 
             if attr & Attribute.VIDEO_BIT or attr & Attribute.AUDIO_BIT:
                 title = node.child(0).title
-        else:
-            title = node.title
 
         if config.get(config.auto_select_mode) == AutoSelectMode.MANUAL:
             current_episode_data = None
