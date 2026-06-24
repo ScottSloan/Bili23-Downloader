@@ -11,10 +11,10 @@ from .enum import (
     Language, WhenClose, DanmakuType, SubtitleType, CoverType, MetadataType, ProxyType, FFmpegSource, NumberingType,
     Scaling, FileConflictResolution, VideoContainer, AutoSelectMode, Area, DuplicateDownloadResolution
 )
+from ._json import json_loads
 
 from pathlib import Path
 import logging
-import orjson
 import sys
 
 logger = logging.getLogger(__name__)
@@ -445,7 +445,7 @@ def check_need_patch():
     # 检查是否需要修补配置文件
     if config_path.exists():
         with open(config_path, "r", encoding = "utf-8") as f:
-            data = orjson.loads(f.read())
+            data = json_loads(f.read())
 
             if "config_version" in data.get("Application", {}):
                 config_version = data.get("Application", {}).get("config_version", 0)

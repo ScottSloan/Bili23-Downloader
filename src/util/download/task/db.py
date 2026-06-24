@@ -1,3 +1,4 @@
+from ...common._json import json_loads, json_dumps
 from ...common.config import appdata_path, config
 from ...common.timestamp import get_timestamp
 from ...common.database import Database
@@ -8,7 +9,6 @@ from .info import TaskInfo
 from pathlib import Path
 from typing import List
 import hashlib
-import orjson
 
 class TaskDatabase(Database):
     def __init__(self):
@@ -79,7 +79,7 @@ class TaskDatabase(Database):
                 task_info.Basic.cover_id,                                   # cover_id
                 task_info.Basic.show_title,                                 # title
                 timestamp,                                                  # created_time or completed_time
-                orjson.dumps(task_info.to_dict()).decode("utf-8")           # data
+                json_dumps(task_info.to_dict())                             # data
             ))
 
         if completed:
@@ -96,7 +96,7 @@ class TaskDatabase(Database):
     def update_task(self, task_info: TaskInfo):
         self.execute("""
             UPDATE download_task SET data = ? WHERE task_id = ?
-        """, (orjson.dumps(task_info.to_dict()).decode("utf-8"), task_info.Basic.task_id))
+        """, (json_dumps(task_info.to_dict()), task_info.Basic.task_id))
 
     def delete_task(self, task_id: str, completed: bool = False):
         if completed:
@@ -125,7 +125,7 @@ class TaskDatabase(Database):
 
             for entry in result:
                 task_info = TaskInfo()
-                task_info.from_dict(orjson.loads(entry[0]))
+                task_info.from_dict(json_loads(entry[0]))
 
                 _task_info_list.append(task_info)
 
@@ -184,4 +184,4 @@ class TaskDatabase(Database):
                 "sid": task_info.Episode.sid
             }
 
-        return hashlib.md5(orjson.dumps(metadata)).hexdigest()
+        return hashlib.md5(json_dumps(metadata)).hexdigest()

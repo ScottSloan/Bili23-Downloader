@@ -1,6 +1,7 @@
-from ...common.config import config
 from ...common.translator import Translator
 from ...common.enum import MetadataType
+from ...common._json import json_dumps
+from ...common.config import config
 
 from ...network.request import SyncNetWorkRequest, ResponseType
 from ...download.task.info import TaskInfo
@@ -12,7 +13,6 @@ from .base import AdditionalParserBase
 
 from dataclasses import asdict
 from pathlib import Path
-import orjson
 
 class MetadataParser(AdditionalParserBase):
     def __init__(self, task_info: TaskInfo):
@@ -51,7 +51,7 @@ class MetadataParser(AdditionalParserBase):
         # 过滤掉空值
         filtered_data = {k: v for k, v in data.items() if v not in [None, "", [], {}, 0]}
 
-        return orjson.dumps(filtered_data, option = orjson.OPT_INDENT_2).decode("utf-8")
+        return json_dumps(filtered_data, indent = 2)
 
     def _save_poster(self):
         path = Path(self.task_info.File.download_path, self.task_info.File.folder, "poster.jpg")

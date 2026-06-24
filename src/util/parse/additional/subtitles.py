@@ -1,6 +1,7 @@
 from ...common.translator import Translator
 from ...common.enum import SubtitleType
 from ...common.config import config
+from ...common._json import json_dumps
 
 from ...network.request import SyncNetWorkRequest
 from ...download.task.info import TaskInfo
@@ -8,8 +9,6 @@ from ...format.time import Time
 
 from .base import AdditionalParserBase
 from .file.subtitle_ass import SubtitlesASS
-
-import orjson
 
 class SubtitlesParser(AdditionalParserBase):
     def __init__(self, task_info: TaskInfo):
@@ -83,7 +82,7 @@ class SubtitlesParser(AdditionalParserBase):
         return ass, "ass"
 
     def _to_json(self, data: dict):
-        return orjson.dumps(data, option = orjson.OPT_INDENT_2).decode("utf-8"), "json"
+        return json_dumps(data, indent = 2), "json"
 
     def _get_subtitles_data_list(self):
         subtitles_data_list = []

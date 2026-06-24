@@ -1,11 +1,11 @@
 from PySide6.QtCore import Signal, QObject, Slot
 
+from ..common._json import json_loads
 from ..common.config import config
 
+from threading import Lock
 from enum import Enum
 import logging
-from threading import Lock
-import orjson
 import httpx
 
 logging.getLogger("httpx").setLevel(logging.WARNING)
@@ -143,7 +143,7 @@ class SyncNetWorkRequest:
                 return response.text
 
             case ResponseType.JSON:
-                return orjson.loads(response.text)
+                return json_loads(response.text)
 
             case ResponseType.BYTES:
                 return response.content

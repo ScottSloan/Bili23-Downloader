@@ -1,5 +1,5 @@
 from ..timestamp import get_timestamp_ms
-import orjson
+from .._json import json_dumps
 
 def get_exclimbwuzhi_payload(user_agent: str, uuid: str):
     payload = {
@@ -246,6 +246,6 @@ def get_exclimbwuzhi_payload(user_agent: str, uuid: str):
         "db46": 0
     }
 
-    return orjson.dumps(
-        {"payload": orjson.dumps(payload).decode("utf-8")}
+    return json_dumps(
+        {"payload": json_dumps(payload)}
     )
