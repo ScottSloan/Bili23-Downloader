@@ -289,6 +289,54 @@
     </message>
 </context>
 <context>
+    <name>BatchParseDialog</name>
+    <message>
+        <location filename="../../gui/dialog/misc/batch_parse.py" line="14"/>
+        <source>Batch Parse</source>
+        <translation>批量解析</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialog/misc/batch_parse.py" line="16"/>
+        <source>Link Count: 0</source>
+        <translation>链接数量：0</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialog/misc/batch_parse.py" line="19"/>
+        <source>Paste video links here, one per line. Currently only av and BV links are supported.</source>
+        <translation>在此粘贴视频链接，一行一个，目前仅支持 av 号和 BV 号链接</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialog/misc/batch_parse.py" line="28"/>
+        <source>Start Parsing</source>
+        <translation>开始解析</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialog/misc/batch_parse.py" line="36"/>
+        <source>Link Count: {count}</source>
+        <translation>链接数量：{count}</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialog/misc/batch_parse.py" line="46"/>
+        <source>No Links Provided</source>
+        <translation>链接数量为空</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialog/misc/batch_parse.py" line="47"/>
+        <source>Please paste video links in the text box.</source>
+        <translation>请在文本框中粘贴视频链接</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialog/misc/batch_parse.py" line="55"/>
+        <source>Invalid Link Format</source>
+        <translation>链接格式错误</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialog/misc/batch_parse.py" line="56"/>
+        <source>Currently only av or BV links are supported.</source>
+        <translation>目前仅支持 av 号或 BV 号链接</translation>
+    </message>
+</context>
+<context>
     <name>BatchSelectDialog</name>
     <message>
         <location filename="../../gui/dialog/misc/batch_select.py" line="16"/>
@@ -1486,110 +1534,112 @@ Reminder: Due to Bilibili&apos;s anti-abuse mechanism, parsing too many pages or
 <context>
     <name>EditRuleDialog</name>
     <message>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="47"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="48"/>
         <source>Edit Naming Rule</source>
         <translation>编辑命名规则</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="49"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="50"/>
         <source>Rule Name</source>
         <translation>规则名称</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="52"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="53"/>
         <source>Rule Type</source>
         <translation>规则类型</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="56"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="57"/>
         <source>Naming Rule</source>
         <translation>命名规则</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="59"/>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="200"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="60"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="201"/>
         <source>Preview</source>
         <translation>预览</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="66"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="67"/>
         <source>Set as default rule for this type</source>
         <translation>设为该类型的默认规则</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="68"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="69"/>
         <source>Instructions</source>
         <translation>说明</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="71"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="72"/>
         <source>Open help page</source>
         <translation>打开帮助页面</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="120"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="121"/>
         <source>Variable</source>
         <translation>变量名</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="121"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="122"/>
         <source>Description</source>
         <translation>含义</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="122"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="123"/>
         <source>Example</source>
         <translation>示例</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="123"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="124"/>
         <source>Actions</source>
         <translation>操作</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="169"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="170"/>
         <source>Rule name cannot be empty</source>
         <translation>规则名称不能为空</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="201"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="202"/>
         <source>Folder: {folder}
 File name: {filename}</source>
         <translation>子目录：{folder}
 文件名：{filename}</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="213"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="214"/>
         <source>Naming Rule Guide</source>
         <translation>简要说明</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="227"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="228"/>
         <source>Naming rule cannot be empty</source>
         <translation>命名规则不能为空</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="230"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="231"/>
         <source>Rule must not start or end with &apos;/&apos; or &apos;.&apos;</source>
         <translation>命名规则不能以 &apos;/&apos; 或 &apos;.&apos; 开头或结尾</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="240"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="245"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="259"/>
         <source>Rule contains illegal characters: &lt;&gt;:\&quot;|?* or control characters</source>
         <translation>命名规则包含非法字符：&lt;&gt;:\&quot;|?* 或控制字符</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="248"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="253"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="264"/>
         <source>Invalid naming rule</source>
         <translation>命名规则无效</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="253"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="269"/>
         <source>Copy Variable</source>
         <translation>复制变量</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="256"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="272"/>
         <source>Insert Variable</source>
         <translation>插入变量</translation>
     </message>
@@ -1803,7 +1853,7 @@ File name: {filename}</source>
 <context>
     <name>InsertActionWidget</name>
     <message>
-        <location filename="../../gui/component/setting/widget.py" line="114"/>
+        <location filename="../../gui/component/setting/widget.py" line="116"/>
         <source>Insert</source>
         <translation>插入</translation>
     </message>
@@ -2800,7 +2850,7 @@ For example, if you set the video quality priority to 720P &gt; 1080P &gt; 4K, t
 <context>
     <name>ParseActionWidget</name>
     <message>
-        <location filename="../../gui/component/setting/widget.py" line="107"/>
+        <location filename="../../gui/component/setting/widget.py" line="109"/>
         <source>Parse</source>
         <translation>解析</translation>
     </message>
@@ -2823,7 +2873,7 @@ For example, if you set the video quality priority to 720P &gt; 1080P &gt; 4K, t
         <translation>点击此处可进行自动解析分页操作</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="287"/>
+        <location filename="../../gui/interface/parse.py" line="288"/>
         <source>Skipped duplicate download: {task_title}</source>
         <translation>已跳过重复下载的任务：{task_title}</translation>
     </message>
@@ -2846,27 +2896,27 @@ For example, if you set the video quality priority to 720P &gt; 1080P &gt; 4K, t
         <translation>清除记录</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/parse_history.py" line="54"/>
+        <location filename="../../gui/dialog/misc/parse_history.py" line="56"/>
         <source>No.</source>
         <translation>序号</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/parse_history.py" line="55"/>
+        <location filename="../../gui/dialog/misc/parse_history.py" line="57"/>
         <source>Title</source>
         <translation>标题</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/parse_history.py" line="56"/>
+        <location filename="../../gui/dialog/misc/parse_history.py" line="58"/>
         <source>Type</source>
         <translation>类型</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/parse_history.py" line="57"/>
+        <location filename="../../gui/dialog/misc/parse_history.py" line="59"/>
         <source>Parse Time</source>
         <translation>解析时间</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/parse_history.py" line="58"/>
+        <location filename="../../gui/dialog/misc/parse_history.py" line="60"/>
         <source>Actions</source>
         <translation>操作</translation>
     </message>
@@ -2874,67 +2924,72 @@ For example, if you set the video quality priority to 720P &gt; 1080P &gt; 4K, t
 <context>
     <name>ParseInterface</name>
     <message>
-        <location filename="../../gui/interface/parse.py" line="310"/>
+        <location filename="../../gui/interface/parse.py" line="317"/>
         <source>Paste and Parse</source>
         <translation>粘贴并解析</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="314"/>
+        <location filename="../../gui/interface/parse.py" line="321"/>
         <source>Link / av / BV / ep / ss / md / Favorites / Profile</source>
         <translation>链接 / av / BV / ep / ss / md / 收藏夹 / 个人空间</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="319"/>
+        <location filename="../../gui/interface/parse.py" line="326"/>
         <source>Parse</source>
         <translation>解析</translation>
     </message>
     <message>
         <location filename="../../gui/interface/parse.py" line="330"/>
+        <source>Batch Parse</source>
+        <translation>批量解析</translation>
+    </message>
+    <message>
+        <location filename="../../gui/interface/parse.py" line="337"/>
         <source>Download Options</source>
         <translation>下载选项</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="334"/>
+        <location filename="../../gui/interface/parse.py" line="341"/>
         <source>More</source>
         <translation>更多</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="349"/>
+        <location filename="../../gui/interface/parse.py" line="356"/>
         <source>Download Selected Items</source>
         <translation>下载所选项目</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="456"/>
+        <location filename="../../gui/interface/parse.py" line="465"/>
         <source>Parse Failed</source>
         <translation>解析失败</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="485"/>
+        <location filename="../../gui/interface/parse.py" line="494"/>
         <source>Added to download queue</source>
         <translation>已加入到下载队列</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="500"/>
+        <location filename="../../gui/interface/parse.py" line="509"/>
         <source>Search</source>
         <translation>搜索</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="501"/>
+        <location filename="../../gui/interface/parse.py" line="510"/>
         <source>Batch select</source>
         <translation>批量选择</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="502"/>
+        <location filename="../../gui/interface/parse.py" line="511"/>
         <source>Parsing history</source>
         <translation>解析记录</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="531"/>
+        <location filename="../../gui/interface/parse.py" line="540"/>
         <source>{category_name} ({selected_count} selected, {total_count} total)</source>
         <translation>{category_name}（已选择 {selected_count} 项，共 {total_count} 项）</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="537"/>
+        <location filename="../../gui/interface/parse.py" line="546"/>
         <source>{category_name} ({total_count} total)</source>
         <translation>{category_name}（共 {total_count} 项）</translation>
     </message>
@@ -2960,67 +3015,67 @@ For example, if you set the video quality priority to 720P &gt; 1080P &gt; 4K, t
 <context>
     <name>ParseTreeView</name>
     <message>
-        <location filename="../../gui/component/parse_list/tree_view.py" line="113"/>
+        <location filename="../../gui/component/parse_list/tree_view.py" line="115"/>
         <source>Check All</source>
         <translation>全选</translation>
     </message>
     <message>
-        <location filename="../../gui/component/parse_list/tree_view.py" line="113"/>
+        <location filename="../../gui/component/parse_list/tree_view.py" line="115"/>
         <source>Uncheck All</source>
         <translation>取消全选</translation>
     </message>
     <message>
-        <location filename="../../gui/component/parse_list/tree_view.py" line="115"/>
+        <location filename="../../gui/component/parse_list/tree_view.py" line="117"/>
         <source>Reverse</source>
         <translation>反选</translation>
     </message>
     <message>
-        <location filename="../../gui/component/parse_list/tree_view.py" line="119"/>
+        <location filename="../../gui/component/parse_list/tree_view.py" line="121"/>
         <source>Check Item</source>
         <translation>勾选</translation>
     </message>
     <message>
-        <location filename="../../gui/component/parse_list/tree_view.py" line="119"/>
+        <location filename="../../gui/component/parse_list/tree_view.py" line="121"/>
         <source>Uncheck Item</source>
         <translation>取消勾选</translation>
     </message>
     <message>
-        <location filename="../../gui/component/parse_list/tree_view.py" line="124"/>
+        <location filename="../../gui/component/parse_list/tree_view.py" line="126"/>
         <source>Open in Browser</source>
         <translation>在浏览器中打开</translation>
     </message>
     <message>
-        <location filename="../../gui/component/parse_list/tree_view.py" line="125"/>
+        <location filename="../../gui/component/parse_list/tree_view.py" line="127"/>
         <source>Download as Single Video</source>
         <translation>下载为单个视频</translation>
     </message>
     <message>
-        <location filename="../../gui/component/parse_list/tree_view.py" line="130"/>
+        <location filename="../../gui/component/parse_list/tree_view.py" line="132"/>
         <source>View Metadata</source>
         <translation>查看元数据</translation>
     </message>
     <message>
-        <location filename="../../gui/component/parse_list/tree_view.py" line="126"/>
+        <location filename="../../gui/component/parse_list/tree_view.py" line="128"/>
         <source>Update Media Info</source>
         <translation>更新媒体信息</translation>
     </message>
     <message>
-        <location filename="../../gui/component/parse_list/tree_view.py" line="133"/>
+        <location filename="../../gui/component/parse_list/tree_view.py" line="135"/>
         <source>View Cover</source>
         <translation>查看封面</translation>
     </message>
     <message>
-        <location filename="../../gui/component/parse_list/tree_view.py" line="160"/>
+        <location filename="../../gui/component/parse_list/tree_view.py" line="162"/>
         <source>Metadata</source>
         <translation>元数据</translation>
     </message>
     <message>
-        <location filename="../../gui/component/parse_list/tree_view.py" line="162"/>
+        <location filename="../../gui/component/parse_list/tree_view.py" line="164"/>
         <source>Copy</source>
         <translation>复制</translation>
     </message>
     <message>
-        <location filename="../../gui/component/parse_list/tree_view.py" line="175"/>
+        <location filename="../../gui/component/parse_list/tree_view.py" line="177"/>
         <source>Added to download queue</source>
         <translation>已加入到下载队列</translation>
     </message>

@@ -8,7 +8,7 @@ from qfluentwidgets import (
 )
 
 from gui.component.widget import (
-    TransparentToolButton, SegmentedWidget, IndeterminateProgressPushButton, SeasonComboBox, ProgressTipWidget,
+    TransparentToolButton, SegmentedWidget, IndeterminateProgressSplitPushButton, SeasonComboBox, ProgressTipWidget,
 )
 from gui.component.parse_list import ParseTreeView
 
@@ -293,6 +293,12 @@ class ParseBase(QFrame):
     def _reset_duplicate_download_toast_flag(self: "ParseInterface"):
         self.duplicate_download_toast_shown = False
 
+    def on_show_batch_parse_dialog(self: "ParseInterface"):
+        from ..dialog.misc.batch_parse import BatchParseDialog
+
+        dialog = BatchParseDialog(self.main_window)
+        dialog.exec()
+
 class ParseInterface(ParseBase):
     def __init__(self, parent = None):
         super().__init__(parent = parent)
@@ -317,13 +323,13 @@ class ParseInterface(ParseBase):
 
         self.url_box.setClearButtonEnabled(True)
 
-        self.parse_btn = IndeterminateProgressPushButton(self.tr("Parse"), self)
-        self.parse_btn.setMinimumWidth(80)
+        self.parse_btn = IndeterminateProgressSplitPushButton(self.tr("Parse"), self)
+        self.parse_btn.button.setMinimumWidth(80)
 
-        # dropdown_menu = RoundMenu(parent = self.parse_btn)
-        # dropdown_menu.addAction(self._create_action(ExtendedFluentIcon.AUTOMATION, self.tr("自动解析分页"), self.on_auto_parse))
+        dropdown_menu = RoundMenu(parent = self.parse_btn)
+        dropdown_menu.addAction(self._create_action(ExtendedFluentIcon.AUTOMATION, self.tr("Batch Parse"), self.on_show_batch_parse_dialog))
 
-        # self.parse_btn.setFlyout(dropdown_menu)
+        self.parse_btn.setFlyout(dropdown_menu)
 
         self.item_count_label = BodyLabel("", self)
 
@@ -409,6 +415,8 @@ class ParseInterface(ParseBase):
 
         self.clipboard = QApplication.clipboard()
         self.clipboard.changed.connect(self.on_copy_url)
+
+        config.themeChanged.connect(self.parse_list._update_palette)
 
     def on_paste_and_parse(self):
         url = self.clipboard.text()
