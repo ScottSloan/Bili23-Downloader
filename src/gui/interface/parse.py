@@ -416,8 +416,6 @@ class ParseInterface(ParseBase):
         self.clipboard = QApplication.clipboard()
         self.clipboard.changed.connect(self.on_copy_url)
 
-        config.themeChanged.connect(self.parse_list._update_palette)
-
     def on_paste_and_parse(self):
         url = self.clipboard.text()
 

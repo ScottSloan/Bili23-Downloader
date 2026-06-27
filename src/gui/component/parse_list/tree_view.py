@@ -1,8 +1,7 @@
-from PySide6.QtCore import Qt, QModelIndex
 from PySide6.QtWidgets import QApplication
-from PySide6.QtGui import QColor
+from PySide6.QtCore import Qt, QModelIndex
 
-from qfluentwidgets import TreeView, RoundMenu, Action, FluentIcon, isDarkTheme
+from qfluentwidgets import TreeView, RoundMenu, Action, FluentIcon, isDarkTheme, setCustomStyleSheet
 
 from .model import ParseModel
 
@@ -27,7 +26,6 @@ class ParseTreeView(TreeView):
         self.setModel(self._model)
         self.setUniformRowHeights(True)
         self.setSortingEnabled(True)
-        self.setAlternatingRowColors(config.get(config.parse_list_alternate_row_color))
         self.setSelectionMode(TreeView.SelectionMode.SingleSelection)
         self.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
 
@@ -35,7 +33,7 @@ class ParseTreeView(TreeView):
         signal_bus.parse.update_column_settings.connect(self._setHeaderWidth)
         
         self._setHeaderWidth()
-        self._update_palette()
+        self.update_alternate_row_color()
 
     def _setHeaderWidth(self):
         for index, entry in enumerate(config.get(config.parse_list_column)):
@@ -280,13 +278,22 @@ class ParseTreeView(TreeView):
         dialog = ViewCoverDialog(item.cover, parent = self.main_window)
         dialog.show()
 
-    def _update_palette(self):
-        palette = self.palette()
+    def update_alternate_row_color(self):
+        if config.get(config.parse_list_alternate_row_color):
+            self.setAlternatingRowColors(True)
 
-        if isDarkTheme():
-            palette.setColor(palette.ColorRole.AlternateBase, QColor(255, 255, 255, 13))
+            _light = """
+                QTreeView {
+                    background-color: transparent;
+                    alternate-background-color: rgba(0, 0, 0, 0.05);
+                }
+            """
 
-        else:
-            palette.setColor(palette.ColorRole.AlternateBase, QColor(0, 0, 0, 5))
+            _dark = """
+                QTreeView {
+                    background-color: transparent;
+                    alternate-background-color: rgba(255, 255, 255, 0.08);
+                }
+            """
 
-        self.setPalette(palette)
+            setCustomStyleSheet(self, _light, _dark)
