@@ -37,6 +37,11 @@ class DynamicEpisodeParser(EpisodeParserBase):
         _empty_info_data = {"data": {}}
 
         match parser_type:
+            case ParserType.VIDEO:
+                from .video import VideoEpisodeParser
+
+                parser = VideoEpisodeParser(_empty_info_data, self.category_name)
+
             case ParserType.FAVLIST:
                 from .favlist import FavlistEpisodeParser
 

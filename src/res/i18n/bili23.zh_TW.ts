@@ -291,47 +291,57 @@
 <context>
     <name>BatchParseDialog</name>
     <message>
-        <location filename="../../gui/dialog/misc/batch_parse.py" line="14"/>
+        <location filename="../../gui/dialog/misc/batch_parse.py" line="17"/>
         <source>Batch Parse</source>
         <translation>批次解析</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/batch_parse.py" line="16"/>
+        <location filename="../../gui/dialog/misc/batch_parse.py" line="19"/>
         <source>Link Count: 0</source>
         <translation>連結數量：0</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/batch_parse.py" line="19"/>
+        <location filename="../../gui/dialog/misc/batch_parse.py" line="20"/>
+        <source>Clear</source>
+        <translation>清除</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialog/misc/batch_parse.py" line="23"/>
         <source>Paste video links here, one per line. Currently only av and BV links are supported.</source>
         <translation>在此貼上影片連結，每行一個，目前僅支援 av 號與 BV 號連結</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/batch_parse.py" line="28"/>
+        <location filename="../../gui/dialog/misc/batch_parse.py" line="25"/>
+        <source>Automatically add to download list after parsing each link</source>
+        <translation>解析每個連結後自動加入下載清單</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialog/misc/batch_parse.py" line="42"/>
         <source>Start Parsing</source>
         <translation>開始解析</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/batch_parse.py" line="36"/>
+        <location filename="../../gui/dialog/misc/batch_parse.py" line="54"/>
         <source>Link Count: {count}</source>
         <translation>連結數量：{count}</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/batch_parse.py" line="46"/>
+        <location filename="../../gui/dialog/misc/batch_parse.py" line="67"/>
         <source>No Links Provided</source>
         <translation>連結數量為空</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/batch_parse.py" line="47"/>
+        <location filename="../../gui/dialog/misc/batch_parse.py" line="68"/>
         <source>Please paste video links in the text box.</source>
         <translation>請在文字方塊中貼上影片連結</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/batch_parse.py" line="55"/>
+        <location filename="../../gui/dialog/misc/batch_parse.py" line="76"/>
         <source>Invalid Link Format</source>
         <translation>連結格式錯誤</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/batch_parse.py" line="56"/>
+        <location filename="../../gui/dialog/misc/batch_parse.py" line="77"/>
         <source>Currently only av or BV links are supported.</source>
         <translation>目前僅支援 av 號或 BV 號連結</translation>
     </message>
@@ -2959,37 +2969,37 @@ For example, if you set the video quality priority to 720P &gt; 1080P &gt; 4K, t
         <translation>下載所選項目</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="465"/>
+        <location filename="../../gui/interface/parse.py" line="463"/>
         <source>Parse Failed</source>
         <translation>解析失敗</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="494"/>
+        <location filename="../../gui/interface/parse.py" line="492"/>
         <source>Added to download queue</source>
         <translation>已加入下載佇列</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="509"/>
+        <location filename="../../gui/interface/parse.py" line="507"/>
         <source>Search</source>
         <translation>搜尋</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="510"/>
+        <location filename="../../gui/interface/parse.py" line="508"/>
         <source>Batch select</source>
         <translation>批次選取</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="511"/>
+        <location filename="../../gui/interface/parse.py" line="509"/>
         <source>Parsing history</source>
         <translation>解析記錄</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="540"/>
+        <location filename="../../gui/interface/parse.py" line="538"/>
         <source>{category_name} ({selected_count} selected, {total_count} total)</source>
         <translation>{category_name}（已選取 {selected_count} 項，共 {total_count} 項）</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="546"/>
+        <location filename="../../gui/interface/parse.py" line="544"/>
         <source>{category_name} ({total_count} total)</source>
         <translation>{category_name}（共 {total_count} 項）</translation>
     </message>
@@ -3015,67 +3025,67 @@ For example, if you set the video quality priority to 720P &gt; 1080P &gt; 4K, t
 <context>
     <name>ParseTreeView</name>
     <message>
-        <location filename="../../gui/component/parse_list/tree_view.py" line="115"/>
+        <location filename="../../gui/component/parse_list/tree_view.py" line="113"/>
         <source>Check All</source>
         <translation>全選</translation>
     </message>
     <message>
-        <location filename="../../gui/component/parse_list/tree_view.py" line="115"/>
+        <location filename="../../gui/component/parse_list/tree_view.py" line="113"/>
         <source>Uncheck All</source>
         <translation>取消全選</translation>
     </message>
     <message>
-        <location filename="../../gui/component/parse_list/tree_view.py" line="117"/>
+        <location filename="../../gui/component/parse_list/tree_view.py" line="115"/>
         <source>Reverse</source>
         <translation>反選</translation>
     </message>
     <message>
-        <location filename="../../gui/component/parse_list/tree_view.py" line="121"/>
+        <location filename="../../gui/component/parse_list/tree_view.py" line="119"/>
         <source>Check Item</source>
         <translation>勾選</translation>
     </message>
     <message>
-        <location filename="../../gui/component/parse_list/tree_view.py" line="121"/>
+        <location filename="../../gui/component/parse_list/tree_view.py" line="119"/>
         <source>Uncheck Item</source>
         <translation>取消勾選</translation>
     </message>
     <message>
-        <location filename="../../gui/component/parse_list/tree_view.py" line="126"/>
+        <location filename="../../gui/component/parse_list/tree_view.py" line="124"/>
         <source>Open in Browser</source>
         <translation>於瀏覽器中開啟</translation>
     </message>
     <message>
-        <location filename="../../gui/component/parse_list/tree_view.py" line="127"/>
+        <location filename="../../gui/component/parse_list/tree_view.py" line="125"/>
         <source>Download as Single Video</source>
         <translation>下載為單個影片</translation>
     </message>
     <message>
-        <location filename="../../gui/component/parse_list/tree_view.py" line="132"/>
+        <location filename="../../gui/component/parse_list/tree_view.py" line="130"/>
         <source>View Metadata</source>
         <translation>檢視元數據</translation>
     </message>
     <message>
-        <location filename="../../gui/component/parse_list/tree_view.py" line="128"/>
+        <location filename="../../gui/component/parse_list/tree_view.py" line="126"/>
         <source>Update Media Info</source>
         <translation>更新媒體資訊</translation>
     </message>
     <message>
-        <location filename="../../gui/component/parse_list/tree_view.py" line="135"/>
+        <location filename="../../gui/component/parse_list/tree_view.py" line="133"/>
         <source>View Cover</source>
         <translation>查看封面</translation>
     </message>
     <message>
-        <location filename="../../gui/component/parse_list/tree_view.py" line="162"/>
+        <location filename="../../gui/component/parse_list/tree_view.py" line="160"/>
         <source>Metadata</source>
         <translation>元數據</translation>
     </message>
     <message>
-        <location filename="../../gui/component/parse_list/tree_view.py" line="164"/>
+        <location filename="../../gui/component/parse_list/tree_view.py" line="162"/>
         <source>Copy</source>
         <translation>複製</translation>
     </message>
     <message>
-        <location filename="../../gui/component/parse_list/tree_view.py" line="177"/>
+        <location filename="../../gui/component/parse_list/tree_view.py" line="175"/>
         <source>Added to download queue</source>
         <translation>已加入下載佇列</translation>
     </message>

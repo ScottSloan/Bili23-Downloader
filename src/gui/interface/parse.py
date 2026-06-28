@@ -297,7 +297,14 @@ class ParseBase(QFrame):
         from ..dialog.misc.batch_parse import BatchParseDialog
 
         dialog = BatchParseDialog(self.main_window)
-        dialog.exec()
+
+        if dialog.exec():
+            # 开始解析前，隐藏分页组件
+            self.segmented_widget.hide_pager()
+
+            config.current_starting_number = 1
+
+            self.start_progress_parse_worker(dialog.payload)
 
 class ParseInterface(ParseBase):
     def __init__(self, parent = None):

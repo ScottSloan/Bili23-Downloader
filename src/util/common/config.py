@@ -449,8 +449,9 @@ def check_need_patch():
                 data = json_loads(f.read())
 
             except Exception as e:
+                data = {}
+                
                 logger.error(f"读取配置文件时发生错误：{e}")
-                return True, 0
 
             if "config_version" in data.get("Application", {}):
                 config_version = data.get("Application", {}).get("config_version", 0)

@@ -11,7 +11,7 @@ class VideoEpisodeParser(EpisodeParserBase):
         self.info_data = info_data["data"]
         self.category_name = category_name
 
-    def parse(self):
+    def parse(self, update_episode_list = True):
         self.episode_data_parser()
 
         match self.info_data:
@@ -24,13 +24,13 @@ class VideoEpisodeParser(EpisodeParserBase):
             case _:
                 node = self.single_parser()
 
-        if self.target_episode_info:
-            return node
-        else:
+        if update_episode_list:
             # 获取剧集数据中的 cid 作为 extra_data 传递，供自动选择使用
             episode_data = ("cid", self.get_cid())
             
             self.update_episode_list(node, episode_data)
+
+        return node
 
     def single_parser(self):
         # 单个视频
@@ -255,4 +255,6 @@ class VideoEpisodeParser(EpisodeParserBase):
                     return page["cid"]
 
         return self.info_data["cid"]
-
+    
+    def get_node_title(self):
+        return Translator.EPISODE_TYPE("USER_UPLOADS")

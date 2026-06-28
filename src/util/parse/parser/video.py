@@ -232,7 +232,7 @@ class VideoParser(ParserBase):
 
         return "BV1" + "".join(bvid)
 
-    def parse(self, url: str, pn: int):
+    def parse(self, url: str, pn: int = 1, get_info_data: bool = False):
         self.url = url
 
         match self.find_str(r"av|BV|AV|bv", url):
@@ -243,6 +243,9 @@ class VideoParser(ParserBase):
                 self.bvid = self.get_bvid()
 
         self.get_video_info()
+
+        if get_info_data:
+            return self.info_data
 
         if "redirect_url" in self.info_data["data"]:
             # 存在重定向链接，停止当前解析，开启新的解析线程
