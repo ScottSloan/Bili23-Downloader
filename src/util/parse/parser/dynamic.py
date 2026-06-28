@@ -30,6 +30,7 @@ class DynamicParser(ParserBase):
         self.stop_event = stop_event
         self.update_progress = update_progress_callback
 
+        self.current_page = 0
         self.parsed_count = 0
 
     def parse(self):
@@ -48,17 +49,17 @@ class DynamicParser(ParserBase):
 
             logger.exception("已停止解析，发生错误：%s", str(e))
 
-            page = 0
-
             # 弹出警告消息框
             signal_bus.toast.show_long_message.emit(
                 ToastNotificationCategory.WARNING,
                 Translator.ERROR_MESSAGES("PARSING_STOPPED"),
-                Translator.ERROR_MESSAGES("PARSING_STOPPED_MESSAGE").format(page = page, error = str(e))
+                Translator.ERROR_MESSAGES("PARSING_STOPPED_MESSAGE").format(page = self.current_page, error = str(e))
             )
 
     def parse_page(self):
         for page in range(self.start_page, self.end_page + 1):
+            self.current_page = page
+            
             if self.stop_event.is_set():
                 break
 
@@ -68,7 +69,7 @@ class DynamicParser(ParserBase):
 
             episode_count = self.episode_parser.update_page_node(parsed_data)
 
-            self._update_ui_progress(page, episode_count)
+            self._update_page_ui_progress(page, episode_count)
 
             if page < self.end_page:
                 time.sleep(config.get(config.auto_parse_interval))
@@ -84,12 +85,12 @@ class DynamicParser(ParserBase):
 
             episode_count = self.episode_parser.update_page_node(parsed_data)
 
-            self._update_ui_progress(self.parsed_count, episode_count)
+            self._update_link_ui_progress(episode_count)
 
-            # 每秒解析一条链接
-            time.sleep(1)
+            # 每0.5秒解析一条链接
+            time.sleep(0.5)
 
-    def _update_ui_progress(self, page: int, episode_count: int):
+    def _update_page_ui_progress(self, page: int, episode_count: int):
         total_page = self.end_page - self.start_page + 1
 
         self.update_progress(
@@ -97,6 +98,17 @@ class DynamicParser(ParserBase):
                 page = page,
                 total_page = total_page,
                 progress = int(self.parsed_count / total_page * 100)
+            )
+        )
+
+        signal_bus.parse.update_parse_list_count.emit(self.get_category_name(), episode_count)
+
+    def _update_link_ui_progress(self, episode_count: int):
+        self.update_progress(
+            Translator.TIP_MESSAGES("PARSING_LINK").format(
+                link = self.parsed_count,
+                total_links = len(self.info_data.url_list),
+                progress = int(self.parsed_count / len(self.info_data.url_list) * 100)
             )
         )
 

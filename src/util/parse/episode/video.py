@@ -42,6 +42,8 @@ class VideoEpisodeParser(EpisodeParserBase):
         root_node = TreeItem(node_data)
         root_node.set_attribute(Attribute.TREE_NODE_BIT)
 
+        self.episode_count += 1
+
         item_data = {
             "episode_id": self.episode_id,
             "aid": self.info_data["aid"],
@@ -50,7 +52,7 @@ class VideoEpisodeParser(EpisodeParserBase):
             "cid": self.info_data["cid"],
             "cover": self.info_data["pic"],
             "duration": self.get_episode_duration(self.info_data),
-            "number": 1,
+            "number": self.episode_count,
             "pubtime": self.info_data["pubdate"],
             "title": self.info_data["title"],
             "url": "https://www.bilibili.com/video/{bvid}".format(bvid = self.info_data["bvid"])
@@ -75,6 +77,8 @@ class VideoEpisodeParser(EpisodeParserBase):
         root_node.set_attribute(Attribute.TREE_NODE_BIT)
 
         for page in self.info_data["pages"]:
+            self.episode_count += 1
+
             item_data = {
                 "aid": self.info_data["aid"],
                 "episode_id": self.episode_id,
@@ -83,7 +87,7 @@ class VideoEpisodeParser(EpisodeParserBase):
                 "cid": page["cid"],
                 "cover": self.info_data["pic"],
                 "duration": self.get_episode_duration(page),
-                "number": page["page"],
+                "number": self.episode_count,
                 "pubtime": page["ctime"],
                 "part_number": page["page"],
                 "title": page["part"],

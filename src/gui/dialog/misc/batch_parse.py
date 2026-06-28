@@ -81,6 +81,8 @@ class BatchParseDialog(DialogBase):
             
         self.payload = self.get_data()
 
+        self.save_config()
+
         return super().accept()
     
     def get_data(self):
@@ -89,3 +91,6 @@ class BatchParseDialog(DialogBase):
             url_list = self.url_list,
             parser_type = ParserType.BATCH
         )
+    
+    def save_config(self):
+        config.set(config.auto_add_to_download_list, self.auto_add_to_download_list_check.isChecked())
