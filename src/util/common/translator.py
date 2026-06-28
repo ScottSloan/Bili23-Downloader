@@ -303,6 +303,7 @@ class Translator:
             "SCRAPING_METADATA": translate("TIP_MESSAGES", "Scraping Metadata..."),
             "PARSING_INTERACTIVE_VIDEO_NODE": translate("TIP_MESSAGES", "Parsing node: {title}"),
             "PARSING_PAGE": translate("TIP_MESSAGES", "Parsing page {page}, total {total_page} pages, progress: {progress}%"),
+            "PARSING_LINK": translate("TIP_MESSAGES", "Parsing link {link}, total {total_links} links, progress: {progress}%"),
             "MEDIA_INFO_UPDATED": translate("TIP_MESSAGES", "Media info updated"),
         }
 

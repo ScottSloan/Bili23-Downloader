@@ -232,7 +232,7 @@ class VideoParser(ParserBase):
 
         return "BV1" + "".join(bvid)
 
-    def parse(self, url: str, pn: int):
+    def parse(self, url: str, pn: int = 1, get_info_data: bool = False):
         self.url = url
 
         match self.find_str(r"av|BV|AV|bv", url):
@@ -243,6 +243,20 @@ class VideoParser(ParserBase):
                 self.bvid = self.get_bvid()
 
         self.get_video_info()
+
+        if get_info_data:
+            # 如果是分P视频，且链接中存在p参数，则将对应分P数据覆盖到 info_data 中，供后续解析使用
+            if "pages" in self.info_data["data"] and self.get_page_number():
+                current_page_data = next((page for page in self.info_data["data"]["pages"] if page["page"] == self.get_page_number()), None)
+
+                self.info_data["data"].pop("pages")
+
+                self.info_data["data"]["cid"] = current_page_data["cid"]
+                self.info_data["data"]["title"] = current_page_data["part"]
+                self.info_data["data"]["duration"] = current_page_data["duration"]
+                self.info_data["data"]["pubdate"] = current_page_data["ctime"]
+
+            return self.info_data
 
         if "redirect_url" in self.info_data["data"]:
             # 存在重定向链接，停止当前解析，开启新的解析线程

@@ -11,7 +11,7 @@ class VideoEpisodeParser(EpisodeParserBase):
         self.info_data = info_data["data"]
         self.category_name = category_name
 
-    def parse(self):
+    def parse(self, update_episode_list = True):
         self.episode_data_parser()
 
         match self.info_data:
@@ -24,13 +24,13 @@ class VideoEpisodeParser(EpisodeParserBase):
             case _:
                 node = self.single_parser()
 
-        if self.target_episode_info:
-            return node
-        else:
+        if update_episode_list:
             # 获取剧集数据中的 cid 作为 extra_data 传递，供自动选择使用
             episode_data = ("cid", self.get_cid())
             
             self.update_episode_list(node, episode_data)
+
+        return node
 
     def single_parser(self):
         # 单个视频
@@ -42,6 +42,8 @@ class VideoEpisodeParser(EpisodeParserBase):
         root_node = TreeItem(node_data)
         root_node.set_attribute(Attribute.TREE_NODE_BIT)
 
+        self.episode_count += 1
+
         item_data = {
             "episode_id": self.episode_id,
             "aid": self.info_data["aid"],
@@ -50,7 +52,7 @@ class VideoEpisodeParser(EpisodeParserBase):
             "cid": self.info_data["cid"],
             "cover": self.info_data["pic"],
             "duration": self.get_episode_duration(self.info_data),
-            "number": 1,
+            "number": self.episode_count,
             "pubtime": self.info_data["pubdate"],
             "title": self.info_data["title"],
             "url": "https://www.bilibili.com/video/{bvid}".format(bvid = self.info_data["bvid"])
@@ -75,6 +77,8 @@ class VideoEpisodeParser(EpisodeParserBase):
         root_node.set_attribute(Attribute.TREE_NODE_BIT)
 
         for page in self.info_data["pages"]:
+            self.episode_count += 1
+
             item_data = {
                 "aid": self.info_data["aid"],
                 "episode_id": self.episode_id,
@@ -83,7 +87,7 @@ class VideoEpisodeParser(EpisodeParserBase):
                 "cid": page["cid"],
                 "cover": self.info_data["pic"],
                 "duration": self.get_episode_duration(page),
-                "number": page["page"],
+                "number": self.episode_count,
                 "pubtime": page["ctime"],
                 "part_number": page["page"],
                 "title": page["part"],
@@ -255,4 +259,6 @@ class VideoEpisodeParser(EpisodeParserBase):
                     return page["cid"]
 
         return self.info_data["cid"]
-
+    
+    def get_node_title(self):
+        return Translator.EPISODE_TYPE("USER_UPLOADS")

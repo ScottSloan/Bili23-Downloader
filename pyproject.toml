@@ -1,6 +1,6 @@
 [project]
 name = "bili23-downloader"
-version = "2.10.3"
+version = "2.10.4"
 description = "开源、免费、跨平台的 B 站视频下载工具，支持多线程加速、音视频分离、弹幕元数据获取、自定义命名与分类等功能。Open Source, Free, Cross-Platform Bilibili Video Downloader."
 readme = "README.md"
 license = "GPL-3.0"

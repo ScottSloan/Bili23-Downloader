@@ -158,6 +158,9 @@ class ProgressParseWorker(WorkerBase, QObject):
 
             case ParserType.DYNAMIC:
                 return self._get_dynamic_parser()
+            
+            case ParserType.BATCH:
+                return self._get_dynamic_parser()
 
         raise ValueError(f"Unsupported parser type: {self.data.parser_type}")
 

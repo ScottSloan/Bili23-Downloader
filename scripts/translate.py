@@ -60,6 +60,7 @@ sources = [
     "src/gui/dialog/main_window/exit.py",
     "src/gui/dialog/main_window/terms.py",
     "src/gui/dialog/misc/auto_parse.py",
+    "src/gui/dialog/misc/batch_parse.py",
     "src/gui/dialog/misc/batch_select.py",
     "src/gui/dialog/misc/duplicate_download.py",
     "src/gui/dialog/misc/interactive_video.py",

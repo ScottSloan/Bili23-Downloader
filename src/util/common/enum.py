@@ -151,6 +151,7 @@ class ParserType(Enum):
     WATCH_LATER = "WATCH_LATER"
     DYNAMIC = "DYNAMIC"
     AUDIO = "AUDIO"
+    BATCH = "BATCH"
     UNKNOWN = "UNKNOWN"
 
 class OriginalFileType(IntEnum):

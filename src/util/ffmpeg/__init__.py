@@ -75,7 +75,7 @@ match config.get(config.ffmpeg_source):
                 on_ffmpeg_not_found()
             
     case FFmpegSource.CUSTOM:
-        custom_ffmpeg_path = Path(config.get(config.custom_ffmpeg_path), ffmpeg_executable)
+        custom_ffmpeg_path = Path(config.get(config.custom_ffmpeg_path))
 
         if custom_ffmpeg_path.exists():
             set_ffmpeg_environment(custom_ffmpeg_path)

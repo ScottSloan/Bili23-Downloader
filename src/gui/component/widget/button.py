@@ -7,7 +7,33 @@ from qfluentwidgets import (
 )
 from qfluentwidgets import ToolButton as _ToolButton, TransparentToolButton as _TransparentToolButton
 
-class IndeterminateProgressPushButton(PrimaryPushButton):
+class IndeterminateProgressBase:
+    def _init_spinner(self):
+        self.spinner = IndeterminateProgressRing(self)
+        self.spinner.setStrokeWidth(3)
+        self.spinner.setFixedSize(20, 20)
+        self.spinner.setCustomBarColor(Qt.GlobalColor.white, Qt.GlobalColor.black)
+        self.spinner.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, True)
+        self.spinner.hide()
+
+        self._center_spinner()
+
+    def setIndeterminateState(self, state: bool):
+        """
+        是否显示不确定进度环
+        """
+
+        if state:
+            self.spinner.show()
+
+            self.setText("")
+
+        else:
+            self.spinner.hide()
+
+            self.setText(self._text)
+
+class IndeterminateProgressPushButton(IndeterminateProgressBase, PrimaryPushButton):
     """
     将 PrimaryPushButton 和 IndeterminateProgressRing 组合，实现类似 IndeterminateProgressPushButton 效果。
     """
@@ -17,15 +43,7 @@ class IndeterminateProgressPushButton(PrimaryPushButton):
         self._text = text
 
         self.setText(text)
-
-        self.spinner = IndeterminateProgressRing(self)
-        self.spinner.setStrokeWidth(3)
-        self.spinner.setFixedSize(20, 20)
-        self.spinner.setCustomBarColor(Qt.GlobalColor.white, Qt.GlobalColor.black)
-        self.spinner.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, True)
-        self.spinner.hide()
-
-        self._center_spinner()
+        self._init_spinner()
 
     def _center_spinner(self):
         dec_size = QSize(20, 20)
@@ -40,22 +58,7 @@ class IndeterminateProgressPushButton(PrimaryPushButton):
 
         self._center_spinner()
 
-    def setIndeterminateState(self, state: bool):
-        """
-        是否显示不确定进度环
-        """
-
-        if state:
-            self.spinner.show()
-
-            self.setText("")
-
-        else:
-            self.spinner.hide()
-
-            self.setText(self._text)
-
-class IndeterminateProgressSplitPushButton(PrimarySplitPushButton):
+class IndeterminateProgressSplitPushButton(IndeterminateProgressBase, PrimarySplitPushButton):
     """
     将 PrimarySplitPushButton 和 IndeterminateProgressRing 组合，实现类似 IndeterminateProgressPushButton 效果。
     """
@@ -65,15 +68,7 @@ class IndeterminateProgressSplitPushButton(PrimarySplitPushButton):
         self._text = text
 
         self.setText(text)
-
-        self.spinner = IndeterminateProgressRing(self)
-        self.spinner.setStrokeWidth(3)
-        self.spinner.setFixedSize(20, 20)
-        self.spinner.setCustomBarColor(Qt.GlobalColor.white, Qt.GlobalColor.black)
-        self.spinner.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, True)
-        self.spinner.hide()
-
-        self._center_spinner()
+        self._init_spinner()
 
     def _center_spinner(self):
         dec_size = QSize(20, 20)
@@ -87,21 +82,6 @@ class IndeterminateProgressSplitPushButton(PrimarySplitPushButton):
         super().resizeEvent(event)
 
         self._center_spinner()
-
-    def setIndeterminateState(self, state: bool):
-        """
-        是否显示不确定进度环
-        """
-
-        if state:
-            self.spinner.show()
-
-            self.setText("")
-
-        else:
-            self.spinner.hide()
-
-            self.setText(self._text)
 
 class ToolButton(_ToolButton):
     """
