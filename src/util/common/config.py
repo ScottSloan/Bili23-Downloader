@@ -290,8 +290,8 @@ class DefaultValue:
 class APPConfig(QConfig):
     # APP
     app_name = "Bili23 Downloader"
-    app_version = "2.10.3"
-    app_comparable_version = "2.10.3"
+    app_version = "2.10.4"
+    app_comparable_version = "2.10.4"
     app_config_version = 2100
     config_version = ConfigItem("Application", "config_version", app_config_version)
 
@@ -445,7 +445,12 @@ def check_need_patch():
     # 检查是否需要修补配置文件
     if config_path.exists():
         with open(config_path, "r", encoding = "utf-8") as f:
-            data = json_loads(f.read())
+            try:
+                data = json_loads(f.read())
+
+            except Exception as e:
+                logger.error(f"读取配置文件时发生错误：{e}")
+                return True, 0
 
             if "config_version" in data.get("Application", {}):
                 config_version = data.get("Application", {}).get("config_version", 0)
@@ -458,9 +463,7 @@ def check_need_patch():
 
 def patch_config(config_version: int):
     # 配置文件修补
-    # if config_version < 2100:
-    #     pass
-
+    
     # 完成修补，写入新的 config_version
     config.set(config.config_version, config.app_config_version)
     config.save()

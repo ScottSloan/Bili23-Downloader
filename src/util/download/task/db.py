@@ -9,6 +9,9 @@ from .info import TaskInfo
 from pathlib import Path
 from typing import List
 import hashlib
+import logging
+
+logger = logging.getLogger(__name__)
 
 class TaskDatabase(Database):
     def __init__(self):
@@ -131,7 +134,16 @@ class TaskDatabase(Database):
 
             return _task_info_list
 
-        # 执行数据库升级逻辑
+        # 检查数据库中是否存在 hash_id 列，如果不存在则进行升级
+        result = self.query("""
+            PRAGMA table_info(download_task);
+        """)
+
+        column_names = [row[1] for row in result]
+
+        if "hash_id" in column_names:
+            logger.info("数据库已是最新版本，无需升级")
+            return
 
         # 取出原有数据
         download_tasks = self.query_tasks(completed = False)
