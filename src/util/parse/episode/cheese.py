@@ -13,17 +13,17 @@ class CheeseEpisodeParser(EpisodeParserBase):
         self.info_data = info_data["data"]
         self.category_name = category_name
 
-    def parse(self):
+    def parse(self, update_episode_list = True):
         self.episode_data_parser()
 
         node = self.sections_parser()
 
-        if self.target_episode_info:
-            return node
-        else:
+        if update_episode_list:
             current_episode_data = ("ep_id", self.get_ep_id()) 
 
             self.update_episode_list(node, current_episode_data)
+
+        return node
 
     def sections_parser(self):
         cheese_title = self.info_data["title"]

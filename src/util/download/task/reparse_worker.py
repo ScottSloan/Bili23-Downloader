@@ -40,7 +40,7 @@ class ReparseWorker(QRunnable, ParserBase):
         elif self.episode_info.get("attribute", 0) & Attribute.CHEESE_BIT:
             episode_parser = self.parse_cheese_info()
 
-        return episode_parser.parse()
+        return episode_parser.parse(update_episode_list = False)
     
     def parse_video_info(self):
         bvid = self.episode_info.get("bvid")
