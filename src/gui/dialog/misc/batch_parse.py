@@ -38,7 +38,7 @@ class BatchParseDialog(DialogBase):
         self.viewLayout.addSpacing(10)
         self.viewLayout.addWidget(self.auto_add_to_download_list_check)
 
-        self.widget.setMinimumWidth(550)
+        self.widget.setMinimumWidth(600)
 
         self.yesButton.setText(self.tr("Start Parsing"))
 
