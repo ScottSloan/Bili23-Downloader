@@ -16,7 +16,7 @@ from .reparse_worker import ReparseWorker
 from .db import TaskDatabase
 from .info import TaskInfo
 
-from threading import Event
+from threading import Event, Lock, Timer
 from pathlib import Path
 from typing import List
 from uuid import uuid4
@@ -29,11 +29,34 @@ logger = logging.getLogger(__name__)
 class TaskManager:
     def __init__(self):
         self.db_manager = TaskDatabase()
+        self._add_to_queue_toast_shown = False
+        self._add_to_queue_toast_lock = Lock()
 
         signal_bus.download.create_task.connect(self._create_async)
 
     def _create_async(self, episode_info_list: List[dict], show_toast: bool = False):
         GlobalThreadPoolTask.run_func(self.create, episode_info_list, show_toast)
+
+    def _show_add_to_queue_toast(self):
+        with self._add_to_queue_toast_lock:
+            if self._add_to_queue_toast_shown:
+                return
+
+            self._add_to_queue_toast_shown = True
+
+        signal_bus.toast.show.emit(
+            ToastNotificationCategory.SUCCESS,
+            "",
+            Translator.TIP_MESSAGES("ADDED_TO_DOWNLOAD_QUEUE")
+        )
+
+        timer = Timer(3, self._reset_add_to_queue_toast_flag)
+        timer.daemon = True
+        timer.start()
+
+    def _reset_add_to_queue_toast_flag(self):
+        with self._add_to_queue_toast_lock:
+            self._add_to_queue_toast_shown = False
 
     def __episode_info_to_task_info(self, episode_info: dict, number) -> TaskInfo:
         task_info = TaskInfo()
@@ -122,9 +145,9 @@ class TaskManager:
         task_info.File.name = str(path.name)
         task_info.File.folder = str(path.parent)
 
-    def __check_reparse_needed(self, episode_info: dict):
+    def __check_reparse_needed(self, episode_info: dict, show_toast: bool = False):
         if episode_info.get("attribute", 0) & Attribute.NEED_PARSE_BIT:
-            worker = ReparseWorker(episode_info)
+            worker = ReparseWorker(episode_info, show_toast)
             GlobalThreadPoolTask.run(worker)
 
             return True
@@ -170,7 +193,7 @@ class TaskManager:
 
         for episode_info in episode_info_list:
             # 判断是否需要重新解析
-            if self.__check_reparse_needed(episode_info):
+            if self.__check_reparse_needed(episode_info, show_toast):
                 continue
 
             # 判断是否重复下载
@@ -195,11 +218,7 @@ class TaskManager:
             signal_bus.download.auto_manage_concurrent_downloads.emit()
 
             if show_toast:
-                signal_bus.toast.show.emit(
-                    ToastNotificationCategory.SUCCESS,
-                    "",
-                    Translator.TIP_MESSAGES("ADDED_TO_DOWNLOAD_QUEUE")
-                )
+                self._show_add_to_queue_toast()
 
     def query(self, completed: bool = False) -> List[TaskInfo]:
         result = self.db_manager.query_tasks(completed)
