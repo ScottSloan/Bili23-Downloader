@@ -4,17 +4,17 @@
 <context>
     <name>ADDITIONAL_FILES_QUALIFIER</name>
     <message>
-        <location filename="../../util/common/translator.py" line="314"/>
+        <location filename="../../util/common/translator.py" line="316"/>
         <source>Danmaku</source>
         <translation>弹幕</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="315"/>
+        <location filename="../../util/common/translator.py" line="317"/>
         <source>Subtitles</source>
         <translation>字幕</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="316"/>
+        <location filename="../../util/common/translator.py" line="318"/>
         <source>Metadata</source>
         <translation>元数据</translation>
     </message>
@@ -828,7 +828,7 @@
 <context>
     <name>DUPLICATE_DOWNLOAD_GUIDE</name>
     <message>
-        <location filename="../../util/common/translator.py" line="392"/>
+        <location filename="../../util/common/translator.py" line="394"/>
         <source>This feature detects duplicates based on unique video identifiers (e.g., BV/av IDs), not filenames.
 Please note that download history is the sole basis for recognizing downloaded videos. Clearing it will prevent the system from identifying existing downloads, which may result in duplicate downloads.</source>
         <translation>本功能通过视频唯一标识（如 BV号、av号）判断是否重复，与文件名无关。
@@ -1344,12 +1344,12 @@ If you continue, please disable the &quot;Preallocate file space&quot; option. (
 <context>
     <name>ERROR_CODE_EXPLANATION</name>
     <message>
-        <location filename="../../util/common/translator.py" line="399"/>
+        <location filename="../../util/common/translator.py" line="401"/>
         <source>Request blocked, client IP has been banned</source>
         <translation>请求被阻止，客户端IP已被封禁</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="400"/>
+        <location filename="../../util/common/translator.py" line="402"/>
         <source>Paid content requires purchasing</source>
         <translation>付费内容需要购买</translation>
     </message>
@@ -1367,12 +1367,12 @@ If you continue, please disable the &quot;Preallocate file space&quot; option. (
         <translation>调用 FFmpeg 时发生错误 ({code})</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="256"/>
+        <location filename="../../util/common/translator.py" line="257"/>
         <source>The file may have been moved or deleted. Please download it again.</source>
         <translation>文件可能已被移动或删除，请重新下载</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="258"/>
+        <location filename="../../util/common/translator.py" line="259"/>
         <source>Permission denied: cannot write to file</source>
         <translation>没有权限写入文件</translation>
     </message>
@@ -1382,122 +1382,127 @@ If you continue, please disable the &quot;Preallocate file space&quot; option. (
         <translation>文件不存在或路径错误，你可能需要重新下载。</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="257"/>
+        <location filename="../../util/common/translator.py" line="256"/>
+        <source>File Not Found</source>
+        <translation>文件不存在</translation>
+    </message>
+    <message>
+        <location filename="../../util/common/translator.py" line="258"/>
         <source>Insufficient disk space, please free up enough space and try again.</source>
         <translation>磁盘空间不足，请腾出足够的空间后再试</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="259"/>
+        <location filename="../../util/common/translator.py" line="260"/>
         <source>Downloaded file is corrupted, please try downloading again.</source>
         <translation>下载文件已损坏，请重新下载。</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="260"/>
+        <location filename="../../util/common/translator.py" line="261"/>
         <source>Failed to open file</source>
         <translation>无法打开文件</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="261"/>
+        <location filename="../../util/common/translator.py" line="262"/>
         <source>File is in use by another process</source>
         <translation>文件被其他进程占用</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="262"/>
+        <location filename="../../util/common/translator.py" line="263"/>
         <source>Could not create output file</source>
         <translation>无法创建输出文件</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="263"/>
+        <location filename="../../util/common/translator.py" line="264"/>
         <source>Download failed</source>
         <translation>下载失败</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="264"/>
+        <location filename="../../util/common/translator.py" line="265"/>
         <source>Failed to rename file</source>
         <translation>重命名文件失败</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="265"/>
+        <location filename="../../util/common/translator.py" line="266"/>
         <source>Failed to parse download information</source>
         <translation>无法解析下载地址</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="266"/>
+        <location filename="../../util/common/translator.py" line="267"/>
         <source>Failed to retrieve media information</source>
         <translation>获取媒体信息失败</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="267"/>
+        <location filename="../../util/common/translator.py" line="268"/>
         <source>Login status expired</source>
         <translation>登录状态失效</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="268"/>
+        <location filename="../../util/common/translator.py" line="269"/>
         <source>Your account login status has expired. Please log in again.</source>
         <translation>当前账号登录状态已失效，请重新登录</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="269"/>
+        <location filename="../../util/common/translator.py" line="270"/>
         <source>Failed to retrieve user information</source>
         <translation>获取用户信息失败</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="270"/>
+        <location filename="../../util/common/translator.py" line="271"/>
         <source>Failed to retrieve user avatar</source>
         <translation>获取用户头像失败</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="271"/>
+        <location filename="../../util/common/translator.py" line="272"/>
         <source>Logout failed</source>
         <translation>注销登录失败</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="272"/>
+        <location filename="../../util/common/translator.py" line="273"/>
         <source>An unknown error occurred</source>
         <translation>发生未知错误</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="273"/>
+        <location filename="../../util/common/translator.py" line="274"/>
         <source>Failed to check for updates</source>
         <translation>检查更新失败</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="274"/>
+        <location filename="../../util/common/translator.py" line="275"/>
         <source>FFmpeg processing failed</source>
         <translation>FFmpeg 处理失败</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="275"/>
+        <location filename="../../util/common/translator.py" line="276"/>
         <source>M4A audio file not found for conversion</source>
         <translation>找不到用于转换的 m4a 音频文件</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="276"/>
+        <location filename="../../util/common/translator.py" line="277"/>
         <source>Login Required</source>
         <translation>需要登录</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="277"/>
+        <location filename="../../util/common/translator.py" line="278"/>
         <source>Please log in to your account first.</source>
         <translation>请先登录账号</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="278"/>
+        <location filename="../../util/common/translator.py" line="279"/>
         <source>The b23.tv short link is invalid or has expired.</source>
         <translation>b23.tv短链接无效或已过期。</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="279"/>
+        <location filename="../../util/common/translator.py" line="280"/>
         <source>Invalid link format</source>
         <translation>无效的链接</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="280"/>
+        <location filename="../../util/common/translator.py" line="281"/>
         <source>Parsing stopped</source>
         <translation>已停止解析</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="281"/>
+        <location filename="../../util/common/translator.py" line="282"/>
         <source>An error occurred during parsing, and the process has been stopped. Parsing was completed up to page {page}.
 
 Reminder: Due to Bilibili&apos;s anti-abuse mechanism, parsing too many pages or at too high a frequency may result in failure and IP ban. Please use with caution!
@@ -2082,7 +2087,7 @@ Message:
 <context>
     <name>MEDIA_INFO_GUIDE</name>
     <message>
-        <location filename="../../util/common/translator.py" line="321"/>
+        <location filename="../../util/common/translator.py" line="323"/>
         <source>The media info shown here defaults to the first video in the parsed results. If multiple videos are available, this information may not exactly match the one you download—use it for reference only.
 
 To view detailed media info for a specific video, right-click its entry in the parse list and select &quot;Update Media Info&quot;.
@@ -2098,7 +2103,7 @@ Note: Videos protected by DRM can only be downloaded up to 1080P; higher qualiti
 <context>
     <name>MEDIA_OPTIONS_GUIDE</name>
     <message>
-        <location filename="../../util/common/translator.py" line="329"/>
+        <location filename="../../util/common/translator.py" line="331"/>
         <source>Media options control how video and audio streams are downloaded and whether they are automatically merged after download.
 Videos on Bilibili typically store and transmit video and audio streams separately. During download, both parts must be fetched individually and can then be merged into a complete video file using FFmpeg. These settings determine which streams to download and whether to keep the original unmerged files.
 
@@ -2566,7 +2571,7 @@ To get a single complete video file, please enable &quot;Merge video and audio&q
 <context>
     <name>NAMING_RULE_GUIDE</name>
     <message>
-        <location filename="../../util/common/translator.py" line="340"/>
+        <location filename="../../util/common/translator.py" line="342"/>
         <source>Customize the file name and folder structure using variables.
 
 Rules:
@@ -2600,7 +2605,7 @@ For advanced usage, see the help documentation.</source>
 <context>
     <name>NUMBERING_GUIDE</name>
     <message>
-        <location filename="../../util/common/translator.py" line="375"/>
+        <location filename="../../util/common/translator.py" line="377"/>
         <source>This setting affects the value of the {number} variable in the naming rule. By default, the program’s preset naming rule does not include {number}. If you want to use numbering, please add {number} to your naming rule first.
 
 The meaning of each &quot;Numbering Mode&quot; option is as follows:
@@ -2798,7 +2803,7 @@ The meaning of each &quot;Numbering Mode&quot; option is as follows:
 <context>
     <name>PREALLOCATE_GUIDE</name>
     <message>
-        <location filename="../../util/common/translator.py" line="386"/>
+        <location filename="../../util/common/translator.py" line="388"/>
         <source>Preallocating file space can improve download performance, especially for large files. When enabled, the program will allocate the required disk space before the download starts, reducing performance overhead caused by repeatedly expanding the file during download and minimizing disk fragmentation.
 
 Note: If the download path is on an external storage device such as a USB drive, and the file system does not support sparse files (e.g., FAT32 or exFAT), please disable this feature—otherwise, the program may become unresponsive.</source>
@@ -2810,7 +2815,7 @@ Note: If the download path is on an external storage device such as a USB drive,
 <context>
     <name>PRIORITY_GUIDE</name>
     <message>
-        <location filename="../../util/common/translator.py" line="369"/>
+        <location filename="../../util/common/translator.py" line="371"/>
         <source>The program will attempt downloads in the order of your configured priority. The actual video quality, audio quality, or codec you can download still depends on what is available in the video itself—priority only determines which option is tried first among multiple available choices.
 
 For example, if you set the video quality priority to 720P &gt; 1080P &gt; 4K, the program will first try to download 720P; if 720P is unavailable, it will then try 1080P and then 4K in sequence.</source>
@@ -2974,32 +2979,27 @@ For example, if you set the video quality priority to 720P &gt; 1080P &gt; 4K, t
         <translation>解析失败</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="499"/>
-        <source>Added to download queue</source>
-        <translation>已加入到下载队列</translation>
-    </message>
-    <message>
-        <location filename="../../gui/interface/parse.py" line="514"/>
+        <location filename="../../gui/interface/parse.py" line="512"/>
         <source>Search</source>
         <translation>搜索</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="515"/>
+        <location filename="../../gui/interface/parse.py" line="513"/>
         <source>Batch select</source>
         <translation>批量选择</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="516"/>
+        <location filename="../../gui/interface/parse.py" line="514"/>
         <source>Parsing history</source>
         <translation>解析记录</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="545"/>
+        <location filename="../../gui/interface/parse.py" line="543"/>
         <source>{category_name} ({selected_count} selected, {total_count} total)</source>
         <translation>{category_name}（已选择 {selected_count} 项，共 {total_count} 项）</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="551"/>
+        <location filename="../../gui/interface/parse.py" line="549"/>
         <source>{category_name} ({total_count} total)</source>
         <translation>{category_name}（共 {total_count} 项）</translation>
     </message>
@@ -3083,11 +3083,6 @@ For example, if you set the video quality priority to 720P &gt; 1080P &gt; 4K, t
         <location filename="../../gui/component/parse_list/tree_view.py" line="162"/>
         <source>Copy</source>
         <translation>复制</translation>
-    </message>
-    <message>
-        <location filename="../../gui/component/parse_list/tree_view.py" line="175"/>
-        <source>Added to download queue</source>
-        <translation>已加入到下载队列</translation>
     </message>
 </context>
 <context>
@@ -3876,7 +3871,7 @@ ISP：{isp}</translation>
 <context>
     <name>TERMS_OF_USE</name>
     <message>
-        <location filename="../../util/common/translator.py" line="357"/>
+        <location filename="../../util/common/translator.py" line="359"/>
         <source>&lt;html&gt;This software is intended solely for personal learning and research purposes. Any content downloaded through this project &lt;b&gt;is strictly limited to personal, non-commercial use and must not be used for any commercial purpose, public distribution, sharing, resale, or unlawful profit.&lt;/b&gt;
 &lt;br&gt;&lt;br&gt;
 This software operates exclusively based on the user&apos;s own legitimate account access rights and &lt;b&gt;does not bypass any paywalls, membership restrictions, or technical protection measures.&lt;/b&gt; You may only download content that you are authorized to access through your normal login on the target platform. If your account does not have permission to access certain content, this software must not be used to obtain it.
@@ -3900,102 +3895,107 @@ Under no circumstances shall the developer be liable for any direct, indirect, i
 <context>
     <name>TIP_MESSAGES</name>
     <message>
-        <location filename="../../util/common/translator.py" line="288"/>
+        <location filename="../../util/common/translator.py" line="289"/>
         <source>Queued...</source>
         <translation>等待中...</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="289"/>
+        <location filename="../../util/common/translator.py" line="290"/>
         <source>Parsing...</source>
         <translation>解析中...</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="290"/>
+        <location filename="../../util/common/translator.py" line="291"/>
         <source>Paused</source>
         <translation>已暂停</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="291"/>
+        <location filename="../../util/common/translator.py" line="292"/>
         <source>Queued for FFmpeg...</source>
         <translation>等待 FFmpeg 处理中...</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="294"/>
+        <location filename="../../util/common/translator.py" line="295"/>
         <source>Converting...</source>
         <translation>转换中...</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="295"/>
+        <location filename="../../util/common/translator.py" line="296"/>
         <source>You are already using the latest version</source>
         <translation>当前已是最新版本</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="296"/>
+        <location filename="../../util/common/translator.py" line="297"/>
         <source>Download completed</source>
         <translation>下载完成</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="297"/>
+        <location filename="../../util/common/translator.py" line="298"/>
         <source>All download tasks have been completed.</source>
         <translation>所有下载任务已完成</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="298"/>
+        <location filename="../../util/common/translator.py" line="299"/>
         <source>Expired</source>
         <translation>已失效</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="299"/>
+        <location filename="../../util/common/translator.py" line="300"/>
         <source>Additional Files</source>
         <translation>附加文件</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="300"/>
+        <location filename="../../util/common/translator.py" line="301"/>
         <source>Downloading Danmaku...</source>
         <translation>下载弹幕中...</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="301"/>
+        <location filename="../../util/common/translator.py" line="302"/>
         <source>Downloading Subtitles...</source>
         <translation>下载字幕中...</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="302"/>
+        <location filename="../../util/common/translator.py" line="303"/>
         <source>Downloading Cover...</source>
         <translation>下载封面中...</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="303"/>
+        <location filename="../../util/common/translator.py" line="304"/>
         <source>Scraping Metadata...</source>
         <translation>刮削元数据中...</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="304"/>
+        <location filename="../../util/common/translator.py" line="305"/>
         <source>Parsing node: {title}</source>
         <translation>正在解析节点：{title}</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="305"/>
+        <location filename="../../util/common/translator.py" line="306"/>
         <source>Parsing page {page}, total {total_page} pages, progress: {progress}%</source>
         <translation>正在解析第 {page} 页，共 {total_page} 页，进度：{progress}%</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="306"/>
+        <location filename="../../util/common/translator.py" line="307"/>
         <source>Parsing link {link}, total {total_links} links, progress: {progress}%</source>
         <translation>正在解析第 {link} 条链接，共 {total_links} 条，进度：{progress}%</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="307"/>
+        <location filename="../../util/common/translator.py" line="308"/>
         <source>Media info updated</source>
         <translation>媒体信息已更新</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="292"/>
+        <location filename="../../util/common/translator.py" line="309"/>
+        <source>Added to download queue</source>
+        <translation>已加入到下载队列</translation>
+    </message>
+    <message>
+        <location filename="../../util/common/translator.py" line="293"/>
         <source>Merging...</source>
         <translation>合并中...</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="293"/>
+        <location filename="../../util/common/translator.py" line="294"/>
         <source>Completed</source>
         <translation>已完成</translation>
     </message>

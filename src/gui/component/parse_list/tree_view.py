@@ -170,9 +170,7 @@ class ParseTreeView(TreeView):
 
         item.set_attribute(Attribute.DOWNLOAD_AS_SINGLE_VIDEO_BIT)
 
-        signal_bus.download.create_task.emit([item.to_dict()])
-
-        signal_bus.toast.show.emit(ToastNotificationCategory.SUCCESS, "", self.tr("Added to download queue"))
+        signal_bus.download.create_task.emit([item.to_dict()], True)
 
     def search_keywords(self, keywords: str = None):
         if not keywords:

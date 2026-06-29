@@ -34,7 +34,7 @@ class SignalBus:
         show_interactive_video_dialog = Signal(dict)
 
     class Download(QObject):
-        create_task = Signal(list)
+        create_task = Signal(list, bool)
 
         show_duplicate_download_dialog = Signal(object, object, object)
         show_skip_duplicate_download_toast = Signal(str)

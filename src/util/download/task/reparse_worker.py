@@ -25,7 +25,7 @@ class ReparseWorker(QRunnable, ParserBase):
         
         episode_node = self.parse_episode_node_info()
 
-        signal_bus.download.create_task.emit(episode_node.get_all_children(to_dict = True))
+        signal_bus.download.create_task.emit(episode_node.get_all_children(to_dict = True), False)
 
     def parse_episode_node_info(self):
         # 视频

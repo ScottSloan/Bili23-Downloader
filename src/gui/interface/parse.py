@@ -494,9 +494,7 @@ class ParseInterface(ParseBase):
         config.current_starting_number = 1
 
         # 添加到下载队列
-        signal_bus.download.create_task.emit(checked_episodes_list)
-
-        signal_bus.toast.show.emit(ToastNotificationCategory.SUCCESS, "", self.tr("Added to download queue"))
+        signal_bus.download.create_task.emit(checked_episodes_list, True)
 
         QTimer.singleShot(0, self.parse_list.update_check_state)
 

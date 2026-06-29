@@ -6,15 +6,19 @@ from qfluentwidgets import FluentIcon
 
 from gui.component.view_model import CoverQueryDelegateBase
 
+from util.common.enum import DownloadStatus, ToastNotificationCategory
 from util.common.icon import ExtendedFluentIcon
 from util.common.io.directory import Directory
+from util.common.signal_bus import signal_bus
 from util.common.translator import Translator
 from util.download.task.info import TaskInfo
-from util.common.enum import DownloadStatus
 from util.format.units import Units
 from util.format.time import Time
 
 from pathlib import Path
+import logging
+
+logger = logging.getLogger(__name__)
 
 class DownloadItemDelegate(CoverQueryDelegateBase):
     def __init__(self, parent = None):
@@ -130,7 +134,30 @@ class DownloadItemDelegate(CoverQueryDelegateBase):
     def openFileLocation(self, task_info: TaskInfo):
         directory = Path(task_info.File.download_path, task_info.File.folder)
 
-        Directory.open_files_in_explorer(str(directory), task_info.File.relative_files)
+        # 检查 relative_files 是否存在，如果不存在则弹出错误提示
+        existing_files = [file for file in task_info.File.relative_files if Path(directory, file).exists()]
+
+        if not existing_files:
+            # 记录第一个文件位置
+            if task_info.File.relative_files:
+                _path = Path(directory, task_info.File.relative_files[0])
+            else:
+                _path = directory
+
+            logger.error("任务 %s 的下载文件不存在，无法打开文件位置： %s", task_info.Basic.show_title, _path)
+
+            signal_bus.toast.show_long_message.emit(
+                ToastNotificationCategory.ERROR,
+                Translator.ERROR_MESSAGES("FILE_NOT_FOUND_TITLE"),
+                "{msg}\n\n{path}".format(
+                    msg = Translator.ERROR_MESSAGES("FILE_NOT_FOUND_DETAIL"),
+                    path = str(_path)
+                )
+                
+            )
+
+        else:
+            Directory.open_files_in_explorer(str(directory), task_info.File.relative_files)
 
     def isTaskCompleted(self, task_info: TaskInfo):
         return task_info.Download.status == DownloadStatus.COMPLETED

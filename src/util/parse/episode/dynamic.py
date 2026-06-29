@@ -81,7 +81,7 @@ class DynamicEpisodeParser(EpisodeParserBase):
 
         # 根据设置决定是否自动添加到下载列表
         if config.get(config.auto_add_to_download_list):
-            GlobalThreadPoolTask.run_func(task_manager.create, node.get_all_children(to_dict = True))
+            GlobalThreadPoolTask.run_func(task_manager.create, node.get_all_children(to_dict = True), False)
 
         # 去除 raw_node 最外层的根节点，直接返回其子节点列表
         for child in node.children:

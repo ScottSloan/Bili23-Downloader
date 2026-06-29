@@ -1,5 +1,5 @@
+from ...common.enum import DownloadStatus, DownloadType, NumberingType, DuplicateDownloadResolution, ToastNotificationCategory
 from ...common.data import reversed_video_quality_map, reversed_audio_quality_map, video_codec_str_map
-from ...common.enum import DownloadStatus, DownloadType, NumberingType, DuplicateDownloadResolution
 from ...common._json import json_dumps, json_loads
 from ...common.timestamp import get_timestamp_ms
 from ...common.translator import Translator
@@ -32,8 +32,8 @@ class TaskManager:
 
         signal_bus.download.create_task.connect(self._create_async)
 
-    def _create_async(self, episode_info_list: List[dict]):
-        GlobalThreadPoolTask.run_func(self.create, episode_info_list)
+    def _create_async(self, episode_info_list: List[dict], show_toast: bool = False):
+        GlobalThreadPoolTask.run_func(self.create, episode_info_list, show_toast)
 
     def __episode_info_to_task_info(self, episode_info: dict, number) -> TaskInfo:
         task_info = TaskInfo()
@@ -165,7 +165,7 @@ class TaskManager:
             case _:
                 return episode_info.get("number", "")
 
-    def create(self, episode_info_list: List[dict]):
+    def create(self, episode_info_list: List[dict], show_toast: bool = False):
         task_info_list = []
 
         for episode_info in episode_info_list:
@@ -193,6 +193,13 @@ class TaskManager:
 
             signal_bus.download.add_to_downloading_list.emit(task_info_list)
             signal_bus.download.auto_manage_concurrent_downloads.emit()
+
+            if show_toast:
+                signal_bus.toast.show.emit(
+                    ToastNotificationCategory.SUCCESS,
+                    "",
+                    Translator.TIP_MESSAGES("ADDED_TO_DOWNLOAD_QUEUE")
+                )
 
     def query(self, completed: bool = False) -> List[TaskInfo]:
         result = self.db_manager.query_tasks(completed)
