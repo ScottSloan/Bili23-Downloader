@@ -36,7 +36,7 @@ class ReparseWorker(QRunnable, ParserBase):
             signal_bus.download.create_task.emit(episode_node.get_all_children(to_dict = True), self.show_toast)
 
         except Exception as e:
-            logger.exception("Failed to reparse download task: %s", self.episode_info.get("title", ""))
+            logger.exception("解析下载任务失败： %s", self.episode_info.get("title", ""))
 
             if self.show_toast:
                 signal_bus.toast.show_long_message.emit(
@@ -84,7 +84,8 @@ class ReparseWorker(QRunnable, ParserBase):
         return {
             "target_episode_info": target_episode_info,
             "target_episode_data_id": self.episode_info.get("episode_id"),
-            "target_attribute": self.episode_info.get("attribute") & ~Attribute.NEED_PARSE_BIT
+            "target_attribute": self.episode_info.get("attribute") & ~Attribute.NEED_PARSE_BIT,
+            "target_number": self.episode_info.get("number")
         }
 
     def get_video_info(self, bvid: str):

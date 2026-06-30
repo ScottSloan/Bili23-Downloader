@@ -64,7 +64,7 @@ class BangumiEpisodeParser(EpisodeParserBase):
                     "cover": episode["cover"],
                     "duration": int(self.get_episode_duration(episode) / 1000),
                     "ep_id": episode["ep_id"],
-                    "number": self.episode_count,
+                    "number": self.get_display_number(self.episode_count),
                     "pubtime": episode["pub_time"],
                     "title": self.get_bangumi_title(episode),
                     "related_titles": {

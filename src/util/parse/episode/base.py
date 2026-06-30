@@ -14,8 +14,15 @@ class EpisodeParserBase:
         self.target_episode_info: str | int = kwargs.get("target_episode_info")
         self.target_episode_data_id: str = kwargs.get("target_episode_data_id")
         self.target_attribute: int = kwargs.get("target_attribute")
+        self.target_number: int | str = kwargs.get("target_number")
 
         self.episode_count = 0
+
+    def get_display_number(self, default_number: int):
+        if self.target_number is not None and self.target_number != "":
+            return self.target_number
+
+        return default_number
 
     def update_episode_list(self, node: TreeItem, current_episode_data: tuple = None):
         # 由于顶层 root_node 不可见，需要在外面再包一层，避免顶层节点信息丢失

@@ -58,7 +58,7 @@ class CheeseEpisodeParser(EpisodeParserBase):
                         "ep_id": episode["id"],
                         "episode_id": self.episode_id,
                         "episode_plot": "{} · {}".format(episode["play_way_subtitle"], episode["subtitle"]),
-                        "number": self.episode_count,
+                        "number": self.get_display_number(self.episode_count),
                         "episode_number": self.episode_count,
                         "pubtime": episode["release_date"],
                         "title": episode["title"],

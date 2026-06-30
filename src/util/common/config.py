@@ -290,8 +290,8 @@ class DefaultValue:
 class APPConfig(QConfig):
     # APP
     app_name = "Bili23 Downloader"
-    app_version = "2.10.4"
-    app_comparable_version = "2.10.4"
+    app_version = "2.10.5"
+    app_comparable_version = "2.10.5"
     app_config_version = 2100
     config_version = ConfigItem("Application", "config_version", app_config_version)
 
