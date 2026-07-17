@@ -57,8 +57,12 @@ class ParseTreeView(TreeView):
         self._model.root_node = root_node
         self._model.endResetModel()
 
+        # 勾选默认项并刷新视图
+        self._auto_select_by_episode_data(current_episode_data)
+
+        # 滚动定位到对应项
         self._schedule_expand_all(
-            lambda: self.locate_to_item_by_episode_data(current_episode_data)
+            lambda: self._scroll_to_episode_data(current_episode_data)
         )
 
     def _schedule_expand_all(self, callback = None):
@@ -245,7 +249,7 @@ class ParseTreeView(TreeView):
             # 选中该项
             self.setCurrentIndex(index)
 
-    def locate_to_item_by_episode_data(self, current_episode_data: tuple = None):
+    def _auto_select_by_episode_data(self, current_episode_data: tuple = None):
         # 没传入剧集数据，不做任何操作
         if not current_episode_data:
             return
@@ -253,14 +257,26 @@ class ParseTreeView(TreeView):
         key = current_episode_data[0]
         value = current_episode_data[1]
 
-        # 根据传入的剧集数据定位到对应的项目
-        all_items = self.get_all_items()
+        # 定位到对应项目并勾选
+        for item in self.get_all_items():
+            if getattr(item, key) == value:
+                item.set_checked_state(Qt.CheckState.Checked)
+                break
 
-        # 不仅滚动到该项，还要自动选中
-        for item in all_items:
+        self.update_check_state()
+
+    def _scroll_to_episode_data(self, current_episode_data: tuple = None):
+        # 没传入剧集数据，不做任何操作
+        if not current_episode_data:
+            return
+
+        key = current_episode_data[0]
+        value = current_episode_data[1]
+
+        # 滚动定位到对应项目
+        for item in self.get_all_items():
             if getattr(item, key) == value:
                 self.scroll_to_item(item)
-                item.set_checked_state(Qt.CheckState.Checked)
                 break
 
     def check_items(self, items: List[TreeItem]):
