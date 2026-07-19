@@ -57,13 +57,18 @@ class ParseTreeView(TreeView):
         self._model.root_node = root_node
         self._model.endResetModel()
 
+        target_item = self.locate_to_item_by_episode_data(
+            current_episode_data,
+            scroll = False
+        )
+
         self._schedule_expand_all(
-            lambda: self.locate_to_item_by_episode_data(current_episode_data)
+            lambda: self.scroll_to_item(target_item) if target_item else None
         )
 
     def _schedule_expand_all(self, callback = None):
         self._expand_queue.clear()
-        self._expand_queue.append(QModelIndex())
+        self._expand_queue.append((QModelIndex(), 0))
         self._expand_callback = callback
 
         if not self._expand_timer.isActive():
@@ -73,19 +78,21 @@ class ParseTreeView(TreeView):
         processed = 0
 
         while self._expand_queue and processed < self._expand_batch_size:
-            parent = self._expand_queue.popleft()
+            parent, start_row = self._expand_queue.popleft()
             rows = self._model.rowCount(parent)
 
-            for row in range(rows):
+            for row in range(start_row, rows):
                 index = self._model.index(row, 0, parent)
                 if not index.isValid():
                     continue
 
                 self.expand(index)
-                self._expand_queue.append(index)
+                self._expand_queue.append((index, 0))
                 processed += 1
 
                 if processed >= self._expand_batch_size:
+                    if row + 1 < rows:
+                        self._expand_queue.appendleft((parent, row + 1))
                     break
 
         if self._expand_queue:
@@ -245,10 +252,10 @@ class ParseTreeView(TreeView):
             # 选中该项
             self.setCurrentIndex(index)
 
-    def locate_to_item_by_episode_data(self, current_episode_data: tuple = None):
+    def locate_to_item_by_episode_data(self, current_episode_data: tuple = None, scroll = True):
         # 没传入剧集数据，不做任何操作
         if not current_episode_data:
-            return
+            return None
 
         key = current_episode_data[0]
         value = current_episode_data[1]
@@ -259,9 +266,17 @@ class ParseTreeView(TreeView):
         # 不仅滚动到该项，还要自动选中
         for item in all_items:
             if getattr(item, key) == value:
-                self.scroll_to_item(item)
                 item.set_checked_state(Qt.CheckState.Checked)
-                break
+
+                if scroll:
+                    self.scroll_to_item(item)
+
+                self.viewport().update()
+                self.update_check_state()
+
+                return item
+
+        return None
 
     def check_items(self, items: List[TreeItem]):
         for item in items:

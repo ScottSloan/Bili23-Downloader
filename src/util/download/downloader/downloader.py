@@ -186,7 +186,14 @@ class ChunkWorker(QRunnable):
         
         if self.on_chunk_start:
             self.on_chunk_start()
-            
+
+        try:
+            self._download_chunk()
+        finally:
+            if self.on_chunk_end:
+                self.on_chunk_end()
+
+    def _download_chunk(self):
         headers = {
             "Range": f"bytes={self.chunk_range[0]}-{self.chunk_range[1] - 1}"
         }
@@ -264,9 +271,6 @@ class ChunkWorker(QRunnable):
 
                 time.sleep(min(2 ** (attempt - 1), 8))
 
-        if self.on_chunk_end:
-            self.on_chunk_end()
-
 class Downloader(QObject):
     def __init__(self, task_info: TaskInfo):
         super().__init__()
@@ -296,6 +300,7 @@ class Downloader(QObject):
         self.wait_callback = None
         self.start_worker_lock = Lock()
         self.start_worker_pending = False
+        self.start_worker_requested = False
         self.download_generation = 0
         
         self._completion_triggered = False
@@ -381,14 +386,44 @@ class Downloader(QObject):
             error_message
         )
 
+    @Slot()
     def start_download(self):
         try:
+            if (
+                self._stop_event.is_set()
+                or self.task_info.Download.status != DownloadStatus.DOWNLOADING
+                or not self.task_info.Download.queue
+            ):
+                return
+
             self.start_timer()
 
             with self.start_worker_lock:
-                if self.start_worker_pending:
+                # A small file can finish while its preparation worker is still
+                # unwinding. Remember the next-file request instead of dropping it.
+                self.start_worker_requested = True
+
+            self._dispatch_start_worker()
+
+        except Exception as e:
+            self.on_download_error(str(e))
+
+    @Slot()
+    def _dispatch_start_worker(self):
+        try:
+            with self.start_worker_lock:
+                if self.start_worker_pending or not self.start_worker_requested:
                     return
 
+                if (
+                    self._stop_event.is_set()
+                    or self.task_info.Download.status != DownloadStatus.DOWNLOADING
+                    or not self.task_info.Download.queue
+                ):
+                    self.start_worker_requested = False
+                    return
+
+                self.start_worker_requested = False
                 self.start_worker_pending = True
                 self.download_generation += 1
                 generation = self.download_generation
@@ -400,6 +435,8 @@ class Downloader(QObject):
             )
         
         except Exception as e:
+            with self.start_worker_lock:
+                self.start_worker_pending = False
             self.on_download_error(str(e))
 
     def _start_worker_in_background(self, generation: int):
@@ -418,6 +455,16 @@ class Downloader(QObject):
         finally:
             with self.start_worker_lock:
                 self.start_worker_pending = False
+                should_restart = self.start_worker_requested and not self._stop_event.is_set()
+
+            if should_restart:
+                QMetaObject.invokeMethod(
+                    self,
+                    "_dispatch_start_worker",
+                    Qt.ConnectionType.QueuedConnection
+                )
+
+            self._queue_wait_callback_if_idle()
 
     def is_generation_active(self, generation: int):
         return generation == self.download_generation
@@ -484,7 +531,10 @@ class Downloader(QObject):
         merge_worker.start()
 
     def pause(self):
-        self.download_generation += 1
+        with self.start_worker_lock:
+            self.download_generation += 1
+            self.start_worker_requested = False
+
         self.task_info.Download.status = DownloadStatus.PAUSED
         self._stop_event.set()
         self.speed_timer.stop()
@@ -659,16 +709,48 @@ class Downloader(QObject):
         with self.count_lock:
             self.active_workers -= 1
 
-        if self.active_workers == 0 and self.wait_flag and self._stop_event.is_set():
-            self.wait_callback()
+        self._queue_wait_callback_if_idle()
 
     def wait(self, on_end):
-        self.wait_flag = True
-        self.wait_callback = on_end
         self._stop_event.set()
 
-        if self.active_workers == 0:
-            on_end()
+        with self.start_worker_lock:
+            self.download_generation += 1
+            self.start_worker_requested = False
+
+        with self.count_lock:
+            self.wait_flag = True
+            self.wait_callback = on_end
+
+        self._finish_wait_if_idle()
+
+    def _queue_wait_callback_if_idle(self):
+        with self.count_lock:
+            should_check = self.wait_flag and self.active_workers == 0
+
+        if should_check:
+            QMetaObject.invokeMethod(
+                self,
+                "_finish_wait_if_idle",
+                Qt.ConnectionType.QueuedConnection
+            )
+
+    @Slot()
+    def _finish_wait_if_idle(self):
+        with self.start_worker_lock:
+            if self.start_worker_pending:
+                return
+
+        with self.count_lock:
+            if not self.wait_flag or self.active_workers != 0:
+                return
+
+            callback = self.wait_callback
+            self.wait_flag = False
+            self.wait_callback = None
+
+        if callback:
+            callback()
 
     def start_timer(self):
         if self.speed_timer.isActive():
