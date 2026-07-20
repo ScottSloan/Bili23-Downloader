@@ -290,8 +290,8 @@ class DefaultValue:
 class APPConfig(QConfig):
     # APP
     app_name = "Bili23 Downloader"
-    app_version = "2.11.0"
-    app_comparable_version = "2.11.0"
+    app_version = "2.11.1"
+    app_comparable_version = "2.11.1"
     app_config_version = 2100
     config_version = ConfigItem("Application", "config_version", app_config_version)
 
@@ -352,6 +352,7 @@ class APPConfig(QConfig):
     download_cover = ConfigItem("Additional", "download_cover", False, BoolValidator())
     cover_type = OptionsConfigItem("Additional", "cover_type", CoverType.JPG, OptionsValidator(CoverType), EnumSerializer(CoverType))
     attach_cover = ConfigItem("Additional", "attach_cover", False, BoolValidator())
+    delete_cover_after_attach = ConfigItem("Additional", "delete_cover_after_attach", False, BoolValidator())
 
     download_metadata = ConfigItem("Additional", "download_metadata", False, BoolValidator())
     metadata_type = OptionsConfigItem("Additional", "metadata_type", MetadataType.NFO, OptionsValidator(MetadataType), EnumSerializer(MetadataType))

@@ -283,6 +283,7 @@ class CoverSettingCard(ExpandGroupSettingCard):
         self.type_choice.setFixedWidth(120)
 
         self.attach_cover_switch = SettingSwitchButton(config.attach_cover, parent = self)
+        self.delete_cover_after_attach_switch = SettingSwitchButton(config.delete_cover_after_attach, parent = self)
 
         self.viewLayout.setContentsMargins(0, 0, 0, 0)
         self.viewLayout.setSpacing(0)
@@ -290,10 +291,12 @@ class CoverSettingCard(ExpandGroupSettingCard):
         self.addGroup("", self.tr("Download Cover"), "", self.download_switch)
         self.addGroup("", self.tr("Cover Format"), "", self.type_choice)
         self.attach_cover_group = self.addGroup("", self.tr("Embed Cover"), self.tr("Embed the downloaded cover into the video file"), self.attach_cover_switch)
+        self.delete_cover_after_attach_group = self.addGroup("", self.tr("Delete Cover After Embedding"), self.tr("Delete the original cover file after embedding it into the video file"), self.delete_cover_after_attach_switch)
 
-        self.attach_cover_group.setEnabled(config.get(config.download_cover) and not self.type_choice.currentText() == "avif")
+        self.update_cover_option_states()
         self.download_switch.checkedChanged.connect(self.on_toggle_attach_cover)
         self.type_choice.currentIndexChanged.connect(self.on_change_cover_format)
+        self.attach_cover_switch.checkedChanged.connect(self.on_toggle_delete_cover)
 
     def on_change_cover_format(self, index: int):
         # avif 格式不支持作为封面嵌入，如果用户选择了 avif 作为封面格式，则禁用嵌入封面选项
@@ -302,13 +305,26 @@ class CoverSettingCard(ExpandGroupSettingCard):
         if is_avif and self.attach_cover_switch.isChecked():
             self.attach_cover_switch.setChecked(False)
 
-        self.attach_cover_group.setEnabled(not is_avif)
+        self.update_cover_option_states()
 
     def on_toggle_attach_cover(self, checked: bool):
-        self.attach_cover_group.setEnabled(checked)
-
         if not checked:
             self.attach_cover_switch.setChecked(False)
+
+        self.update_cover_option_states()
+
+    def on_toggle_delete_cover(self, checked: bool):
+        if not checked:
+            self.delete_cover_after_attach_switch.setChecked(False)
+
+        self.update_cover_option_states()
+
+    def update_cover_option_states(self):
+        can_embed_cover = self.download_switch.isChecked() and self.type_choice.currentText() != "avif"
+        self.attach_cover_group.setEnabled(can_embed_cover)
+
+        can_delete_cover = can_embed_cover and self.attach_cover_switch.isChecked()
+        self.delete_cover_after_attach_group.setEnabled(can_delete_cover)
 
 class MetadataSettingCard(ExpandGroupSettingCard):
     def __init__(self, parent = None):

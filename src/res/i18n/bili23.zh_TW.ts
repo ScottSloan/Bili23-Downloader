@@ -715,6 +715,16 @@
         <source>Embed the downloaded cover into the video file</source>
         <translation>將下載的封面嵌入至影片檔案中</translation>
     </message>
+    <message>
+        <location filename="../../gui/component/setting/card.py" line="294"/>
+        <source>Delete Cover After Embedding</source>
+        <translation>嵌入後刪除封面</translation>
+    </message>
+    <message>
+        <location filename="../../gui/component/setting/card.py" line="294"/>
+        <source>Delete the original cover file after embedding it into the video file</source>
+        <translation>將封面嵌入影片檔案後刪除原封面檔案</translation>
+    </message>
 </context>
 <context>
     <name>DANMAKU_DENSITY</name>
