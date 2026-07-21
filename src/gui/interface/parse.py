@@ -343,13 +343,21 @@ class ParseInterface(ParseBase):
 
         self.item_count_label = BodyLabel("", self)
 
+        self.search_btn = TransparentToolButton(FluentIcon.SEARCH, self)
+        self.search_btn.setToolTip(self.tr("Search"))
+        self.search_btn.setFixedSize(28, 28)
+
+        self.history_btn = TransparentToolButton(FluentIcon.HISTORY, self)
+        self.history_btn.setToolTip(self.tr("Parsing History"))
+        self.history_btn.setFixedSize(28, 28)
+
+        self.batch_select_btn = TransparentToolButton(ExtendedFluentIcon.TODO, self)
+        self.batch_select_btn.setToolTip(self.tr("Batch Select"))
+        self.batch_select_btn.setFixedSize(28, 28)
+
         self.download_option_btn = TransparentToolButton(ExtendedFluentIcon.OPTIONS, self)
         self.download_option_btn.setToolTip(self.tr("Download Options"))
         self.download_option_btn.setFixedSize(28, 28)
-
-        self.show_more_btn = TransparentToolButton(FluentIcon.MORE, self)
-        self.show_more_btn.setToolTip(self.tr("More"))
-        self.show_more_btn.setFixedSize(28, 28)
 
         self.parse_list = ParseTreeView(self.main_window, parent = self)
 
@@ -374,8 +382,10 @@ class ParseInterface(ParseBase):
         toolbar_layout = QHBoxLayout()
         toolbar_layout.addWidget(self.item_count_label)
         toolbar_layout.addStretch()
+        toolbar_layout.addWidget(self.search_btn)
+        toolbar_layout.addWidget(self.history_btn)
+        toolbar_layout.addWidget(self.batch_select_btn)
         toolbar_layout.addWidget(self.download_option_btn)
-        toolbar_layout.addWidget(self.show_more_btn)
 
         bottom_layout = QHBoxLayout()
         bottom_layout.addWidget(self.segmented_widget)
@@ -399,8 +409,10 @@ class ParseInterface(ParseBase):
         self.segmented_widget.pager_widget.pageChanged.connect(lambda page: self.on_parse(page))
         self.url_box.returnPressed.connect(lambda: self.on_parse())
 
+        self.search_btn.clicked.connect(self.on_search)
+        self.history_btn.clicked.connect(self.on_history)
+        self.batch_select_btn.clicked.connect(self.on_batch_select)
         self.download_option_btn.clicked.connect(self.on_download_options)
-        self.show_more_btn.clicked.connect(self.on_top_layout_show_more_menu)
 
         self.parse_list._model.check_state_changed.connect(self.on_item_check_state_changed)
         self.download_btn.clicked.connect(self.on_download)
@@ -508,17 +520,6 @@ class ParseInterface(ParseBase):
         
         dialog = self.show_download_options_dialog()
         dialog.exec()
-
-    def on_top_layout_show_more_menu(self):
-        menu = RoundMenu(parent = self)
-
-        menu.addAction(self._create_action(FluentIcon.SEARCH, self.tr("Search"), self.on_search))
-        menu.addAction(self._create_action(ExtendedFluentIcon.TODO, self.tr("Batch select"), self.on_batch_select))
-        menu.addAction(self._create_action(FluentIcon.HISTORY, self.tr("Parsing history"), self.on_history))
-
-        pos = self.show_more_btn.mapToGlobal(self.show_more_btn.rect().bottomLeft())
-
-        menu.exec(pos)
 
     def on_search(self):
         from ..dialog.misc.search import SearchDialog
