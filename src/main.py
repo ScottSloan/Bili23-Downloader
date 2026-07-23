@@ -12,7 +12,7 @@ import sys
 # 创建 QApplication 前禁用 DirectWrite，否则 Qt 文本会显示为方框。
 qt_win7_compatible = False
 
-if platform.system() == "Windows" :
+if sys.platform == "win32":
     def _msw_messagebox(title: str, content: str):
         ctypes.windll.user32.MessageBoxW(0, content, title, 0 | 0x10)
 

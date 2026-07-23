@@ -1,11 +1,11 @@
-from PySide6.QtWidgets import QApplication
 from PySide6.QtCore import Qt, QModelIndex, QTimer
+from PySide6.QtWidgets import QApplication
 
-from qfluentwidgets import TreeView, RoundMenu, Action, FluentIcon, isDarkTheme, setCustomStyleSheet
+from qfluentwidgets import TreeView, RoundMenu, Action, FluentIcon, setCustomStyleSheet
 
+from .item_delegate import ParseTreeItemDelegate
 from .model import ParseModel
 
-from util.common.enum import ToastNotificationCategory
 from util.common.icon import ExtendedFluentIcon
 from util.common.signal_bus import signal_bus
 from util.common.config import config
@@ -23,6 +23,7 @@ class ParseTreeView(TreeView):
         self.main_window = main_window
 
         self._model = ParseModel(parent = self)
+        self._delegate = ParseTreeItemDelegate(parent = self)
         self._expand_timer = QTimer(self)
         self._expand_timer.setSingleShot(True)
         self._expand_timer.timeout.connect(self._expand_next_batch)
@@ -31,6 +32,7 @@ class ParseTreeView(TreeView):
         self._expand_batch_size = 100
 
         self.setModel(self._model)
+        self.setItemDelegate(self._delegate)
         self.setUniformRowHeights(True)
         self.setSortingEnabled(True)
         self.setSelectionMode(TreeView.SelectionMode.SingleSelection)
@@ -159,23 +161,24 @@ class ParseTreeView(TreeView):
 
         menu = RoundMenu(parent=self)
 
-        # 1. 全局选择操作
+        # 全局选择操作
         check_all_text = self.tr("Check All") if self._model.root_node.checked == Qt.CheckState.Unchecked else self.tr("Uncheck All")
         menu.addAction(self._create_action(ExtendedFluentIcon.SELECT_ALL, check_all_text, self.on_toggle_check_all_items))
         menu.addAction(self._create_action(ExtendedFluentIcon.RETRY, self.tr("Reverse"), self.reverse_check_state))
         menu.addSeparator()
 
-        # 2. 当前项操作
+        # 当前项操作
         check_item_text = self.tr("Check Item") if item.checked == Qt.CheckState.Unchecked else self.tr("Uncheck Item")
         menu.addAction(self._create_action(ExtendedFluentIcon.SELECT, check_item_text, lambda: self.on_toggle_check_state(item)))
 
-        # 3. 叶子节点操作 (无子节点的项)
+        # 叶子节点操作 (无子节点的项)
         if item.count() == 0:
+            menu.addAction(self._create_action(FluentIcon.SEARCH, self.tr("Parse this item"), lambda: self.on_parse_item(item)))
             menu.addAction(self._create_action(FluentIcon.GLOBE, self.tr("Open in Browser"), lambda: self.on_open_in_browser(item)))
             menu.addAction(self._create_action(FluentIcon.DOWNLOAD, self.tr("Download as Single Video"), lambda: self.on_download_as_single_video(item)))
             menu.addAction(self._create_action(ExtendedFluentIcon.RETRY, self.tr("Update Media Info"), lambda: self.on_update_media_info(item.to_dict())))
 
-        # 4. 元数据信息
+        # 元数据信息
         menu.addSeparator()
         menu.addAction(self._create_action(FluentIcon.DOCUMENT, self.tr("View Metadata"), lambda: self.on_view_metadata(item)))
 
@@ -191,6 +194,11 @@ class ParseTreeView(TreeView):
         item.set_checked_state(Qt.CheckState.Checked if item.checked == Qt.CheckState.Unchecked else Qt.CheckState.Unchecked)
 
         self.update_check_state()
+
+    def on_parse_item(self, item: TreeItem):
+        url = item.url
+
+        signal_bus.parse.parse_url.emit(url)
 
     def on_open_in_browser(self, item: TreeItem):
         if item.url:

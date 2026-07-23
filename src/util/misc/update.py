@@ -8,6 +8,7 @@ from ..thread.async_ import AsyncTask
 from ..common.config import config
 
 import logging
+import sys
 
 logger = logging.getLogger(__name__)
 
@@ -57,10 +58,28 @@ class Updater(QObject):
             "include_preview": config.get(config.include_prerelease)
         }
 
+        headers = {
+            "x-verhub-platform": self.get_platform()
+        }
+
         url = "https://verhub.hanloth.cn/api/v1/public/scottsloan-bili23-downloader/versions/check-update"
 
-        worker = NetworkRequestWorker(url, request_type = RequestType.POST, json_data = params)
+        worker = NetworkRequestWorker(url, request_type = RequestType.POST, json_data = params, extra_headers = headers)
         worker.success.connect(self.check)
         worker.error.connect(on_error)
 
         AsyncTask.run(worker)
+
+    def get_platform(self):
+        match sys.platform:
+            case "win32":
+                return "windows"
+            
+            case "linux":
+                return "linux"
+            
+            case "darwin":
+                return "macos"
+            
+            case _:
+                return "unknown"

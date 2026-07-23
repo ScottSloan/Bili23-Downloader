@@ -98,7 +98,7 @@ class ResponseType(Enum):
     RESPONSE = 5         # 返回完整的 Response 对象，供需要访问更多信息的情况使用
 
 class SyncNetWorkRequest:
-    def __init__(self, url: str, request_type: RequestType = RequestType.GET, params: dict = None, response_type: ResponseType = ResponseType.JSON, raise_for_status: bool = True, json_data: dict = None, data: dict = None, content_type: str = None):
+    def __init__(self, url: str, request_type: RequestType = RequestType.GET, params: dict = None, response_type: ResponseType = ResponseType.JSON, raise_for_status: bool = True, json_data: dict = None, data: dict = None, content_type: str = None, extra_headers: dict = None):
         self.url = url
         self.params = params
         self.request_type = request_type
@@ -107,6 +107,7 @@ class SyncNetWorkRequest:
         self.json_data = json_data
         self.data = data
         self.content_type = content_type     # 供 POST 请求使用，自动设置 Content-Type 头部
+        self.extra_headers = extra_headers
 
         self.proxies = None
 
@@ -173,13 +174,16 @@ class SyncNetWorkRequest:
             if "Content-Type" in get_client().headers:
                 get_client().headers.pop("Content-Type", None)
 
+        if self.extra_headers:
+            get_client().headers.update(self.extra_headers)
+
 class NetworkRequestWorker(SyncNetWorkRequest, QObject):
     success = Signal(object)
     error = Signal(str)
     finished = Signal()
 
-    def __init__(self, url: str, request_type: RequestType = RequestType.GET, params: dict = None, response_type: ResponseType = ResponseType.JSON, raise_for_status: bool = True, json_data: dict = None, data: dict = None, content_type: str = None):
-        SyncNetWorkRequest.__init__(self, url, request_type, params, response_type, raise_for_status, json_data, data, content_type)
+    def __init__(self, url: str, request_type: RequestType = RequestType.GET, params: dict = None, response_type: ResponseType = ResponseType.JSON, raise_for_status: bool = True, json_data: dict = None, data: dict = None, content_type: str = None, extra_headers: dict = None):
+        SyncNetWorkRequest.__init__(self, url, request_type, params, response_type, raise_for_status, json_data, data, content_type, extra_headers)
         QObject.__init__(self)
 
     @Slot()
