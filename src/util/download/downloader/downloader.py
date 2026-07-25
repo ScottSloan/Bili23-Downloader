@@ -311,6 +311,9 @@ class Downloader(QObject):
         self.speed_timer.timeout.connect(self._calculate_speed)
 
     def start(self):
+        if self.session is None:
+            self.init_session()
+
         self._completion_triggered = False
         self._download_error_triggered = False
 
@@ -353,6 +356,7 @@ class Downloader(QObject):
 
     @Slot(str)
     def on_parse_error(self, error_message: str):
+        self._close_session()
         self.task_info.Download.status = DownloadStatus.FAILED
 
         self.update_item(self.task_info)
@@ -373,6 +377,7 @@ class Downloader(QObject):
         self._download_error_triggered = True
         self.task_info.Download.status = DownloadStatus.FAILED
         self._stop_event.set()
+        self._close_session()
         self.speed_timer.stop()
 
         self.update_item(self.task_info)
@@ -537,6 +542,8 @@ class Downloader(QObject):
 
         self.task_info.Download.status = DownloadStatus.PAUSED
         self._stop_event.set()
+
+        self._close_session()
         self.speed_timer.stop()
 
     def resume(self):
@@ -695,7 +702,7 @@ class Downloader(QObject):
         self.task_info.Download.status = DownloadStatus.FFMPEG_QUEUED
 
         self._stop_event.set()
-        self.session.close()
+        self._close_session()
         self.speed_timer.stop()
 
         task_manager.update_async(self.task_info)
@@ -776,11 +783,25 @@ class Downloader(QObject):
             self.on_download_completed()
 
     def on_delete(self):
-        self.session = None
+        self._stop_event.set()
+        self._close_session()
         self.thread_pool = None
         self.task_info = None
         self.download_list = None
         self.deleteLater()
+
+    def _close_session(self):
+        session = self.session
+        self.session = None
+
+        if session is None:
+            return
+
+        try:
+            session.close()
+
+        except Exception:
+            logger.exception("无法关闭 HTTP 会话，可能存在资源泄漏风险")
     
     def update_item(self, task_info: TaskInfo):
         signal_bus.download.update_downloading_item.emit(task_info)

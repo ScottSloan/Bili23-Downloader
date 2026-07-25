@@ -46,7 +46,7 @@ class HistoryEpisodeParser(EpisodeParserBase):
                 "number": self.episode_count,
                 "viewtime": episode["view_at"],
                 "title": self.get_episode_title(episode),
-                "url": "https://www.bilibili.com/video/{bvid}".format(bvid = episode["history"]["bvid"]),
+                "url": self.get_episode_url(episode),
                 "expired": episode["duration"] == 0
             }
 
@@ -74,9 +74,24 @@ class HistoryEpisodeParser(EpisodeParserBase):
         
     def get_episode_title(self, episode_data: dict):
         if episode_data["history"]["business"] == "pgc":
-            return "{} - {}".format(episode_data["title"], episode_data["long_title"])
+            show_title = episode_data.get("show_title", "")
+
+            if show_title:
+                return "{} - {}".format(episode_data["title"], show_title)
+            else:
+                return episode_data["title"]
         else:
             return episode_data["title"]
+
+    def get_episode_url(self, episode_data: dict):
+        uri = episode_data["uri"]
+        bvid = episode_data["history"]["bvid"]
+
+        if uri:
+            return uri
+
+        else:
+            return "https://www.bilibili.com/video/{bvid}".format(bvid = bvid)
         
     def set_episode_attribute(self, episode_data: dict, item: TreeItem):
         match episode_data["history"]["business"]:

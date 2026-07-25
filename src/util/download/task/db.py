@@ -17,6 +17,7 @@ logger = logging.getLogger(__name__)
 class TaskDatabase(Database):
     def __init__(self):
         self.path = Path(appdata_path) / "Bili23 Downloader" / "task.db"
+        self.path.parent.mkdir(parents = True, exist_ok = True)
 
         self.check_and_create_table()
 
@@ -197,7 +198,7 @@ class TaskDatabase(Database):
         completed_records = _task_records(completed_task_list, completed = True)
 
         # 在同一个事务中重建表，避免迁移中途失败后留下空表或半成品表。
-        with sqlite3.connect(self.path) as conn:
+        with sqlite3.connect(self.path, timeout = 10) as conn:
             cursor = conn.cursor()
             cursor.execute("BEGIN")
 

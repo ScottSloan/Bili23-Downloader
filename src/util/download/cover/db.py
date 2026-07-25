@@ -7,6 +7,7 @@ from pathlib import Path
 class CoverDatabase(Database):
     def __init__(self):
         self.path = Path(appdata_path) / "Bili23 Downloader" / "thumbnail.db"
+        self.path.parent.mkdir(parents = True, exist_ok = True)
 
         self.check_and_create_table()
 
