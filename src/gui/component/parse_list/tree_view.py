@@ -4,7 +4,6 @@ from PySide6.QtWidgets import QApplication
 
 from qfluentwidgets import TreeView, RoundMenu, Action, CommandBarView, FluentIcon, setCustomStyleSheet
 
-from .item_delegate import ParseTreeItemDelegate
 from .model import ParseModel
 
 from util.common.icon import ExtendedFluentIcon
@@ -24,7 +23,7 @@ class ParseTreeView(TreeView):
         self.main_window = main_window
 
         self._model = ParseModel(parent = self)
-        self._delegate = ParseTreeItemDelegate(parent = self)
+
         self._expand_timer = QTimer(self)
         self._expand_timer.setSingleShot(True)
         self._expand_timer.timeout.connect(self._expand_next_batch)
@@ -40,7 +39,6 @@ class ParseTreeView(TreeView):
         self._hover_hide_timer.timeout.connect(self._hide_hover_bar_if_outside)
 
         self.setModel(self._model)
-        self.setItemDelegate(self._delegate)
         self.setUniformRowHeights(True)
         self.setSortingEnabled(True)
         self.setSelectionMode(TreeView.SelectionMode.SingleSelection)
@@ -56,13 +54,13 @@ class ParseTreeView(TreeView):
         self.update_alternate_row_color()
 
     def _init_hover_command_bar(self):
-        """Create one reusable command bar for the currently hovered leaf item."""
         self._hover_bar = CommandBarView(self.viewport())
         self._hover_bar.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonIconOnly)
         self._hover_bar.setButtonTight(True)
         self._hover_bar.setIconSize(QSize(14, 14))
         self._hover_bar.setSpaing(2)
         self._hover_bar.hBoxLayout.setContentsMargins(4, 4, 4, 4)
+
         self._hover_bar.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self._hover_bar.setAttribute(Qt.WidgetAttribute.WA_ShowWithoutActivating)
         self._hover_bar.installEventFilter(self)
@@ -104,25 +102,33 @@ class ParseTreeView(TreeView):
         action = Action(icon=icon, text=text, parent=self)
         action.setToolTip(text)
         action.triggered.connect(slot)
+
         return action
 
-    def viewportEvent(self, event):
-        if event.type() == QEvent.Type.MouseMove:
-            self._update_hover_bar(self.indexAt(event.position().toPoint()))
-        elif event.type() == QEvent.Type.Leave:
-            self._schedule_hide_hover_bar()
-        elif event.type() == QEvent.Type.Resize:
-            QTimer.singleShot(0, self._reposition_hover_bar)
+    def viewportEvent(self, event: QEvent):
+        if config.get(config.parse_list_show_floating_command_bar):
+            if event.type() == QEvent.Type.MouseMove:
+
+                self._update_hover_bar(self.indexAt(event.position().toPoint()))
+            elif event.type() == QEvent.Type.Leave:
+
+                self._schedule_hide_hover_bar()
+            elif event.type() == QEvent.Type.Resize:
+
+                QTimer.singleShot(0, self._reposition_hover_bar)
 
         return super().viewportEvent(event)
 
     def eventFilter(self, watched, event):
-        hover_bar = getattr(self, "_hover_bar", None)
-        if hover_bar is not None and watched is hover_bar:
-            if event.type() == QEvent.Type.Enter:
-                self._hover_hide_timer.stop()
-            elif event.type() == QEvent.Type.Leave:
-                self._schedule_hide_hover_bar()
+        if config.get(config.parse_list_show_floating_command_bar):
+            hover_bar = getattr(self, "_hover_bar", None)
+
+            if hover_bar is not None and watched is hover_bar:
+                if event.type() == QEvent.Type.Enter:
+                    self._hover_hide_timer.stop()
+
+                elif event.type() == QEvent.Type.Leave:
+                    self._schedule_hide_hover_bar()
 
         return super().eventFilter(watched, event)
 
@@ -152,24 +158,28 @@ class ParseTreeView(TreeView):
             return
 
         last_column = self._model.columnCount() - 1
+
         cell_index = self._model.index(
             self._hover_index.row(),
             last_column,
             self._hover_index.parent()
         )
         cell_rect = self.visualRect(cell_index)
+
         if not cell_rect.isValid() or not cell_rect.intersects(self.viewport().rect()):
             self._hide_hover_bar()
             return
 
         bar_size = self._hover_bar.sizeHint()
         margin = 4
+
         if self.viewport().width() <= bar_size.width() + margin * 2:
             self._hide_hover_bar()
             return
 
         left = cell_rect.right() - bar_size.width() - margin
         left = max(margin, min(left, self.viewport().width() - bar_size.width() - margin))
+
         top = cell_rect.top() + (cell_rect.height() - bar_size.height()) // 2
         top = max(margin, min(top, self.viewport().height() - bar_size.height() - margin))
 
@@ -194,12 +204,14 @@ class ParseTreeView(TreeView):
         self._hover_hide_timer.stop()
         self._hover_item = None
         self._hover_index = QPersistentModelIndex()
+
         if hasattr(self, "_hover_bar"):
             self._hover_bar.hide()
 
     def _consume_hover_item(self):
         item = self._hover_item
         self._hide_hover_bar()
+
         return item
 
     def _on_hover_parse(self):

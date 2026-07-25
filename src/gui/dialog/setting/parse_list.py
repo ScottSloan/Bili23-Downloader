@@ -27,6 +27,9 @@ class ParseListSettingsDialog(DialogBase):
         alternate_row_color_lab = BodyLabel(self.tr("Enable alternate row colors"), self)
         self.enable_alternate_row_color_switch = SwitchButton(parent = self)
 
+        show_floating_command_bar_lab = BodyLabel(self.tr("Show floating command bar"), self)
+        self.enable_show_floating_command_bar_switch = SwitchButton(parent = self)
+
         self.viewLayout.addWidget(self.caption_lab)
         self.viewLayout.addSpacing(10)
         self.viewLayout.addWidget(column_lab)
@@ -34,6 +37,9 @@ class ParseListSettingsDialog(DialogBase):
         self.viewLayout.addSpacing(10)
         self.viewLayout.addWidget(alternate_row_color_lab)
         self.viewLayout.addWidget(self.enable_alternate_row_color_switch)
+        self.viewLayout.addSpacing(5)
+        self.viewLayout.addWidget(show_floating_command_bar_lab)
+        self.viewLayout.addWidget(self.enable_show_floating_command_bar_switch)
 
         self.widget.setMinimumWidth(400)
 
@@ -50,6 +56,7 @@ class ParseListSettingsDialog(DialogBase):
         self.drag_list.setMinDragRow(1)          # 保持第一列（序号）在最前面，不允许拖动到其他位置
 
         self.enable_alternate_row_color_switch.setChecked(config.get(config.parse_list_alternate_row_color))
+        self.enable_show_floating_command_bar_switch.setChecked(config.get(config.parse_list_show_floating_command_bar))
 
     def accept(self):
         column_list = []
@@ -68,6 +75,7 @@ class ParseListSettingsDialog(DialogBase):
         
         config.set(config.parse_list_column, column_list)
         config.set(config.parse_list_alternate_row_color, self.enable_alternate_row_color_switch.isChecked())
+        config.set(config.parse_list_show_floating_command_bar, self.enable_show_floating_command_bar_switch.isChecked())
 
         signal_bus.parse.update_column_settings.emit()
             
