@@ -1,8 +1,8 @@
 from PySide6.QtCore import Qt, QEvent, QModelIndex, QPersistentModelIndex, QPoint, QTimer, QSize
-from PySide6.QtGui import QCursor
-from PySide6.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication, QGraphicsDropShadowEffect
+from PySide6.QtGui import QColor, QCursor
 
-from qfluentwidgets import TreeView, RoundMenu, Action, CommandBarView, FluentIcon, setCustomStyleSheet
+from qfluentwidgets import TreeView, RoundMenu, Action, CommandBarView, FluentIcon, isDarkTheme, setCustomStyleSheet
 
 from .model import ParseModel
 
@@ -49,6 +49,7 @@ class ParseTreeView(TreeView):
         self.customContextMenuRequested.connect(self.on_context_menu)
         signal_bus.parse.update_column_settings.connect(self._setHeaderWidth)
         self._model.modelReset.connect(self._hide_hover_bar)
+        config.themeChanged.connect(self._update_hover_bar_shadow)
         
         self._setHeaderWidth()
         self.update_alternate_row_color()
@@ -61,6 +62,12 @@ class ParseTreeView(TreeView):
         self._hover_bar.setSpaing(2)
         self._hover_bar.hBoxLayout.setContentsMargins(4, 4, 4, 4)
 
+        self._hover_shadow = QGraphicsDropShadowEffect(self._hover_bar)
+        self._hover_shadow.setBlurRadius(14)
+        self._hover_shadow.setOffset(0, 2)
+        self._hover_bar.setGraphicsEffect(self._hover_shadow)
+        self._update_hover_bar_shadow()
+
         self._hover_bar.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self._hover_bar.setAttribute(Qt.WidgetAttribute.WA_ShowWithoutActivating)
         self._hover_bar.installEventFilter(self)
@@ -70,33 +77,34 @@ class ParseTreeView(TreeView):
             self.tr("Parse this item"),
             self._on_hover_parse
         )
-        self._hover_browser_action = self._create_hover_action(
-            FluentIcon.GLOBE,
-            self.tr("Open in Browser"),
-            self._on_hover_open_in_browser
-        )
         self._hover_download_action = self._create_hover_action(
             FluentIcon.DOWNLOAD,
             self.tr("Download as Single Video"),
             self._on_hover_download
         )
-        self._hover_media_action = self._create_hover_action(
-            ExtendedFluentIcon.RETRY,
-            self.tr("Update Media Info"),
-            self._on_hover_update_media_info
+        # 查看分P视频列表默认禁用，只有在解析收藏夹时，且对应条目为分P视频时才会启用
+        self._hover_part_list_action = self._create_hover_action(
+            ExtendedFluentIcon.LIST,
+            self.tr("View Multi-part Video List"),
+            lambda: None
         )
+        self._hover_part_list_action.setEnabled(False)
 
         self._hover_bar.addActions([
             self._hover_parse_action,
+            self._hover_part_list_action,
             self._hover_download_action,
-        ])
-        self._hover_bar.addHiddenActions([
-            self._hover_browser_action,
-            self._hover_media_action,
         ])
         self._hover_bar.resizeToSuitableWidth()
         self._hover_bar.adjustSize()
         self._hover_bar.hide()
+
+    def _update_hover_bar_shadow(self, *_):
+        if not hasattr(self, "_hover_shadow"):
+            return
+
+        alpha = 100 if isDarkTheme() else 50
+        self._hover_shadow.setColor(QColor(0, 0, 0, alpha))
 
     def _create_hover_action(self, icon, text, slot):
         action = Action(icon=icon, text=text, parent=self)
@@ -108,18 +116,17 @@ class ParseTreeView(TreeView):
     def viewportEvent(self, event: QEvent):
         if config.get(config.parse_list_show_floating_command_bar):
             if event.type() == QEvent.Type.MouseMove:
-
                 self._update_hover_bar(self.indexAt(event.position().toPoint()))
+
             elif event.type() == QEvent.Type.Leave:
-
                 self._schedule_hide_hover_bar()
-            elif event.type() == QEvent.Type.Resize:
 
+            elif event.type() == QEvent.Type.Resize:
                 QTimer.singleShot(0, self._reposition_hover_bar)
 
         return super().viewportEvent(event)
 
-    def eventFilter(self, watched, event):
+    def eventFilter(self, watched, event: QEvent):
         if config.get(config.parse_list_show_floating_command_bar):
             hover_bar = getattr(self, "_hover_bar", None)
 
@@ -140,6 +147,7 @@ class ParseTreeView(TreeView):
             return
 
         item: TreeItem = index.internalPointer()
+
         if item is None or item.count() != 0:
             self._hide_hover_bar()
             return
@@ -152,6 +160,11 @@ class ParseTreeView(TreeView):
         self._hover_item = item
         self._hover_index = QPersistentModelIndex(root_index)
         self._reposition_hover_bar()
+
+        if item.has_attribute(Attribute.FAVORITE_WITH_MULTI_PART_VIDEO_BIT):
+            self._hover_part_list_action.setEnabled(True)
+        else:
+            self._hover_part_list_action.setEnabled(False)
 
     def _reposition_hover_bar(self):
         if self._hover_item is None or not self._hover_index.isValid():

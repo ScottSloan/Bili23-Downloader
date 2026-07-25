@@ -150,14 +150,14 @@ class DownloadListModel(CoverQueryModelBase):
                 self.removeRow(self.getRow(task_info))
 
             case DownloadStatus.DOWNLOADING:
-                downloader_manager.wait(task_info, lambda: task_manager.cancel(task_info))
+                downloader_manager.wait(task_info, lambda: task_manager.cancel_async(task_info))
 
             case DownloadStatus.MERGING | DownloadStatus.CONVERTING:
                 # 合并和转换中的任务不允许取消
                 return
 
             case _:
-                task_manager.cancel(task_info)
+                task_manager.cancel_async(task_info)
 
     def batchStart(self):
         for task in self._task_list:

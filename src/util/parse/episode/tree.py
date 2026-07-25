@@ -25,29 +25,31 @@ class EpisodeData:
         cls.table.clear()
 
 class Attribute(IntFlag):
-    VIDEO_BIT                          = 1 << 0                   # 是否为投稿视频
-    BANGUMI_BIT                        = 1 << 1                   # 是否为剧集
-    CHEESE_BIT                         = 1 << 2                   # 是否为课程
-    WEEKLY_BIT                         = 1 << 3                   # 是否为每周必看
-    COLLECTION_LIST_BIT                = 1 << 4                   # 是否为合集列表
-    SPACE_BIT                          = 1 << 5                   # 是否为个人空间
-    FAVLIST_BIT                        = 1 << 6                   # 是否为收藏夹
+    VIDEO_BIT                                 = 1 << 0                   # 是否为投稿视频
+    BANGUMI_BIT                               = 1 << 1                   # 是否为剧集
+    CHEESE_BIT                                = 1 << 2                   # 是否为课程
+    WEEKLY_BIT                                = 1 << 3                   # 是否为每周必看
+    COLLECTION_LIST_BIT                       = 1 << 4                   # 是否为合集列表
+    SPACE_BIT                                 = 1 << 5                   # 是否为个人空间
+    FAVLIST_BIT                               = 1 << 6                   # 是否为收藏夹
 
-    NEED_PARSE_BIT                     = 1 << 7                   # 是否需要二次解析，如个人空间、收藏夹、合集列表中的视频
+    NEED_PARSE_BIT                            = 1 << 7                   # 是否需要二次解析，如个人空间、收藏夹、合集列表中的视频
 
-    NORMAL_BIT                         = 1 << 8                   # 是否为单个视频（item）
-    PART_BIT                           = 1 << 9                   # 是否为分P（item）
-    COLLECTION_BIT                     = 1 << 10                  # 是否为合集（node）
-    INTERACTIVE_BIT                    = 1 << 11                  # 是否为互动视频（item）
+    NORMAL_BIT                                = 1 << 8                   # 是否为单个视频（item）
+    PART_BIT                                  = 1 << 9                   # 是否为分P（item）
+    COLLECTION_BIT                            = 1 << 10                  # 是否为合集（node）
+    INTERACTIVE_BIT                           = 1 << 11                  # 是否为互动视频（item）
 
-    DOWNLOAD_AS_SINGLE_VIDEO_BIT       = 1 << 12                  # 是否下载为单个视频
+    DOWNLOAD_AS_SINGLE_VIDEO_BIT              = 1 << 12                  # 是否下载为单个视频
 
-    WATCH_LATER_BIT                    = 1 << 13                  # 是否为稍后再看
-    HISTORY_BIT                        = 1 << 14                  # 是否为历史记录
+    WATCH_LATER_BIT                           = 1 << 13                  # 是否为稍后再看
+    HISTORY_BIT                               = 1 << 14                  # 是否为历史记录
 
-    TREE_NODE_BIT                      = 1 << 15                  # 是否为树节点
+    TREE_NODE_BIT                             = 1 << 15                  # 是否为树节点
 
-    AUDIO_BIT                          = 1 << 16                  # 是否为音频
+    AUDIO_BIT                                 = 1 << 16                  # 是否为音频
+
+    FAVORITE_WITH_MULTI_PART_VIDEO_BIT        = 1 << 17                  # 收藏夹中是否包含分P视频
 
 class TreeItemBase:
     def __init__(self):
@@ -230,7 +232,10 @@ class TreeItem(TreeItemBase):
             matches.extend(child.search_items(keyword))
 
         return matches
-    
+
+    def has_attribute(self, flag: int):
+        return (self.attribute & flag) == flag
+
     @property
     def dyn_time(self):
         time_map = {

@@ -36,6 +36,10 @@ class TaskManager:
         self._pending_updates = {}
         self._update_flush_scheduled = False
         self._update_executor = ThreadPoolExecutor(max_workers = 1, thread_name_prefix = "task-db")
+        # Cancellation can involve waiting for pending progress writes and
+        # removing a large number of temporary files. Keep that work off the
+        # GUI thread while preserving ordering between cancellations.
+        self._cancel_executor = ThreadPoolExecutor(max_workers = 1, thread_name_prefix = "task-cancel")
 
         signal_bus.download.create_task.connect(self._create_async)
 
@@ -311,6 +315,18 @@ class TaskManager:
         self.delete(task_info)
         
         self._removeTemporaryFiles(task_info)
+
+    def cancel_async(self, task_info: TaskInfo):
+        signal_bus.download.remove_from_downloading_list.emit(task_info)
+        self._cancel_executor.submit(self._cancel_storage, task_info)
+
+    def _cancel_storage(self, task_info: TaskInfo):
+        try:
+            self.delete(task_info)
+            self._removeTemporaryFiles(task_info)
+            
+        except Exception:
+            logger.exception("取消下载任务失败: %s", task_info.Basic.task_id)
 
     def mark_as_completed(self, task_info: TaskInfo):
         self.delete(task_info)

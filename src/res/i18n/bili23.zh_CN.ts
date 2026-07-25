@@ -3078,71 +3078,74 @@ For example, if you set the video quality priority to 720P &gt; 1080P &gt; 4K, t
 <context>
     <name>ParseTreeView</name>
     <message>
-        <location filename="../../gui/component/parse_list/tree_view.py" line="363"/>
+        <location filename="../../gui/component/parse_list/tree_view.py" line="371"/>
         <source>Check All</source>
         <translation>全选</translation>
     </message>
     <message>
-        <location filename="../../gui/component/parse_list/tree_view.py" line="363"/>
+        <location filename="../../gui/component/parse_list/tree_view.py" line="371"/>
         <source>Uncheck All</source>
         <translation>取消全选</translation>
     </message>
     <message>
-        <location filename="../../gui/component/parse_list/tree_view.py" line="365"/>
+        <location filename="../../gui/component/parse_list/tree_view.py" line="373"/>
         <source>Reverse</source>
         <translation>反选</translation>
     </message>
     <message>
-        <location filename="../../gui/component/parse_list/tree_view.py" line="369"/>
+        <location filename="../../gui/component/parse_list/tree_view.py" line="377"/>
         <source>Check Item</source>
         <translation>勾选</translation>
     </message>
     <message>
-        <location filename="../../gui/component/parse_list/tree_view.py" line="369"/>
+        <location filename="../../gui/component/parse_list/tree_view.py" line="377"/>
         <source>Uncheck Item</source>
         <translation>取消勾选</translation>
     </message>
     <message>
-        <location filename="../../gui/component/parse_list/tree_view.py" line="70"/>
-        <location filename="../../gui/component/parse_list/tree_view.py" line="374"/>
+        <location filename="../../gui/component/parse_list/tree_view.py" line="77"/>
+        <location filename="../../gui/component/parse_list/tree_view.py" line="382"/>
         <source>Parse this item</source>
         <translation>解析此项</translation>
     </message>
     <message>
-        <location filename="../../gui/component/parse_list/tree_view.py" line="75"/>
-        <location filename="../../gui/component/parse_list/tree_view.py" line="375"/>
+        <location filename="../../gui/component/parse_list/tree_view.py" line="383"/>
         <source>Open in Browser</source>
         <translation>在浏览器中打开</translation>
     </message>
     <message>
-        <location filename="../../gui/component/parse_list/tree_view.py" line="80"/>
-        <location filename="../../gui/component/parse_list/tree_view.py" line="376"/>
+        <location filename="../../gui/component/parse_list/tree_view.py" line="82"/>
+        <location filename="../../gui/component/parse_list/tree_view.py" line="384"/>
         <source>Download as Single Video</source>
         <translation>下载为单个视频</translation>
     </message>
     <message>
-        <location filename="../../gui/component/parse_list/tree_view.py" line="381"/>
+        <location filename="../../gui/component/parse_list/tree_view.py" line="389"/>
         <source>View Metadata</source>
         <translation>查看元数据</translation>
     </message>
     <message>
-        <location filename="../../gui/component/parse_list/tree_view.py" line="85"/>
-        <location filename="../../gui/component/parse_list/tree_view.py" line="377"/>
+        <location filename="../../gui/component/parse_list/tree_view.py" line="385"/>
         <source>Update Media Info</source>
         <translation>更新媒体信息</translation>
     </message>
     <message>
-        <location filename="../../gui/component/parse_list/tree_view.py" line="384"/>
+        <location filename="../../gui/component/parse_list/tree_view.py" line="87"/>
+        <source>View Multi-part Video List</source>
+        <translation>查看分P视频列表</translation>
+    </message>
+    <message>
+        <location filename="../../gui/component/parse_list/tree_view.py" line="392"/>
         <source>View Cover</source>
         <translation>查看封面</translation>
     </message>
     <message>
-        <location filename="../../gui/component/parse_list/tree_view.py" line="416"/>
+        <location filename="../../gui/component/parse_list/tree_view.py" line="424"/>
         <source>Metadata</source>
         <translation>元数据</translation>
     </message>
     <message>
-        <location filename="../../gui/component/parse_list/tree_view.py" line="418"/>
+        <location filename="../../gui/component/parse_list/tree_view.py" line="426"/>
         <source>Copy</source>
         <translation>复制</translation>
     </message>

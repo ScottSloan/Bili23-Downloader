@@ -33,12 +33,12 @@ class EpisodeParserBase:
         title = node.title
 
         if not title:
-            attr = node.child(0).attribute
+            child = node.child(0)
 
-            if attr & Attribute.VIDEO_BIT or attr & Attribute.AUDIO_BIT:
+            if child.has_attribute(Attribute.VIDEO_BIT) or child.has_attribute(Attribute.AUDIO_BIT):
                 title = node.child(0).title
 
-            if attr & Attribute.HISTORY_BIT or attr & Attribute.WATCH_LATER_BIT:
+            if child.has_attribute(Attribute.HISTORY_BIT) or child.has_attribute(Attribute.WATCH_LATER_BIT):
                 title = node.number
 
         if config.get(config.auto_select_mode) == AutoSelectMode.MANUAL:
