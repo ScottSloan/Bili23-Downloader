@@ -1,7 +1,8 @@
-from PySide6.QtCore import Qt, QModelIndex, QTimer
+from PySide6.QtCore import Qt, QEvent, QModelIndex, QPersistentModelIndex, QPoint, QTimer, QSize
+from PySide6.QtGui import QCursor
 from PySide6.QtWidgets import QApplication
 
-from qfluentwidgets import TreeView, RoundMenu, Action, FluentIcon, setCustomStyleSheet
+from qfluentwidgets import TreeView, RoundMenu, Action, CommandBarView, FluentIcon, setCustomStyleSheet
 
 from .item_delegate import ParseTreeItemDelegate
 from .model import ParseModel
@@ -31,6 +32,13 @@ class ParseTreeView(TreeView):
         self._expand_callback = None
         self._expand_batch_size = 100
 
+        self._hover_item = None
+        self._hover_index = QPersistentModelIndex()
+        self._hover_hide_timer = QTimer(self)
+        self._hover_hide_timer.setSingleShot(True)
+        self._hover_hide_timer.setInterval(80)
+        self._hover_hide_timer.timeout.connect(self._hide_hover_bar_if_outside)
+
         self.setModel(self._model)
         self.setItemDelegate(self._delegate)
         self.setUniformRowHeights(True)
@@ -38,13 +46,181 @@ class ParseTreeView(TreeView):
         self.setSelectionMode(TreeView.SelectionMode.SingleSelection)
         self.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
 
+        self._init_hover_command_bar()
+
         self.customContextMenuRequested.connect(self.on_context_menu)
         signal_bus.parse.update_column_settings.connect(self._setHeaderWidth)
+        self._model.modelReset.connect(self._hide_hover_bar)
         
         self._setHeaderWidth()
         self.update_alternate_row_color()
 
+    def _init_hover_command_bar(self):
+        """Create one reusable command bar for the currently hovered leaf item."""
+        self._hover_bar = CommandBarView(self.viewport())
+        self._hover_bar.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonIconOnly)
+        self._hover_bar.setButtonTight(True)
+        self._hover_bar.setIconSize(QSize(14, 14))
+        self._hover_bar.setSpaing(2)
+        self._hover_bar.hBoxLayout.setContentsMargins(4, 4, 4, 4)
+        self._hover_bar.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self._hover_bar.setAttribute(Qt.WidgetAttribute.WA_ShowWithoutActivating)
+        self._hover_bar.installEventFilter(self)
+
+        self._hover_parse_action = self._create_hover_action(
+            FluentIcon.SEARCH,
+            self.tr("Parse this item"),
+            self._on_hover_parse
+        )
+        self._hover_browser_action = self._create_hover_action(
+            FluentIcon.GLOBE,
+            self.tr("Open in Browser"),
+            self._on_hover_open_in_browser
+        )
+        self._hover_download_action = self._create_hover_action(
+            FluentIcon.DOWNLOAD,
+            self.tr("Download as Single Video"),
+            self._on_hover_download
+        )
+        self._hover_media_action = self._create_hover_action(
+            ExtendedFluentIcon.RETRY,
+            self.tr("Update Media Info"),
+            self._on_hover_update_media_info
+        )
+
+        self._hover_bar.addActions([
+            self._hover_parse_action,
+            self._hover_download_action,
+        ])
+        self._hover_bar.addHiddenActions([
+            self._hover_browser_action,
+            self._hover_media_action,
+        ])
+        self._hover_bar.resizeToSuitableWidth()
+        self._hover_bar.adjustSize()
+        self._hover_bar.hide()
+
+    def _create_hover_action(self, icon, text, slot):
+        action = Action(icon=icon, text=text, parent=self)
+        action.setToolTip(text)
+        action.triggered.connect(slot)
+        return action
+
+    def viewportEvent(self, event):
+        if event.type() == QEvent.Type.MouseMove:
+            self._update_hover_bar(self.indexAt(event.position().toPoint()))
+        elif event.type() == QEvent.Type.Leave:
+            self._schedule_hide_hover_bar()
+        elif event.type() == QEvent.Type.Resize:
+            QTimer.singleShot(0, self._reposition_hover_bar)
+
+        return super().viewportEvent(event)
+
+    def eventFilter(self, watched, event):
+        hover_bar = getattr(self, "_hover_bar", None)
+        if hover_bar is not None and watched is hover_bar:
+            if event.type() == QEvent.Type.Enter:
+                self._hover_hide_timer.stop()
+            elif event.type() == QEvent.Type.Leave:
+                self._schedule_hide_hover_bar()
+
+        return super().eventFilter(watched, event)
+
+    def _update_hover_bar(self, index: QModelIndex):
+        self._hover_hide_timer.stop()
+
+        if not index.isValid():
+            self._hide_hover_bar()
+            return
+
+        item: TreeItem = index.internalPointer()
+        if item is None or item.count() != 0:
+            self._hide_hover_bar()
+            return
+
+        root_index = index.siblingAtColumn(0)
+        if not root_index.isValid() or self._model.columnCount() == 0:
+            self._hide_hover_bar()
+            return
+
+        self._hover_item = item
+        self._hover_index = QPersistentModelIndex(root_index)
+        self._reposition_hover_bar()
+
+    def _reposition_hover_bar(self):
+        if self._hover_item is None or not self._hover_index.isValid():
+            return
+
+        last_column = self._model.columnCount() - 1
+        cell_index = self._model.index(
+            self._hover_index.row(),
+            last_column,
+            self._hover_index.parent()
+        )
+        cell_rect = self.visualRect(cell_index)
+        if not cell_rect.isValid() or not cell_rect.intersects(self.viewport().rect()):
+            self._hide_hover_bar()
+            return
+
+        bar_size = self._hover_bar.sizeHint()
+        margin = 4
+        if self.viewport().width() <= bar_size.width() + margin * 2:
+            self._hide_hover_bar()
+            return
+
+        left = cell_rect.right() - bar_size.width() - margin
+        left = max(margin, min(left, self.viewport().width() - bar_size.width() - margin))
+        top = cell_rect.top() + (cell_rect.height() - bar_size.height()) // 2
+        top = max(margin, min(top, self.viewport().height() - bar_size.height() - margin))
+
+        self._hover_bar.resize(bar_size)
+        self._hover_bar.move(QPoint(left, top))
+        self._hover_bar.raise_()
+        self._hover_bar.show()
+
+    def _schedule_hide_hover_bar(self):
+        if self._hover_bar.isVisible():
+            self._hover_hide_timer.start()
+
+    def _hide_hover_bar_if_outside(self):
+        cursor_pos = QCursor.pos()
+        in_viewport = self.viewport().rect().contains(self.viewport().mapFromGlobal(cursor_pos))
+        in_bar = self._hover_bar.rect().contains(self._hover_bar.mapFromGlobal(cursor_pos))
+
+        if not in_viewport and not in_bar:
+            self._hide_hover_bar()
+
+    def _hide_hover_bar(self):
+        self._hover_hide_timer.stop()
+        self._hover_item = None
+        self._hover_index = QPersistentModelIndex()
+        if hasattr(self, "_hover_bar"):
+            self._hover_bar.hide()
+
+    def _consume_hover_item(self):
+        item = self._hover_item
+        self._hide_hover_bar()
+        return item
+
+    def _on_hover_parse(self):
+        if item := self._consume_hover_item():
+            self.on_parse_item(item)
+
+    def _on_hover_open_in_browser(self):
+        if item := self._consume_hover_item():
+            self.on_open_in_browser(item)
+
+    def _on_hover_download(self):
+        if item := self._consume_hover_item():
+            self.on_download_as_single_video(item)
+
+    def _on_hover_update_media_info(self):
+        if item := self._consume_hover_item():
+            self.on_update_media_info(item.to_dict())
+
     def _setHeaderWidth(self):
+        self._hide_hover_bar()
+
         for index, entry in enumerate(config.get(config.parse_list_column)):
             self.setColumnWidth(index, entry["width"])
 
@@ -53,6 +229,18 @@ class ParseTreeView(TreeView):
 
         header = self.header()
         header.setStretchLastSection(False)
+
+    def scrollContentsBy(self, dx, dy):
+        super().scrollContentsBy(dx, dy)
+
+        if self._hover_item is not None:
+            self._hide_hover_bar()
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+
+        if self._hover_item is not None:
+            QTimer.singleShot(0, self._reposition_hover_bar)
 
     def update_tree(self, root_node: TreeItem, current_episode_data: tuple = None):
         self._model.beginResetModel()
