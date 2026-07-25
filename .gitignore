@@ -18,6 +18,7 @@ uv.toml
 
 # 其他文件
 .DS_Store
+/demo
 /test
 /json
 /bundle

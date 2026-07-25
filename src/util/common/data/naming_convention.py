@@ -396,6 +396,12 @@ class VariableListFactory:
     def _favorite_variable(self):
         return [
             {
+                "name": "parent_title",
+                "variable": "{parent_title}",
+                "description": "PARENT_TITLE_FOR_FAVORITE",
+                "example": "【KEY社20周年音乐专辑】Key BEST SELECTION"
+            },
+            {
                 "name": "favorites_name",
                 "variable": "{favorites_name}",
                 "description": "FAVORITES_NAME",
