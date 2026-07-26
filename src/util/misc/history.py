@@ -7,6 +7,8 @@ from uuid import uuid4
 
 class HistoryDatabase(Database):
     def __init__(self):
+        super().__init__()
+
         self.path = Path(appdata_path) / "Bili23 Downloader" / "history.db"
 
         self.max_length = 100
@@ -35,23 +37,24 @@ class HistoryDatabase(Database):
     def add(self, title: str, url: str, type: str):
         history_id = str(uuid4())
 
-        # 1. 删除已存在的相同 URL 的记录（如果有的话）
-        self.execute("""
-            DELETE FROM history WHERE url = ?
-        """, (url,))
+        # 三条语句合并到单个事务中提交，避免三次独立的写入开销
+        self.execute_batch([
+            # 1. 删除已存在的相同 URL 的记录（如果有的话）
+            ("DELETE FROM history WHERE url = ?", (url,)),
 
-        # 2.插入新记录
-        self.execute("""
-            INSERT INTO history (history_id, title, url, type, created_time) VALUES (?, ?, ?, ?, ?)
-        """, (history_id, title, url, type, get_timestamp()))
+            # 2.插入新记录
+            ("""
+                INSERT INTO history (history_id, title, url, type, created_time) VALUES (?, ?, ?, ?, ?)
+            """, (history_id, title, url, type, get_timestamp())),
 
-        # 3.保留最新的 max_length 条记录，删除更旧的数据
-        self.execute("""
-            DELETE FROM history 
-            WHERE id NOT IN (
-                SELECT id FROM history ORDER BY created_time DESC LIMIT ?
-            )
-        """, (self.max_length,))
+            # 3.保留最新的 max_length 条记录，删除更旧的数据
+            ("""
+                DELETE FROM history
+                WHERE id NOT IN (
+                    SELECT id FROM history ORDER BY created_time DESC LIMIT ?
+                )
+            """, (self.max_length,))
+        ])
 
     def delete(self, history_id: str):
         self.execute("""

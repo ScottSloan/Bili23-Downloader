@@ -425,16 +425,20 @@ class MainWindow(MainWindowBase, MSFluentWindow):
         self.run_post_terms_checks()
 
     def closeEvent(self, e):
+        from util.download.task.manager import task_manager
         from util.thread.async_ import AsyncTask
 
         if not self.on_close():
             e.ignore()
             return
-        
+
         # 隐藏窗口，给用户反馈正在关闭的状态，避免长时间无响应的感觉
         self.hide()
-        
+
         AsyncTask.safe_quit()
+
+        # 任务状态是异步写入的，退出前等待队列中的写入落盘
+        task_manager.shutdown()
 
         if self.theme_listener.isRunning():
             self.theme_listener.quit()

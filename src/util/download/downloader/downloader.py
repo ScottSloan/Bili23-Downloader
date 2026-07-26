@@ -12,7 +12,7 @@ from ...common.io.file import File
 
 from ...parse.additional.worker import AdditionalParseWorker
 from ...thread.pool import GlobalThreadPoolTask
-from ...network.request import get_cookies, get_mounts
+from ...network.request import get_cookies, get_mounts, get_ssl_context
 from ...network.proxy import Proxy
 from ...thread.async_ import AsyncTask
 
@@ -22,7 +22,7 @@ from ..task.info import TaskInfo
 from .parse_worker import ParseWorker
 from .merger import Merger
 
-from threading import Event, Lock
+from threading import Event, Lock, Thread
 from pathlib import Path
 import logging
 import errno
@@ -180,10 +180,22 @@ class ChunkWorker(QRunnable):
         self.stop_event.set()
         self._invoke_download_error(message)
 
+    def _interruptible_sleep(self, seconds: float):
+        # 分段休眠，保证暂停、取消能够及时生效，而不必等满整个退避时间
+        while seconds > 0:
+            if self.stop_event.is_set() or not self.parent.is_generation_active(self.generation):
+                return
+
+            interval = min(0.1, seconds)
+
+            time.sleep(interval)
+
+            seconds -= interval
+
     def run(self):
         if self.stop_event.is_set() or not self.parent.is_generation_active(self.generation):
             return
-        
+
         if self.on_chunk_start:
             self.on_chunk_start()
 
@@ -269,7 +281,7 @@ class ChunkWorker(QRunnable):
                     self._report_download_failure(exc, attempt, retryable)
                     break
 
-                time.sleep(min(2 ** (attempt - 1), 8))
+                self._interruptible_sleep(min(2 ** (attempt - 1), 8))
 
 class Downloader(QObject):
     def __init__(self, task_info: TaskInfo):
@@ -651,8 +663,11 @@ class Downloader(QObject):
             task_manager._update_media_info(self.task_info)
 
     def init_session(self):
+        # SSL 上下文全局复用，避免每次创建 Client 时重新加载 CA 证书（约 170ms，且发生在 GUI 线程）
+        ssl_context = get_ssl_context()
+
         limits = httpx.Limits(max_keepalive_connections = config.get(config.download_thread), max_connections = config.get(config.download_thread))
-        transport = httpx.HTTPTransport(retries = 5)
+        transport = httpx.HTTPTransport(retries = 5, verify = ssl_context)
         mounts = get_mounts(Proxy().get_proxies())
 
         headers = {
@@ -664,7 +679,8 @@ class Downloader(QObject):
             limits = limits,
             transport = transport,
             mounts = mounts,
-            headers = headers
+            headers = headers,
+            verify = ssl_context
         )
 
         cookies = get_cookies()
@@ -784,11 +800,42 @@ class Downloader(QObject):
 
     def on_delete(self):
         self._stop_event.set()
+
+        # 提升代次，令仍在运行的分片线程尽快退出，并且不再回调本对象
+        with self.start_worker_lock:
+            self.download_generation += 1
+            self.start_worker_requested = False
+
         self._close_session()
-        self.thread_pool = None
+        self.speed_timer.stop()
+
+        self._release_thread_pool()
+
         self.task_info = None
         self.download_list = None
         self.deleteLater()
+
+    def _release_thread_pool(self):
+        # QThreadPool 析构时会调用 waitForDone()。若在 GUI 线程上释放引用，
+        # 界面会一直卡到所有分片线程退出为止（实测可达数秒），因此改到后台线程释放。
+        pool = self.thread_pool
+        self.thread_pool = None
+
+        if pool is None:
+            return
+
+        # 丢弃尚未开始的分片任务，只需等待已在运行的部分
+        pool.clear()
+
+        def release():
+            try:
+                pool.waitForDone()
+
+            except Exception:
+                logger.exception("等待下载线程池退出时发生异常")
+
+        thread = Thread(target = release, name = "downloader-pool-release", daemon = True)
+        thread.start()
 
     def _close_session(self):
         session = self.session

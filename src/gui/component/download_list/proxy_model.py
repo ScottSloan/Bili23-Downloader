@@ -198,6 +198,12 @@ class DownloadListProxyModel(QSortFilterProxyModel):
 
         return source.removeRow(source_row)
 
+    def removeTasks(self, task_info_list: list[TaskInfo]):
+        source = self._source()
+
+        if source:
+            source.removeTasks(task_info_list)
+
     def togglePauseResume(self, task_info: TaskInfo):
         source = self._source()
 

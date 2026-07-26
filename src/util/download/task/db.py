@@ -10,12 +10,13 @@ from pathlib import Path
 from typing import List
 import hashlib
 import logging
-import sqlite3
 
 logger = logging.getLogger(__name__)
 
 class TaskDatabase(Database):
     def __init__(self):
+        super().__init__()
+
         self.path = Path(appdata_path) / "Bili23 Downloader" / "task.db"
         self.path.parent.mkdir(parents = True, exist_ok = True)
 
@@ -90,24 +91,25 @@ class TaskDatabase(Database):
 
         return result
 
+    def build_record(self, task_info: TaskInfo, completed: bool = False) -> tuple:
+        # 组装一条待写入的记录。调用方可在自己的线程上预先组装，避免写线程读到中途被改写的 task_info
+        timestamp = task_info.Basic.completed_time if completed else task_info.Basic.created_time
+
+        if not timestamp:
+            timestamp = get_timestamp()
+
+        return (
+            task_info.Basic.task_id,                                    # task_id
+            self._calc_hash_id(task_info),                              # hash_id
+            task_info.Basic.cover_id,                                   # cover_id
+            task_info.Basic.show_title,                                 # title
+            timestamp,                                                  # created_time or completed_time
+            json_dumps(task_info.to_dict())                             # data
+        )
+
     def add_tasks(self, task_info_list: List[TaskInfo], completed: bool = False):
         # 通过 completed 参数来区分是插入到 download_task 还是 completed_task 表
-        info_list = []
-
-        for task_info in task_info_list:
-            timestamp = task_info.Basic.completed_time if completed else task_info.Basic.created_time
-
-            if not timestamp:
-                timestamp = get_timestamp()
-
-            info_list.append((
-                task_info.Basic.task_id,                                    # task_id
-                self._calc_hash_id(task_info),                              # hash_id
-                task_info.Basic.cover_id,                                   # cover_id
-                task_info.Basic.show_title,                                 # title
-                timestamp,                                                  # created_time or completed_time
-                json_dumps(task_info.to_dict())                             # data
-            ))
+        info_list = [self.build_record(task_info, completed) for task_info in task_info_list]
 
         if completed:
             self.executemany("""
@@ -130,26 +132,61 @@ class TaskDatabase(Database):
             UPDATE download_task SET data = ? WHERE task_id = ?
         """, (data, task_id))
 
+    def update_task_json_many(self, updates: List[tuple]):
+        # updates 中每一项为 (task_id, data)，在单个事务中一次性提交
+        if not updates:
+            return
+
+        self.executemany("""
+            UPDATE download_task SET data = ? WHERE task_id = ?
+        """, [(data, task_id) for task_id, data in updates])
+
     def delete_task(self, task_id: str, completed: bool = False):
-        if completed:
-            self.execute("""
-                DELETE FROM completed_task WHERE task_id = ?
-            """, (task_id,))
-        else:
-            self.execute("""
-                DELETE FROM download_task WHERE task_id = ?
-            """, (task_id,))
+        self.delete_tasks([task_id], completed)
+
+    def delete_tasks(self, task_id_list: List[str], completed: bool = False):
+        # 批量删除，避免逐条提交事务
+        if not task_id_list:
+            return
+
+        table = "completed_task" if completed else "download_task"
+
+        # SQLITE_MAX_VARIABLE_NUMBER 默认下限为 999，分批处理以保证安全
+        for index in range(0, len(task_id_list), 500):
+            batch = task_id_list[index:index + 500]
+            placeholders = ", ".join("?" * len(batch))
+
+            self.execute(f"DELETE FROM {table} WHERE task_id IN ({placeholders})", tuple(batch))
+
+    def move_to_completed(self, record: tuple):
+        # 从下载中表移出并写入已完成表，两步在同一事务内完成，避免中途失败导致任务丢失
+        self.execute_batch([
+            ("DELETE FROM download_task WHERE task_id = ?", (record[0],)),
+            ("""
+                INSERT OR REPLACE INTO completed_task (task_id, hash_id, cover_id, title, completed_time, data)
+                VALUES (?, ?, ?, ?, ?, ?)
+            """, record)
+        ])
+
+    def recreate_task(self, record: tuple):
+        # 从已完成表移回下载中表，同样在单个事务内完成
+        self.execute_batch([
+            ("DELETE FROM completed_task WHERE task_id = ?", (record[0],)),
+            ("""
+                INSERT OR REPLACE INTO download_task (task_id, hash_id, cover_id, title, created_time, data)
+                VALUES (?, ?, ?, ?, ?, ?)
+            """, record)
+        ])
 
     def check_duplicate(self, hash_id: str):
-        completed_result = self.query("""
-            SELECT title FROM completed_task WHERE hash_id = ?
-        """, (hash_id,))
-    
-        download_result = self.query("""
-            SELECT title FROM download_task WHERE hash_id = ?
-        """, (hash_id,))
+        # 合并为一次查询，避免两次独立的数据库往返
+        result = self.query("""
+            SELECT
+                EXISTS(SELECT 1 FROM completed_task WHERE hash_id = ?)
+                OR EXISTS(SELECT 1 FROM download_task WHERE hash_id = ?)
+        """, (hash_id, hash_id))
 
-        return len(completed_result) > 0 or len(download_result) > 0
+        return bool(result and result[0][0])
 
     def _upgrade(self):
         def _to_task_list(result):
@@ -198,7 +235,9 @@ class TaskDatabase(Database):
         completed_records = _task_records(completed_task_list, completed = True)
 
         # 在同一个事务中重建表，避免迁移中途失败后留下空表或半成品表。
-        with sqlite3.connect(self.path, timeout = 10) as conn:
+        conn = self.get_connection()
+
+        with conn:
             cursor = conn.cursor()
             cursor.execute("BEGIN")
 
@@ -276,6 +315,17 @@ class TaskDatabase(Database):
             # 音乐类
             metadata = {
                 "sid": task_info.Episode.sid
+            }
+
+        else:
+            # 属性缺失或未知时同样要给出可区分的 hash，否则会抛出异常中断数据库迁移
+            metadata = {
+                "aid": task_info.Episode.aid,
+                "bvid": task_info.Episode.bvid,
+                "cid": task_info.Episode.cid,
+                "ep_id": task_info.Episode.ep_id,
+                "sid": task_info.Episode.sid,
+                "task_id": task_info.Basic.task_id
             }
 
         return hashlib.md5(json_dumps(metadata).encode("utf-8")).hexdigest()

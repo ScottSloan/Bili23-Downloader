@@ -23,6 +23,8 @@ class DownloadListModel(CoverQueryModelBase):
         self._sort_by_key = None
         self._ascending = True
         self._row_by_task_id: dict[str, int] = {}
+        self._managing_concurrent = False
+        self._managing_merges = False
 
         self._rebuild_row_index()
 
@@ -108,8 +110,27 @@ class DownloadListModel(CoverQueryModelBase):
             self._rebuild_row_index()
 
             return True
-        
+
         return False
+
+    def removeTasks(self, task_info_list: List[TaskInfo]):
+        # 批量移除。逐行调用 removeRow 时每次都要重建行索引，整体为 O(n²)，
+        # 此处一次性过滤并重建，整体为 O(n)。
+        task_id_set = {self._get_task_id(task_info) for task_info in task_info_list}
+
+        if not task_id_set:
+            return
+
+        self.beginResetModel()
+
+        self._task_list[:] = [
+            task_info for task_info in self._task_list
+            if self._get_task_id(task_info) not in task_id_set
+        ]
+
+        self.endResetModel()
+
+        self._rebuild_row_index()
 
     def togglePauseResume(self, task_info: TaskInfo):
         # 在暂停与继续之间切换
@@ -145,6 +166,7 @@ class DownloadListModel(CoverQueryModelBase):
     def cancelDownload(self, task_info: TaskInfo):
         match task_info.Download.status:
             case DownloadStatus.COMPLETED:
+                # 数据库删除交由写线程处理，界面立即移除该行
                 task_manager.delete(task_info, completed = True)
 
                 self.removeRow(self.getRow(task_info))
@@ -181,39 +203,111 @@ class DownloadListModel(CoverQueryModelBase):
                 self.onUpdateData(task)
 
     def batch_cancel(self):
+        # 已完成的任务走批量路径：一次数据库删除 + 一次界面刷新。
+        # 逐条处理时每条都要独立提交事务并重建行索引，任务较多时会长时间卡住界面。
+        completed_tasks = []
+        remaining_tasks = []
+
         for task in list(self._task_list):
-            if task.Download.status not in [DownloadStatus.MERGING, DownloadStatus.CONVERTING]:
-                # 只有非合并中的任务才允许取消
-                self.cancelDownload(task)
+            match task.Download.status:
+                case DownloadStatus.MERGING | DownloadStatus.CONVERTING:
+                    # 只有非合并中的任务才允许取消
+                    continue
+
+                case DownloadStatus.COMPLETED:
+                    completed_tasks.append(task)
+
+                case _:
+                    remaining_tasks.append(task)
+
+        if completed_tasks:
+            task_manager.delete_many(completed_tasks, completed = True)
+
+            self.removeTasks(completed_tasks)
+
+        for task in remaining_tasks:
+            self.cancelDownload(task)
 
     def manageConcurrentDownloads(self):
-        # 自动调度同时下载的任务数量
+        # 启动任务时可能同步走完整个流程并反过来再次触发调度。
+        # 单次扫描的实现依赖本地计数，需要屏蔽重入，避免超出并发上限。
+        # 被跳过的那次调度由 auto_manage_concurrent_downloads 信号在事件循环中补上。
+        if self._managing_concurrent:
+            return
 
-        while True:
-            downloads = [item for item in self._task_list if item.Download.status in [DownloadStatus.DOWNLOADING, DownloadStatus.PARSING]]
-            queued = [item for item in self._task_list if item.Download.status == DownloadStatus.QUEUED]
+        self._managing_concurrent = True
 
-            if len(downloads) >= config.get(config.download_parallel) or not queued:
+        try:
+            self._manageConcurrentDownloads()
+
+        finally:
+            self._managing_concurrent = False
+
+    def _manageConcurrentDownloads(self):
+        # 自动调度同时下载的任务数量。
+        # 原实现每启动一个任务就重新扫描一遍列表，整体为 O(n²)，此处改为单次扫描后按需启动。
+        limit = config.get(config.download_parallel)
+
+        active_count = 0
+        queued_tasks = []
+
+        for item in self._task_list:
+            match item.Download.status:
+                case DownloadStatus.DOWNLOADING | DownloadStatus.PARSING:
+                    active_count += 1
+
+                case DownloadStatus.QUEUED:
+                    queued_tasks.append(item)
+
+        for task in queued_tasks:
+            if active_count >= limit:
                 break
 
-            next_task = queued.pop(0)
-            self.togglePauseResume(next_task)
-        
+            self.togglePauseResume(task)
+
+            # 启动后任务可能直接跳到合并阶段，此时不占用下载并发额度
+            if task.Download.status in [DownloadStatus.DOWNLOADING, DownloadStatus.PARSING]:
+                active_count += 1
+
         self.manageConcurrentMerges()
 
     def manageConcurrentMerges(self):
+        # 与下载调度同理，屏蔽重入
+        if self._managing_merges:
+            return
+
+        self._managing_merges = True
+
+        try:
+            self._manageConcurrentMerges()
+
+        finally:
+            self._managing_merges = False
+
+    def _manageConcurrentMerges(self):
         # 自动调度同时合并的任务数量
         # 为避免多个合并任务同时进行导致高频资源占用，每次只允许一个合并任务进行，其他等待合并的任务都处于等待合并状态，由 manage_concurrent_merges 统一调度
 
-        while True:
-            merging = [item for item in self._task_list if item.Download.status in [DownloadStatus.MERGING, DownloadStatus.CONVERTING]]
-            merge_queued = [item for item in self._task_list if item.Download.status == DownloadStatus.FFMPEG_QUEUED]
+        merging_count = 0
+        merge_queued_tasks = []
 
-            if len(merging) >= 1 or not merge_queued:
+        for item in self._task_list:
+            match item.Download.status:
+                case DownloadStatus.MERGING | DownloadStatus.CONVERTING:
+                    merging_count += 1
+
+                case DownloadStatus.FFMPEG_QUEUED:
+                    merge_queued_tasks.append(item)
+
+        for task in merge_queued_tasks:
+            if merging_count >= 1:
                 break
 
-            next_task = merge_queued.pop(0)
-            self.togglePauseResume(next_task)
+            self.togglePauseResume(task)
+
+            # 无需调用 ffmpeg 的任务会同步完成，不占用合并额度
+            if task.Download.status in [DownloadStatus.MERGING, DownloadStatus.CONVERTING]:
+                merging_count += 1
 
     def connectUpdateDataSignal(self):
         signal_bus.download.update_downloading_item.connect(self.onUpdateData)
