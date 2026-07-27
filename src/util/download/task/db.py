@@ -10,7 +10,6 @@ from pathlib import Path
 from typing import List
 import hashlib
 import logging
-import sqlite3
 
 logger = logging.getLogger(__name__)
 
@@ -197,7 +196,7 @@ class TaskDatabase(Database):
         completed_records = _task_records(completed_task_list, completed = True)
 
         # 在同一个事务中重建表，避免迁移中途失败后留下空表或半成品表。
-        with sqlite3.connect(self.path) as conn:
+        with self._connection() as conn:
             cursor = conn.cursor()
             cursor.execute("BEGIN")
 
