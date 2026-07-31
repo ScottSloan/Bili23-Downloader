@@ -309,6 +309,12 @@ class ParseBase(QFrame):
 
             self.start_progress_parse_worker(dialog.payload)
 
+    def on_show_multi_part_lists_dialog(self: "ParseInterface", item: dict):
+        from ..dialog.misc.multi_part_lists import MultiPartListsDialog
+
+        dialog = MultiPartListsDialog(item, self.main_window)
+        dialog.exec()
+
 class ParseInterface(ParseBase):
     def __init__(self, parent = None):
         super().__init__(parent = parent)

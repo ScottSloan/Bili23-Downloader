@@ -86,7 +86,7 @@ class ParseTreeView(TreeView):
         self._hover_part_list_action = self._create_hover_action(
             ExtendedFluentIcon.LIST,
             self.tr("View Multi-part Video List"),
-            lambda: None
+            self._on_hover_view_part_list
         )
         self._hover_part_list_action.setEnabled(False)
 
@@ -231,17 +231,13 @@ class ParseTreeView(TreeView):
         if item := self._consume_hover_item():
             self.on_parse_item(item)
 
-    def _on_hover_open_in_browser(self):
+    def _on_hover_view_part_list(self):
         if item := self._consume_hover_item():
-            self.on_open_in_browser(item)
+            self.main_window.parse_interface.on_show_multi_part_lists_dialog(item.to_dict())
 
     def _on_hover_download(self):
         if item := self._consume_hover_item():
             self.on_download_as_single_video(item)
-
-    def _on_hover_update_media_info(self):
-        if item := self._consume_hover_item():
-            self.on_update_media_info(item.to_dict())
 
     def _setHeaderWidth(self):
         self._hide_hover_bar()
