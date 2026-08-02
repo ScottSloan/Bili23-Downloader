@@ -2624,29 +2624,39 @@ To get a single complete video file, please enable &quot;Merge video and audio&q
 <context>
     <name>MultiPartListsDialog</name>
     <message>
-        <location filename="../../gui/dialog/misc/multi_part_lists.py" line="17"/>
+        <location filename="../../gui/dialog/misc/multi_part_lists.py" line="59"/>
         <source>Multi-part video list</source>
         <translation>分P影片列表</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/multi_part_lists.py" line="27"/>
+        <location filename="../../gui/dialog/misc/multi_part_lists.py" line="73"/>
         <source>Download Selected Items</source>
         <translation>下載所選項目</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/multi_part_lists.py" line="30"/>
+        <location filename="../../gui/dialog/misc/multi_part_lists.py" line="76"/>
         <source>No.</source>
         <translation>序號</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/multi_part_lists.py" line="30"/>
+        <location filename="../../gui/dialog/misc/multi_part_lists.py" line="76"/>
         <source>Title</source>
         <translation>標題</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/multi_part_lists.py" line="30"/>
+        <location filename="../../gui/dialog/misc/multi_part_lists.py" line="76"/>
         <source>Duration</source>
         <translation>時長</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialog/misc/multi_part_lists.py" line="98"/>
+        <source>{selected_count} selected, {total_count} total</source>
+        <translation>已選取 {selected_count} 項，共 {total_count} 項</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialog/misc/multi_part_lists.py" line="100"/>
+        <source>{total_count} total</source>
+        <translation>共 {total_count} 項</translation>
     </message>
 </context>
 <context>

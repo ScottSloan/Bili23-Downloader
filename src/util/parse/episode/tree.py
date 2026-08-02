@@ -99,7 +99,7 @@ class TreeItemBase:
 
     def _propagate_up(self):
         states = [child.checked for child in self.children]
-        
+
         if all(s == Qt.CheckState.Checked for s in states):
             new_state = Qt.CheckState.Checked
 
@@ -114,6 +114,43 @@ class TreeItemBase:
 
             if self.parent:
                 self.parent._propagate_up()
+
+    def refresh_check_state(self):
+        """
+        自底向上重算整棵子树的勾选状态，叶子节点的状态视为已确定
+
+        用于批量改动（如 Shift 范围勾选）后一次性同步父节点状态，
+        避免逐项调用 set_checked_state 触发 O(项数 × 深度) 次向上传递
+        """
+        if not self.children:
+            return self.checked
+
+        states = [child.refresh_check_state() for child in self.children]
+
+        if all(s == Qt.CheckState.Checked for s in states):
+            self.checked = Qt.CheckState.Checked
+
+        elif all(s == Qt.CheckState.Unchecked for s in states):
+            self.checked = Qt.CheckState.Unchecked
+
+        else:
+            self.checked = Qt.CheckState.PartiallyChecked
+
+        return self.checked
+
+    def get_all_leaves(self):
+        """
+        递归返回所有叶子节点（无子节点的项）
+        """
+        if not self.children:
+            return [self]
+
+        leaves: List[TreeItem] = []
+
+        for child in self.children:
+            leaves.extend(child.get_all_leaves())
+
+        return leaves
 
     def get_all_checked_children(self, to_dict = False, mark_as_downloaded = False):
         checked_items: List[TreeItem] = []

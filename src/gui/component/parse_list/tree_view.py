@@ -31,6 +31,11 @@ class ParseTreeView(TreeView):
         self._expand_callback = None
         self._expand_batch_size = 100
 
+        # Shift 范围勾选：锚点为上一次手动点击复选框的项，按对象保存以免排序后失效
+        self._check_anchor: TreeItem = None
+        # 本次 Shift 会话中被改动过的叶子节点及其原始状态，用于回拖缩小范围时还原
+        self._shift_snapshot: dict[TreeItem, Qt.CheckState] = {}
+
         self._hover_item = None
         self._hover_index = QPersistentModelIndex()
         self._hover_hide_timer = QTimer(self)
@@ -49,10 +54,116 @@ class ParseTreeView(TreeView):
         self.customContextMenuRequested.connect(self.on_context_menu)
         signal_bus.parse.update_column_settings.connect(self._setHeaderWidth)
         self._model.modelReset.connect(self._hide_hover_bar)
+        self._model.modelReset.connect(self._reset_check_anchor)
+        # 排序、搜索后旧的范围不再成立，但锚点项本身仍然有效
+        self._model.layoutChanged.connect(self._reset_shift_snapshot)
+        self._model.check_state_changed.connect(self._on_check_state_changed)
         config.themeChanged.connect(self._update_hover_bar_shadow)
         
         self._setHeaderWidth()
         self.update_alternate_row_color()
+
+    def _reset_check_anchor(self):
+        self._check_anchor = None
+        self._shift_snapshot.clear()
+
+    def _reset_shift_snapshot(self, *_):
+        self._shift_snapshot.clear()
+
+    def _on_check_state_changed(self, index: QModelIndex):
+        # index 有效表示用户手动点击了某一项的复选框，将其记为新的锚点并结束上一次 Shift 会话
+        if index is not None and index.isValid():
+            self._check_anchor = index.internalPointer()
+            self._shift_snapshot.clear()
+
+        # 勾选状态在数据层变更后，重绘可视区域即可，无需逐项发送 dataChanged
+        self.viewport().update()
+
+    def _is_index_visible(self, index: QModelIndex):
+        """判断该项是否真的显示在列表中（所有祖先节点均已展开）"""
+        parent = index.parent()
+
+        while parent.isValid():
+            if not self.isExpanded(parent):
+                return False
+
+            parent = parent.parent()
+
+        return True
+
+    def _visible_range(self, from_index: QModelIndex, to_index: QModelIndex):
+        """按列表可见顺序返回两个索引之间的所有项（含两端），折叠节点内的子项会被自动跳过"""
+        def walk_down(start: QModelIndex, target: QModelIndex):
+            visited = []
+            index = start
+
+            while index.isValid():
+                visited.append(index)
+
+                if index == target:
+                    return visited
+
+                index = self.indexBelow(index)
+
+            return None
+
+        # 先假设 from 在上方，走不到再反过来
+        return walk_down(from_index, to_index) or walk_down(to_index, from_index) or []
+
+    def _apply_shift_range(self, target_index: QModelIndex):
+        """以锚点的勾选状态填充锚点到目标项之间的范围，返回是否已处理"""
+        anchor = self._check_anchor
+
+        if anchor is None:
+            return False
+
+        anchor_index = self._model.get_index_for_item(anchor)
+
+        if not anchor_index.isValid() or not self._is_index_visible(anchor_index):
+            return False
+
+        # 范围统一采用锚点的状态；锚点为半选时按勾选处理
+        state = Qt.CheckState.Checked if anchor.checked == Qt.CheckState.PartiallyChecked else anchor.checked
+
+        indexes = self._visible_range(anchor_index, target_index)
+
+        if not indexes:
+            return False
+
+        # 展开到叶子节点，否则还原一个半选的父节点无法恢复其子项明细
+        leaves = set()
+
+        for index in indexes:
+            item: TreeItem = index.internalPointer()
+
+            # 已展开的父节点跳过，其状态由落在范围内的子项推导得出，
+            # 否则范围末端停在组内某一项时，该组后面的项也会被一并选中
+            if item.children and self.isExpanded(index):
+                continue
+
+            # 折叠的节点在列表中只占一行，选中它即代表选中其全部子项
+            leaves.update(item.get_all_leaves())
+
+        # 还原本次会话中已移出范围的项
+        for moved_out in [item for item in self._shift_snapshot if item not in leaves]:
+            moved_out.checked = self._shift_snapshot.pop(moved_out)
+
+        # 应用到范围内的项，首次覆盖时记录原始状态
+        for item in leaves:
+            if item not in self._shift_snapshot:
+                self._shift_snapshot[item] = item.checked
+
+            item.checked = state
+
+        # 叶子节点批量改完后，一次性重算所有父节点状态
+        self._model.root_node.refresh_check_state()
+
+        self.setCurrentIndex(target_index)
+
+        # update_check_state 会触发 _on_check_state_changed 重绘视图
+        self.update_check_state()
+
+        return True
 
     def _init_hover_command_bar(self):
         self._hover_bar = CommandBarView(self.viewport())
@@ -114,6 +225,16 @@ class ParseTreeView(TreeView):
         return action
 
     def viewportEvent(self, event: QEvent):
+        # Shift + 左键点击行的任意位置即可范围勾选，不必命中复选框
+        if (event.type() == QEvent.Type.MouseButtonPress
+                and event.button() == Qt.MouseButton.LeftButton
+                and event.modifiers() & Qt.KeyboardModifier.ShiftModifier):
+            index = self.indexAt(event.position().toPoint())
+
+            # 处理成功则完整消费事件，避免再触发展开折叠、复选框切换和选中态变更
+            if index.isValid() and self._apply_shift_range(index.siblingAtColumn(0)):
+                return True
+
         if config.get(config.parse_list_show_floating_command_bar):
             if event.type() == QEvent.Type.MouseMove:
                 self._update_hover_bar(self.indexAt(event.position().toPoint()))
@@ -515,22 +636,6 @@ class ParseTreeView(TreeView):
 
     def on_update_media_info(self, episode_data: dict):
         signal_bus.parse.preview_init.emit(episode_data, True)
-
-    def shift_select_range(self, new_index: QModelIndex):
-        if self._model.last_changed_index.isValid():
-            last_row = self._model.last_changed_index.row()
-            new_row = new_index.row()
-
-            start_row = min(last_row, new_row)
-            end_row = max(last_row, new_row)
-
-            for row in range(start_row, end_row + 1):
-                index = self._model.index(row, 0)
-                item: TreeItem = index.internalPointer()
-
-                item.set_checked_state(Qt.CheckState.Checked)
-
-            self.update_check_state()
 
     def mark_item_as_downloaded(self, item_list: List[TreeItem]):
         for item in item_list:
