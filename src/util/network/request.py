@@ -150,6 +150,8 @@ class SyncNetWorkRequest:
     def run(self):
         self.update_headers()
 
+        headers = self.get_headers()
+
         if self.proxies:
             with httpx.Client(mounts = get_mounts(self.proxies), follow_redirects = True, verify = get_ssl_context()) as temp_client:
                 response = temp_client.request(
@@ -157,7 +159,7 @@ class SyncNetWorkRequest:
                     url = self.url,
                     params = self.params,
                     json = self.json_data,
-                    headers = client.headers,
+                    headers = headers,
                     cookies = client.cookies,
                     data = self.data
                 )
@@ -167,7 +169,7 @@ class SyncNetWorkRequest:
                 url = self.url,
                 params = self.params,
                 json = self.json_data,
-                headers = client.headers,
+                headers = headers,
                 cookies = client.cookies,
                 data = self.data
             )
@@ -210,8 +212,14 @@ class SyncNetWorkRequest:
             if "Content-Type" in get_client().headers:
                 get_client().headers.pop("Content-Type", None)
 
+    def get_headers(self):
+        # extra_headers 只作用于本次请求，不写回全局 client，避免污染其他请求
+        headers = dict(get_client().headers)
+
         if self.extra_headers:
-            get_client().headers.update(self.extra_headers)
+            headers.update(self.extra_headers)
+
+        return headers
 
 class NetworkRequestWorker(SyncNetWorkRequest, QObject):
     success = Signal(object)
