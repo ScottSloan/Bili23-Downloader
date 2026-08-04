@@ -174,3 +174,15 @@ class CheckListView(TreeView):
                 count += 1
 
         return count
+
+    def setCheckStateForAll(self, state: Qt.CheckState):
+        for i in range(self.data_model.rowCount()):
+            item: CheckableTreeItem = self.data_model.item(i)
+            item.setCheckState(state)
+
+    def checkAll(self):
+        self.setCheckStateForAll(Qt.CheckState.Checked)
+
+    def uncheckAll(self):
+        self.setCheckStateForAll(Qt.CheckState.Unchecked)
+        
