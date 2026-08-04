@@ -12,7 +12,7 @@ import sys
 # 创建 QApplication 前禁用 DirectWrite，否则 Qt 文本会显示为方框。
 qt_win7_compatible = False
 
-if platform.system() == "Windows" :
+if sys.platform == "win32":
     def _msw_messagebox(title: str, content: str):
         ctypes.windll.user32.MessageBoxW(0, content, title, 0 | 0x10)
 
@@ -285,8 +285,25 @@ class Application(QApplication):
         from util.auth.cookie import cookie_manager
         from util.auth.user import user_manager
 
+        self.warmup_ssl_context()
+
         cookie_manager.init_cookie_info()
         user_manager.init_user_info()
+
+    def warmup_ssl_context(self):
+        # 首次构建 SSL 上下文需要加载完整的 CA 证书列表（约 0.5 秒）。
+        # 提前在后台线程完成，避免第一次发起下载时在 GUI 线程上付出这笔开销。
+        from util.network.request import get_ssl_context
+        from threading import Thread
+
+        def warmup():
+            try:
+                get_ssl_context()
+
+            except Exception:
+                logger.exception("预热 SSL 上下文失败")
+
+        Thread(target = warmup, name = "ssl-warmup", daemon = True).start()
 
     def _msw_create_mutex(self, name: str):
         import ctypes

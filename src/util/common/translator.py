@@ -200,6 +200,7 @@ class Translator:
             "PARENT_TITLE_FOR_WATCH_LATER": translate("VARIABLE_DESCRIPTION", "Watch Later title"),
             "PARENT_TITLE_FOR_WEEKLY": translate("VARIABLE_DESCRIPTION", "Weekly Picks title"),
             "PARENT_TITLE_FOR_AUDIO": translate("VARIABLE_DESCRIPTION", "Playlist title"),
+            "PARENT_TITLE_FOR_FAVORITE": translate("VARIABLE_DESCRIPTION", "Multi-part video main title (if exists)"),
 
             "PART_NUMBER_FOR_PART": translate("VARIABLE_DESCRIPTION", "Part number"),
             "PART_NUMBER_FOR_COLLECTION": translate("VARIABLE_DESCRIPTION", "Part number (only for multi-part videos)"),

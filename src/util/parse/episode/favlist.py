@@ -72,6 +72,10 @@ class FavlistEpisodeParser(EpisodeParserBase):
     def get_episode_badge(self, episode_data: dict):
         if episode_data.get("ogv"):
             return episode_data["ogv"]["type_name"]
+
+        # 分P视频 page 数 > 1
+        if episode_data.get("page", 0) > 1:
+            return "分P"
         
         return ""
     
@@ -89,6 +93,9 @@ class FavlistEpisodeParser(EpisodeParserBase):
             item.set_attribute(Attribute.BANGUMI_BIT)
         else:
             item.set_attribute(Attribute.VIDEO_BIT)
+
+        if episode_data.get("page", 0) > 1:
+            item.set_attribute(Attribute.FAVORITE_WITH_MULTI_PART_VIDEO_BIT)
 
         item.set_attribute(Attribute.FAVLIST_BIT | Attribute.NEED_PARSE_BIT)
 

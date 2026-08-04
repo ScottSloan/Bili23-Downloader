@@ -290,8 +290,8 @@ class DefaultValue:
 class APPConfig(QConfig):
     # APP
     app_name = "Bili23 Downloader"
-    app_version = "2.11.0"
-    app_comparable_version = "2.11.0"
+    app_version = "2.12.0"
+    app_comparable_version = "2.12.0"
     app_config_version = 2100
     config_version = ConfigItem("Application", "config_version", app_config_version)
 
@@ -303,6 +303,7 @@ class APPConfig(QConfig):
     # Behavior
     parse_list_column = ConfigItem("Behavior", "parse_list_column", DefaultValue.parse_list_column)
     parse_list_alternate_row_color = ConfigItem("Behavior", "parse_list_alternate_row_color", True, BoolValidator())
+    parse_list_show_floating_command_bar = ConfigItem("Behavior", "parse_list_show_floating_command_bar", True, BoolValidator())
 
     monitor_clipboard = ConfigItem("Behavior", "monitor_clipboard", False, BoolValidator())
     show_download_confirmation_dialog = ConfigItem("Behavior", "show_download_confirmation_dialog", False, BoolValidator())
@@ -352,6 +353,7 @@ class APPConfig(QConfig):
     download_cover = ConfigItem("Additional", "download_cover", False, BoolValidator())
     cover_type = OptionsConfigItem("Additional", "cover_type", CoverType.JPG, OptionsValidator(CoverType), EnumSerializer(CoverType))
     attach_cover = ConfigItem("Additional", "attach_cover", False, BoolValidator())
+    delete_cover_after_attach = ConfigItem("Additional", "delete_cover_after_attach", False, BoolValidator())
 
     download_metadata = ConfigItem("Additional", "download_metadata", False, BoolValidator())
     metadata_type = OptionsConfigItem("Additional", "metadata_type", MetadataType.NFO, OptionsValidator(MetadataType), EnumSerializer(MetadataType))

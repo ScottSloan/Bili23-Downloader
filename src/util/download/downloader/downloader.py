@@ -12,7 +12,7 @@ from ...common.io.file import File
 
 from ...parse.additional.worker import AdditionalParseWorker
 from ...thread.pool import GlobalThreadPoolTask
-from ...network.request import get_cookies, get_mounts
+from ...network.request import get_cookies, get_mounts, get_ssl_context
 from ...network.proxy import Proxy
 from ...thread.async_ import AsyncTask
 
@@ -22,7 +22,7 @@ from ..task.info import TaskInfo
 from .parse_worker import ParseWorker
 from .merger import Merger
 
-from threading import Event, Lock
+from threading import Event, Lock, Thread
 from pathlib import Path
 import logging
 import errno
@@ -180,13 +180,32 @@ class ChunkWorker(QRunnable):
         self.stop_event.set()
         self._invoke_download_error(message)
 
+    def _interruptible_sleep(self, seconds: float):
+        # 分段休眠，保证暂停、取消能够及时生效，而不必等满整个退避时间
+        while seconds > 0:
+            if self.stop_event.is_set() or not self.parent.is_generation_active(self.generation):
+                return
+
+            interval = min(0.1, seconds)
+
+            time.sleep(interval)
+
+            seconds -= interval
+
     def run(self):
         if self.stop_event.is_set() or not self.parent.is_generation_active(self.generation):
             return
-        
+
         if self.on_chunk_start:
             self.on_chunk_start()
-            
+
+        try:
+            self._download_chunk()
+        finally:
+            if self.on_chunk_end:
+                self.on_chunk_end()
+
+    def _download_chunk(self):
         headers = {
             "Range": f"bytes={self.chunk_range[0]}-{self.chunk_range[1] - 1}"
         }
@@ -262,10 +281,7 @@ class ChunkWorker(QRunnable):
                     self._report_download_failure(exc, attempt, retryable)
                     break
 
-                time.sleep(min(2 ** (attempt - 1), 8))
-
-        if self.on_chunk_end:
-            self.on_chunk_end()
+                self._interruptible_sleep(min(2 ** (attempt - 1), 8))
 
 class Downloader(QObject):
     def __init__(self, task_info: TaskInfo):
@@ -296,6 +312,7 @@ class Downloader(QObject):
         self.wait_callback = None
         self.start_worker_lock = Lock()
         self.start_worker_pending = False
+        self.start_worker_requested = False
         self.download_generation = 0
         
         self._completion_triggered = False
@@ -306,6 +323,9 @@ class Downloader(QObject):
         self.speed_timer.timeout.connect(self._calculate_speed)
 
     def start(self):
+        if self.session is None:
+            self.init_session()
+
         self._completion_triggered = False
         self._download_error_triggered = False
 
@@ -348,6 +368,7 @@ class Downloader(QObject):
 
     @Slot(str)
     def on_parse_error(self, error_message: str):
+        self._close_session()
         self.task_info.Download.status = DownloadStatus.FAILED
 
         self.update_item(self.task_info)
@@ -368,6 +389,7 @@ class Downloader(QObject):
         self._download_error_triggered = True
         self.task_info.Download.status = DownloadStatus.FAILED
         self._stop_event.set()
+        self._close_session()
         self.speed_timer.stop()
 
         self.update_item(self.task_info)
@@ -381,14 +403,44 @@ class Downloader(QObject):
             error_message
         )
 
+    @Slot()
     def start_download(self):
         try:
+            if (
+                self._stop_event.is_set()
+                or self.task_info.Download.status != DownloadStatus.DOWNLOADING
+                or not self.task_info.Download.queue
+            ):
+                return
+
             self.start_timer()
 
             with self.start_worker_lock:
-                if self.start_worker_pending:
+                # A small file can finish while its preparation worker is still
+                # unwinding. Remember the next-file request instead of dropping it.
+                self.start_worker_requested = True
+
+            self._dispatch_start_worker()
+
+        except Exception as e:
+            self.on_download_error(str(e))
+
+    @Slot()
+    def _dispatch_start_worker(self):
+        try:
+            with self.start_worker_lock:
+                if self.start_worker_pending or not self.start_worker_requested:
                     return
 
+                if (
+                    self._stop_event.is_set()
+                    or self.task_info.Download.status != DownloadStatus.DOWNLOADING
+                    or not self.task_info.Download.queue
+                ):
+                    self.start_worker_requested = False
+                    return
+
+                self.start_worker_requested = False
                 self.start_worker_pending = True
                 self.download_generation += 1
                 generation = self.download_generation
@@ -400,6 +452,8 @@ class Downloader(QObject):
             )
         
         except Exception as e:
+            with self.start_worker_lock:
+                self.start_worker_pending = False
             self.on_download_error(str(e))
 
     def _start_worker_in_background(self, generation: int):
@@ -418,6 +472,16 @@ class Downloader(QObject):
         finally:
             with self.start_worker_lock:
                 self.start_worker_pending = False
+                should_restart = self.start_worker_requested and not self._stop_event.is_set()
+
+            if should_restart:
+                QMetaObject.invokeMethod(
+                    self,
+                    "_dispatch_start_worker",
+                    Qt.ConnectionType.QueuedConnection
+                )
+
+            self._queue_wait_callback_if_idle()
 
     def is_generation_active(self, generation: int):
         return generation == self.download_generation
@@ -484,9 +548,14 @@ class Downloader(QObject):
         merge_worker.start()
 
     def pause(self):
-        self.download_generation += 1
+        with self.start_worker_lock:
+            self.download_generation += 1
+            self.start_worker_requested = False
+
         self.task_info.Download.status = DownloadStatus.PAUSED
         self._stop_event.set()
+
+        self._close_session()
         self.speed_timer.stop()
 
     def resume(self):
@@ -594,8 +663,11 @@ class Downloader(QObject):
             task_manager._update_media_info(self.task_info)
 
     def init_session(self):
+        # SSL 上下文全局复用，避免每次创建 Client 时重新加载 CA 证书（约 170ms，且发生在 GUI 线程）
+        ssl_context = get_ssl_context()
+
         limits = httpx.Limits(max_keepalive_connections = config.get(config.download_thread), max_connections = config.get(config.download_thread))
-        transport = httpx.HTTPTransport(retries = 5)
+        transport = httpx.HTTPTransport(retries = 5, verify = ssl_context)
         mounts = get_mounts(Proxy().get_proxies())
 
         headers = {
@@ -607,7 +679,8 @@ class Downloader(QObject):
             limits = limits,
             transport = transport,
             mounts = mounts,
-            headers = headers
+            headers = headers,
+            verify = ssl_context
         )
 
         cookies = get_cookies()
@@ -645,7 +718,7 @@ class Downloader(QObject):
         self.task_info.Download.status = DownloadStatus.FFMPEG_QUEUED
 
         self._stop_event.set()
-        self.session.close()
+        self._close_session()
         self.speed_timer.stop()
 
         task_manager.update_async(self.task_info)
@@ -659,16 +732,48 @@ class Downloader(QObject):
         with self.count_lock:
             self.active_workers -= 1
 
-        if self.active_workers == 0 and self.wait_flag and self._stop_event.is_set():
-            self.wait_callback()
+        self._queue_wait_callback_if_idle()
 
     def wait(self, on_end):
-        self.wait_flag = True
-        self.wait_callback = on_end
         self._stop_event.set()
 
-        if self.active_workers == 0:
-            on_end()
+        with self.start_worker_lock:
+            self.download_generation += 1
+            self.start_worker_requested = False
+
+        with self.count_lock:
+            self.wait_flag = True
+            self.wait_callback = on_end
+
+        self._finish_wait_if_idle()
+
+    def _queue_wait_callback_if_idle(self):
+        with self.count_lock:
+            should_check = self.wait_flag and self.active_workers == 0
+
+        if should_check:
+            QMetaObject.invokeMethod(
+                self,
+                "_finish_wait_if_idle",
+                Qt.ConnectionType.QueuedConnection
+            )
+
+    @Slot()
+    def _finish_wait_if_idle(self):
+        with self.start_worker_lock:
+            if self.start_worker_pending:
+                return
+
+        with self.count_lock:
+            if not self.wait_flag or self.active_workers != 0:
+                return
+
+            callback = self.wait_callback
+            self.wait_flag = False
+            self.wait_callback = None
+
+        if callback:
+            callback()
 
     def start_timer(self):
         if self.speed_timer.isActive():
@@ -694,11 +799,56 @@ class Downloader(QObject):
             self.on_download_completed()
 
     def on_delete(self):
-        self.session = None
-        self.thread_pool = None
+        self._stop_event.set()
+
+        # 提升代次，令仍在运行的分片线程尽快退出，并且不再回调本对象
+        with self.start_worker_lock:
+            self.download_generation += 1
+            self.start_worker_requested = False
+
+        self._close_session()
+        self.speed_timer.stop()
+
+        self._release_thread_pool()
+
         self.task_info = None
         self.download_list = None
         self.deleteLater()
+
+    def _release_thread_pool(self):
+        # QThreadPool 析构时会调用 waitForDone()。若在 GUI 线程上释放引用，
+        # 界面会一直卡到所有分片线程退出为止（实测可达数秒），因此改到后台线程释放。
+        pool = self.thread_pool
+        self.thread_pool = None
+
+        if pool is None:
+            return
+
+        # 丢弃尚未开始的分片任务，只需等待已在运行的部分
+        pool.clear()
+
+        def release():
+            try:
+                pool.waitForDone()
+
+            except Exception:
+                logger.exception("等待下载线程池退出时发生异常")
+
+        thread = Thread(target = release, name = "downloader-pool-release", daemon = True)
+        thread.start()
+
+    def _close_session(self):
+        session = self.session
+        self.session = None
+
+        if session is None:
+            return
+
+        try:
+            session.close()
+
+        except Exception:
+            logger.exception("无法关闭 HTTP 会话，可能存在资源泄漏风险")
     
     def update_item(self, task_info: TaskInfo):
         signal_bus.download.update_downloading_item.emit(task_info)

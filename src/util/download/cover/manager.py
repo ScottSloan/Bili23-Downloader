@@ -6,6 +6,12 @@ from .db import CoverDatabase
 from .cache import CoverCache
 
 from functools import lru_cache
+from hashlib import md5
+
+@lru_cache(maxsize = 8192)
+def _calc_cover_id(cover_url: str):
+    # 使用 cover_url 的 md5 作为 cover_id
+    return md5(cover_url.encode("utf-8")).hexdigest()
 
 class CoverManager:
     def __init__(self):
@@ -13,18 +19,13 @@ class CoverManager:
 
         # 为封面加载专门创建一个独立的线程池
         self.thread_pool = QThreadPool()
-        
+
         # 作为典型的网络/数据库 I/O 密集型任务，可适当增加最大线程数并发处理
         self.thread_pool.setMaxThreadCount(16)
 
-    @lru_cache(maxsize = None)
     def arrange_cover_id(self, cover_url: str):
-        from hashlib import md5
-
-        # 使用 cover_url 的 md5 作为 cover_id
-        hash = md5(cover_url.encode("utf-8")).hexdigest()
-
-        return hash
+        # 缓存放在模块级函数上：装饰实例方法会把 self 一并作为缓存键持有，且原先没有上限
+        return _calc_cover_id(cover_url)
 
     def create(self, cover_id: str, cover_data: bytes):
         self.db_manager.add_cover(cover_id, cover_data)

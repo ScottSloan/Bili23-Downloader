@@ -19,7 +19,8 @@ except ImportError:
 
 def json_dumps(obj, indent = None):
     if _orjson_available:
-        return json.dumps(obj, option = json.OPT_INDENT_2 if indent is None else None).decode("utf-8")
+        # orjson 仅支持 2 空格缩进；未指定 indent 时输出紧凑格式，避免入库数据额外膨胀一倍
+        return json.dumps(obj, option = json.OPT_INDENT_2 if indent else None).decode("utf-8")
     else:
         return json.dumps(obj, indent = indent)
     

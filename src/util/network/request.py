@@ -7,6 +7,8 @@ from threading import Lock
 from enum import Enum
 import logging
 import httpx
+import ssl
+import os
 
 logging.getLogger("httpx").setLevel(logging.WARNING)
 
@@ -15,22 +17,55 @@ logger = logging.getLogger(__name__)
 _client = None
 _client_lock = Lock()
 
+_ssl_context = None
+_ssl_context_lock = Lock()
+
+def get_ssl_context():
+    # httpx 默认会为每个 Client / HTTPTransport 重新构建 SSLContext，加载完整的 CA 根证书列表耗时约 170ms。
+    # 由于全局的证书配置是一致的，此处只构建一次并复用，创建 Client 的开销可降至微秒级。
+    global _ssl_context
+
+    if _ssl_context is None:
+        with _ssl_context_lock:
+            if _ssl_context is None:
+                _ssl_context = _create_ssl_context()
+
+    return _ssl_context
+
+def _create_ssl_context():
+    # 与 httpx 默认行为保持一致：优先使用环境变量指定的证书，否则回退到 certifi 提供的证书列表
+    try:
+        if cert_file := os.environ.get("SSL_CERT_FILE"):
+            return ssl.create_default_context(cafile = cert_file)
+
+        if cert_dir := os.environ.get("SSL_CERT_DIR"):
+            return ssl.create_default_context(capath = cert_dir)
+
+        import certifi
+
+        return ssl.create_default_context(cafile = certifi.where())
+
+    except Exception:
+        logger.exception("构建 SSL 上下文失败，已回退到系统默认证书")
+
+        return ssl.create_default_context()
+
 def get_mounts(proxies = None):
     if proxies:
         proxy_url = proxies.get("http") or proxies.get("https")
 
         return {
-            "http://": httpx.HTTPTransport(proxy = proxy_url, retries = 5),
-            "https://": httpx.HTTPTransport(proxy = proxy_url, retries = 5)
+            "http://": httpx.HTTPTransport(proxy = proxy_url, retries = 5, verify = get_ssl_context()),
+            "https://": httpx.HTTPTransport(proxy = proxy_url, retries = 5, verify = get_ssl_context())
         }
     else:
         return None
 
 def _create_client():
     from .proxy import Proxy
-    
+
     limits = httpx.Limits(max_connections = 10, max_keepalive_connections = 10)
-    transport = httpx.HTTPTransport(retries = 3)
+    transport = httpx.HTTPTransport(retries = 3, verify = get_ssl_context())
 
     if config.get(config.proxy_enabled):
         logger.info("已启用代理，类型：%s，服务器：%s:%s", config.get(config.proxy_type), config.get(config.proxy_server), config.get(config.proxy_port))
@@ -40,7 +75,8 @@ def _create_client():
         timeout = 5,
         mounts = get_mounts(Proxy().get_proxies()),
         transport = transport,
-        follow_redirects = True
+        follow_redirects = True,
+        verify = get_ssl_context()
     )
 
 
@@ -98,7 +134,7 @@ class ResponseType(Enum):
     RESPONSE = 5         # 返回完整的 Response 对象，供需要访问更多信息的情况使用
 
 class SyncNetWorkRequest:
-    def __init__(self, url: str, request_type: RequestType = RequestType.GET, params: dict = None, response_type: ResponseType = ResponseType.JSON, raise_for_status: bool = True, json_data: dict = None, data: dict = None, content_type: str = None):
+    def __init__(self, url: str, request_type: RequestType = RequestType.GET, params: dict = None, response_type: ResponseType = ResponseType.JSON, raise_for_status: bool = True, json_data: dict = None, data: dict = None, content_type: str = None, extra_headers: dict = None):
         self.url = url
         self.params = params
         self.request_type = request_type
@@ -107,6 +143,7 @@ class SyncNetWorkRequest:
         self.json_data = json_data
         self.data = data
         self.content_type = content_type     # 供 POST 请求使用，自动设置 Content-Type 头部
+        self.extra_headers = extra_headers
 
         self.proxies = None
 
@@ -114,7 +151,7 @@ class SyncNetWorkRequest:
         self.update_headers()
 
         if self.proxies:
-            with httpx.Client(mounts = get_mounts(self.proxies), follow_redirects = True) as temp_client:
+            with httpx.Client(mounts = get_mounts(self.proxies), follow_redirects = True, verify = get_ssl_context()) as temp_client:
                 response = temp_client.request(
                     method = self.request_type.name,
                     url = self.url,
@@ -173,13 +210,16 @@ class SyncNetWorkRequest:
             if "Content-Type" in get_client().headers:
                 get_client().headers.pop("Content-Type", None)
 
+        if self.extra_headers:
+            get_client().headers.update(self.extra_headers)
+
 class NetworkRequestWorker(SyncNetWorkRequest, QObject):
     success = Signal(object)
     error = Signal(str)
     finished = Signal()
 
-    def __init__(self, url: str, request_type: RequestType = RequestType.GET, params: dict = None, response_type: ResponseType = ResponseType.JSON, raise_for_status: bool = True, json_data: dict = None, data: dict = None, content_type: str = None):
-        SyncNetWorkRequest.__init__(self, url, request_type, params, response_type, raise_for_status, json_data, data, content_type)
+    def __init__(self, url: str, request_type: RequestType = RequestType.GET, params: dict = None, response_type: ResponseType = ResponseType.JSON, raise_for_status: bool = True, json_data: dict = None, data: dict = None, content_type: str = None, extra_headers: dict = None):
+        SyncNetWorkRequest.__init__(self, url, request_type, params, response_type, raise_for_status, json_data, data, content_type, extra_headers)
         QObject.__init__(self)
 
     @Slot()

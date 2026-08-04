@@ -27,6 +27,8 @@ class Merger(QObject):
         self._ffmpeg_runner = None
 
         self._output_audio_file = None
+        self._embedded_cover_file_name = None
+        self._delete_cover_after_embedding = False
 
     def start(self):
         if self.task_info.Download.merge_video_audio:
@@ -149,6 +151,7 @@ class Merger(QObject):
 
                 safe_remove(cwd, *self.task_info.File.relative_files)
 
+            self.delete_embedded_cover()
             self.add_file(final_output_file_name, *kept_original_files, clear = True)
             self.mark_as_completed()
 
@@ -297,10 +300,16 @@ class Merger(QObject):
         if config.get(config.attach_cover):
             cover_path = Path(self.get_cwd(), self.cover_file_name)
             if cover_path.exists():
+                self._embedded_cover_file_name = self.cover_file_name
+                self._delete_cover_after_embedding = config.get(config.delete_cover_after_attach)
                 return self.cover_file_name
             else:
                 logger.warning(f"封面文件 {cover_path} 不存在，无法嵌入封面")
         return None
+
+    def delete_embedded_cover(self):
+        if self._embedded_cover_file_name and self._delete_cover_after_embedding:
+            safe_remove(self.get_cwd(), self._embedded_cover_file_name)
 
     def create_lists_file(self, video_parts_count: int):
         cwd = self.get_cwd()

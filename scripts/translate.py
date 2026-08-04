@@ -65,6 +65,7 @@ sources = [
     "src/gui/dialog/misc/duplicate_download.py",
     "src/gui/dialog/misc/interactive_video.py",
     "src/gui/dialog/misc/jump_to_page.py",
+    "src/gui/dialog/misc/multi_part_lists.py",
     "src/gui/dialog/misc/parse_history.py",
     "src/gui/dialog/misc/search.py",
     "src/gui/dialog/misc/view_cover.py",

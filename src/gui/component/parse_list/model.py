@@ -1,5 +1,5 @@
-from PySide6.QtCore import Qt, QAbstractItemModel, QModelIndex, Signal, QPersistentModelIndex
-from PySide6.QtGui import QBrush, QGuiApplication, QColor
+from PySide6.QtCore import Qt, QAbstractItemModel, QModelIndex, Signal
+from PySide6.QtGui import QBrush, QColor
 
 from qfluentwidgets import themeColor, isDarkTheme
 
@@ -23,8 +23,6 @@ class ParseModel(QAbstractItemModel):
         self.root_node = root_node
         self.search_keyword = ""
         self._category_name = ""
-        self.last_changed_index = QPersistentModelIndex()
-        self.last_shift_index = QPersistentModelIndex()
 
         self._setup_column_data()
 
@@ -178,10 +176,6 @@ class ParseModel(QAbstractItemModel):
 
         _sort_recursive(self.root_node)
 
-        # 排序后清空用于按住 Shift 连续勾选的记录索引，避免错乱
-        self.last_changed_index = QPersistentModelIndex()
-        self.last_shift_index = QPersistentModelIndex()
-
         self.layoutChanged.emit()
 
     def flags(self, index: QModelIndex):
@@ -200,81 +194,16 @@ class ParseModel(QAbstractItemModel):
 
         if index.column() == 0 and role == Qt.ItemDataRole.CheckStateRole:
             state = Qt.CheckState(value) if isinstance(value, int) else value
-            
-            is_shift_pressed = bool(QGuiApplication.keyboardModifiers() & Qt.KeyboardModifier.ShiftModifier)
-            is_shift_pressed = is_shift_pressed or getattr(self, 'shift_pressed', False) or getattr(self, 'shift_key_pressed', False)
 
-            if is_shift_pressed and self.last_changed_index.isValid() and self.last_changed_index.parent() == index.parent():
-                self._handle_shift_check_state(index, state)
-            else:
-                self._handle_normal_check_state(index, state)
+            item: TreeItem = index.internalPointer()
+            item.set_checked_state(state)
 
-            self._update_ancestors(index)
+            # 发出有效的 index，视图据此把该项记为 Shift 范围勾选的锚点
             self.check_state_changed.emit(index)
 
             return True
 
         return False
-
-    def _handle_shift_check_state(self, index: QModelIndex, state: Qt.CheckState):
-        parent_idx = index.parent()
-        start_row_new = min(self.last_changed_index.row(), index.row())
-        end_row_new = max(self.last_changed_index.row(), index.row())
-
-        if not hasattr(self, 'last_shift_index') or not self.last_shift_index.isValid() or self.last_shift_index.parent() != parent_idx:
-            self.last_shift_index = self.last_changed_index
-
-        start_row_old = min(self.last_changed_index.row(), self.last_shift_index.row())
-        end_row_old = max(self.last_changed_index.row(), self.last_shift_index.row())
-
-        opposite_state = Qt.CheckState.Unchecked if state == Qt.CheckState.Checked else Qt.CheckState.Checked
-
-        min_refresh_row = min(start_row_new, start_row_old)
-        max_refresh_row = max(end_row_new, end_row_old)
-
-        for row in range(min_refresh_row, max_refresh_row + 1):
-            idx = self.index(row, 0, parent_idx)
-            in_new = start_row_new <= row <= end_row_new
-            in_old = start_row_old <= row <= end_row_old
-
-            if in_new:
-                idx.internalPointer().set_checked_state(state)
-                self._update_descendants(idx)
-            elif in_old:
-                idx.internalPointer().set_checked_state(opposite_state)
-                self._update_descendants(idx)
-
-        self.dataChanged.emit(self.index(min_refresh_row, 0, parent_idx), self.index(max_refresh_row, 0, parent_idx))
-        self.last_shift_index = QPersistentModelIndex(index)
-
-    def _handle_normal_check_state(self, index: QModelIndex, state: Qt.CheckState):
-        item: TreeItem = index.internalPointer()
-        item.set_checked_state(state)
-
-        self.last_changed_index = QPersistentModelIndex(index)
-        self.last_shift_index = QPersistentModelIndex(index)
-
-        self.dataChanged.emit(index, index)
-        self._update_descendants(index)
-
-    def _update_ancestors(self, index: QModelIndex):
-        p_idx = self.parent(index)
-        while p_idx.isValid():
-            self.dataChanged.emit(p_idx, p_idx)
-            p_idx = self.parent(p_idx)
-
-    def _update_descendants(self, parent_idx: QModelIndex):
-        """辅导方法：递归触发所有子孙节点视图的局部刷新"""
-        rows = self.rowCount(parent_idx)
-        if rows > 0:
-            # 批量刷新该父节点下的所有子节点（第0列）
-            top_left = self.index(0, 0, parent_idx)
-            bottom_right = self.index(rows - 1, 0, parent_idx)
-            self.dataChanged.emit(top_left, bottom_right)
-            
-            # 继续往下遍历更深层的子节点
-            for r in range(rows):
-                self._update_descendants(self.index(r, 0, parent_idx))
 
     def _get_column_value(self, item: TreeItem, column: int):
         attr_key = self._column_data[column]["attr_key"]

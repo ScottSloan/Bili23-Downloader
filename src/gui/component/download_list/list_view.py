@@ -122,9 +122,9 @@ class DownloadListView(ListView):
     def removeTask(self, task_info: TaskInfo):
         self._model.removeTask(task_info)
 
-        if self._auto_manage_concurrent and not self._in_batch_cancel:
-            downloader_manager.remove(task_info.Basic.task_id)
+        downloader_manager.remove(task_info.Basic.task_id)
 
+        if self._auto_manage_concurrent and not self._in_batch_cancel:
             self._model.manageConcurrentDownloads()
 
         if self._auto_update_count_badge:

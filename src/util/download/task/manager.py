@@ -35,7 +35,11 @@ class TaskManager:
         self._update_lock = Lock()
         self._pending_updates = {}
         self._update_flush_scheduled = False
+        # 所有对 task.db 的写入都在这一个线程上串行执行：既保证了顺序，
+        # 也避免了 GUI 线程与写线程争抢 SQLite 写锁。
         self._update_executor = ThreadPoolExecutor(max_workers = 1, thread_name_prefix = "task-db")
+        # 删除临时文件可能涉及大量磁盘操作，与数据库写入互不依赖，单独放一个线程执行。
+        self._cancel_executor = ThreadPoolExecutor(max_workers = 1, thread_name_prefix = "task-cancel")
 
         signal_bus.download.create_task.connect(self._create_async)
 
@@ -281,9 +285,20 @@ class TaskManager:
 
         self._update_executor.submit(self._flush_updates)
 
-    def _wait_for_pending_updates(self):
-        # 结构性操作前等待已提交的快照完成，避免旧状态覆盖新记录。
-        self._update_executor.submit(lambda: None).result()
+    def shutdown(self, timeout: float = 5.0):
+        # 退出前把已投递的写入落盘。写入都在同一个线程上排队，
+        # 因此只要等待队尾的任务完成即可，超时后不再继续阻塞退出流程。
+        try:
+            self._update_executor.submit(lambda: None).result(timeout = timeout)
+
+        except Exception:
+            logger.exception("等待下载任务写入完成超时")
+
+    def _discard_pending_updates(self, task_id_list: List[str]):
+        # 任务即将被删除，丢弃其尚未落盘的进度快照，避免无谓的写入
+        with self._update_lock:
+            for task_id in task_id_list:
+                self._pending_updates.pop(task_id, None)
 
     def _flush_updates(self):
         while True:
@@ -295,27 +310,92 @@ class TaskManager:
                 updates = list(self._pending_updates.values())
                 self._pending_updates.clear()
 
-            for task_id, data in updates:
-                try:
-                    self.db_manager.update_task_json(task_id, data)
-                except Exception:
-                    logger.exception("异步保存下载任务失败：%s", task_id)
+            try:
+                # 一次事务写入全部快照。逐条提交时每条约 18ms，批量提交后整批不到 1ms。
+                self.db_manager.update_task_json_many(updates)
+
+            except Exception:
+                logger.exception("异步保存下载任务失败，本批共 %d 条", len(updates))
 
     def delete(self, task_info: TaskInfo, completed: bool = False):
-        self._wait_for_pending_updates()
-        self.db_manager.delete_task(task_info.Basic.task_id, completed)
+        # 结构性操作与进度写入共用同一个写线程，天然保证先后顺序，
+        # 无需再阻塞调用方等待挂起的写入完成。
+        self.delete_many([task_info], completed)
+
+    def delete_many(self, task_info_list: List[TaskInfo], completed: bool = False):
+        if not task_info_list:
+            return
+
+        task_id_list = [task_info.Basic.task_id for task_info in task_info_list]
+
+        self._discard_pending_updates(task_id_list)
+        self._update_executor.submit(self._delete_storage, task_id_list, completed)
+
+    def _delete_storage(self, task_id_list: List[str], completed: bool):
+        try:
+            self.db_manager.delete_tasks(task_id_list, completed)
+
+        except Exception:
+            logger.exception("删除下载任务记录失败，本批共 %d 条", len(task_id_list))
 
     def cancel(self, task_info: TaskInfo):
-        signal_bus.download.remove_from_downloading_list.emit(task_info)
+        self.cancel_async(task_info)
 
-        self.delete(task_info)
-        
-        self._removeTemporaryFiles(task_info)
+    def cancel_async(self, task_info: TaskInfo):
+        self.cancel_many_async([task_info])
+
+    def cancel_many_async(self, task_info_list: List[TaskInfo], notify: bool = True):
+        if not task_info_list:
+            return
+
+        if notify:
+            for task_info in task_info_list:
+                signal_bus.download.remove_from_downloading_list.emit(task_info)
+
+        self.delete_many(task_info_list)
+
+        # 删除临时文件与数据库写入互不依赖，放到另一个线程并行处理
+        self._remove_temporary_files_async(task_info_list)
+
+    def _remove_temporary_files_async(self, task_info_list: List[TaskInfo]):
+        # 在投递前就把待删除的文件列表快照下来，避免后台线程执行时读到已被改写的列表
+        snapshots = [
+            (
+                task_info.Basic.task_id,
+                Path(task_info.File.download_path, task_info.File.folder),
+                list(task_info.File.relative_files)
+            )
+            for task_info in task_info_list
+        ]
+
+        self._cancel_executor.submit(self._remove_temporary_files_storage, snapshots)
+
+    def _remove_temporary_files_storage(self, snapshots: List[tuple]):
+        for task_id, directory, file_names in snapshots:
+            if not file_names:
+                continue
+
+            try:
+                safe_remove(directory, *file_names)
+
+            except Exception:
+                logger.exception("删除下载任务临时文件失败: %s", task_id)
 
     def mark_as_completed(self, task_info: TaskInfo):
-        self.delete(task_info)
+        # 由 Merger 在 GUI 线程调用，改为投递到写线程，避免两次同步数据库写入阻塞界面。
+        # 记录在调用方线程上组装，保证写入的是此刻的任务快照。
+        self._discard_pending_updates([task_info.Basic.task_id])
 
-        self.db_manager.add_tasks([task_info], completed = True)
+        record = self.db_manager.build_record(task_info, completed = True)
+
+        self._update_executor.submit(self._mark_as_completed_storage, record)
+
+    def _mark_as_completed_storage(self, record: tuple):
+        try:
+            self.db_manager.move_to_completed(record)
+
+        except Exception:
+            logger.exception("标记下载任务为已完成失败: %s", record[0])
 
     def reset(self, task_info: TaskInfo):
         # 重置下载状态为初始状态，适用于完全重新下载的场景
@@ -328,19 +408,25 @@ class TaskManager:
         task_info.Download.downloaded_size = 0
         task_info.Download.speed = 0
 
-        self._removeTemporaryFiles(task_info)
+        # 临时文件删除放到后台线程，避免在 GUI 线程上做磁盘操作
+        self._remove_temporary_files_async([task_info])
 
     def recreate(self, task_info: TaskInfo):
-        self._wait_for_pending_updates()
-        self.db_manager.delete_task(task_info.Basic.task_id, completed = True)
-        self.db_manager.add_tasks([task_info])
+        self._discard_pending_updates([task_info.Basic.task_id])
+
+        record = self.db_manager.build_record(task_info)
+
+        self._update_executor.submit(self._recreate_storage, record)
 
         signal_bus.download.add_to_downloading_list.emit([task_info])
         signal_bus.download.auto_manage_concurrent_downloads.emit()
 
-    def _removeTemporaryFiles(self, task_info: TaskInfo):
-        # 删除下载的临时文件
-        safe_remove(Path(task_info.File.download_path, task_info.File.folder), *task_info.File.relative_files)
+    def _recreate_storage(self, record: tuple):
+        try:
+            self.db_manager.recreate_task(record)
+
+        except Exception:
+            logger.exception("重建下载任务记录失败: %s", record[0])
 
     def _update_media_info(self, task_info: TaskInfo):
         # 更新媒体信息相关的变量，以便在文件命名规则中使用
@@ -429,6 +515,16 @@ class TaskManager:
         elif attr & Attribute.AUDIO_BIT:
             # 音乐类
             metadata = {
+                "sid": episode_info.get("sid")
+            }
+
+        else:
+            # 属性缺失或未知时同样要给出可区分的 hash，否则会抛出异常导致任务创建失败
+            metadata = {
+                "aid": episode_info.get("aid"),
+                "bvid": episode_info.get("bvid"),
+                "cid": episode_info.get("cid"),
+                "ep_id": episode_info.get("ep_id"),
                 "sid": episode_info.get("sid")
             }
 

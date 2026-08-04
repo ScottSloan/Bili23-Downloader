@@ -25,29 +25,31 @@ class EpisodeData:
         cls.table.clear()
 
 class Attribute(IntFlag):
-    VIDEO_BIT                          = 1 << 0                   # 是否为投稿视频
-    BANGUMI_BIT                        = 1 << 1                   # 是否为剧集
-    CHEESE_BIT                         = 1 << 2                   # 是否为课程
-    WEEKLY_BIT                         = 1 << 3                   # 是否为每周必看
-    COLLECTION_LIST_BIT                = 1 << 4                   # 是否为合集列表
-    SPACE_BIT                          = 1 << 5                   # 是否为个人空间
-    FAVLIST_BIT                        = 1 << 6                   # 是否为收藏夹
+    VIDEO_BIT                                 = 1 << 0                   # 是否为投稿视频
+    BANGUMI_BIT                               = 1 << 1                   # 是否为剧集
+    CHEESE_BIT                                = 1 << 2                   # 是否为课程
+    WEEKLY_BIT                                = 1 << 3                   # 是否为每周必看
+    COLLECTION_LIST_BIT                       = 1 << 4                   # 是否为合集列表
+    SPACE_BIT                                 = 1 << 5                   # 是否为个人空间
+    FAVLIST_BIT                               = 1 << 6                   # 是否为收藏夹
 
-    NEED_PARSE_BIT                     = 1 << 7                   # 是否需要二次解析，如个人空间、收藏夹、合集列表中的视频
+    NEED_PARSE_BIT                            = 1 << 7                   # 是否需要二次解析，如个人空间、收藏夹、合集列表中的视频
 
-    NORMAL_BIT                         = 1 << 8                   # 是否为单个视频（item）
-    PART_BIT                           = 1 << 9                   # 是否为分P（item）
-    COLLECTION_BIT                     = 1 << 10                  # 是否为合集（node）
-    INTERACTIVE_BIT                    = 1 << 11                  # 是否为互动视频（item）
+    NORMAL_BIT                                = 1 << 8                   # 是否为单个视频（item）
+    PART_BIT                                  = 1 << 9                   # 是否为分P（item）
+    COLLECTION_BIT                            = 1 << 10                  # 是否为合集（node）
+    INTERACTIVE_BIT                           = 1 << 11                  # 是否为互动视频（item）
 
-    DOWNLOAD_AS_SINGLE_VIDEO_BIT       = 1 << 12                  # 是否下载为单个视频
+    DOWNLOAD_AS_SINGLE_VIDEO_BIT              = 1 << 12                  # 是否下载为单个视频
 
-    WATCH_LATER_BIT                    = 1 << 13                  # 是否为稍后再看
-    HISTORY_BIT                        = 1 << 14                  # 是否为历史记录
+    WATCH_LATER_BIT                           = 1 << 13                  # 是否为稍后再看
+    HISTORY_BIT                               = 1 << 14                  # 是否为历史记录
 
-    TREE_NODE_BIT                      = 1 << 15                  # 是否为树节点
+    TREE_NODE_BIT                             = 1 << 15                  # 是否为树节点
 
-    AUDIO_BIT                          = 1 << 16                  # 是否为音频
+    AUDIO_BIT                                 = 1 << 16                  # 是否为音频
+
+    FAVORITE_WITH_MULTI_PART_VIDEO_BIT        = 1 << 17                  # 收藏夹中是否包含分P视频
 
 class TreeItemBase:
     def __init__(self):
@@ -97,7 +99,7 @@ class TreeItemBase:
 
     def _propagate_up(self):
         states = [child.checked for child in self.children]
-        
+
         if all(s == Qt.CheckState.Checked for s in states):
             new_state = Qt.CheckState.Checked
 
@@ -112,6 +114,43 @@ class TreeItemBase:
 
             if self.parent:
                 self.parent._propagate_up()
+
+    def refresh_check_state(self):
+        """
+        自底向上重算整棵子树的勾选状态，叶子节点的状态视为已确定
+
+        用于批量改动（如 Shift 范围勾选）后一次性同步父节点状态，
+        避免逐项调用 set_checked_state 触发 O(项数 × 深度) 次向上传递
+        """
+        if not self.children:
+            return self.checked
+
+        states = [child.refresh_check_state() for child in self.children]
+
+        if all(s == Qt.CheckState.Checked for s in states):
+            self.checked = Qt.CheckState.Checked
+
+        elif all(s == Qt.CheckState.Unchecked for s in states):
+            self.checked = Qt.CheckState.Unchecked
+
+        else:
+            self.checked = Qt.CheckState.PartiallyChecked
+
+        return self.checked
+
+    def get_all_leaves(self):
+        """
+        递归返回所有叶子节点（无子节点的项）
+        """
+        if not self.children:
+            return [self]
+
+        leaves: List[TreeItem] = []
+
+        for child in self.children:
+            leaves.extend(child.get_all_leaves())
+
+        return leaves
 
     def get_all_checked_children(self, to_dict = False, mark_as_downloaded = False):
         checked_items: List[TreeItem] = []
@@ -230,7 +269,10 @@ class TreeItem(TreeItemBase):
             matches.extend(child.search_items(keyword))
 
         return matches
-    
+
+    def has_attribute(self, flag: int):
+        return (self.attribute & flag) == flag
+
     @property
     def dyn_time(self):
         time_map = {
