@@ -11,11 +11,6 @@ from util.common.config import config
 
 from util.parse.episode.tree import TreeItem
 
-# data() 是绘制时的最热路径，提前解引用角色常量，避免每次调用都走三层属性查找
-DISPLAY_ROLE = Qt.ItemDataRole.DisplayRole
-CHECK_STATE_ROLE = Qt.ItemDataRole.CheckStateRole
-FOREGROUND_ROLE = Qt.ItemDataRole.ForegroundRole
-
 class ParseModel(QAbstractItemModel):
     check_state_changed = Signal(QModelIndex)
 
@@ -29,38 +24,12 @@ class ParseModel(QAbstractItemModel):
         self.search_keyword = ""
         self._category_name = ""
 
-        # 每项各列的显示文本缓存，列数据不会随勾选、排序变化，只在模型重置时失效
-        self._display_cache: dict[TreeItem, list] = {}
-
-        self._highlight_brush = None
-        self._disabled_brush = None
-
         self._setup_column_data()
 
         signal_bus.parse.update_column_settings.connect(self._setup_column_data)
 
-        self.modelReset.connect(self._display_cache.clear)
-        config.themeChanged.connect(self._reset_brush_cache)
-        config.themeColorChanged.connect(self._reset_brush_cache)
-
-    @property
-    def search_keyword(self):
-        return self._search_keyword
-
-    @search_keyword.setter
-    def search_keyword(self, keyword: str):
-        self._search_keyword = keyword or ""
-        self._search_keyword_lower = self._search_keyword.lower()
-
-    def _reset_brush_cache(self, *_):
-        self._highlight_brush = None
-        self._disabled_brush = None
-
     def _setup_column_data(self):
         self.beginResetModel()
-
-        # 列的数量和顺序会变，旧缓存按列下标存放，必须一并作废
-        self._display_cache.clear()
 
         column_map = [
             {
@@ -113,50 +82,34 @@ class ParseModel(QAbstractItemModel):
 
         return parent_item.count()
 
-    def data(self, index: QModelIndex, role = DISPLAY_ROLE):
-        # 视图每绘制一个单元格都会以近十种角色回调本方法，未命中的角色必须尽早返回，
-        # 否则项目数量一多，单帧耗时就会超过 16ms，拖慢平滑滚动动画
-        if role == DISPLAY_ROLE:
-            if not index.isValid():
-                return None
+    def data(self, index: QModelIndex, role = Qt.ItemDataRole.DisplayRole):
+        if not index.isValid():
+            return None
 
-            return self._get_column_value(index.internalPointer(), index.column())
+        item: TreeItem = index.internalPointer()
 
-        if role == CHECK_STATE_ROLE:
-            # 勾选状态只在序号列显示
-            if index.column() != 0 or not index.isValid():
-                return None
+        column = index.column()
 
-            return index.internalPointer().checked
+        column_value = self._get_column_value(item, column)
 
-        if role == FOREGROUND_ROLE:
-            if not index.isValid():
-                return None
-
-            item: TreeItem = index.internalPointer()
-
+        # 序号列单独处理显示和勾选状态
+        if role == Qt.ItemDataRole.DisplayRole:
+            return column_value
+        
+        elif role == Qt.ItemDataRole.CheckStateRole and index.column() == 0:
+            return item.checked
+            
+        if role == Qt.ItemDataRole.ForegroundRole:
             # 高亮搜索关键词
-            if self._search_keyword_lower:
-                if index.column() == 1 and self._search_keyword_lower in item.title.lower():
-                    return self._get_highlight_brush()
-
+            if self.search_keyword:
+                if index.column() == 1 and self.search_keyword.lower() in item.title.lower():
+                    return QBrush(themeColor())
+            
             # 已下载的剧集、失效的剧集显示为灰色
             elif item.downloaded or item.expired:
-                return self._get_disabled_brush()
+                return QBrush(QColor(150, 150, 150)) if isDarkTheme() else QBrush(QColor(110, 110, 110))
 
         return None
-
-    def _get_highlight_brush(self):
-        if self._highlight_brush is None:
-            self._highlight_brush = QBrush(themeColor())
-
-        return self._highlight_brush
-
-    def _get_disabled_brush(self):
-        if self._disabled_brush is None:
-            self._disabled_brush = QBrush(QColor(150, 150, 150)) if isDarkTheme() else QBrush(QColor(110, 110, 110))
-
-        return self._disabled_brush
 
     def headerData(self, section: int, orientation: Qt.Orientation, role = Qt.ItemDataRole.DisplayRole):
         if orientation == Qt.Orientation.Horizontal and role == Qt.ItemDataRole.DisplayRole:
@@ -253,22 +206,10 @@ class ParseModel(QAbstractItemModel):
         return False
 
     def _get_column_value(self, item: TreeItem, column: int):
-        # 时长、时间等列的格式化成本较高，而其数据在解析完成后不再变化，按项缓存结果
-        row_cache = self._display_cache.get(item)
-
-        if row_cache is None:
-            row_cache = [None] * len(self._column_data)
-            self._display_cache[item] = row_cache
-
-        column_value = row_cache[column]
-
-        if column_value is None:
-            entry = self._column_data[column]
-
-            column_value = str(entry["formatter"](getattr(item, entry["attr_key"], "")))
-            row_cache[column] = column_value
-
-        return column_value
+        attr_key = self._column_data[column]["attr_key"]
+        formatter = self._column_data[column]["formatter"]
+    
+        return str(formatter(getattr(item, attr_key, "")))
 
     def get_index_for_item(self, item: TreeItem, column: int = 0) -> QModelIndex:
         if not item or item == self.root_node:

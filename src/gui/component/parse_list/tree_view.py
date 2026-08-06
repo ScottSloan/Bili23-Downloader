@@ -17,10 +17,15 @@ from collections import deque
 import webbrowser
 
 class ParseTreeView(TreeView):
+    SMOOTH_SCROLL_DURATION = 250
+    SMOOTH_SCROLL_MIN_DURATION = 80
+
     def __init__(self, main_window, parent = None):
         super().__init__(parent)
 
         self.main_window = main_window
+
+        self._init_smooth_scroll()
 
         self._model = ParseModel(parent = self)
 
@@ -62,6 +67,29 @@ class ParseTreeView(TreeView):
         
         self._setHeaderWidth()
         self.update_alternate_row_color()
+
+    def _init_smooth_scroll(self):
+        """强制使用按实际耗时推进的滚动引擎，并缩短动画时长
+
+        qfluentwidgets 默认的 FixedStepSmoothScrollEngine 按帧计数推进：一次滚轮固定分成
+        fps * duration / 1000 帧，每次定时器超时才走一帧。项目数量多时单帧绘制超过 16ms，
+        定时器不会补偿，动画的实际时长就被拉长成 帧数 × 单帧耗时，表现为松开滚轮后列表还在滚。
+        自适应引擎以 QElapsedTimer 的实际间隔消耗动画时间，掉帧只会让单帧位移变大，不会拖长动画，
+        并且在队列积压时会合并滚轮事件，不再堆积未处理的滚动量。
+        """
+        scroll_delegate = getattr(self, "scrollDelagate", None)
+
+        if not scroll_delegate:
+            return
+
+        for smooth_scroll in (scroll_delegate.verticalSmoothScroll, scroll_delegate.horizonSmoothScroll):
+            # 阈值置 0 后引擎选择不再取决于屏幕宽度，恒定返回自适应引擎
+            smooth_scroll.widthThreshold = 0
+
+            for engine in (smooth_scroll.fixedStepScrollEngine, smooth_scroll.adaptiveScrollEngine):
+                engine.duration = self.SMOOTH_SCROLL_DURATION
+
+            smooth_scroll.adaptiveScrollEngine.minDuration = self.SMOOTH_SCROLL_MIN_DURATION
 
     def _reset_check_anchor(self):
         self._check_anchor = None

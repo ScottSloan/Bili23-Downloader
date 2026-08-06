@@ -275,15 +275,11 @@ class TreeItem(TreeItemBase):
 
     @property
     def dyn_time(self):
-        time_map = {
-            Attribute.FAVLIST_BIT: self.favtime,
-            Attribute.WATCH_LATER_BIT: self.favtime,
-            Attribute.HISTORY_BIT: self.viewtime,
-        }
+        if self.attribute & (Attribute.FAVLIST_BIT | Attribute.WATCH_LATER_BIT):
+            return self.favtime
 
-        for attr_bit, time_value in time_map.items():
-            if self.attribute & attr_bit:
-                return time_value
+        if self.attribute & Attribute.HISTORY_BIT:
+            return self.viewtime
 
         return self.pubtime
     
