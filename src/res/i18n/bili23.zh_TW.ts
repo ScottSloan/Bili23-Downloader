@@ -289,6 +289,16 @@
     </message>
 </context>
 <context>
+    <name>BATCH_SELECT_GUIDE</name>
+    <message>
+        <location filename="../../util/common/translator.py" line="403"/>
+        <source>Press Ctrl + A to select all items, Ctrl + D to deselect all items
+You can also press shift + click to select a range of items.</source>
+        <translation>按 Ctrl + A 全選，Ctrl + D 取消全選
+也可以按住 Shift 並點擊以選取連續項目。</translation>
+    </message>
+</context>
+<context>
     <name>BatchParseDialog</name>
     <message>
         <location filename="../../gui/dialog/misc/batch_parse.py" line="18"/>
@@ -349,27 +359,27 @@
 <context>
     <name>BatchSelectDialog</name>
     <message>
-        <location filename="../../gui/dialog/misc/batch_select.py" line="16"/>
+        <location filename="../../gui/dialog/misc/batch_select.py" line="18"/>
         <source>Batch Selection</source>
         <translation>批次選取</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/batch_select.py" line="19"/>
+        <location filename="../../gui/dialog/misc/batch_select.py" line="21"/>
         <source>Enter line numbers (e.g. 1,3,5-10)</source>
         <translation>請輸入行號，例如：1,3,5-10</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/batch_select.py" line="57"/>
+        <location filename="../../gui/dialog/misc/batch_select.py" line="61"/>
         <source>Please enter line numbers</source>
         <translation>請輸入行號</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/batch_select.py" line="66"/>
+        <location filename="../../gui/dialog/misc/batch_select.py" line="70"/>
         <source>Invalid line number range</source>
         <translation>行號範圍格式錯誤</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/batch_select.py" line="71"/>
+        <location filename="../../gui/dialog/misc/batch_select.py" line="75"/>
         <source>Invalid line number</source>
         <translation>行號格式錯誤</translation>
     </message>
@@ -1248,7 +1258,7 @@ If you continue, please disable the &quot;Preallocate file space&quot; option. (
 <context>
     <name>Downloader</name>
     <message>
-        <location filename="../../util/download/downloader/downloader.py" line="661"/>
+        <location filename="../../util/download/downloader/downloader.py" line="737"/>
         <source>Audio</source>
         <translation>音訊</translation>
     </message>
@@ -1372,12 +1382,12 @@ If you continue, please disable the &quot;Preallocate file space&quot; option. (
 <context>
     <name>ERROR_CODE_EXPLANATION</name>
     <message>
-        <location filename="../../util/common/translator.py" line="405"/>
+        <location filename="../../util/common/translator.py" line="410"/>
         <source>Request blocked, client IP has been banned</source>
         <translation>請求遭封鎖，用戶端IP已被禁止</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="406"/>
+        <location filename="../../util/common/translator.py" line="411"/>
         <source>Paid content requires purchasing</source>
         <translation>付費內容需要購買</translation>
     </message>
@@ -2624,42 +2634,42 @@ To get a single complete video file, please enable &quot;Merge video and audio&q
 <context>
     <name>MultiPartListsDialog</name>
     <message>
-        <location filename="../../gui/dialog/misc/multi_part_lists.py" line="60"/>
+        <location filename="../../gui/dialog/misc/multi_part_lists.py" line="66"/>
         <source>Multi-part video list</source>
         <translation>分P影片列表</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/multi_part_lists.py" line="62"/>
+        <location filename="../../gui/dialog/misc/multi_part_lists.py" line="68"/>
         <source>Check All</source>
         <translation>全選</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/multi_part_lists.py" line="80"/>
+        <location filename="../../gui/dialog/misc/multi_part_lists.py" line="87"/>
         <source>Download Selected Items</source>
         <translation>下載所選項目</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/multi_part_lists.py" line="85"/>
+        <location filename="../../gui/dialog/misc/multi_part_lists.py" line="93"/>
         <source>No.</source>
         <translation>序號</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/multi_part_lists.py" line="85"/>
+        <location filename="../../gui/dialog/misc/multi_part_lists.py" line="93"/>
         <source>Title</source>
         <translation>標題</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/multi_part_lists.py" line="85"/>
+        <location filename="../../gui/dialog/misc/multi_part_lists.py" line="93"/>
         <source>Duration</source>
         <translation>時長</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/multi_part_lists.py" line="109"/>
+        <location filename="../../gui/dialog/misc/multi_part_lists.py" line="117"/>
         <source>{selected_count} selected, {total_count} total</source>
         <translation>已選取 {selected_count} 項，共 {total_count} 項</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/multi_part_lists.py" line="111"/>
+        <location filename="../../gui/dialog/misc/multi_part_lists.py" line="120"/>
         <source>{total_count} total</source>
         <translation>共 {total_count} 項</translation>
     </message>
@@ -3121,74 +3131,74 @@ For example, if you set the video quality priority to 720P &gt; 1080P &gt; 4K, t
 <context>
     <name>ParseTreeView</name>
     <message>
-        <location filename="../../gui/component/parse_list/tree_view.py" line="495"/>
+        <location filename="../../gui/component/parse_list/tree_view.py" line="523"/>
         <source>Check All</source>
         <translation>全選</translation>
     </message>
     <message>
-        <location filename="../../gui/component/parse_list/tree_view.py" line="495"/>
+        <location filename="../../gui/component/parse_list/tree_view.py" line="523"/>
         <source>Uncheck All</source>
         <translation>取消全選</translation>
     </message>
     <message>
-        <location filename="../../gui/component/parse_list/tree_view.py" line="497"/>
+        <location filename="../../gui/component/parse_list/tree_view.py" line="525"/>
         <source>Reverse</source>
         <translation>反選</translation>
     </message>
     <message>
-        <location filename="../../gui/component/parse_list/tree_view.py" line="501"/>
+        <location filename="../../gui/component/parse_list/tree_view.py" line="529"/>
         <source>Check Item</source>
         <translation>勾選</translation>
     </message>
     <message>
-        <location filename="../../gui/component/parse_list/tree_view.py" line="501"/>
+        <location filename="../../gui/component/parse_list/tree_view.py" line="529"/>
         <source>Uncheck Item</source>
         <translation>取消勾選</translation>
     </message>
     <message>
-        <location filename="../../gui/component/parse_list/tree_view.py" line="188"/>
-        <location filename="../../gui/component/parse_list/tree_view.py" line="506"/>
+        <location filename="../../gui/component/parse_list/tree_view.py" line="216"/>
+        <location filename="../../gui/component/parse_list/tree_view.py" line="534"/>
         <source>Parse this item</source>
         <translation>解析此項</translation>
     </message>
     <message>
-        <location filename="../../gui/component/parse_list/tree_view.py" line="507"/>
+        <location filename="../../gui/component/parse_list/tree_view.py" line="535"/>
         <source>Open in Browser</source>
         <translation>於瀏覽器中開啟</translation>
     </message>
     <message>
-        <location filename="../../gui/component/parse_list/tree_view.py" line="193"/>
-        <location filename="../../gui/component/parse_list/tree_view.py" line="508"/>
+        <location filename="../../gui/component/parse_list/tree_view.py" line="221"/>
+        <location filename="../../gui/component/parse_list/tree_view.py" line="536"/>
         <source>Download as Single Video</source>
         <translation>下載為單個影片</translation>
     </message>
     <message>
-        <location filename="../../gui/component/parse_list/tree_view.py" line="513"/>
+        <location filename="../../gui/component/parse_list/tree_view.py" line="541"/>
         <source>View Metadata</source>
         <translation>檢視元數據</translation>
     </message>
     <message>
-        <location filename="../../gui/component/parse_list/tree_view.py" line="509"/>
+        <location filename="../../gui/component/parse_list/tree_view.py" line="537"/>
         <source>Update Media Info</source>
         <translation>更新媒體資訊</translation>
     </message>
     <message>
-        <location filename="../../gui/component/parse_list/tree_view.py" line="199"/>
+        <location filename="../../gui/component/parse_list/tree_view.py" line="227"/>
         <source>View Multi-part Video List</source>
         <translation>查看分P影片列表</translation>
     </message>
     <message>
-        <location filename="../../gui/component/parse_list/tree_view.py" line="516"/>
+        <location filename="../../gui/component/parse_list/tree_view.py" line="544"/>
         <source>View Cover</source>
         <translation>查看封面</translation>
     </message>
     <message>
-        <location filename="../../gui/component/parse_list/tree_view.py" line="548"/>
+        <location filename="../../gui/component/parse_list/tree_view.py" line="576"/>
         <source>Metadata</source>
         <translation>元數據</translation>
     </message>
     <message>
-        <location filename="../../gui/component/parse_list/tree_view.py" line="550"/>
+        <location filename="../../gui/component/parse_list/tree_view.py" line="578"/>
         <source>Copy</source>
         <translation>複製</translation>
     </message>

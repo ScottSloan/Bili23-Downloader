@@ -2,7 +2,7 @@ from PySide6.QtGui import QColor, QMovie, QPixmap
 from PySide6.QtWidgets import QLabel
 from PySide6.QtCore import QSize, Qt
 
-from qfluentwidgets import FluentLabelBase, getFont, CaptionLabel, isDarkTheme, ImageLabel as _ImageLabel
+from qfluentwidgets import FluentLabelBase, getFont, CaptionLabel, isDarkTheme, BodyLabel, ImageLabel as _ImageLabel
 
 class SectionLabel(FluentLabelBase):
     """
@@ -12,9 +12,22 @@ class SectionLabel(FluentLabelBase):
     def getFont(self):
         return getFont(16)
     
-class TipLabel(CaptionLabel):
+class TipCaptionLabel(CaptionLabel):
     """
-    TipLabel 用于显示提示信息，字体颜色为灰色。
+    TipCaptionLabel 用于显示提示信息，字体颜色为灰色。
+    """
+
+    def __init__(self, text = "", parent = None):
+        super().__init__(parent)
+
+        color = QColor(206, 206, 206) if isDarkTheme() else QColor(96, 96, 96)
+
+        self.setStyleSheet('QLabel{color: ' + color.name() + '}')
+        self.setText(text)
+
+class TipBodyLabel(BodyLabel):
+    """
+    TipBodyLabel 用于显示提示信息，字体颜色为灰色。
     """
 
     def __init__(self, text = "", parent = None):

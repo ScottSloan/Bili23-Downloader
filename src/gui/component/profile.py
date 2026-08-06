@@ -4,7 +4,7 @@ from qfluentwidgets import (
     AvatarWidget, BodyLabel, HyperlinkButton, FlyoutViewBase, MessageBox
 )
 
-from .widget import TipLabel
+from .widget import TipCaptionLabel
 
 from util.common.enum import ToastNotificationCategory
 from util.common.signal_bus  import signal_bus
@@ -32,7 +32,7 @@ class ProfileCard(FlyoutViewBase):
 
         self.uname_lab = BodyLabel(config.user_uname, parent = self)
 
-        self.uid_lab = TipLabel(f"UID: {config.user_uid}", parent = self)
+        self.uid_lab = TipCaptionLabel(f"UID: {config.user_uid}", parent = self)
 
         self.logout_btn = HyperlinkButton(parent = self)
         self.logout_btn.setText(self.tr("Logout"))

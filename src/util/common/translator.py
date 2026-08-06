@@ -399,6 +399,11 @@ Note: If the download path is on an external storage device such as a USB drive,
 Please note that download history is the sole basis for recognizing downloaded videos. Clearing it will prevent the system from identifying existing downloads, which may result in duplicate downloads.""")
 
     @staticmethod
+    def BATCH_SELECT_GUIDE():
+        return translate("BATCH_SELECT_GUIDE", """Press Ctrl + A to select all items, Ctrl + D to deselect all items
+You can also press shift + click to select a range of items.""")
+
+    @staticmethod
     @get_map_method
     def ERROR_CODE_EXPLANATION(key = None):
         return {

@@ -1,8 +1,10 @@
 from qfluentwidgets import SubtitleLabel, LineEdit
 
+from gui.component.widget.label import TipBodyLabel
 from gui.component.dialog import DialogBase
 
 from util.common.enum import ToastNotificationCategory
+from util.common.translator import Translator
 
 class BatchSelectDialog(DialogBase):
     def __init__(self, parent = None):
@@ -19,11 +21,15 @@ class BatchSelectDialog(DialogBase):
         self.lines_box.setPlaceholderText(self.tr("Enter line numbers (e.g. 1,3,5-10)"))
         self.lines_box.setClearButtonEnabled(True)
 
+        self.tip_lab = TipBodyLabel(Translator.BATCH_SELECT_GUIDE(), parent = self)
+
         self.viewLayout.addWidget(self.caption_label)
         self.viewLayout.addSpacing(10)
         self.viewLayout.addWidget(self.lines_box)
+        self.viewLayout.addSpacing(10)
+        self.viewLayout.addWidget(self.tip_lab)
 
-        self.widget.setMinimumWidth(450)
+        self.widget.setMinimumWidth(500)
 
     def accept(self):
         self.number_list = self.to_number_list()
