@@ -1,4 +1,4 @@
-from PySide6.QtCore import QObject, Signal
+from PySide6.QtCore import QObject, Signal, Slot
 
 from ...common.signal_bus import signal_bus
 from ...common.translator import Translator
@@ -25,6 +25,7 @@ class AdditionalParseWorker(QObject):
 
         self.task_info = task_info
 
+    @Slot()
     def run(self):
         try:
             self.__parse()

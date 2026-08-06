@@ -64,7 +64,10 @@ def get_mounts(proxies = None):
 def _create_client():
     from .proxy import Proxy
 
-    limits = httpx.Limits(max_connections = 10, max_keepalive_connections = 10)
+    # 封面加载线程池上限就有 16，叠加解析线程后并发请求数远超 10。
+    # 连接数不够时后来的请求要排队等空闲连接，而排队时间同样计入超时，
+    # 批量解析边下载时很容易把解析请求本身拖成 PoolTimeout。
+    limits = httpx.Limits(max_connections = 32, max_keepalive_connections = 16)
     transport = httpx.HTTPTransport(retries = 3, verify = get_ssl_context())
 
     if config.get(config.proxy_enabled):
@@ -72,7 +75,8 @@ def _create_client():
 
     return httpx.Client(
         limits = limits,
-        timeout = 5,
+        # 连接、读写仍为 5s；等待空闲连接单独放宽，避免高并发下把排队算成请求超时
+        timeout = httpx.Timeout(5.0, pool = 30.0),
         mounts = get_mounts(Proxy().get_proxies()),
         transport = transport,
         follow_redirects = True,
@@ -148,8 +152,6 @@ class SyncNetWorkRequest:
         self.proxies = None
 
     def run(self):
-        self.update_headers()
-
         headers = self.get_headers()
 
         if self.proxies:
@@ -196,25 +198,20 @@ class SyncNetWorkRequest:
             case ResponseType.RESPONSE:
                 return response
     
-    def update_headers(self):
-        get_client().headers.update(
-            {
-                "Referer": "https://www.bilibili.com/",
-                "User-Agent": config.get(config.user_agent)
-            }
-        )
+    def get_headers(self):
+        # 全部逐请求构造，不再改写全局 client 的 headers。
+        # 该 client 被下载解析线程与 16 个封面线程共用，原先每次请求都要往上面
+        # update / pop 一次 Content-Type，多线程并发时会互相串扰：A 刚设上的
+        # Content-Type 可能被 B 删掉，httpx.Headers 本身也不是线程安全的。
+        # httpx 会把 client.headers 与本次请求的 headers 合并（后者优先），
+        # 所以这里只需要给出需要覆盖的部分。
+        headers = {
+            "Referer": "https://www.bilibili.com/",
+            "User-Agent": config.get(config.user_agent)
+        }
 
         if self.content_type:
-            get_client().headers["Content-Type"] = self.content_type
-
-        else:
-            # 如果没有指定 content_type，则移除可能存在的 Content-Type 头部，避免影响某些请求
-            if "Content-Type" in get_client().headers:
-                get_client().headers.pop("Content-Type", None)
-
-    def get_headers(self):
-        # extra_headers 只作用于本次请求，不写回全局 client，避免污染其他请求
-        headers = dict(get_client().headers)
+            headers["Content-Type"] = self.content_type
 
         if self.extra_headers:
             headers.update(self.extra_headers)

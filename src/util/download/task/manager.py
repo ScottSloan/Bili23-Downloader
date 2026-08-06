@@ -231,12 +231,15 @@ class TaskManager:
                 )
 
         if task_info_list:
-            # 存储到数据库，并添加到下载列表
+            # 存储到数据库，并添加到下载列表。
+            # 记录在当前线程组装（create 由解析线程调用），写入则投递到唯一的写线程。
+            # 批量解析时会有多个解析线程同时创建任务，若各自直接写库，就会与进度写入
+            # 争抢 SQLite 的写锁；busy_timeout 为 30s，进度快照可能被阻塞数十秒无法落盘。
             try:
-                self.db_manager.add_tasks(task_info_list)
+                records = [self.db_manager.build_record(task_info) for task_info in task_info_list]
 
             except Exception as error:
-                logger.exception("保存下载任务失败")
+                logger.exception("组装下载任务记录失败")
 
                 signal_bus.toast.show_long_message.emit(
                     ToastNotificationCategory.ERROR,
@@ -245,6 +248,8 @@ class TaskManager:
                 )
 
                 return
+
+            self._update_executor.submit(self._add_storage, records)
 
             signal_bus.download.add_to_downloading_list.emit(task_info_list)
             signal_bus.download.auto_manage_concurrent_downloads.emit()
@@ -273,10 +278,12 @@ class TaskManager:
     def update_async(self, task_info: TaskInfo):
         # 高频进度更新只保留每个任务最新快照，并由单独线程串行写入数据库。
         task_id = task_info.Basic.task_id
-        data = json_dumps(task_info.to_dict())
 
+        # 取样必须在锁内完成。若把 json_dumps 放在锁外，同一个任务的两个调用方
+        # （GUI 线程的测速定时器、后台线程的 start_worker）可能先后取样却以相反的
+        # 顺序写入 _pending_updates，旧快照覆盖新快照，重启后表现为下载进度倒退。
         with self._update_lock:
-            self._pending_updates[task_id] = (task_id, data)
+            self._pending_updates[task_id] = (task_id, json_dumps(task_info.to_dict()))
 
             if self._update_flush_scheduled:
                 return
@@ -289,7 +296,7 @@ class TaskManager:
         # 退出前把已投递的写入落盘。写入都在同一个线程上排队，
         # 因此只要等待队尾的任务完成即可，超时后不再继续阻塞退出流程。
         try:
-            self._update_executor.submit(lambda: None).result(timeout = timeout)
+            self._update_executor.submit(self._flush_pending_snapshots).result(timeout = timeout)
 
         except Exception:
             logger.exception("等待下载任务写入完成超时")
@@ -310,12 +317,43 @@ class TaskManager:
                 updates = list(self._pending_updates.values())
                 self._pending_updates.clear()
 
-            try:
-                # 一次事务写入全部快照。逐条提交时每条约 18ms，批量提交后整批不到 1ms。
-                self.db_manager.update_task_json_many(updates)
+            self._write_updates(updates)
 
-            except Exception:
-                logger.exception("异步保存下载任务失败，本批共 %d 条", len(updates))
+    def _flush_pending_snapshots(self):
+        # 结构性写入（新增、删除、移动）前先把已取样的进度快照落盘，
+        # 保证入库顺序与取样顺序一致，不会出现 UPDATE 排到 INSERT 前面。
+        while True:
+            with self._update_lock:
+                if not self._pending_updates:
+                    return
+
+                updates = list(self._pending_updates.values())
+                self._pending_updates.clear()
+
+            self._write_updates(updates)
+
+    def _write_updates(self, updates: List[tuple]):
+        try:
+            # 一次事务写入全部快照。逐条提交时每条约 18ms，批量提交后整批不到 1ms。
+            self.db_manager.update_task_json_many(updates)
+
+        except Exception:
+            logger.exception("异步保存下载任务失败，本批共 %d 条", len(updates))
+
+    def _add_storage(self, records: List[tuple]):
+        self._flush_pending_snapshots()
+
+        try:
+            self.db_manager.add_task_records(records)
+
+        except Exception as error:
+            logger.exception("保存下载任务失败，本批共 %d 条", len(records))
+
+            signal_bus.toast.show_long_message.emit(
+                ToastNotificationCategory.ERROR,
+                Translator.ERROR_MESSAGES("DOWNLOAD_FAILED"),
+                str(error)
+            )
 
     def delete(self, task_info: TaskInfo, completed: bool = False):
         # 结构性操作与进度写入共用同一个写线程，天然保证先后顺序，
@@ -332,6 +370,8 @@ class TaskManager:
         self._update_executor.submit(self._delete_storage, task_id_list, completed)
 
     def _delete_storage(self, task_id_list: List[str], completed: bool):
+        self._flush_pending_snapshots()
+
         try:
             self.db_manager.delete_tasks(task_id_list, completed)
 
@@ -391,6 +431,8 @@ class TaskManager:
         self._update_executor.submit(self._mark_as_completed_storage, record)
 
     def _mark_as_completed_storage(self, record: tuple):
+        self._flush_pending_snapshots()
+
         try:
             self.db_manager.move_to_completed(record)
 
@@ -422,6 +464,8 @@ class TaskManager:
         signal_bus.download.auto_manage_concurrent_downloads.emit()
 
     def _recreate_storage(self, record: tuple):
+        self._flush_pending_snapshots()
+
         try:
             self.db_manager.recreate_task(record)
 

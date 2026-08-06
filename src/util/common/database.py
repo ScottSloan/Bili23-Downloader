@@ -36,7 +36,13 @@ class Database:
         if conn is None:
             conn = sqlite3.connect(self.path, timeout = self.timeout)
 
-            conn.execute("PRAGMA journal_mode = WAL")
+            # 切换 journal_mode 需要短暂地取得排他锁，而 QThreadPool 的线程是短命的，
+            # 频繁建连时这一步会与真正的写入互相阻塞。已经是 WAL 时直接跳过。
+            mode = conn.execute("PRAGMA journal_mode").fetchone()
+
+            if not mode or str(mode[0]).lower() != "wal":
+                conn.execute("PRAGMA journal_mode = WAL")
+
             conn.execute("PRAGMA synchronous = NORMAL")
             conn.execute(f"PRAGMA busy_timeout = {int(self.timeout * 1000)}")
 

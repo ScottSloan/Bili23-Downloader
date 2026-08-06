@@ -90,13 +90,15 @@ def _probe_with_head(url: str, min_file_size: int) -> int:
 
 
 def _probe_with_range_get(url: str) -> int:
-    request = SyncNetWorkRequest(url)
-    request.update_headers()
+    # 原先靠 update_headers() 改写全局 client 来带上 UA / Referer，
+    # 现在直接把头部传给本次请求，不再依赖全局状态
+    headers = SyncNetWorkRequest(url).get_headers()
+    headers["Range"] = "bytes=0-0"
 
     with get_client().stream(
         "GET",
         url,
-        headers = {"Range": "bytes=0-0"},
+        headers = headers,
         timeout = PROBE_TIMEOUT
     ) as response:
         response.raise_for_status()

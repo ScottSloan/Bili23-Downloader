@@ -109,7 +109,12 @@ class TaskDatabase(Database):
 
     def add_tasks(self, task_info_list: List[TaskInfo], completed: bool = False):
         # 通过 completed 参数来区分是插入到 download_task 还是 completed_task 表
-        info_list = [self.build_record(task_info, completed) for task_info in task_info_list]
+        self.add_task_records([self.build_record(task_info, completed) for task_info in task_info_list], completed)
+
+    def add_task_records(self, info_list: List[tuple], completed: bool = False):
+        # 记录由调用方预先组装，此处只负责写入，便于把写操作统一投递到写线程执行
+        if not info_list:
+            return
 
         if completed:
             self.executemany("""

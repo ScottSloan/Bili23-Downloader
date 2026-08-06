@@ -19,7 +19,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 class ParseWorker(QRunnable, ParserBase):
-    def __init__(self, task_info: TaskInfo, parent = None):
+    def __init__(self, task_info: TaskInfo, parent = None, on_finished = None):
         super().__init__()
 
         self.task_info = task_info
@@ -27,6 +27,9 @@ class ParseWorker(QRunnable, ParserBase):
 
         self.parent = parent
         self.error = False
+
+        # 解析期间本 worker 一直持有 parent 的裸引用，结束时通知 parent 可以安全销毁
+        self.on_finished = on_finished
 
     def run(self):
         try:
@@ -47,6 +50,14 @@ class ParseWorker(QRunnable, ParserBase):
             logger.exception("解析下载链接失败")
 
             self.on_parse_error("{}\n\n{}".format(Translator.ERROR_MESSAGES("PARSE_FAILED"), str(e)))
+
+        finally:
+            if self.on_finished:
+                try:
+                    self.on_finished()
+
+                except Exception:
+                    logger.exception("通知下载器解析结束失败")
 
     def get_info(self):
         attr = self.task_info.Episode.attribute
