@@ -77,6 +77,9 @@ class TokenBucket:
 
 class ChunkWorker(QRunnable):
     max_retries = 5
+    # 每写满这么多字节就 flush 一次并记录断点。进程崩溃时 Python 缓冲区里的数据会丢，
+    # flush 之后数据已交给操作系统，即便进程被强杀也仍在磁盘上，断点因此是可信的。
+    flush_interval = 1024 * 1024
     retryable_status_codes = {408, 429, 500, 502, 503, 504}
     permanent_status_codes = {400, 401, 403, 404, 405, 410, 416}
     permanent_errnos = {
@@ -107,6 +110,7 @@ class ChunkWorker(QRunnable):
         self.session = session
         self.file_key = file_key
         self.chunk_index = chunk_index
+        self.offset_key = str(chunk_index)      # 断点表随任务快照走 JSON，键统一用字符串
         self.chunk_range = chunk_range
         self.chunk_size = chunk_range[1] - chunk_range[0]
         self.file_path = file_path
@@ -213,12 +217,49 @@ class ChunkWorker(QRunnable):
             if self.on_chunk_end:
                 self.on_chunk_end()
 
+    def _get_offsets(self):
+        # 分片断点表由 calc_chunk_list 预先建好，此处只会改写已有键的值
+        file_info = self.task_info.Download.files.get(self.file_key)
+
+        if isinstance(file_info, dict):
+            offsets = file_info.get("chunk_offsets")
+
+            if isinstance(offsets, dict):
+                return offsets
+
+        return None
+
+    def _commit_offset(self, written: int):
+        # 记录本分片已 flush 落盘的字节数。只在 flush/close 成功之后调用，
+        # 保证记录的断点绝不会超过磁盘上真实存在的数据。
+        offsets = self._get_offsets()
+
+        if offsets is None:
+            return
+
+        with self.lock:
+            offsets[self.offset_key] = written
+
+    def _load_offset(self):
+        offsets = self._get_offsets()
+
+        if offsets is None:
+            return 0
+
+        with self.lock:
+            try:
+                return max(min(int(offsets.get(self.offset_key, 0)), self.chunk_size), 0)
+
+            except (TypeError, ValueError):
+                return 0
+
     def _download_chunk(self):
         chunk_start, chunk_end = self.chunk_range
 
         # 本分片已确认落盘的字节数。重试时从这里断点续传，而不是整片重下：
         # 原先一次网络抖动就会让最多 4MB 已下载的数据作废，界面上直接表现为进度回退。
-        written = 0
+        # 该值同时会写进任务快照，进程崩溃后重启也能从这里继续，而不是退回到上一个整片边界。
+        written = self._load_offset()
         attempt = 0
 
         while (
@@ -237,7 +278,8 @@ class ChunkWorker(QRunnable):
                 "Range": f"bytes={chunk_start + written}-{chunk_end - 1}"
             }
 
-            downloaded = 0
+            downloaded = 0      # 本轮从服务端收到的字节数
+            pending = 0         # 已 write 但尚未 flush、因而还不能计入断点的字节数
             expected_size = 0
             flushed = False
 
@@ -256,6 +298,7 @@ class ChunkWorker(QRunnable):
                                 self.task_info.Download.downloaded_size = max(self.task_info.Download.downloaded_size - written, 0)
 
                             written = 0
+                            self._commit_offset(0)
 
                             raise StopIteration("服务端未按 Range 返回 206，分片将从头重新下载")
 
@@ -276,9 +319,20 @@ class ChunkWorker(QRunnable):
 
                                 f.write(chunk)
                                 downloaded += chunk_len
+                                pending += chunk_len
 
                                 with self.lock:
                                     self.task_info.Download.downloaded_size += chunk_len
+
+                                if pending >= self.flush_interval:
+                                    # 定期把缓冲区交给操作系统并推进断点，
+                                    # 这样崩溃后恢复最多只损失 flush_interval 字节，而不是整个分片
+                                    f.flush()
+
+                                    written += pending
+                                    pending = 0
+
+                                    self._commit_offset(written)
 
                 finally:
                     # 无论正常结束还是中途抛错，都要先关闭文件（隐含 flush）。
@@ -287,8 +341,11 @@ class ChunkWorker(QRunnable):
                     try:
                         f.close()
 
-                        written += downloaded
+                        written += pending
+                        pending = 0
                         flushed = True
+
+                        self._commit_offset(written)
 
                     except Exception:
                         logger.exception("关闭分片文件失败，本轮数据将重新下载: %s", self.file_path)
@@ -313,11 +370,11 @@ class ChunkWorker(QRunnable):
                 if self.stop_event.is_set():
                     break
 
-                if not flushed:
-                    # 文件没能正常关闭，无法确认这批数据是否真的落盘，
-                    # 回退计数并从上一个确认过的断点重来
+                if not flushed and pending:
+                    # 文件没能正常关闭，只有最后一次 flush 之后的那部分数据无法确认落盘，
+                    # 回退这部分计数并从上一个确认过的断点重来；已 flush 的部分依旧有效
                     with self.lock:
-                        self.task_info.Download.downloaded_size = max(self.task_info.Download.downloaded_size - downloaded, 0)
+                        self.task_info.Download.downloaded_size = max(self.task_info.Download.downloaded_size - pending, 0)
 
                 attempt += 1
                 retryable = self._is_retryable_exception(exc)
@@ -454,6 +511,13 @@ class Downloader(QObject):
         self._download_error_triggered = True
         self.task_info.Download.status = DownloadStatus.FAILED
         self._stop_event.set()
+
+        # 提升代次，令仍排在线程池里的分片作废。否则用户点重试时 start() 会先清掉
+        # stop_event，这批旧分片就可能在新代次分配之前被唤醒，拿着已关闭的会话乱写计数。
+        with self.start_worker_lock:
+            self.download_generation += 1
+            self.start_worker_requested = False
+
         self._close_session()
         self.speed_timer.stop()
 
@@ -578,8 +642,14 @@ class Downloader(QObject):
 
         # 计算文件所需空间
         file_size = info.get("file_size", 0)
-        current_size = path.stat().st_size if path.exists() else 0
+        file_exists = path.exists()
+        current_size = path.stat().st_size if file_exists else 0
         required_space = max(file_size - current_size, 0)
+
+        if not file_exists:
+            # 目标文件已不存在（被手动删除或清理工具移除），此前记录的分片进度全部作废。
+            # 否则只会补下剩余分片，最终拼出一个中间全是空洞的文件。
+            self._reset_file_progress(file_key)
 
         # 检查磁盘空间并预分配文件
         self._check_disk_space(path, required_space)
@@ -587,6 +657,18 @@ class Downloader(QObject):
         info["file_path"] = path
         chunk_list = self.calc_chunk_list(file_key, file_size, self.chunk_size)
         self.calc_downloaded_size()
+
+        if not chunk_list:
+            # 该文件其实已经下载完毕，只是出队记录没能落盘（例如出队前进程被杀）。
+            # 直接补做出队并处理下一个文件，切勿重建分片表把整个文件重下一遍。
+            QMetaObject.invokeMethod(
+                self,
+                "on_file_completed",
+                Qt.ConnectionType.QueuedConnection,
+                Q_ARG(str, file_key)
+            )
+
+            return
 
         # 对于每个区块，启动一个下载线程。区块下载完成后会从 chunk_list 中移除，直到全部完成。
         for chunk_index in chunk_list:
@@ -618,6 +700,18 @@ class Downloader(QObject):
 
         task_manager.update_async(self.task_info)
 
+    def _reset_file_progress(self, file_key: str):
+        file_info = self.task_info.Download.files.get(file_key)
+
+        if not isinstance(file_info, dict):
+            return
+
+        with self.update_lock:
+            file_info["chunks_list"] = []
+            file_info["total_chunks"] = 0
+            file_info["finished_chunks"] = 0
+            file_info["chunk_offsets"] = {}
+
     def start_merge(self):
         self.task_info.Download.status = DownloadStatus.MERGING
         merge_worker = Merger(self.task_info, parent=self)
@@ -634,6 +728,9 @@ class Downloader(QObject):
         self._close_session()
         self.speed_timer.stop()
 
+        # 暂停后测速定时器不再触发，这里补一次快照，否则最近一秒内完成的分片不会落盘
+        task_manager.update_async(self.task_info)
+
     def resume(self):
         self.task_info.Download.status = DownloadStatus.DOWNLOADING
         self._stop_event.clear()
@@ -648,16 +745,36 @@ class Downloader(QObject):
 
     def calc_chunk_list(self, file_key: str, total_size: int, chunk_size: int) -> list:
         file_info = self.task_info.Download.files[file_key]
-        if chunk_list := file_info.get("chunks_list"):
-            return chunk_list
-        
-        total_chunks = (total_size + chunk_size - 1) // chunk_size if total_size > 0 else 0
-        if total_chunks == 0:
-            total_chunks = 1
-            
-        chunk_list = list(range(total_chunks))
-        file_info["total_chunks"] = total_chunks
-        file_info["chunks_list"] = chunk_list.copy()
+
+        with self.update_lock:
+            # 以 total_chunks 判断分片表是否已建立，切勿判断 chunks_list 是否为空：
+            # 分片全部完成后 chunks_list 会被清空，按空值重建等于把整个文件当作从未下载过，
+            # 崩溃恰好发生在「最后一片完成」与「文件出队」之间时就会整片重下。
+            if file_info.get("total_chunks"):
+                # 返回副本：调用方会边遍历边启动分片，而 on_chunk_finished 会在 GUI 线程上
+                # 从同一个列表里移除已完成的分片，直接遍历原列表会漏启动一部分分片。
+                chunk_list = list(file_info.get("chunks_list") or [])
+
+            else:
+                total_chunks = (total_size + chunk_size - 1) // chunk_size if total_size > 0 else 0
+                if total_chunks == 0:
+                    total_chunks = 1
+
+                chunk_list = list(range(total_chunks))
+                file_info["total_chunks"] = total_chunks
+                file_info["chunks_list"] = chunk_list.copy()
+
+            # 预先为每个分片建好断点条目。ChunkWorker 之后只改写已有键的值，
+            # 不会在别的线程序列化任务快照的同时增删键。
+            offsets = file_info.get("chunk_offsets")
+
+            if not isinstance(offsets, dict):
+                offsets = {}
+                file_info["chunk_offsets"] = offsets
+
+            for index in chunk_list:
+                offsets.setdefault(str(index), 0)
+
         return chunk_list
 
     def calc_chunk_range(self, chunk_index: int, chunk_size: int, total_size: int):
@@ -667,21 +784,36 @@ class Downloader(QObject):
 
     def calc_downloaded_size(self):
         downloaded_size = 0
-        
-        for file_info in self.task_info.Download.files.values():
-            total_chunks = file_info.get("total_chunks", 0)
-            file_size = file_info.get("file_size", 0)
-            chunks_list = file_info.get("chunks_list", [])
-
-            if total_chunks > 0:
-                # 只累加确实已经完全下载完成的区块的实际大小
-                for i in range(total_chunks):
-                    if i not in chunks_list:
-                        start = i * self.chunk_size
-                        end = min(start + self.chunk_size, file_size) if file_size > 0 else 0
-                        downloaded_size += (end - start)
 
         with self.update_lock:
+            for file_info in self.task_info.Download.files.values():
+                total_chunks = file_info.get("total_chunks", 0)
+                file_size = file_info.get("file_size", 0)
+                chunks_list = file_info.get("chunks_list", [])
+                offsets = file_info.get("chunk_offsets") or {}
+
+                if total_chunks > 0:
+                    remaining = set(chunks_list)
+
+                    for i in range(total_chunks):
+                        start = i * self.chunk_size
+                        end = min(start + self.chunk_size, file_size) if file_size > 0 else 0
+
+                        if i not in remaining:
+                            # 已完整下载的区块，累加其实际大小
+                            downloaded_size += (end - start)
+
+                        else:
+                            # 未完成的区块也把已确认落盘的部分算进来，
+                            # 否则恢复下载时进度会退回到上一个整片边界
+                            try:
+                                offset = int(offsets.get(str(i), 0))
+
+                            except (TypeError, ValueError):
+                                offset = 0
+
+                            downloaded_size += max(min(offset, end - start), 0)
+
             self.task_info.Download.downloaded_size = downloaded_size
     
     @Slot(str, int)
@@ -692,20 +824,33 @@ class Downloader(QObject):
                 file_info["finished_chunks"] += 1
                 file_info["chunks_list"].remove(chunk_index)
 
-            total = file_info.get("total_chunks", 1)
-            current_progress = int((file_info.get("finished_chunks", 0) / total) * 100) if total > 0 else 100
+            # 以剩余分片是否为空判断文件是否下载完成。finished_chunks 只是展示用的计数，
+            # 一旦因为历史数据异常而与实际分片数对不上，就会提前把文件判定为完成。
+            file_completed = file_info.get("total_chunks", 0) > 0 and not file_info.get("chunks_list")
+
+        if file_completed:
+            self.on_file_completed(file_key)
+            return
 
         task_manager.update_async(self.task_info)
 
-        if current_progress >= 100:
-            if file_key in self.task_info.Download.queue:
-                self.task_info.Download.queue.remove(file_key)
-
-            if self.task_info.Download.queue and not self._stop_event.is_set():
-                self.start_download()
-                return
-
         # 若队列全空，且任务没被暂停/取消，意味着所有文件下载完成
+        if not self.task_info.Download.queue and self.task_info.Download.status == DownloadStatus.DOWNLOADING:
+            self.on_download_completed()
+
+    @Slot(str)
+    def on_file_completed(self, file_key: str):
+        # 出队必须与分片状态在同一个快照里落盘。若先写库再出队，崩溃窗口内保存下来的记录
+        # 会是「分片全部完成但文件仍在队列中」，重启后该文件会被当作从未下载过而整片重下。
+        if file_key in self.task_info.Download.queue:
+            self.task_info.Download.queue.remove(file_key)
+
+        task_manager.update_async(self.task_info)
+
+        if self.task_info.Download.queue and not self._stop_event.is_set():
+            self.start_download()
+            return
+
         if not self.task_info.Download.queue and self.task_info.Download.status == DownloadStatus.DOWNLOADING:
             self.on_download_completed()
 
@@ -716,6 +861,7 @@ class Downloader(QObject):
                     "chunks_list": [],
                     "total_chunks": 0,
                     "finished_chunks": 0,
+                    "chunk_offsets": {},
                     "file_size": download_info["download_list"][file_key].get("file_size", 0)
                 } for file_key in download_info["download_queue"]
             }
