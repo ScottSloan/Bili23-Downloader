@@ -7,6 +7,7 @@ from gui.component.dialog import TopNavigationDialogBase
 from .additional import AdditionalSettingsPage
 from .download import DownloadSettingsPage
 from .media import MediaSettingsPage
+from .preview import DownloadPreviewBar
 
 from util.common.icon import ExtendedFluentIcon
 
@@ -23,6 +24,8 @@ class DownloadOptionsDialog(TopNavigationDialogBase):
 
         self.init_UI()
 
+        self.connect_signals()
+
         self.set_open_state(True)
 
     def init_UI(self):
@@ -35,7 +38,25 @@ class DownloadOptionsDialog(TopNavigationDialogBase):
         self.addItem("download", self.tr("Download Settings"), FluentIcon.DOWNLOAD, self.download_settings_page)
 
         self.pivot.setCurrentItem("media")
-    
+
+        self.preview_bar = DownloadPreviewBar(self)
+
+        self.setBottomLeftWidget(self.preview_bar)
+
+        self.on_update_preview()
+
+    def connect_signals(self):
+        self.media_settings_page.preview_changed.connect(self.on_update_preview)
+        self.additional_settings_page.preview_changed.connect(self.on_update_preview)
+
+    def on_update_preview(self):
+        # 汇总各页面的下载内容，刷新底部的预览标签
+        state = self.media_settings_page.get_download_preview()
+        state.update(self.additional_settings_page.get_download_preview())
+
+        self.preview_bar.update_preview(state)
+
+
     def accept(self):
         # 检查用户的设置
         if not self.media_settings_page.on_check():

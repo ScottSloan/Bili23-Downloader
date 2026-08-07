@@ -213,13 +213,13 @@ class TopNavigationDialogBase(FluentDialogBase):
         pivot_layout.addWidget(self.pivot)
         pivot_layout.addStretch()
 
-        button_layout = QHBoxLayout()
+        self.buttonLayout = button_layout = QHBoxLayout()
         button_layout.setContentsMargins(0, 5, 0, 0)
         button_layout.setSpacing(10)
         button_layout.addStretch()
         button_layout.addWidget(self.okBtn)
         button_layout.addWidget(self.cancelBtn)
-        
+
         self.vboxLayout = QVBoxLayout(self)
         self.vboxLayout.setContentsMargins(10, 32, 10, 10)
         self.vboxLayout.setSpacing(5)
@@ -228,6 +228,12 @@ class TopNavigationDialogBase(FluentDialogBase):
         self.vboxLayout.addLayout(button_layout)
 
         StyleSheet.FLUENT_DIALOG.apply(self.stackedWidget)
+
+    def setBottomLeftWidget(self, widget: QWidget):
+        """
+        在底部按钮栏的左侧添加控件，用于展示与对话框操作相关的辅助信息。
+        """
+        self.buttonLayout.insertWidget(0, widget, 0, Qt.AlignmentFlag.AlignVCenter)
 
     def addItem(self, routeKey: str, text: str, icon, widget: QWidget):
         item = PivotItem(text, icon, self.pivot)

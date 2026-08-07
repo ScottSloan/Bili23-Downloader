@@ -7,7 +7,7 @@ from .combobox import CidComboBox, DictComboBox, SeasonComboBox
 from .spinbox import SpinBox, DoubleSpinBox, CompactSpinBox
 from .info_bar import InfoBar, InfoBarPosition, InfoBarIcon
 from .tree_widget import DragTreeWidget, ColumnTreeWidget
-from .label import SectionLabel, ImageLabel, TipCaptionLabel
+from .label import SectionLabel, ImageLabel, TipCaptionLabel, TagLabel
 from .avatar import NavigationLargeAvatarWidget
 from .progress_tip import ProgressTipWidget
 from .flyout import FavoriteFlyoutWidget

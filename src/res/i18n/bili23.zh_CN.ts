@@ -369,17 +369,17 @@ You can also press shift + click to select a range of items.</source>
         <translation>请输入行号，例如：1,3,5-10</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/batch_select.py" line="61"/>
+        <location filename="../../gui/dialog/misc/batch_select.py" line="63"/>
         <source>Please enter line numbers</source>
         <translation>请输入行号</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/batch_select.py" line="70"/>
+        <location filename="../../gui/dialog/misc/batch_select.py" line="72"/>
         <source>Invalid line number range</source>
         <translation>行号范围格式错误</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/batch_select.py" line="75"/>
+        <location filename="../../gui/dialog/misc/batch_select.py" line="77"/>
         <source>Invalid line number</source>
         <translation>行号格式错误</translation>
     </message>
@@ -1169,32 +1169,32 @@ Please note that download history is the sole basis for recognizing downloaded v
 <context>
     <name>DownloadOptionsDialog</name>
     <message>
-        <location filename="../../gui/dialog/download_options/dialog.py" line="19"/>
+        <location filename="../../gui/dialog/download_options/dialog.py" line="20"/>
         <source>Download Options</source>
         <translation>下载选项</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/download_options/dialog.py" line="33"/>
+        <location filename="../../gui/dialog/download_options/dialog.py" line="36"/>
         <source>Media Settings</source>
         <translation>媒体设置</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/download_options/dialog.py" line="34"/>
+        <location filename="../../gui/dialog/download_options/dialog.py" line="37"/>
         <source>Additional Files</source>
         <translation>附加文件</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/download_options/dialog.py" line="35"/>
+        <location filename="../../gui/dialog/download_options/dialog.py" line="38"/>
         <source>Download Settings</source>
         <translation>下载设置</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/download_options/dialog.py" line="47"/>
+        <location filename="../../gui/dialog/download_options/dialog.py" line="68"/>
         <source>No files selected for download</source>
         <translation>未选择任何文件进行下载</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/download_options/dialog.py" line="48"/>
+        <location filename="../../gui/dialog/download_options/dialog.py" line="69"/>
         <source>Please select at least one of the following: video stream, audio stream, or additional files.</source>
         <translation>请至少选择下载独立视频流、音频流或附加文件中的一个。</translation>
     </message>
@@ -1243,6 +1243,49 @@ If you continue, please disable the &quot;Preallocate file space&quot; option. (
     </message>
 </context>
 <context>
+    <name>DownloadPreviewBar</name>
+    <message>
+        <location filename="../../gui/dialog/download_options/preview.py" line="17"/>
+        <source>Will download:</source>
+        <translation>将下载：</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialog/download_options/preview.py" line="21"/>
+        <source>Video</source>
+        <translation>视频</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialog/download_options/preview.py" line="22"/>
+        <source>Audio</source>
+        <translation>音频</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialog/download_options/preview.py" line="23"/>
+        <source>Danmaku</source>
+        <translation>弹幕</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialog/download_options/preview.py" line="24"/>
+        <source>Subtitles</source>
+        <translation>字幕</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialog/download_options/preview.py" line="25"/>
+        <source>Cover</source>
+        <translation>封面</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialog/download_options/preview.py" line="26"/>
+        <source>Metadata</source>
+        <translation>元数据</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialog/download_options/preview.py" line="32"/>
+        <source>Nothing selected</source>
+        <translation>未选择任何内容</translation>
+    </message>
+</context>
+<context>
     <name>DownloadSettingsPage</name>
     <message>
         <location filename="../../gui/dialog/download_options/download.py" line="24"/>
@@ -1258,7 +1301,7 @@ If you continue, please disable the &quot;Preallocate file space&quot; option. (
 <context>
     <name>Downloader</name>
     <message>
-        <location filename="../../util/download/downloader/downloader.py" line="737"/>
+        <location filename="../../util/download/downloader/downloader.py" line="883"/>
         <source>Audio</source>
         <translation>音频</translation>
     </message>
@@ -2531,13 +2574,13 @@ Download functionality will be limited if you&apos;re not logged in.</source>
 <context>
     <name>MediaSettingsPage</name>
     <message>
-        <location filename="../../gui/dialog/download_options/media.py" line="92"/>
-        <location filename="../../gui/dialog/download_options/media.py" line="102"/>
+        <location filename="../../gui/dialog/download_options/media.py" line="98"/>
+        <location filename="../../gui/dialog/download_options/media.py" line="108"/>
         <source>Important Notice</source>
         <translation>重要提示</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/download_options/media.py" line="93"/>
+        <location filename="../../gui/dialog/download_options/media.py" line="99"/>
         <source>Downloading video only will result in a silent video.
 
 If you intentionally need a video without audio, you may proceed. Otherwise, please also enable the audio stream.</source>
@@ -2546,7 +2589,7 @@ If you intentionally need a video without audio, you may proceed. Otherwise, ple
 如果确实需要无声视频，可继续操作；否则请同时勾选音频流。</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/download_options/media.py" line="103"/>
+        <location filename="../../gui/dialog/download_options/media.py" line="109"/>
         <source>&quot;Merge video and audio&quot; is disabled. Video and audio will be downloaded as two separate files.
 
 To get a single complete video file, please enable &quot;Merge video and audio&quot;.</source>
@@ -2933,37 +2976,37 @@ For example, if you set the video quality priority to 720P &gt; 1080P &gt; 4K, t
 <context>
     <name>Pager</name>
     <message>
-        <location filename="../../gui/component/widget/pager.py" line="39"/>
+        <location filename="../../gui/component/widget/pager.py" line="37"/>
         <source>Previous page</source>
         <translation>上一页</translation>
     </message>
     <message>
-        <location filename="../../gui/component/widget/pager.py" line="43"/>
+        <location filename="../../gui/component/widget/pager.py" line="41"/>
         <source>Next page</source>
         <translation>下一页</translation>
     </message>
     <message>
-        <location filename="../../gui/component/widget/pager.py" line="153"/>
+        <location filename="../../gui/component/widget/pager.py" line="162"/>
         <source>{total_pages} total / {total_items} items</source>
         <translation>共 {total_pages} 页 / {total_items} 个</translation>
     </message>
     <message>
-        <location filename="../../gui/component/widget/pager.py" line="164"/>
+        <location filename="../../gui/component/widget/pager.py" line="46"/>
         <source>Jump to page</source>
         <translation>跳转到页面</translation>
     </message>
     <message>
-        <location filename="../../gui/component/widget/pager.py" line="167"/>
+        <location filename="../../gui/component/widget/pager.py" line="50"/>
         <source>Auto-parse pagination</source>
         <translation>自动解析分页</translation>
     </message>
     <message>
-        <location filename="../../gui/component/widget/pager.py" line="191"/>
+        <location filename="../../gui/component/widget/pager.py" line="187"/>
         <source>Invalid page number</source>
         <translation>无效页码</translation>
     </message>
     <message>
-        <location filename="../../gui/component/widget/pager.py" line="191"/>
+        <location filename="../../gui/component/widget/pager.py" line="187"/>
         <source>Please enter a number between 1 and {total_pages}</source>
         <translation>请输入一个介于1和{total_pages}之间的数字</translation>
     </message>
@@ -3085,7 +3128,7 @@ For example, if you set the video quality priority to 720P &gt; 1080P &gt; 4K, t
         <translation>下载所选项目</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="491"/>
+        <location filename="../../gui/interface/parse.py" line="492"/>
         <source>Parse Failed</source>
         <translation>解析失败</translation>
     </message>
@@ -3095,12 +3138,12 @@ For example, if you set the video quality priority to 720P &gt; 1080P &gt; 4K, t
         <translation>搜索</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="553"/>
+        <location filename="../../gui/interface/parse.py" line="554"/>
         <source>{category_name} ({selected_count} selected, {total_count} total)</source>
         <translation>{category_name}（已选择 {selected_count} 项，共 {total_count} 项）</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="559"/>
+        <location filename="../../gui/interface/parse.py" line="560"/>
         <source>{category_name} ({total_count} total)</source>
         <translation>{category_name}（共 {total_count} 项）</translation>
     </message>
