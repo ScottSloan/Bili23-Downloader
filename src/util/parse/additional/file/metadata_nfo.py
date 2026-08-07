@@ -1,6 +1,7 @@
 from ....common.translator import Translator
 from ....download.task.info import TaskInfo
 from ....format.time import Time
+from ....common.translator import Translator
 
 from ...episode.tree import Attribute
 
