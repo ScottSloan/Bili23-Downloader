@@ -367,7 +367,7 @@ class ParseInterface(ParseBase):
 
         self.parse_list = ParseTreeView(self.main_window, parent = self)
 
-        self.segmented_widget = SegmentedWidget(self)
+        self.segmented_widget = SegmentedWidget(self.main_window, self)
         self.segmented_widget.hide()
 
         self.season_choice = SeasonComboBox(self)
@@ -435,6 +435,7 @@ class ParseInterface(ParseBase):
 
         self.segmented_widget.search_widget.scrollToItem.connect(self.scroll_to_item)
         self.segmented_widget.search_widget.checkMatches.connect(self.check_matches)
+        self.segmented_widget.pager_widget.auto_parse_btn.clicked.connect(self.on_auto_parse)
 
         self.season_choice.changeSeason.connect(self.on_season_changed)
 

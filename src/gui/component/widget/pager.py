@@ -1,9 +1,9 @@
-from PySide6.QtWidgets import QWidget, QHBoxLayout, QApplication
+from PySide6.QtWidgets import QWidget, QHBoxLayout
 from PySide6.QtCore import QSize, Signal
 
-from qfluentwidgets import FluentIcon, BodyLabel, RoundMenu, Action
+from qfluentwidgets import FluentIcon, BodyLabel, Action
 
-from .button import PagerNumberButton, TransparentToolButton, ToolButton
+from .button import PagerNumberButton, TransparentToolButton
 
 from util.common.enum import ToastNotificationCategory
 from util.common.icon import ExtendedFluentIcon
@@ -31,8 +31,6 @@ class Pager(QWidget):
 
         self.update_buttons()
 
-        self.menu_btn.clicked.connect(self.on_show_more_menu)
-
     def init_UI(self):
         self.prev_btn = TransparentToolButton(FluentIcon.CARE_LEFT_SOLID)
         self.prev_btn.setIconSize(QSize(9, 9))
@@ -44,8 +42,13 @@ class Pager(QWidget):
 
         self.count_label = BodyLabel(parent = self)
 
-        self.menu_btn = ToolButton(FluentIcon.MORE)
-        self.menu_btn.setFixedSize(28, 28)
+        self.jump_to_page_btn = TransparentToolButton(ExtendedFluentIcon.FORWARD_BUTTON, self)
+        self.jump_to_page_btn.setToolTip(self.tr("Jump to page"))
+        self.jump_to_page_btn.setFixedSize(28, 28)
+
+        self.auto_parse_btn = TransparentToolButton(ExtendedFluentIcon.AUTOMATION, self)
+        self.auto_parse_btn.setToolTip(self.tr("Auto-parse pagination"))
+        self.auto_parse_btn.setFixedSize(28, 28)
 
         self.num_layout = QHBoxLayout()
         self.num_layout.setContentsMargins(0, 0, 0, 0)
@@ -60,12 +63,18 @@ class Pager(QWidget):
         self.main_layout.addWidget(self.next_btn)
         self.main_layout.addSpacing(10)
         self.main_layout.addWidget(self.count_label)
-        self.main_layout.addSpacing(5)
-        self.main_layout.addWidget(self.menu_btn)
+        self.main_layout.addSpacing(10)
+        self.main_layout.addWidget(self.jump_to_page_btn)
+        self.main_layout.addWidget(self.auto_parse_btn)
         self.main_layout.addStretch()
 
+        self.connect_signals()
+
+    def connect_signals(self):
         self.prev_btn.clicked.connect(lambda: self.on_change_page(self.current_page - 1))
         self.next_btn.clicked.connect(lambda: self.on_change_page(self.current_page + 1))
+
+        self.jump_to_page_btn.clicked.connect(self.on_jump_to_page)
 
     def get_contiguous_numbers(self):
         # 左侧
@@ -156,19 +165,6 @@ class Pager(QWidget):
         ))
 
         self.update_buttons()
-
-    def on_show_more_menu(self):
-        menu = RoundMenu(parent = self)
-
-        if self.can_jump_page:
-            menu.addAction(self._create_action(FluentIcon.DOCUMENT, self.tr("Jump to page"), self.on_jump_to_page))
-
-        if self.can_auto_parse:
-            menu.addAction(self._create_action(ExtendedFluentIcon.AUTOMATION, self.tr("Auto-parse pagination"), self.parent_window.on_auto_parse))
-
-        pos = self.menu_btn.mapToGlobal(self.menu_btn.rect().bottomLeft())
-
-        menu.exec(pos)
 
     def _create_action(self, icon, text, slot):
         action = Action(icon = icon, text = text, parent = self)

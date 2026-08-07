@@ -23,7 +23,7 @@ class JumpToPageDialog(DialogBase):
         self.viewLayout.addSpacing(10)
         self.viewLayout.addWidget(self.page_box)
 
-        self.widget.setMinimumWidth(300)
+        self.widget.setMinimumWidth(350)
 
     def accept(self):
         self.page = int(self.page_box.text())

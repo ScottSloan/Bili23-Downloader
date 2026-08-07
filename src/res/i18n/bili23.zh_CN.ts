@@ -3699,13 +3699,13 @@ ISP：{isp}</translation>
     <name>SegmentedWidget</name>
     <message>
         <location filename="../../gui/component/widget/segment.py" line="48"/>
-        <source>Search</source>
-        <translation>搜索</translation>
+        <source>Search results</source>
+        <translation>搜索结果</translation>
     </message>
     <message>
         <location filename="../../gui/component/widget/segment.py" line="49"/>
-        <source>Page</source>
-        <translation>页面</translation>
+        <source>Pagination</source>
+        <translation>分页</translation>
     </message>
 </context>
 <context>
