@@ -355,6 +355,8 @@ class APPConfig(QConfig):
     attach_cover = ConfigItem("Additional", "attach_cover", False, BoolValidator())
     delete_cover_after_attach = ConfigItem("Additional", "delete_cover_after_attach", False, BoolValidator())
 
+    embed_chapter = ConfigItem("Additional", "embed_chapter", False, BoolValidator())
+
     download_metadata = ConfigItem("Additional", "download_metadata", False, BoolValidator())
     metadata_type = OptionsConfigItem("Additional", "metadata_type", MetadataType.NFO, OptionsValidator(MetadataType), EnumSerializer(MetadataType))
 

@@ -133,6 +133,7 @@ class DownloadType(IntFlag):
     SUBTITLE         = 1 << 3       # 下载字幕
     COVER            = 1 << 4       # 下载封面
     METADATA         = 1 << 5       # 下载元数据
+    CHAPTER          = 1 << 6       # 嵌入章节信息
 
 class VideoContainer(Enum):
     MP4 = "mp4"

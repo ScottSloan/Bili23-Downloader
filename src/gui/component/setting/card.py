@@ -326,6 +326,17 @@ class CoverSettingCard(ExpandGroupSettingCard):
         can_delete_cover = can_embed_cover and self.attach_cover_switch.isChecked()
         self.delete_cover_after_attach_group.setEnabled(can_delete_cover)
 
+class ChapterSettingCard(ExpandGroupSettingCard):
+    def __init__(self, parent = None):
+        super().__init__(FluentIcon.BOOK_SHELF, self.tr("Chapter Settings"), self.tr("Adjust chapter settings"), parent)
+
+        self.download_switch = SettingSwitchButton(config.embed_chapter, parent = self)
+
+        self.viewLayout.setContentsMargins(0, 0, 0, 0)
+        self.viewLayout.setSpacing(0)
+
+        self.addGroup("", self.tr("Embed Chapters"), self.tr("Embed the video chapters into the video file, only effective when merging video and audio"), self.download_switch)
+
 class MetadataSettingCard(ExpandGroupSettingCard):
     def __init__(self, parent = None):
         super().__init__(FluentIcon.DOCUMENT, self.tr("Metadata Download Settings"), self.tr("Adjust metadata download settings"), parent)

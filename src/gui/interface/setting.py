@@ -8,7 +8,7 @@ from qfluentwidgets import (
 
 from gui.component.widget.scroll import ScrollArea
 from gui.component.setting import (
-    PrioritySettingCard, DanmakuSettingCard, SubtitleSettingCard, CoverSettingCard, MetadataSettingCard, CDNSettingCard, ProxySettingCard,
+    PrioritySettingCard, DanmakuSettingCard, SubtitleSettingCard, CoverSettingCard, ChapterSettingCard, MetadataSettingCard, CDNSettingCard, ProxySettingCard,
     FFmpegSettingCard, NumberSettingCard, DownloadFormatCard, DownloadPathSettingCard, ParsingSettingCard, WindowBehaviorSettingCard,
     DownloadHandlingSettingCard, DownloadConcurrencySettingCard, PersonalizationCard, CheckUpdateSettingCard, OtherAdvancedSettingCard
 )
@@ -59,11 +59,12 @@ class SettingInterface(ScrollArea):
         self.download_format_card = DownloadFormatCard(self)
 
         # Additional
-        self.additional_group = SettingCardGroup(self.tr("Danmaku, Subtitles, Cover, and Metadata"), self)
+        self.additional_group = SettingCardGroup(self.tr("Danmaku, Subtitles, Cover, Chapters, and Metadata"), self)
 
         self.danmaku_setting_card = DanmakuSettingCard(parent = self)
         self.subtitle_setting_card = SubtitleSettingCard(parent = self)
         self.cover_setting_card = CoverSettingCard(parent = self)
+        self.chapter_setting_card = ChapterSettingCard(parent = self)
         self.metadata_setting_card = MetadataSettingCard(parent = self)
 
         # File Naming
@@ -106,6 +107,7 @@ class SettingInterface(ScrollArea):
         self.additional_group.addSettingCard(self.danmaku_setting_card)
         self.additional_group.addSettingCard(self.subtitle_setting_card)
         self.additional_group.addSettingCard(self.cover_setting_card)
+        self.additional_group.addSettingCard(self.chapter_setting_card)
         self.additional_group.addSettingCard(self.metadata_setting_card)
 
         # File Naming Convention

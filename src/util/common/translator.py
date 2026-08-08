@@ -305,6 +305,7 @@ class Translator:
             "DOWNLOADING_DANMAKU": translate("TIP_MESSAGES", "Downloading Danmaku..."),
             "DOWNLOADING_SUBTITLES": translate("TIP_MESSAGES", "Downloading Subtitles..."),
             "DOWNLOADING_COVER": translate("TIP_MESSAGES", "Downloading Cover..."),
+            "PARSING_CHAPTER": translate("TIP_MESSAGES", "Parsing Chapters..."),
             "SCRAPING_METADATA": translate("TIP_MESSAGES", "Scraping Metadata..."),
             "PARSING_INTERACTIVE_VIDEO_NODE": translate("TIP_MESSAGES", "Parsing node: {title}"),
             "PARSING_PAGE": translate("TIP_MESSAGES", "Parsing page {page}, total {total_page} pages, progress: {progress}%"),

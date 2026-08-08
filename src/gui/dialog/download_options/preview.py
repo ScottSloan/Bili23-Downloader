@@ -23,6 +23,7 @@ class DownloadPreviewBar(QWidget):
             ("danmaku", self.tr("Danmaku"), "#8764B8"),
             ("subtitle", self.tr("Subtitles"), "#DA6A1E"),
             ("cover", self.tr("Cover"), "#00B7C3"),
+            ("chapter", self.tr("Chapters"), "#EF6950"),
             ("metadata", self.tr("Metadata"), "#C239B3")
         ]
 

@@ -11,6 +11,7 @@ from ...common.config import config
 from ...common.io.file import File
 
 from ...parse.additional.worker import AdditionalParseWorker
+from ...parse.additional.chapter import ChapterParser
 from ...thread.pool import GlobalThreadPoolTask
 from ...network.request import get_cookies, get_mounts, get_ssl_context
 from ...network.proxy import Proxy
@@ -925,8 +926,9 @@ class Downloader(QObject):
         subtitles = self.task_info.Download.type & DownloadType.SUBTITLE != 0
         cover = self.task_info.Download.type & DownloadType.COVER != 0
         metadata = self.task_info.Download.type & DownloadType.METADATA != 0
+        chapter = ChapterParser.is_available(self.task_info)
 
-        if any([danmaku, subtitles, cover, metadata]):
+        if any([danmaku, subtitles, cover, metadata, chapter]):
             self.task_info.Download.status = DownloadStatus.ADDITIONAL_PROCESSING
             
             worker = AdditionalParseWorker(self.task_info)

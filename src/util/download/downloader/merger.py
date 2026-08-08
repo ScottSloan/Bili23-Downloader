@@ -7,6 +7,8 @@ from ...common.signal_bus import signal_bus
 from ...common.translator import Translator
 from ...common.config import config
 
+from ...parse.additional.chapter import ChapterParser
+
 from ...ffmpeg.command import FFmpegCommand
 from ...ffmpeg.runner import FFmpegRunner
 
@@ -65,7 +67,8 @@ class Merger(QObject):
                 video_path = self.temp_video_file_name,
                 audio_path = self.temp_audio_file_name,
                 output_path = self.temp_output_file_name,
-                cover_path = self.check_attach_cover()
+                cover_path = self.check_attach_cover(),
+                chapter_path = self.check_attach_chapter()
             )
 
             self._run_merge_command(merge_cmd, cwd)
@@ -89,7 +92,8 @@ class Merger(QObject):
         merge_cmd = FFmpegCommand.merge_video_parts(
             lists_path = lists_path,
             output_path = self.temp_output_file_name,
-            cover_path = self.check_attach_cover()
+            cover_path = self.check_attach_cover(),
+            chapter_path = self.check_attach_chapter()
         )
 
         self._run_merge_command(merge_cmd, cwd)
@@ -152,6 +156,7 @@ class Merger(QObject):
                 safe_remove(cwd, *self.task_info.File.relative_files)
 
             self.delete_embedded_cover()
+            self.delete_embedded_chapter()
             self.add_file(final_output_file_name, *kept_original_files, clear = True)
             self.mark_as_completed()
 
@@ -310,6 +315,19 @@ class Merger(QObject):
     def delete_embedded_cover(self):
         if self._embedded_cover_file_name and self._delete_cover_after_embedding:
             safe_remove(self.get_cwd(), self._embedded_cover_file_name)
+
+    def check_attach_chapter(self):
+        # 章节文件由 ChapterParser 在附加内容解析阶段生成，视频没有章节时不会存在
+        chapter_file_name = ChapterParser.get_file_name(self.task_info.Basic.task_id)
+
+        if Path(self.get_cwd(), chapter_file_name).exists():
+            return chapter_file_name
+
+        return None
+
+    def delete_embedded_chapter(self):
+        # 章节文件仅为中间文件，合并成功后删除；合并失败时保留，重试可直接复用
+        safe_remove(self.get_cwd(), ChapterParser.get_file_name(self.task_info.Basic.task_id))
 
     def create_lists_file(self, video_parts_count: int):
         cwd = self.get_cwd()

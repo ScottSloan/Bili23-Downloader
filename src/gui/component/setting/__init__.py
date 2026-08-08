@@ -1,6 +1,6 @@
 from .card import (
     DownloadPathSettingCard, PrioritySettingCard, DanmakuSettingCard, SubtitleSettingCard, CoverSettingCard,
-    MetadataSettingCard, NumberSettingCard, CDNSettingCard, ProxySettingCard, FFmpegSettingCard,
+    ChapterSettingCard, MetadataSettingCard, NumberSettingCard, CDNSettingCard, ProxySettingCard, FFmpegSettingCard,
     DownloadFormatCard, ParsingSettingCard, WindowBehaviorSettingCard, DownloadHandlingSettingCard,
     DownloadConcurrencySettingCard, DownloadConcurrencySettingCard, PersonalizationCard,
     CheckUpdateSettingCard, OtherAdvancedSettingCard

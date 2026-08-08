@@ -712,6 +712,29 @@ You can also press shift + click to select a range of items.</source>
     </message>
 </context>
 <context>
+    <name>ChapterSettingCard</name>
+    <message>
+        <location filename="../../gui/component/setting/card.py" line="331"/>
+        <source>Chapter Settings</source>
+        <translation>章節設定</translation>
+    </message>
+    <message>
+        <location filename="../../gui/component/setting/card.py" line="331"/>
+        <source>Adjust chapter settings</source>
+        <translation>調整章節相關設定</translation>
+    </message>
+    <message>
+        <location filename="../../gui/component/setting/card.py" line="338"/>
+        <source>Embed Chapters</source>
+        <translation>嵌入章節資訊</translation>
+    </message>
+    <message>
+        <location filename="../../gui/component/setting/card.py" line="338"/>
+        <source>Embed the video chapters into the video file, only effective when merging video and audio</source>
+        <translation>將影片的分段章節寫入影片檔案，僅在合併影片與音訊時生效</translation>
+    </message>
+</context>
+<context>
     <name>CoverSettingCard</name>
     <message>
         <location filename="../../gui/component/setting/card.py" line="278"/>
@@ -1276,6 +1299,11 @@ If you continue, please disable the &quot;Preallocate file space&quot; option. (
     </message>
     <message>
         <location filename="../../gui/dialog/download_options/preview.py" line="26"/>
+        <source>Chapters</source>
+        <translation>章節</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialog/download_options/preview.py" line="27"/>
         <source>Metadata</source>
         <translation>元數據</translation>
     </message>
@@ -3818,8 +3846,8 @@ ISP：{isp}</translation>
     </message>
     <message>
         <location filename="../../gui/interface/setting.py" line="62"/>
-        <source>Danmaku, Subtitles, Cover, and Metadata</source>
-        <translation>彈幕、字幕、封面與元數據</translation>
+        <source>Danmaku, Subtitles, Cover, Chapters, and Metadata</source>
+        <translation>彈幕、字幕、封面、章節與元數據</translation>
     </message>
     <message>
         <location filename="../../gui/interface/setting.py" line="76"/>
@@ -4119,6 +4147,11 @@ Under no circumstances shall the developer be liable for any direct, indirect, i
         <location filename="../../util/common/translator.py" line="307"/>
         <source>Downloading Cover...</source>
         <translation>下載封面中...</translation>
+    </message>
+    <message>
+        <location filename="../../util/common/translator.py" line="308"/>
+        <source>Parsing Chapters...</source>
+        <translation>解析章節中...</translation>
     </message>
     <message>
         <location filename="../../util/common/translator.py" line="308"/>
