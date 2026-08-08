@@ -2,13 +2,11 @@ from ...common._json import json_loads, json_dumps
 from ...common.config import appdata_path, config
 from ...common.timestamp import get_timestamp
 from ...common.database import Database
-from ...parse.episode.tree import Attribute
-
+from .hash_id import calc_hash_id, HASH_ID_VERSION
 from .info import TaskInfo
 
 from pathlib import Path
 from typing import List
-import hashlib
 import logging
 
 logger = logging.getLogger(__name__)
@@ -30,6 +28,58 @@ class TaskDatabase(Database):
         if self._needs_upgrade():
             logger.info("检测到旧版下载任务数据库，正在进行升级")
             self._upgrade()
+
+            # 升级时已按当前算法重算过 hash_id，直接打上版本号
+            self.set_user_version(HASH_ID_VERSION)
+
+            return
+
+        self._check_should_rehash()
+
+    def _check_should_rehash(self):
+        # 表结构没变，但 hash_id 的算法可能已经变化。
+        # 早期版本的 hash_id 依赖 orjson 的默认输出格式，换环境或升级版本后即失效，
+        # 导致旧记录无法参与重复下载判定，因此需要按当前算法重算一次。
+        current_version = self.get_user_version()
+
+        if current_version >= HASH_ID_VERSION:
+            return
+
+        logger.info("检测到下载任务数据库中的 hash_id 版本过旧（%d），正在重算", current_version)
+
+        try:
+            self._rehash_all()
+
+        except Exception:
+            # 重算失败时不写入版本号，下次启动会再试一次，不影响本次正常使用
+            logger.exception("重算下载任务 hash_id 失败")
+
+            return
+
+        self.set_user_version(HASH_ID_VERSION)
+
+    def _rehash_all(self):
+        # data 列中保存着完整的 task_info，可据此重算 hash_id，无需用户重新下载
+        for table_name in ("download_task", "completed_task"):
+            updates = []
+
+            for task_id, data in self.query(f"SELECT task_id, data FROM {table_name}"):
+                try:
+                    task_info = TaskInfo()
+                    task_info.from_dict(json_loads(data))
+
+                except Exception:
+                    # 单条记录损坏时跳过，不影响其余记录的重算
+                    logger.exception("解析下载任务记录失败，已跳过: %s", task_id)
+
+                    continue
+
+                updates.append((self._calc_hash_id(task_info), task_id))
+
+            if updates:
+                self.executemany(f"UPDATE {table_name} SET hash_id = ? WHERE task_id = ?", updates)
+
+                logger.info("已重算 %s 表中 %d 条记录的 hash_id", table_name, len(updates))
 
     def _needs_upgrade(self):
         required_columns = {"task_id", "hash_id", "cover_id", "title", "data"}
@@ -289,48 +339,12 @@ class TaskDatabase(Database):
 
     def _calc_hash_id(self, task_info: TaskInfo):
         # 根据 task_info 计算 hash_id
-        attr = task_info.Episode.attribute
-
-        if attr & Attribute.VIDEO_BIT:
-            # 投稿视频
-            metadata = {
-                "bvid": task_info.Episode.bvid,
-                "cid": task_info.Episode.cid,
-                "aid": task_info.Episode.aid
-            }
-
-        elif attr & Attribute.BANGUMI_BIT:
-            # 剧集类
-            metadata = {
-                "bvid": task_info.Episode.bvid,
-                "cid": task_info.Episode.cid,
-                "aid": task_info.Episode.aid,
-                "ep_id": task_info.Episode.ep_id
-            }
-
-        elif attr & Attribute.CHEESE_BIT:
-            # 课程类
-            metadata = {
-                "aid": task_info.Episode.aid,
-                "cid": task_info.Episode.cid,
-                "ep_id": task_info.Episode.ep_id
-            }
-
-        elif attr & Attribute.AUDIO_BIT:
-            # 音乐类
-            metadata = {
-                "sid": task_info.Episode.sid
-            }
-
-        else:
-            # 属性缺失或未知时同样要给出可区分的 hash，否则会抛出异常中断数据库迁移
-            metadata = {
-                "aid": task_info.Episode.aid,
-                "bvid": task_info.Episode.bvid,
-                "cid": task_info.Episode.cid,
-                "ep_id": task_info.Episode.ep_id,
-                "sid": task_info.Episode.sid,
-                "task_id": task_info.Basic.task_id
-            }
-
-        return hashlib.md5(json_dumps(metadata).encode("utf-8")).hexdigest()
+        return calc_hash_id(
+            task_info.Episode.attribute,
+            aid = task_info.Episode.aid,
+            bvid = task_info.Episode.bvid,
+            cid = task_info.Episode.cid,
+            ep_id = task_info.Episode.ep_id,
+            sid = task_info.Episode.sid,
+            task_id = task_info.Basic.task_id
+        )

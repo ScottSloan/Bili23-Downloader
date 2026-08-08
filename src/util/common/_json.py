@@ -1,3 +1,4 @@
+import json as std_json
 import logging
 
 logger = logging.getLogger(__name__)
@@ -24,6 +25,14 @@ def json_dumps(obj, indent = None):
     else:
         return json.dumps(obj, indent = indent)
     
+def json_dumps_stable(obj):
+    # 供计算持久化哈希使用，输出格式必须永远保持稳定。
+    #
+    # json_dumps 的结果取决于运行时有没有 orjson，也曾因为 indent 判断修改而变化过，
+    # 一旦用它计算入库的哈希，换个环境或升级一次版本，历史记录就全部对不上了。
+    # 因此这里固定走标准库，并显式锁定分隔符、键序与转义方式。
+    return std_json.dumps(obj, sort_keys = True, separators = (",", ":"), ensure_ascii = True)
+
 def json_loads(s):
     if _orjson_available:
         return json.loads(s)

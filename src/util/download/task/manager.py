@@ -13,6 +13,7 @@ from ...thread.pool import GlobalThreadPoolTask
 
 from ..cover.manager import cover_manager
 from .reparse_worker import ReparseWorker
+from .hash_id import calc_hash_id
 from .db import TaskDatabase
 from .info import TaskInfo
 
@@ -22,7 +23,6 @@ from typing import List
 from uuid import uuid4
 from concurrent.futures import ThreadPoolExecutor
 import logging
-import hashlib
 import re
 
 logger = logging.getLogger(__name__)
@@ -530,49 +530,13 @@ class TaskManager:
 
     def _calc_hash_id(self, episode_info: dict):
         # 根据 episode_info 计算 hash_id
-        attr = episode_info.get("attribute", 0)
-
-        if attr & Attribute.VIDEO_BIT:
-            # 投稿视频
-            metadata = {
-                "bvid": episode_info.get("bvid"),
-                "cid": episode_info.get("cid"),
-                "aid": episode_info.get("aid")
-            }
-
-        elif attr & Attribute.BANGUMI_BIT:
-            # 剧集类
-            metadata = {
-                "bvid": episode_info.get("bvid"),
-                "cid": episode_info.get("cid"),
-                "aid": episode_info.get("aid"),
-                "ep_id": episode_info.get("ep_id")
-            }
-
-        elif attr & Attribute.CHEESE_BIT:
-            # 课程类
-            metadata = {
-                "aid": episode_info.get("aid"),
-                "cid": episode_info.get("cid"),
-                "ep_id": episode_info.get("ep_id")
-            }
-
-        elif attr & Attribute.AUDIO_BIT:
-            # 音乐类
-            metadata = {
-                "sid": episode_info.get("sid")
-            }
-
-        else:
-            # 属性缺失或未知时同样要给出可区分的 hash，否则会抛出异常导致任务创建失败
-            metadata = {
-                "aid": episode_info.get("aid"),
-                "bvid": episode_info.get("bvid"),
-                "cid": episode_info.get("cid"),
-                "ep_id": episode_info.get("ep_id"),
-                "sid": episode_info.get("sid")
-            }
-
-        return hashlib.md5(json_dumps(metadata).encode("utf-8")).hexdigest()
+        return calc_hash_id(
+            episode_info.get("attribute", 0),
+            aid = episode_info.get("aid"),
+            bvid = episode_info.get("bvid"),
+            cid = episode_info.get("cid"),
+            ep_id = episode_info.get("ep_id"),
+            sid = episode_info.get("sid")
+        )
     
 task_manager = TaskManager()

@@ -102,6 +102,19 @@ class Database:
         with conn:
             conn.executescript(script)
 
+    def get_user_version(self) -> int:
+        # 借助 SQLite 自带的 user_version 记录数据结构版本，避免与配置文件的版本号耦合
+        result = self.query("PRAGMA user_version")
+
+        return int(result[0][0]) if result else 0
+
+    def set_user_version(self, version: int):
+        conn = self.get_connection()
+
+        # PRAGMA 不支持参数绑定，因此在拼接前强制转换为整数
+        with conn:
+            conn.execute(f"PRAGMA user_version = {int(version)}")
+
     def vacuum(self):
         # VACUUM 无法在事务中执行，先提交挂起的事务再回收空间
         conn = self.get_connection()
