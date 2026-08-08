@@ -1,7 +1,7 @@
 from qfluentwidgets import SubtitleLabel, MessageBox
 
 from gui.component.dialog import DialogBase
-from gui.component.widget import LabelSwitchButton
+from gui.component.widget.button import LabelSwitchButton
 
 from util.common.config import config
 

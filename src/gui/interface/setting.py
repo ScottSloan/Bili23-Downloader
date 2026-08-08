@@ -3,7 +3,7 @@ from PySide6.QtCore import Qt
 
 from qfluentwidgets import (
     SettingCardGroup, PushSettingCard, ComboBoxSettingCard, MSFluentWindow, MessageBox, FluentIcon,
-    setTheme, setThemeColor
+    setThemeColor
 )
 
 from gui.component.widget.scroll import ScrollArea
@@ -147,7 +147,7 @@ class SettingInterface(ScrollArea):
 
     def connect_signals(self):
         # Interface
-        config.themeChanged.connect(setTheme)
+        # config.themeChanged -> setTheme 已在主窗口中连接，此处不再重复连接
         config.appRestartSig.connect(self.show_restart_message)
         self.personalization_card.accentColorChanged.connect(setThemeColor)
         self.personalization_card.mica_effect_switch.checkedChanged.connect(signal_bus.interface.mica_effect_changed)

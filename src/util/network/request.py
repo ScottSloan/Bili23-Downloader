@@ -6,9 +6,11 @@ from ..common.config import config
 from threading import Lock
 from enum import Enum
 import logging
-import httpx
 import ssl
 import os
+
+# 不在模块顶层导入 httpx：本模块会被解析、预览等界面模块间接引入，而导入 httpx 需要连带加载
+# httpcore 等一系列模块（约 0.1 秒）。改为在真正用到的函数内导入，把这笔开销留给后台预热线程。
 
 logging.getLogger("httpx").setLevel(logging.WARNING)
 
@@ -51,6 +53,8 @@ def _create_ssl_context():
         return ssl.create_default_context()
 
 def get_mounts(proxies = None):
+    import httpx
+
     if proxies:
         proxy_url = proxies.get("http") or proxies.get("https")
 
@@ -63,6 +67,8 @@ def get_mounts(proxies = None):
 
 def _create_client():
     from .proxy import Proxy
+
+    import httpx
 
     # 封面加载线程池上限就有 16，叠加解析线程后并发请求数远超 10。
     # 连接数不够时后来的请求要排队等空闲连接，而排队时间同样计入超时，
@@ -152,6 +158,8 @@ class SyncNetWorkRequest:
         self.proxies = None
 
     def run(self):
+        import httpx
+
         headers = self.get_headers()
 
         if self.proxies:

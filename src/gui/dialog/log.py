@@ -3,7 +3,8 @@ from PySide6.QtWidgets import QHBoxLayout, QVBoxLayout
 from qfluentwidgets import ComboBox, LineEdit, PushButton
 
 from gui.component.log_list.list_view import LogListView
-from gui.component.widget import TipCaptionLabel, ToolButton
+from gui.component.widget.button import ToolButton
+from gui.component.widget.label import TipCaptionLabel
 from gui.component.dialog import FluentWidget
 
 from util.common.icon import ExtendedFluentIcon

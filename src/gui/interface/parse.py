@@ -7,9 +7,10 @@ from qfluentwidgets import (
     TeachingTipTailPosition, TeachingTip
 )
 
-from gui.component.widget import (
-    TransparentToolButton, SegmentedWidget, IndeterminateProgressSplitPushButton, SeasonComboBox, ProgressTipWidget,
-)
+from gui.component.widget.button import TransparentToolButton, IndeterminateProgressSplitPushButton
+from gui.component.widget.combobox import SeasonComboBox
+from gui.component.widget.progress_tip import ProgressTipWidget
+from gui.component.widget.segment import SegmentedWidget
 from gui.component.parse_list import ParseTreeView
 
 from util.common.enum import ToastNotificationCategory, AutoSelectMode, ParserType, DuplicateDownloadResolution

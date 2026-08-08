@@ -2,7 +2,7 @@ from PySide6.QtWidgets import QVBoxLayout
 from PySide6.QtCore import QTimer, Signal
 
 from gui.component.setting import DanmakuSettingCard, SubtitleSettingCard, CoverSettingCard, ChapterSettingCard, MetadataSettingCard
-from gui.component.widget import ScrollArea
+from gui.component.widget.scroll import ScrollArea
 
 class AdditionalSettingsPage(ScrollArea):
     # 下载内容发生变化时发出，用于刷新下载内容预览

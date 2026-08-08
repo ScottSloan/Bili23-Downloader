@@ -6,7 +6,7 @@ from qfluentwidgets import (
     RangeConfigItem, isDarkTheme, ConfigItem
 )
 
-from gui.component.widget import TransparentToolButton
+from gui.component.widget.button import TransparentToolButton
 
 from util.common.config import config
 

@@ -3,7 +3,7 @@ from PySide6.QtCore import Qt, QSize
 from qfluentwidgets import SubtitleLabel, MessageBox, CommandBar, Action, FluentIcon
 
 from gui.component.setting import EditActionWidget
-from gui.component.widget import ColumnTreeWidget
+from gui.component.widget.tree_widget import ColumnTreeWidget
 from gui.component.dialog import DialogBase
 
 from util.common.data import reversed_convention_type_map

@@ -138,7 +138,7 @@ qInstallMessageHandler(qt_message_handler)
 
 # --------- Imports ---------
 
-from PySide6.QtCore import Qt, QLocale, QTranslator, QLockFile, QTimer
+from PySide6.QtCore import Qt, QLocale, QTranslator, QLockFile, QTimer, Signal
 from PySide6.QtNetwork import QLocalServer, QLocalSocket
 from PySide6.QtWidgets import QApplication
 from PySide6.QtGui import QFont
@@ -156,6 +156,9 @@ APP_MUTEX_NAME = "B096F0C1-D105-4EF9-86E1-5E87DA884EA4"
 logger = logging.getLogger(__name__)
 
 class Application(QApplication):
+    # 网络栈在后台线程预热完成后发出，用于把后续的登录态初始化切回 GUI 线程
+    network_ready = Signal()
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -165,6 +168,7 @@ class Application(QApplication):
         self.app_mutex_handle = None
 
         self.aboutToQuit.connect(self.cleanup_instance_state)
+        self.network_ready.connect(self.init_auth_info)
 
         self.init_single_instance()
 
@@ -281,29 +285,37 @@ class Application(QApplication):
         self.installTranslator(self.bili23_translator)
 
     def bootstrap_startup_tasks(self):
-        # 将登录态与用户信息初始化放到首屏之后，避免阻塞窗口展示
-        from util.auth.cookie import cookie_manager
-        from util.auth.user import user_manager
+        # 网络栈预热与登录态初始化都放到首屏之后，避免阻塞窗口展示
+        self.warmup_network_stack()
 
-        self.warmup_ssl_context()
-
-        cookie_manager.init_cookie_info()
-        user_manager.init_user_info()
-
-    def warmup_ssl_context(self):
-        # 首次构建 SSL 上下文需要加载完整的 CA 证书列表（约 0.5 秒）。
-        # 提前在后台线程完成，避免第一次发起下载时在 GUI 线程上付出这笔开销。
-        from util.network.request import get_ssl_context
+    def warmup_network_stack(self):
+        # 导入 httpx 需要连带加载 httpcore 等一系列模块（约 0.3 秒），首次构建 SSL 上下文
+        # 需要加载完整的 CA 证书列表（约 0.5 秒）。两者都放到后台线程完成，避免在 GUI 线程
+        # 上付出这笔开销。
         from threading import Thread
 
         def warmup():
             try:
+                import httpx  # noqa: F401
+
+                from util.network.request import get_ssl_context
+
                 get_ssl_context()
 
             except Exception:
-                logger.exception("预热 SSL 上下文失败")
+                logger.exception("预热网络栈失败")
 
-        Thread(target = warmup, name = "ssl-warmup", daemon = True).start()
+            # Qt 对象只能在 GUI 线程创建，通过跨线程信号切回主线程再发起请求
+            self.network_ready.emit()
+
+        Thread(target = warmup, name = "network-warmup", daemon = True).start()
+
+    def init_auth_info(self):
+        from util.auth.cookie import cookie_manager
+        from util.auth.user import user_manager
+
+        cookie_manager.init_cookie_info()
+        user_manager.init_user_info()
 
     def _msw_create_mutex(self, name: str):
         import ctypes

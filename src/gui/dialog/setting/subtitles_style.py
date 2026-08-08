@@ -4,7 +4,7 @@ from qfluentwidgets import SubtitleLabel, ScrollArea
 
 from gui.component.setting import FontGroup, BorderGroup, ColorGroup, MarginGroup, AlignmentGroup, ResolutionGroup
 from gui.component.dialog import DialogBase
-from gui.component.widget import ScrollArea
+from gui.component.widget.scroll import ScrollArea
 
 from util.common.config import config
 

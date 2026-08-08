@@ -3,7 +3,7 @@ from PySide6.QtWidgets import QHBoxLayout
 
 from qfluentwidgets import SubtitleLabel, BodyLabel, CheckBox
 
-from gui.component.widget import CheckListView
+from gui.component.widget.tree_view import CheckListView
 from gui.component.dialog import DialogBase
 
 from util.parse.episode.video import VideoEpisodeParser

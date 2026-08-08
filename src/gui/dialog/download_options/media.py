@@ -4,7 +4,7 @@ from PySide6.QtCore import QTimer, Signal
 from qfluentwidgets import MessageBox
 
 from gui.dialog.download_options.card import MediaInfoCard, MediaOptionsCard
-from gui.component.widget import ScrollArea
+from gui.component.widget.scroll import ScrollArea
 
 from util.parse.preview.info import PreviewerInfo
 from util.common.data import video_quality_map, audio_quality_map, video_codec_map

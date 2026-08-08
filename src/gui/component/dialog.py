@@ -6,7 +6,8 @@ from qfluentwidgets import (
     MessageBoxBase, FluentWidgetTitleBar, PrimaryPushButton, PushButton, FluentWidget as _FluentWidget,
     PopUpAniStackedWidget, InfoBar, InfoBarPosition, MessageBox as _MessageBox
 )
-from .widget import PivotItem, Pivot, ScrollArea
+from .widget.pivot import PivotItem, Pivot
+from .widget.scroll import ScrollArea
 
 from util.common.enum import ToastNotificationCategory
 from util.common.style_sheet import StyleSheet

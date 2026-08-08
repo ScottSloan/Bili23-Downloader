@@ -4,7 +4,8 @@ from .cdn import CDN
 from urllib.parse import urlparse
 import logging
 import time
-import httpx
+
+# 同 request.py：本模块会被解析预览链路间接引入，httpx 改为在函数内导入，避免拖慢启动
 
 logger = logging.getLogger(__name__)
 
@@ -34,6 +35,8 @@ def resolve_download_url(url_list: list[str], min_file_size: int = 1024) -> dict
 
 
 def _probe_url(url: str, min_file_size: int, deadline: float) -> int:
+    import httpx
+
     for attempt in range(PROBE_ATTEMPTS):
         if time.monotonic() >= deadline:
             return 0

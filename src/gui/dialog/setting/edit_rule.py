@@ -3,7 +3,8 @@ from PySide6.QtCore import Qt, QSize
 
 from qfluentwidgets import SubtitleLabel, BodyLabel, LineEdit, CheckBox, PushButton, MessageBox, HyperlinkButton, RoundMenu, Action, FluentIcon
 
-from gui.component.widget import ColumnTreeWidget, DictComboBox
+from gui.component.widget.combobox import DictComboBox
+from gui.component.widget.tree_widget import ColumnTreeWidget
 from gui.component.setting import InsertActionWidget
 from gui.component.dialog import DialogBase
 

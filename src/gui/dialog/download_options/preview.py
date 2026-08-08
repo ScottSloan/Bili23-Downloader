@@ -1,7 +1,7 @@
 from PySide6.QtWidgets import QWidget, QHBoxLayout
 from PySide6.QtGui import QColor
 
-from gui.component.widget import TagLabel, TipCaptionLabel
+from gui.component.widget.label import TagLabel, TipCaptionLabel
 
 class DownloadPreviewBar(QWidget):
     """

@@ -3,7 +3,7 @@ from PySide6.QtGui import QIcon, QPixmap
 from PySide6.QtCore import Qt, QTimer
 
 from qfluentwidgets import (
-    MSFluentWindow, SystemThemeListener, NavigationItemPosition, FluentIcon, InfoBadge, qrouter
+    MSFluentWindow, SystemThemeListener, NavigationItemPosition, FluentIcon, InfoBadge, qrouter, setTheme
 )
 
 from util.common.enum import ToastNotificationCategory, WhenClose
@@ -283,6 +283,9 @@ class MainWindow(MainWindowBase, MSFluentWindow):
         self.flyout_initialized = False
         self.initialized = False
 
+        # 设置界面构造耗时约 0.5 秒，且多数启动过程中并不会用到，推迟到首次进入设置页时再创建
+        self.setting_interface = None
+
         self.init_UI()
 
         self.center_on_screen(not config.get(config.silent_start))
@@ -356,17 +359,14 @@ class MainWindow(MainWindowBase, MSFluentWindow):
     def init_deferred_ui(self):
         from gui.component.widget.flyout import FavoriteFlyoutWidget
         from gui.component.sys_tray import SystemTrayIcon
-        
+
         from qfluentwidgets import Flyout
 
         from .download import DownloadInterface
-        from .setting import SettingInterface
 
         self.download_interface = DownloadInterface(self)
-        self.setting_interface = SettingInterface(self)
 
         self._addSubInterface(self.download_interface)
-        self._addSubInterface(self.setting_interface)
 
         self.system_tray_icon = SystemTrayIcon(self)
         self.system_tray_icon.show()
@@ -384,7 +384,24 @@ class MainWindow(MainWindowBase, MSFluentWindow):
         self.flyout_widget.closed.connect(self.flyout.fadeOut)
         self.flyout.closed.connect(self.reset_route_key)
 
+    def ensure_setting_interface(self):
+        # 首次进入设置页时才构造设置界面
+        if self.setting_interface is not None:
+            return
+
+        from .setting import SettingInterface
+
+        self.setting_interface = SettingInterface(self)
+
+        self._addSubInterface(self.setting_interface)
+
+        # _addSubInterface 中建立的 clicked -> switchTo 连接对本次点击不生效，此处手动切换一次
+        self.switchTo(self.setting_interface)
+
     def connect_signals(self):
+        # 跟随系统主题切换。该连接原先建立在设置界面中，设置界面改为懒加载后需要提前到此处
+        config.themeChanged.connect(setTheme)
+
         signal_bus.toast.show.connect(self.show_toast_notification)
         signal_bus.toast.show_long_message.connect(self.show_toast_notification_long_message)
 
@@ -398,13 +415,18 @@ class MainWindow(MainWindowBase, MSFluentWindow):
         self.parse_btn.clicked.connect(lambda: self.update_route_key("ParseInterface"))
         self.download_btn.clicked.connect(lambda: self.update_route_key("DownloadInterface"))
         self.setting_btn.clicked.connect(lambda: self.update_route_key("SettingInterface"))
+        self.setting_btn.clicked.connect(self.ensure_setting_interface)
 
     def init_utils(self):
         QApplication.processEvents()
 
         self.init_deferred_ui()
 
+        from util.ffmpeg import init_ffmpeg
         from util.misc.update import Updater
+
+        # 探测 FFmpeg 涉及磁盘 IO，放在首屏之后执行，check_ffmpeg 依赖其结果
+        init_ffmpeg()
 
         # 监听系统主题变化
         self.theme_listener = SystemThemeListener(self)

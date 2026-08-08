@@ -7,7 +7,7 @@ from qfluentwidgets import (
     isDarkTheme
 )
 
-from gui.component.widget import ToolButton
+from gui.component.widget.button import ToolButton
 
 from util.common.icon import ExtendedFluentIcon
 from util.common.io.directory import Directory

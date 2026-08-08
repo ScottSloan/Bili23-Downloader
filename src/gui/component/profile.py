@@ -4,7 +4,7 @@ from qfluentwidgets import (
     AvatarWidget, BodyLabel, HyperlinkButton, FlyoutViewBase, MessageBox
 )
 
-from .widget import TipCaptionLabel
+from .widget.label import TipCaptionLabel
 
 from util.common.enum import ToastNotificationCategory
 from util.common.signal_bus  import signal_bus
