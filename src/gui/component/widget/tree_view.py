@@ -4,6 +4,8 @@ from PySide6.QtCore import Qt, QEvent
 
 from qfluentwidgets import TreeView
 
+from gui.component.widget.smooth_scroll import applySmoothScroll
+
 class CheckableTreeItem(QStandardItem):
     def __init__(self, text: str = ""):
         super().__init__(text)
@@ -24,6 +26,8 @@ class StandardTreeItem(QStandardItem):
 class CheckListView(TreeView):
     def __init__(self, parent = None):
         super().__init__(parent)
+
+        applySmoothScroll(self)
 
         # Shift 范围勾选：锚点为上一次手动勾选的行号
         self._check_anchor_row = -1

@@ -4,6 +4,8 @@ from PySide6.QtGui import QMouseEvent
 
 from qfluentwidgets import ListWidget
 
+from .smooth_scroll import applySmoothScroll
+
 class CheckableItem(QListWidgetItem):
     def __init__(self, text: str, parent = None):
         super().__init__(text, parent)
@@ -14,6 +16,8 @@ class CheckableItem(QListWidgetItem):
 class DragListWidget(ListWidget):
     def __init__(self, parent = None):
         super().__init__(parent)
+
+        applySmoothScroll(self)
 
         self.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
         self.setFont(QApplication.font())

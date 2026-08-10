@@ -215,7 +215,7 @@ class ParseBase(QFrame):
         config.set(config.auto_parse_teaching_tip_shown, True)
 
         TeachingTip.create(
-            target = self.segmented_widget.pager_widget.menu_btn,
+            target = self.segmented_widget.pager_widget.auto_parse_btn,
             title = self.tr("Auto-parse Pagination"),
             content = self.tr("Click here to automatically parse all pages."),
             icon = InfoBarIcon.INFORMATION,
