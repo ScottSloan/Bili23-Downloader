@@ -3,6 +3,7 @@ from ..common.translator import Translator
 from .command import FFmpegCommand
 
 from typing import Optional, List
+from threading import Lock
 import subprocess
 import os
 
@@ -17,6 +18,11 @@ class FFmpegRunner(QThread):
         self._cmd = cmd
         self._cwd = None
         self._proc: Optional[subprocess.Popen] = None
+
+        # 保护「创建子进程」与「请求终止」这一对操作。二者分处两个线程，
+        # 若 stop() 抢在 Popen 之前完成，终止请求就会落空，线程会一直跑到 FFmpeg 自己结束
+        self._proc_lock = Lock()
+        self._stop_requested = False
 
     @classmethod
     def from_command(cls, command: FFmpegCommand, parent=None):
@@ -38,16 +44,21 @@ class FFmpegRunner(QThread):
             if os.name == "nt":
                 kwargs["creationflags"] = getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000)
 
-            self._proc = subprocess.Popen(
-                self._cmd,
-                stdout = subprocess.PIPE,
-                stderr = subprocess.PIPE,
-                cwd = self._cwd,
-                text = True,
-                encoding = "utf-8",
-                errors = "replace",
-                **kwargs
-            )
+            with self._proc_lock:
+                if self._stop_requested:
+                    # 线程刚启动就被要求停止，此时还没有子进程可以终止，直接收工
+                    return
+
+                self._proc = subprocess.Popen(
+                    self._cmd,
+                    stdout = subprocess.PIPE,
+                    stderr = subprocess.PIPE,
+                    cwd = self._cwd,
+                    text = True,
+                    encoding = "utf-8",
+                    errors = "replace",
+                    **kwargs
+                )
 
             stdout, stderr = self._proc.communicate()
             return_code = self._proc.returncode
@@ -72,8 +83,26 @@ class FFmpegRunner(QThread):
         else:
             self.error_signal.emit(RuntimeError(Translator.ERROR_MESSAGES("FFMPEG_FAILED_WITH_CODE").format(code = return_code)), stdout, stderr)
 
-    def terminate(self):
-        if self._proc:
-            self._proc.terminate()
+    def stop(self, timeout: int = 3000):
+        """
+        终止 FFmpeg 子进程并等待线程收尾，返回线程是否已退出
 
-        super().terminate()
+        绝不调用 QThread.terminate()：它在 Windows 上就是 TerminateThread，
+        会在任意指令处杀死线程，若当时正持有 CRT 堆锁，之后任何一次 free 都会崩溃。
+        子进程被终止后 communicate() 会立即返回，线程自己就能干净收尾。
+        """
+        with self._proc_lock:
+            # 在锁内置位：本次若抢在 Popen 之前，run() 会读到标记并放弃启动子进程
+            self._stop_requested = True
+
+            proc = self._proc
+
+        if proc is not None:
+            try:
+                proc.terminate()
+
+            except Exception:
+                # 子进程可能刚好已经退出，此时 terminate 会失败，忽略即可
+                pass
+
+        return self.wait(timeout)

@@ -386,6 +386,15 @@ class ChunkWorker(QRunnable):
 
                 self._interruptible_sleep(min(2 ** (attempt - 1), 8))
 
+# 正在销毁流程中的下载器。
+#
+# ParseWorker / ChunkWorker 都持有 Downloader 的引用，并且是在自己的线程上结束的。
+# 一旦 DownloaderManager 已经把它移出字典，最后一个 Python 引用就可能落在工作线程手里，
+# 对象随之在工作线程被回收 —— 而它是 GUI 线程的 QObject，成员里还有 QTimer，
+# 跨线程析构会触发 "Timers cannot be stopped from another thread" 并破坏 Qt 内部状态。
+# 这里在销毁流程期间替它保管一份引用，直到 _finalize_delete 在 GUI 线程上执行完毕。
+_pending_delete: set = set()
+
 class Downloader(QObject):
     def __init__(self, task_info: TaskInfo):
         super().__init__()
@@ -404,6 +413,10 @@ class Downloader(QObject):
 
         self.chunk_size = 4 * 1024 * 1024
         self.download_list = {}
+        self.merger = None
+
+        # 线程池交由 GUI 线程释放，见 _release_thread_pool
+        self._releasing_pool = None
 
         self._stop_event = Event()
         self.update_lock = Lock()
@@ -721,9 +734,32 @@ class Downloader(QObject):
             file_info["chunk_offsets"] = {}
 
     def start_merge(self):
+        # 合并失败后可以重试，上一次的 Merger 不再需要。它挂在本对象的 parent 链上，
+        # 不主动释放就会一直累积到任务结束
+        self._release_merger()
+
         self.task_info.Download.status = DownloadStatus.MERGING
-        merge_worker = Merger(self.task_info, parent=self)
-        merge_worker.start()
+
+        self.merger = Merger(self.task_info, parent = self)
+        self.merger.start()
+
+    def _release_merger(self):
+        # 先停掉 FFmpeg 线程再释放对象：Merger 与其中的 FFmpegRunner 都挂在
+        # 本对象的 parent 链上，销毁 Downloader 会连带析构它们，
+        # 而销毁一个仍在运行的 QThread 会让 Qt 直接 qFatal 中止进程
+        merger = self.merger
+        self.merger = None
+
+        if merger is None:
+            return
+
+        try:
+            merger.stop()
+            merger.deleteLater()
+
+        except RuntimeError:
+            # C++ 侧已经析构，无需再处理
+            pass
 
     def pause(self):
         with self.start_worker_lock:
@@ -937,11 +973,24 @@ class Downloader(QObject):
 
         if any([danmaku, subtitles, cover, metadata, chapter]):
             self.task_info.Download.status = DownloadStatus.ADDITIONAL_PROCESSING
-            
+
+            # 附加内容解析同样跑在独立线程上，并且回调本对象，
+            # 必须与 ParseWorker 一样纳入引用计数，否则销毁流程不会等它结束
+            if not self._acquire_ref():
+                return
+
             worker = AdditionalParseWorker(self.task_info)
             worker.success.connect(self.wait_merge)
             worker.error.connect(self.on_parse_error)
-            AsyncTask.run(worker)
+            worker.finished.connect(self._release_ref)
+
+            try:
+                AsyncTask.run(worker)
+
+            except Exception:
+                self._release_ref()
+
+                raise
         else:
             self.wait_merge()
 
@@ -1037,7 +1086,37 @@ class Downloader(QObject):
         if not self.task_info.Download.queue and self.task_info.Download.status == DownloadStatus.DOWNLOADING:
             self.on_download_completed()
 
+    def shutdown(self):
+        """
+        进程退出前的快速收敛：让后台线程尽早停下来，但不销毁本对象
+
+        与 on_delete 的区别是不走引用计数与销毁流程 —— 进程马上就要结束，
+        对象由操作系统回收，这里只需保证没有线程还在读写文件和网络。
+        """
+        self._stop_event.set()
+
+        with self.start_worker_lock:
+            self.download_generation += 1
+            self.start_worker_requested = False
+
+        self.speed_timer.stop()
+
+        pool = self.thread_pool
+
+        if pool is not None:
+            # 丢弃尚未开始的分片，已在运行的分片会因为会话关闭而立即出错退出
+            pool.clear()
+
+        # 关闭会话后阻塞在 socket 读上的分片会立刻返回，
+        # 否则退出流程要一直等到读超时（5s）才能推进
+        self._close_session()
+
+        self._release_merger()
+
     def on_delete(self):
+        # 在移出管理器之前先登记，保证销毁期间始终有一份来自 GUI 线程的引用
+        _pending_delete.add(self)
+
         self._stop_event.set()
 
         # 提升代次，令仍在运行的分片线程尽快退出，并且不再回调本对象
@@ -1046,6 +1125,10 @@ class Downloader(QObject):
             self.start_worker_requested = False
 
         self.speed_timer.stop()
+
+        # 必须赶在 deleteLater 之前停掉 FFmpeg，否则销毁 parent 链时
+        # 会析构仍在运行的 FFmpegRunner
+        self._release_merger()
 
         with self._ref_lock:
             self._delete_pending = True
@@ -1109,13 +1192,25 @@ class Downloader(QObject):
         self.task_info = None
         self.download_list = None
 
+        # 线程池已经跑完，在本线程（GUI 线程）上释放
+        self._releasing_pool = None
+
         self.deleteLater()
+
+        # 放在最后：本槽运行在 GUI 线程上，此处释放最后一份引用，
+        # 后续的 Python 回收就不会发生在工作线程里
+        _pending_delete.discard(self)
 
     def _release_thread_pool(self):
         # QThreadPool 析构时会调用 waitForDone()。若在 GUI 线程上释放引用，
         # 界面会一直卡到所有分片线程退出为止（实测可达数秒），因此改到后台线程释放。
         pool = self.thread_pool
         self.thread_pool = None
+
+        # QThreadPool 的 affinity 在 GUI 线程。若只由下面的闭包持有，闭包结束时
+        # 它就会在那个裸线程里被回收，等于跨线程析构一个 QObject。
+        # 这里替它保管一份引用，改由 _finalize_delete 在 GUI 线程上释放。
+        self._releasing_pool = pool
 
         if pool is None:
             self._close_session()

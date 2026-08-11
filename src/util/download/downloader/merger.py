@@ -26,11 +26,37 @@ class Merger(QObject):
 
         self.task_info = task_info
         self._has_error = False
+        self._stopped = False
         self._ffmpeg_runner = None
 
         self._output_audio_file = None
         self._embedded_cover_file_name = None
         self._delete_cover_after_embedding = False
+
+    def stop(self, timeout: int = 3000):
+        """
+        终止正在进行的 FFmpeg 任务，返回其线程是否已退出
+
+        FFmpegRunner 是 QThread，且挂在本对象的 parent 链上。若在它仍然运行时
+        销毁 Downloader，整条链会被连带析构，Qt 随即 qFatal 中止进程。
+        因此销毁本对象之前必须先在这里把线程收干净。
+        """
+        self._stopped = True
+
+        runner = self._ffmpeg_runner
+
+        if runner is None:
+            return True
+
+        try:
+            if not runner.isRunning():
+                return True
+
+            return runner.stop(timeout)
+
+        except RuntimeError:
+            # C++ 侧已经析构，无需再处理
+            return True
 
     def start(self):
         if self.task_info.Download.merge_video_audio:
@@ -137,7 +163,7 @@ class Merger(QObject):
             self.set_error_message(Translator.ERROR_MESSAGES("RENAME_FAILED"), str(e))
 
     def on_merge_completed(self, return_code: int, stdout: str, stderr: str):
-        if getattr(self, "_has_error", False):
+        if getattr(self, "_has_error", False) or self._stopped:
             return
 
         try:
@@ -164,7 +190,7 @@ class Merger(QObject):
             self.set_error_message(Translator.ERROR_MESSAGES("RENAME_FAILED"), str(e))
 
     def on_convert_completed(self, return_code: int, stdout: str, stderr: str):
-        if getattr(self, "_has_error", False):
+        if getattr(self, "_has_error", False) or self._stopped:
             return
 
         try:
@@ -220,6 +246,11 @@ class Merger(QObject):
             return []
 
     def on_merge_error(self, error: Exception, stdout: str, stderr: str):
+        # 主动终止 FFmpeg 必然带回一个非零返回码，这不是真正的合并失败，
+        # 不能据此把任务标记为失败
+        if self._stopped:
+            return
+
         error_map = {
             "No space left on device": "INSUFFICIENT_SPACE",
             "Permission denied": "PERMISSION_DENIED",

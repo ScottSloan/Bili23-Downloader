@@ -61,6 +61,12 @@ class CoverQueryModelBase(QAbstractListModel):
 
             for row in rows:
                 index = self.index(row)
+
+                # 封面请求耗时可达数秒，期间列表可能已经增删过，记下的行号会失效。
+                # dataChanged 要求索引有效，传入无效索引会让视图与代理模型按 -1 去取行
+                if not index.isValid():
+                    continue
+
                 self.dataChanged.emit(index, index)
 
             del self.cover_waiting_rows[cover_id]

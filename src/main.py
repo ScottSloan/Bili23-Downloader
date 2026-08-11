@@ -174,6 +174,38 @@ threading.excepthook = handle_uncaught_thread_exception
 # 据此可以区分"硬崩溃"与"意外走到了正常退出流程"
 atexit.register(lambda: write_crash_log("进程正常退出"))
 
+def shutdown_process(exit_code: int = 0):
+    """
+    结束进程，跳过解释器的清理流程
+
+    QThread 若在仍然运行时被析构，Qt 会直接 qFatal 中止进程，在 Windows 上表现为
+    0xC0000409（FAST_FAIL_FATAL_APP_EXIT），日志里只留下一行
+    "QThread: Destroyed while thread is still running"，没有任何 Python 栈。
+
+    退出时总有一些线程停不下来：卡在尚未超时的网络请求里的 worker、仍在转码的 FFmpeg、
+    阻塞在注册表通知上的系统主题监听。它们的 QThread 由 Python 侧持有所有权，
+    解释器清理模块全局变量时会连带析构，于是"正常退出"变成了崩溃。
+    shiboken 的 invalidate() 拦不住这一步（实测 isValid 仍为 True），
+    唯一可靠的办法是不给解释器清理的机会 —— 落盘工作在调用本函数之前均已完成，
+    剩下的线程交给操作系统随进程一起回收。
+    """
+    write_crash_log("进程正常退出")
+
+    try:
+        logging.shutdown()
+
+    except Exception:
+        pass
+
+    for stream in (sys.stdout, sys.stderr):
+        try:
+            stream.flush()
+
+        except Exception:
+            pass
+
+    os._exit(exit_code)
+
 # --------- Disable PySide6 Warnings ---------
 from PySide6.QtCore import QtMsgType, qInstallMessageHandler
 
@@ -425,7 +457,11 @@ def _main():
 
     QTimer.singleShot(0, app.bootstrap_startup_tasks)
 
-    app.exec()
+    exit_code = app.exec()
+
+    # 事件循环退出时 aboutToQuit 已经触发，实例锁与数据库写入均已收尾，
+    # 此处不再让解释器去清理那些可能仍在运行的线程对象
+    shutdown_process(exit_code)
 
 if __name__ == "__main__":
     _main()
