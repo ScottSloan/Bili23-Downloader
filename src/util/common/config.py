@@ -13,9 +13,12 @@ from .enum import (
 )
 from ._json import json_loads
 
+from threading import Lock
 from pathlib import Path
 import logging
+import json
 import sys
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -448,6 +451,35 @@ class APPConfig(QConfig):
 
     tutorial_dialog_shown = ConfigItem("Misc", "tutorial_dialog_shown", False, BoolValidator())
     select_area_dialog_shown = ConfigItem("Misc", "select_area_dialog_shown", False, BoolValidator())
+
+    # 写盘串行化。qfluentwidgets 的 save() 直接 open(..., "w") 覆写整个文件，没有任何保护，
+    # 而 config.set() 默认会立即触发写盘 —— 登录相关的请求回调各自跑在自己的工作线程上
+    # （cookie_manager.init_cookie_info 在启动时会并发发出三个请求），
+    # 两个线程同时打开同一个文件写入，配置会被写成互相交错的内容。
+    _save_lock = Lock()
+
+    def save(self):
+        with self._save_lock:
+            self._cfg.file.parent.mkdir(parents = True, exist_ok = True)
+
+            # 先写临时文件再原子替换。就地截断写一旦在中途被打断，留下的就是一个残缺的配置文件，
+            # 用户的全部设置随之丢失；而退出流程走的是 os._exit，不会等待仍在写盘的线程。
+            temp_path = self._cfg.file.parent / f"{self._cfg.file.name}.tmp"
+
+            try:
+                with open(temp_path, "w", encoding = "utf-8") as f:
+                    json.dump(self._cfg.toDict(), f, ensure_ascii = False, indent = 4)
+
+                os.replace(temp_path, self._cfg.file)
+
+            except Exception:
+                logger.exception("保存配置文件失败")
+
+                try:
+                    temp_path.unlink(missing_ok = True)
+
+                except Exception:
+                    pass
 
 def check_need_patch():
     # 检查是否需要修补配置文件
