@@ -30,7 +30,7 @@ class ProgressTipWidget(QWidget):
 
     def show_tip(self):
         self.progress_ring.start()
-        self.tip_lab.setText("")
+        self.tip_lab.setText(self.tr("Preparing..."))
 
         self.show()
 

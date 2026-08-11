@@ -232,7 +232,7 @@ class PrioritySettingCard(ExpandGroupSettingCard):
         self.hyper_label.clicked.connect(lambda: self.showGuideMessageBox(self.tr("Instructions"), Translator.PRIORITY_GUIDE()))
 
 class DanmakuSettingCard(ExpandGroupSettingCard):
-    def __init__(self, full_mode = True, parent = None):
+    def __init__(self, parent = None):
         super().__init__(ExtendedFluentIcon.COMMENT, self.tr("Danmaku Download Settings"), self.tr("Adjust danmaku download settings"), parent)
 
         self.download_switch = SettingSwitchButton(config.download_danmaku, parent = self)
@@ -240,19 +240,17 @@ class DanmakuSettingCard(ExpandGroupSettingCard):
         self.type_choice = SettingComboBox(config.danmaku_type, ["xml", "ass", "json"], parent = self)
         self.type_choice.setFixedWidth(120)
 
+        self.custom_style_btn = PushButton(self.tr("Customize…"), self)
+
         self.viewLayout.setContentsMargins(0, 0, 0, 0)
         self.viewLayout.setSpacing(0)
 
         self.addGroup("", self.tr("Download Danmaku"), "", self.download_switch)
         self.addGroup("", self.tr("Danmaku Format"), "", self.type_choice)
-
-        if full_mode:
-            self.custom_style_btn = PushButton(self.tr("Customize…"), self)
-            
-            self.addGroup("", self.tr("Danmaku Style"), self.tr("Only effective for ASS format danmaku"), self.custom_style_btn)
+        self.addGroup("", self.tr("Danmaku Style"), self.tr("Only effective for ASS format danmaku"), self.custom_style_btn)
 
 class SubtitleSettingCard(ExpandGroupSettingCard):
-    def __init__(self, full_mode = True, parent = None):
+    def __init__(self, parent = None):
         super().__init__(ExtendedFluentIcon.SUBTITLES, self.tr("Subtitle Download Settings"), self.tr("Adjust subtitle download settings"), parent)
 
         self.download_switch = SettingSwitchButton(config.download_subtitle, parent = self)
@@ -260,18 +258,16 @@ class SubtitleSettingCard(ExpandGroupSettingCard):
         self.type_choice = SettingComboBox(config.subtitle_type, ["srt", "lrc", "txt", "ass", "json"], parent = self)
         self.type_choice.setFixedWidth(120)
 
+        self.language_btn = PushButton(self.tr("Customize…"), self)
+        self.custom_style_btn = PushButton(self.tr("Customize…"), self)
+
         self.viewLayout.setContentsMargins(0, 0, 0, 0)
         self.viewLayout.setSpacing(0)
 
         self.addGroup("", self.tr("Download Subtitles"), "", self.download_switch)
         self.addGroup("", self.tr("Subtitle Format"), "", self.type_choice)
-
-        if full_mode:
-            self.language_btn = PushButton(self.tr("Customize…"), self)
-            self.custom_style_btn = PushButton(self.tr("Customize…"), self)
-
-            self.addGroup("", self.tr("Subtitle Language"), "", self.language_btn)
-            self.addGroup("", self.tr("Subtitle Style"), self.tr("Only effective for ASS format subtitles"), self.custom_style_btn)
+        self.addGroup("", self.tr("Subtitle Language"), "", self.language_btn)
+        self.addGroup("", self.tr("Subtitle Style"), self.tr("Only effective for ASS format subtitles"), self.custom_style_btn)
 
 class CoverSettingCard(ExpandGroupSettingCard):
     def __init__(self, parent = None):

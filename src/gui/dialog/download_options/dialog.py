@@ -30,7 +30,7 @@ class DownloadOptionsDialog(TopNavigationDialogBase):
 
     def init_UI(self):
         self.media_settings_page = MediaSettingsPage(self)
-        self.additional_settings_page = AdditionalSettingsPage(self)
+        self.additional_settings_page = AdditionalSettingsPage(self, self)
         self.download_settings_page = DownloadSettingsPage(self)
 
         self.addItem("media", self.tr("Media Settings"), FluentIcon.MEDIA, self.media_settings_page)
