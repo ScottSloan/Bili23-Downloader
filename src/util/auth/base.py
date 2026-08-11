@@ -1,7 +1,7 @@
 from ..common.enum import ToastNotificationCategory
 from ..common.signal_bus import signal_bus
 from ..common.config import config
-from ..network.request import client
+from ..network.request import snapshot_client_cookies
 
 import logging
 
@@ -33,9 +33,12 @@ class AuthBase:
     
     def update_cookies(self):
         # 登录成功后更新 cookies 信息到配置中
-        config.set(config.bili_jct, client.cookies.get("bili_jct", ""))
-        config.set(config.DedeUserID, client.cookies.get("DedeUserID", ""))
-        config.set(config.DedeUserID__ckMd5, client.cookies.get("DedeUserID__ckMd5", ""))
-        config.set(config.SESSDATA, client.cookies.get("SESSDATA", ""))
+        # 取一份快照再逐项读取，避免四次读取分别去遍历共用的 cookiejar
+        cookies = snapshot_client_cookies()
+
+        config.set(config.bili_jct, cookies.get("bili_jct", ""))
+        config.set(config.DedeUserID, cookies.get("DedeUserID", ""))
+        config.set(config.DedeUserID__ckMd5, cookies.get("DedeUserID__ckMd5", ""))
+        config.set(config.SESSDATA, cookies.get("SESSDATA", ""))
         config.set(config.is_login, True)
         config.is_expired = False

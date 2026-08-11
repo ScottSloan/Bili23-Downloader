@@ -1,5 +1,7 @@
 from PySide6.QtCore import Qt
 
+from contextlib import contextmanager
+from threading import RLock
 from enum import IntFlag
 from typing import List
 import uuid
@@ -8,21 +10,57 @@ class EpisodeData:
     # 全局剧集数据表
     table: dict[str, dict] = {}
 
+    # 解析界面与分P对话框可以同时存活，两边的解析各自跑在自己的线程里，都会往 table 写。
+    # 键是 uuid，条目之间不会冲突，真正危险的是 clear_cache()：它会把另一边刚写进去的
+    # 数据一并擦掉，之后创建下载任务时 get_episode_data() 拿到空字典，UP 主、简介等
+    # 附加信息全部丢失。因此用 _active_parsers 记录正在写入的解析数，有并发解析时跳过清理，
+    # 顶多多留一份用不到的数据，等下一次独占解析时再回收。
+    _lock = RLock()
+    _active_parsers = 0
+
     @classmethod
     def add_episode(cls):
         episode_id = str(uuid.uuid4())
 
-        cls.table[episode_id] = {}
+        with cls._lock:
+            cls.table[episode_id] = {}
 
         return episode_id
-    
+
     @classmethod
     def get_episode_data(cls, episode_id: str):
-        return cls.table.get(episode_id, {})
+        with cls._lock:
+            return cls.table.get(episode_id, {})
 
     @classmethod
     def clear_cache(cls):
-        cls.table.clear()
+        with cls._lock:
+            if cls._active_parsers:
+                return
+
+            cls.table.clear()
+
+    @classmethod
+    @contextmanager
+    def parsing(cls, clear_cache: bool = True):
+        """
+        标记一段正在写入剧集数据的解析流程
+
+        clear_cache 为 True 时会在进入前尝试清空旧数据，清空与登记必须在同一把锁内完成，
+        否则清空之后、登记之前挤进来的另一个解析会被误判为可清理
+        """
+        with cls._lock:
+            if clear_cache and not cls._active_parsers:
+                cls.table.clear()
+
+            cls._active_parsers += 1
+
+        try:
+            yield
+
+        finally:
+            with cls._lock:
+                cls._active_parsers = max(0, cls._active_parsers - 1)
 
 class Attribute(IntFlag):
     VIDEO_BIT                                 = 1 << 0                   # 是否为投稿视频

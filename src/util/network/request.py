@@ -22,6 +22,11 @@ _client_lock = Lock()
 _ssl_context = None
 _ssl_context_lock = Lock()
 
+# client.cookies 由解析、下载、封面等多个线程共用，httpx 的 Cookies 只是 cookiejar 的薄封装，
+# 遍历时并没有加锁。登录流程在 GUI 线程写、请求线程在读，撞上就会抛 RuntimeError，
+# 因此本模块内所有对 cookies 的读写都必须持有这把锁
+_cookies_lock = Lock()
+
 def get_ssl_context():
     # httpx 默认会为每个 Client / HTTPTransport 重新构建 SSLContext，加载完整的 CA 根证书列表耗时约 170ms。
     # 由于全局的证书配置是一致的，此处只构建一次并复用，创建 Client 的开销可降至微秒级。
@@ -91,13 +96,38 @@ def _create_client():
 
 
 def _apply_cookies(client_obj, cookies: dict):
-    for key, value in cookies.items():
-        client_obj.cookies.set(
-            name = key,
-            value = value,
-            domain = ".bilibili.com",
-            path = "/"
-        )
+    with _cookies_lock:
+        for key, value in cookies.items():
+            client_obj.cookies.set(
+                name = key,
+                value = value,
+                domain = ".bilibili.com",
+                path = "/"
+            )
+
+
+def set_client_cookies(cookies: dict):
+    # 供登录流程写入 Cookie，写入必须走这里，不要直接操作 client.cookies
+    _apply_cookies(_ensure_client(), cookies)
+
+
+def delete_client_cookies(keys, domain: str = ".bilibili.com", path: str = "/"):
+    client_obj = _ensure_client()
+
+    with _cookies_lock:
+        for key in keys:
+            try:
+                client_obj.cookies.delete(key, domain = domain, path = path)
+
+            except KeyError:
+                pass
+
+
+def snapshot_client_cookies() -> dict:
+    # 遍历 cookiejar 取快照。httpx 的 Cookies 不是线程安全的，读取时同样要持锁，
+    # 否则与登录流程的写入撞上会抛 RuntimeError
+    with _cookies_lock:
+        return dict(_ensure_client().cookies)
 
 
 def _load_persisted_cookies():
@@ -163,6 +193,7 @@ class SyncNetWorkRequest:
         headers = self.get_headers()
 
         if self.proxies:
+            # 临时 client 没有全局 client 的 cookiejar，需要带一份快照过去
             with httpx.Client(mounts = get_mounts(self.proxies), follow_redirects = True, verify = get_ssl_context()) as temp_client:
                 response = temp_client.request(
                     method = self.request_type.name,
@@ -170,17 +201,20 @@ class SyncNetWorkRequest:
                     params = self.params,
                     json = self.json_data,
                     headers = headers,
-                    cookies = client.cookies,
+                    cookies = snapshot_client_cookies(),
                     data = self.data
                 )
         else:
+            # 不再传 cookies = client.cookies：httpx 会把请求的 cookies 与 client 自身的
+            # cookiejar 合并，传自己等于让每次请求都在子线程里多遍历一遍 cookiejar，
+            # 与登录写入或响应回写的 Set-Cookie 撞上就会抛 RuntimeError。
+            # 省略该参数时 client 本就会带上自己的 Cookie，行为不变
             response = client.request(
                 method = self.request_type.name,
                 url = self.url,
                 params = self.params,
                 json = self.json_data,
                 headers = headers,
-                cookies = client.cookies,
                 data = self.data
             )
 
