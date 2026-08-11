@@ -183,6 +183,34 @@ class ParseModel(QAbstractItemModel):
         
         return QModelIndex()
     
+    def append_nodes(self, nodes: list) -> int:
+        """
+        向可见根节点追加子节点，返回插入的起始行号；没有插入任何内容时返回 -1
+
+        必须成对发出 beginInsertRows / endInsertRows：视图缓存了自己的一份行布局，
+        绕过通知直接改动底层数据会让两者脱节，视图随后就会按失效的行号访问模型
+        """
+        if not nodes or not self.root_node.count():
+            return -1
+
+        # root_node 是不可见的包装节点，真正显示的树根是它的第一个子节点
+        parent_index = self.index(0, 0, QModelIndex())
+
+        if not parent_index.isValid():
+            return -1
+
+        parent_item: TreeItem = parent_index.internalPointer()
+        first = parent_item.count()
+
+        self.beginInsertRows(parent_index, first, first + len(nodes) - 1)
+
+        for node in nodes:
+            parent_item.add_child(node)
+
+        self.endInsertRows()
+
+        return first
+
     def parent(self, index: QModelIndex):
         if not index.isValid():
             return QModelIndex()
@@ -200,6 +228,12 @@ class ParseModel(QAbstractItemModel):
             return
 
         self.layoutAboutToBeChanged.emit()
+
+        # 排序会打乱行号，而视图的选中项、展开状态、悬浮项都以持久索引记录着旧行号。
+        # 先取出这些索引对应的节点，排完序后再按节点的新行号改写回去，
+        # 否则视图会拿着错位的行号访问模型
+        old_indexes = self.persistentIndexList()
+        old_items = [index.internalPointer() for index in old_indexes]
 
         attr_key = self._column_data[column]["attr_key"]
         reverse = (order == Qt.SortOrder.DescendingOrder)
@@ -223,11 +257,18 @@ class ParseModel(QAbstractItemModel):
 
         _sort_recursive(self.root_node)
 
+        for old_index, item in zip(old_indexes, old_items):
+            if item is None:
+                continue
+
+            self.changePersistentIndex(old_index, self.createIndex(item.row(), old_index.column(), item))
+
         self.layoutChanged.emit()
 
     def flags(self, index: QModelIndex):
         if not index.isValid():
-            return Qt.ItemFlag.ItemIsEnabled
+            # 无效索引代表不可见的顶层根，按 Qt 的约定只能返回 ItemIsDropEnabled 或空标志
+            return Qt.ItemFlag.NoItemFlags
 
         # 第一列可选中和可勾选，其他列仅可选中
         if index.column() == 0:

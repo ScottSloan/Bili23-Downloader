@@ -454,9 +454,11 @@ class Downloader(QObject):
                 self.task_info.Download.status = DownloadStatus.PARSING
                 self._stop_event.clear()
 
-                parse_worker = ParseWorker(self.task_info, self, on_finished = self._release_ref)
+                # 对象正在销毁时不再启动解析，否则回调会落到已析构的对象上
+                if not self._acquire_ref():
+                    return
 
-                self._acquire_ref()
+                parse_worker = ParseWorker(self.task_info, self, on_finished = self._release_ref)
 
                 try:
                     GlobalThreadPoolTask.run(parse_worker)
@@ -576,7 +578,12 @@ class Downloader(QObject):
                 generation = self.download_generation
 
             # 磁盘检查、预分配和启动分片属于准备工作，不能阻塞 GUI 事件循环。
-            self._acquire_ref()
+            # 对象正在销毁时直接放弃，避免后台任务回调到已析构的对象上
+            if not self._acquire_ref():
+                with self.start_worker_lock:
+                    self.start_worker_pending = False
+
+                return
 
             try:
                 GlobalThreadPoolTask.run_func(
@@ -1038,19 +1045,34 @@ class Downloader(QObject):
             self.download_generation += 1
             self.start_worker_requested = False
 
-        self._close_session()
         self.speed_timer.stop()
 
         with self._ref_lock:
             self._delete_pending = True
 
-        # 线程池释放线程本身也算一个持有者，保证下面至少会触发一次归零检查
-        self._acquire_ref()
+            # 线程池释放线程本身也算一个持有者，保证下面至少会触发一次归零检查。
+            # 这里必须直接自增：_delete_pending 已经置位，_acquire_ref 会拒绝
+            self._external_refs += 1
+
+        # 关闭会话要等连接池释放，批量取消时逐个在 GUI 线程上关闭会让界面卡住数秒，
+        # 因此与线程池的等待一并放到后台线程执行
         self._release_thread_pool()
 
     def _acquire_ref(self):
+        """
+        登记一个外部持有者，成功返回 True
+
+        销毁流程一旦启动就必须拒绝：此时 _finalize_delete 可能已经排在 GUI 事件队列里，
+        再放行新的后台任务，任务结束时回调的就是已经析构的 C++ 对象，
+        跨线程的 invokeMethod 会落到已释放的内存上。
+        """
         with self._ref_lock:
+            if self._delete_pending or self._delete_finalized:
+                return False
+
             self._external_refs += 1
+
+            return True
 
     def _release_ref(self):
         with self._ref_lock:
@@ -1075,6 +1097,15 @@ class Downloader(QObject):
 
     @Slot()
     def _finalize_delete(self):
+        # 本槽是排队执行的，从决定销毁到真正执行之间隔着一轮事件循环。
+        # 期间若又有持有者登记进来，必须放弃本次销毁，改由最后一个持有者释放时重新触发，
+        # 否则 C++ 对象会先于仍在运行的后台任务析构
+        with self._ref_lock:
+            if self._external_refs > 0:
+                self._delete_finalized = False
+
+                return
+
         self.task_info = None
         self.download_list = None
 
@@ -1087,6 +1118,7 @@ class Downloader(QObject):
         self.thread_pool = None
 
         if pool is None:
+            self._close_session()
             self._release_ref()
 
             return
@@ -1096,6 +1128,9 @@ class Downloader(QObject):
 
         def release():
             try:
+                # 先断开连接，正在读取响应的分片会立即出错退出，无需等到读超时
+                self._close_session()
+
                 pool.waitForDone()
 
             except Exception:

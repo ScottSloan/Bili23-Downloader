@@ -33,6 +33,9 @@ class TaskManager:
         self._add_to_queue_toast_shown = False
         self._add_to_queue_toast_lock = Lock()
         self._update_lock = Lock()
+        # 自动解析、二次解析会让多个线程池线程同时进入 create()，
+        # 编号的「取值 + 自增」必须是一个原子操作，否则会分配出重复的序号
+        self._numbering_lock = Lock()
         self._pending_updates = {}
         self._update_flush_scheduled = False
         # 所有对 task.db 的写入都在这一个线程上串行执行：既保证了顺序，
@@ -183,18 +186,19 @@ class TaskManager:
                 episode_info[title] = re.sub(r'[\/\\\:\*\?\"\<\>\|]', '_', episode_info.get(title, ""))
 
     def __get_number(self, episode_info: dict = None):
+        # 调用方已持有 _numbering_lock
         match config.get(config.numbering_type):
             case NumberingType.CONTINUOUS:
                 # 全局顺序编号
                 return config.global_starting_number
-            
+
             case NumberingType.FROM_SPECIFIED:
                 # 返回 current_starting_number，然后自增
                 _current = config.current_starting_number
                 config.current_starting_number += 1
 
                 return _current
-            
+
             case _:
                 return episode_info.get("number", "")
 
@@ -211,15 +215,17 @@ class TaskManager:
                 if self._check_duplicate(episode_info):
                     continue
 
-                # 先判断重复下载，再分配编号
-                number = self.__get_number(episode_info)
+                # 先判断重复下载，再分配编号。
+                # 取号与自增必须在同一把锁内完成，否则并发创建任务时会分配出重复的编号
+                with self._numbering_lock:
+                    number = self.__get_number(episode_info)
+
+                    # 全局起始编号自增
+                    config.global_starting_number += 1
 
                 task_info = self.__episode_info_to_task_info(episode_info, number)
 
                 task_info_list.append(task_info)
-
-                # 全局起始编号自增
-                config.global_starting_number += 1
 
             except Exception as error:
                 title = episode_info.get("title", "")

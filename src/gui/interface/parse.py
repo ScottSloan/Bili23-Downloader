@@ -425,6 +425,7 @@ class ParseInterface(ParseBase):
         self.download_btn.clicked.connect(self.on_download)
 
         signal_bus.parse.update_parse_list.connect(self.on_update_parse_list)
+        signal_bus.parse.append_parse_list_nodes.connect(self.on_append_parse_list_nodes)
         signal_bus.parse.update_parse_list_count.connect(self.on_update_parse_list_count)
         signal_bus.parse.update_preview_info.connect(self.update_previewer_info)
         signal_bus.parse.search_keyword.connect(self.parse_list.search_keywords)
@@ -497,6 +498,10 @@ class ParseInterface(ParseBase):
 
         if config.get(config.parse_history):
             GlobalThreadPoolTask.run_func(history_manager.add_history, title, self.url_box.text(), category_name)
+
+    def on_append_parse_list_nodes(self, nodes: list):
+        # 自动解析、互动视频探查过程中追加节点，解析历史已在建立根节点时记录，此处无需重复写入
+        self.parse_list.append_nodes(nodes)
 
     def on_download(self):
         # 只有在获取媒体信息成功时才允许下载
