@@ -12,7 +12,7 @@ from ...common.io.file import File
 
 from ...parse.additional.worker import AdditionalParseWorker
 from ...thread.pool import GlobalThreadPoolTask
-from ...network.request import get_cookies, get_mounts, get_ssl_context
+from ...network.request import get_cookies, get_env_mounts, get_mounts, get_ssl_context
 from ...network.proxy import Proxy
 from ...thread.async_ import AsyncTask
 
@@ -668,7 +668,13 @@ class Downloader(QObject):
 
         limits = httpx.Limits(max_keepalive_connections = config.get(config.download_thread), max_connections = config.get(config.download_thread))
         transport = httpx.HTTPTransport(retries = 5, verify = ssl_context)
-        mounts = get_mounts(Proxy().get_proxies())
+
+        if config.get(config.proxy_enabled):
+            mounts = get_mounts(Proxy().get_proxies())
+        else:
+            # 未在应用内配置代理时，回退读取系统代理，避免因显式传入 transport
+            # 导致 httpx 不再读取环境变量中的代理，直连被服务器强制断开（Error 10054）。
+            mounts = get_env_mounts()
 
         headers = {
             "Referer": self.task_info.Episode.url,

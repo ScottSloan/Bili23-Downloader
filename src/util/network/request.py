@@ -61,6 +61,48 @@ def get_mounts(proxies = None):
     else:
         return None
 
+def get_env_proxy_urls():
+    # 读取系统环境变量（及 Windows 注册表）中的代理设置，
+    # 语义与 httpx 默认的 get_environment_proxies 保持一致。
+    from urllib.request import getproxies
+
+    proxy_info = getproxies()
+
+    urls = {}
+
+    for scheme in ("http", "https", "all"):
+        if proxy_info.get(scheme):
+            hostname = proxy_info[scheme]
+
+            urls[f"{scheme}://"] = (
+                hostname if "://" in hostname else f"http://{hostname}"
+            )
+
+    for hostname in (host.strip() for host in proxy_info.get("no", "").split(",")):
+        if hostname == "*":
+            return {}
+
+        elif hostname:
+            if "://" in hostname:
+                urls[hostname] = None
+            elif hostname.lower() == "localhost":
+                urls[f"all://{hostname}"] = None
+            else:
+                urls[f"all://*{hostname}"] = None
+
+    return urls
+
+def get_env_mounts():
+    mounts = {}
+
+    for key, proxy_url in get_env_proxy_urls().items():
+        if proxy_url is None:
+            mounts[key] = None
+        else:
+            mounts[key] = httpx.HTTPTransport(proxy = httpx.Proxy(proxy_url), retries = 3, verify = get_ssl_context())
+
+    return mounts or None
+
 def _create_client():
     from .proxy import Proxy
 
@@ -70,10 +112,19 @@ def _create_client():
     if config.get(config.proxy_enabled):
         logger.info("已启用代理，类型：%s，服务器：%s:%s", config.get(config.proxy_type), config.get(config.proxy_server), config.get(config.proxy_port))
 
+        mounts = get_mounts(Proxy().get_proxies())
+    else:
+        # 未在应用内配置代理时，回退读取系统代理，避免因显式传入 transport
+        # 导致 httpx 不再读取环境变量中的代理，直连被服务器强制断开（Error 10054）。
+        mounts = get_env_mounts()
+
+        if mounts:
+            logger.info("已读取系统代理设置")
+
     return httpx.Client(
         limits = limits,
         timeout = 5,
-        mounts = get_mounts(Proxy().get_proxies()),
+        mounts = mounts,
         transport = transport,
         follow_redirects = True,
         verify = get_ssl_context()
