@@ -7,7 +7,7 @@ from qfluentwidgets import (
     isDarkTheme
 )
 
-from gui.component.widget import ToolButton
+from gui.component.widget.button import ToolButton
 
 from util.common.icon import ExtendedFluentIcon
 from util.common.io.directory import Directory
@@ -148,6 +148,9 @@ class TopStackedWidget(QStackedWidget):
         self.sort_downloading_list_btn = ToolButton(ExtendedFluentIcon.SORT, self)
         self.sort_downloading_list_btn.setToolTip(self.tr("Sort"))
 
+        self.open_folder_1_btn = ToolButton(FluentIcon.FOLDER, self)
+        self.open_folder_1_btn.setToolTip(self.tr("Open Download Directory"))
+
         separator_1 = Separator(self)
 
         self.start_all_btn = PrimaryPushButton(FluentIcon.PLAY, self.tr("Start All"), self)
@@ -158,6 +161,7 @@ class TopStackedWidget(QStackedWidget):
         downloading_layout.setContentsMargins(0, 0, 0, 0)
         downloading_layout.addStretch()
         downloading_layout.addWidget(self.sort_downloading_list_btn)
+        downloading_layout.addWidget(self.open_folder_1_btn)
         downloading_layout.addWidget(separator_1)
         downloading_layout.addWidget(self.start_all_btn)
         downloading_layout.addWidget(self.pause_all_btn)
@@ -169,10 +173,11 @@ class TopStackedWidget(QStackedWidget):
         self.sort_completed_list_btn = ToolButton(ExtendedFluentIcon.SORT, self)
         self.sort_completed_list_btn.setToolTip(self.tr("Sort"))
 
+        self.open_folder_2_btn = ToolButton(FluentIcon.FOLDER, self)
+        self.open_folder_2_btn.setToolTip(self.tr("Open Download Directory"))
+
         separator_2 = Separator(self)
 
-        self.open_directory_btn = PushButton(FluentIcon.FOLDER, self.tr("Open Directory"), self)
-        self.open_directory_btn.setMinimumWidth(110)
         self.clear_all_btn = PushButton(ExtendedFluentIcon.CLEAR, self.tr("Clear All"))
         self.clear_all_btn.setMinimumWidth(110)
 
@@ -180,8 +185,8 @@ class TopStackedWidget(QStackedWidget):
         completed_layout.setContentsMargins(0, 0, 0, 0)
         completed_layout.addStretch()
         completed_layout.addWidget(self.sort_completed_list_btn)
+        completed_layout.addWidget(self.open_folder_2_btn)
         completed_layout.addWidget(separator_2)
-        completed_layout.addWidget(self.open_directory_btn)
         completed_layout.addWidget(self.clear_all_btn)
 
         self.addWidget(downloading_widget)
@@ -190,7 +195,8 @@ class TopStackedWidget(QStackedWidget):
         self.connect_signals()
 
     def connect_signals(self):
-        self.open_directory_btn.clicked.connect(self.on_open_directory)
+        self.open_folder_1_btn.clicked.connect(self.on_open_download_directory)
+        self.open_folder_2_btn.clicked.connect(self.on_open_download_directory)
 
         self.sort_downloading_list_btn.clicked.connect(self.on_show_downloading_list_sort_flyout)
         self.sort_completed_list_btn.clicked.connect(self.on_show_completed_list_sort_flyout)
@@ -239,5 +245,5 @@ class TopStackedWidget(QStackedWidget):
 
         view.closed.connect(flyout.fadeOut)
 
-    def on_open_directory(self):    
+    def on_open_download_directory(self):    
         Directory.open_directory_in_explorer(config.get(config.download_path))

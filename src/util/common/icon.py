@@ -35,6 +35,7 @@ class ExtendedFluentIcon(FluentIconBase, Enum):
     FILE_SETTINGS = "file_settings"
     FAST_DOWNLOAD = "fast_download"
     SINGLE_CHOICE = "single_choice"
+    FORWARD_BUTTON = "forward_button"
     APPLICATION_WINDOW = "application_window"
     DOUBLE_RIGHT_ARROWS = "double_right_arrows"
 

@@ -6,6 +6,8 @@ from qfluentwidgets import TreeView, RoundMenu, Action, CommandBarView, FluentIc
 
 from .model import ParseModel
 
+from gui.component.widget.smooth_scroll import applySmoothScroll
+
 from util.common.icon import ExtendedFluentIcon
 from util.common.signal_bus import signal_bus
 from util.common.config import config
@@ -21,6 +23,8 @@ class ParseTreeView(TreeView):
         super().__init__(parent)
 
         self.main_window = main_window
+
+        applySmoothScroll(self)
 
         self._model = ParseModel(parent = self)
 
@@ -398,19 +402,61 @@ class ParseTreeView(TreeView):
             lambda: self.scroll_to_item(target_item) if target_item else None
         )
 
+    def append_nodes(self, nodes: list):
+        # 由解析线程通过信号投递过来，在 GUI 线程里挂到树上
+        first_row = self._model.append_nodes(nodes)
+
+        if first_row < 0:
+            return
+
+        parent_index = self._model.index(0, 0, QModelIndex())
+
+        if not parent_index.isValid():
+            return
+
+        # 只展开新插入的行。整棵树重新展开一遍会让解析 N 页的开销退化成 O(N²)
+        self.expand(parent_index)
+        self._enqueue_expand(parent_index, first_row)
+
+        if not self._expand_timer.isActive():
+            self._expand_timer.start(0)
+
     def _schedule_expand_all(self, callback = None):
         self._expand_queue.clear()
-        self._expand_queue.append((QModelIndex(), 0))
+        self._expand_queue.append((None, 0))
         self._expand_callback = callback
 
         if not self._expand_timer.isActive():
             self._expand_timer.start(0)
 
+    def _enqueue_expand(self, parent: QModelIndex, start_row: int, front = False):
+        # 展开是分批跨事件循环进行的，期间模型可能已经插入了新行。
+        # 普通 QModelIndex 存的是节点裸指针，一旦对应节点被释放就会成为悬垂指针，
+        # 因此队列里一律保存持久索引，由 Qt 负责跟踪行号变化与失效
+        entry = (QPersistentModelIndex(parent) if parent.isValid() else None, start_row)
+
+        if front:
+            self._expand_queue.appendleft(entry)
+        else:
+            self._expand_queue.append(entry)
+
     def _expand_next_batch(self):
         processed = 0
 
         while self._expand_queue and processed < self._expand_batch_size:
-            parent, start_row = self._expand_queue.popleft()
+            persistent_parent, start_row = self._expand_queue.popleft()
+
+            if persistent_parent is None:
+                # None 代表不可见的顶层根
+                parent = QModelIndex()
+
+            elif persistent_parent.isValid():
+                parent = self._model.index(persistent_parent.row(), persistent_parent.column(), persistent_parent.parent())
+
+            else:
+                # 该节点已随模型重置或删除而失效，跳过
+                continue
+
             rows = self._model.rowCount(parent)
 
             for row in range(start_row, rows):
@@ -419,12 +465,12 @@ class ParseTreeView(TreeView):
                     continue
 
                 self.expand(index)
-                self._expand_queue.append((index, 0))
+                self._enqueue_expand(index, 0)
                 processed += 1
 
                 if processed >= self._expand_batch_size:
                     if row + 1 < rows:
-                        self._expand_queue.appendleft((parent, row + 1))
+                        self._enqueue_expand(parent, row + 1, front = True)
                     break
 
         if self._expand_queue:

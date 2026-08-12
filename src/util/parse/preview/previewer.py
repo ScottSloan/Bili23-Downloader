@@ -1,3 +1,5 @@
+from PySide6.QtCore import QObject, Signal, Slot
+
 from ...common.enum import MediaType, ToastNotificationCategory
 from ...common.signal_bus import signal_bus
 from ...common.translator import Translator
@@ -20,24 +22,37 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-class Previewer(ParserBase):
+class Previewer(ParserBase, QObject):
+    # 媒体信息请求跑在子线程里，而 PreviewerInfo 是全局状态，下载选项对话框会直接读它。
+    # 连到闭包的回调会就地在子线程改写这些状态，因此子线程只负责把结果原样转发给这两个信号，
+    # 由 Qt 排队回 GUI 线程后再落盘到 PreviewerInfo
+    _media_info_ready = Signal(object, str, str, int)
+    _media_info_failed = Signal(str, int)
+
     def __init__(self):
-        super().__init__()
+        ParserBase.__init__(self)
+        QObject.__init__(self)
 
         self.show_toast = False
 
         self.video_info_parser = VideoInfoParser()
         self.audio_info_parser = AudioInfoParser()
 
+        self._media_info_ready.connect(self._on_media_info_ready)
+        self._media_info_failed.connect(self._on_media_info_failed)
+
         signal_bus.parse.preview_init.connect(self.on_init)
 
     def on_init(self, episode_data: dict, show_toast: bool):
         if episode_data is None:
             return
-        
+
         self.show_toast = show_toast
-        
+
         self.clear_cache()
+
+        # clear_cache 已递增代号，此后到达的旧请求结果都会被丢弃
+        token = PreviewerInfo.generation
 
         ep_attr = episode_data.get("attribute", 0)
         PreviewerInfo.attribute = ep_attr
@@ -46,18 +61,18 @@ class Previewer(ParserBase):
             # 不需要获取媒体信息，直接调用 on_init_success 以继续后续流程
             self.on_init_success()
             return
-        
+
         if ep_attr & Attribute.VIDEO_BIT:
-            self.get_video_info(episode_data)
+            self.get_video_info(episode_data, token)
 
         elif ep_attr & Attribute.BANGUMI_BIT:
-            self.get_bangumi_info(episode_data)
+            self.get_bangumi_info(episode_data, token)
 
         elif ep_attr & Attribute.CHEESE_BIT:
-            self.get_cheese_info(episode_data)
+            self.get_cheese_info(episode_data, token)
 
         elif ep_attr & Attribute.AUDIO_BIT:
-            self.get_audio_info(episode_data)
+            self.get_audio_info(episode_data, token)
 
     def on_init_success(self):
         try:
@@ -115,16 +130,7 @@ class Previewer(ParserBase):
         except Exception as e:
             self.on_init_error(str(e))
 
-    def get_video_info(self, episode_data: dict):
-        def on_success(response: dict):
-            self.check_response(response)
-
-            PreviewerInfo.info_data = response.copy()["data"]
-            PreviewerInfo.info_data["parser_type"] = "video"
-            PreviewerInfo.info_data["query_url"] = url
-
-            self.on_init_success()
-
+    def get_video_info(self, episode_data: dict, token: int):
         params = {
             "bvid": episode_data["bvid"],
             "cid": episode_data["cid"],
@@ -136,22 +142,9 @@ class Previewer(ParserBase):
 
         url = f"https://api.bilibili.com/x/player/wbi/playurl?{self.enc_wbi(params)}"
 
-        worker = NetworkRequestWorker(url)
-        worker.success.connect(on_success)
-        worker.error.connect(self.on_init_error)
+        self._request_media_info(url, "video", token)
 
-        AsyncTask.run(worker)
-
-    def get_bangumi_info(self, episode_data: dict):
-        def on_success(response: dict):
-            self.check_response(response)
-
-            PreviewerInfo.info_data = response.copy()["result"]
-            PreviewerInfo.info_data["parser_type"] = "bangumi"
-            PreviewerInfo.info_data["query_url"] = url
-
-            self.on_init_success()
-
+    def get_bangumi_info(self, episode_data: dict, token: int):
         params = {
             "bvid": episode_data["bvid"],
             "cid": episode_data["cid"],
@@ -163,22 +156,9 @@ class Previewer(ParserBase):
 
         url = f"https://api.bilibili.com/pgc/player/web/playurl?{urlencode(params)}"
 
-        worker = NetworkRequestWorker(url)
-        worker.success.connect(on_success)
-        worker.error.connect(self.on_init_error)
+        self._request_media_info(url, "bangumi", token)
 
-        AsyncTask.run(worker)
-
-    def get_cheese_info(self, episode_data: dict):
-        def on_success(response: dict):
-            self.check_response(response)
-
-            PreviewerInfo.info_data = response.copy()["data"]
-            PreviewerInfo.info_data["parser_type"] = "cheese"
-            PreviewerInfo.info_data["query_url"] = url
-
-            self.on_init_success()
-
+    def get_cheese_info(self, episode_data: dict, token: int):
         params = {
             "avid": episode_data["aid"],
             "cid": episode_data["cid"],
@@ -191,24 +171,9 @@ class Previewer(ParserBase):
 
         url = f"https://api.bilibili.com/pugv/player/web/playurl?{urlencode(params)}"
 
-        worker = NetworkRequestWorker(url)
-        worker.success.connect(on_success)
-        worker.error.connect(self.on_init_error)
+        self._request_media_info(url, "cheese", token)
 
-        AsyncTask.run(worker)
-
-    def get_audio_info(self, episode_data: dict):
-        def on_success(response: dict):
-            self.check_response(response)
-
-            response["data"]["format"] = "m4a"
-
-            PreviewerInfo.info_data = response.copy()["data"]
-            PreviewerInfo.info_data["parser_type"] = "audio"
-            PreviewerInfo.info_data["query_url"] = url
-
-            self.on_init_success()
-            
+    def get_audio_info(self, episode_data: dict, token: int):
         params = {
             "sid": episode_data["sid"],
             "privilege": 2,
@@ -217,11 +182,51 @@ class Previewer(ParserBase):
 
         url = f"https://www.bilibili.com/audio/music-service-c/web/url?{urlencode(params)}"
 
+        self._request_media_info(url, "audio", token)
+
+    def _request_media_info(self, url: str, parser_type: str, token: int):
+        # 两个闭包都跑在请求线程里，只负责把结果连同发起时的代号转发出去，不碰任何共享状态
+        def on_success(response: dict):
+            self._media_info_ready.emit(response, parser_type, url, token)
+
+        def on_error(error: str):
+            self._media_info_failed.emit(error, token)
+
         worker = NetworkRequestWorker(url)
         worker.success.connect(on_success)
-        worker.error.connect(self.on_init_error)
+        worker.error.connect(on_error)
 
         AsyncTask.run(worker)
+
+    @Slot(object, str, str, int)
+    def _on_media_info_ready(self, response: dict, parser_type: str, url: str, token: int):
+        if token != PreviewerInfo.generation:
+            # 用户已切换到别的剧集，丢弃过期结果
+            return
+
+        try:
+            self.check_response(response)
+
+        except RuntimeError:
+            # check_response 内部已经走过 on_init_error
+            return
+
+        if parser_type == "audio":
+            response["data"]["format"] = "m4a"
+
+        # 剧集接口的数据在 result 下，其余都在 data 下
+        PreviewerInfo.info_data = response.copy()["result" if parser_type == "bangumi" else "data"]
+        PreviewerInfo.info_data["parser_type"] = parser_type
+        PreviewerInfo.info_data["query_url"] = url
+
+        self.on_init_success()
+
+    @Slot(str, int)
+    def _on_media_info_failed(self, error: str, token: int):
+        if token != PreviewerInfo.generation:
+            return
+
+        self.on_init_error(error)
 
     def check_need_parse(self, ep_attr: int):
         attr_list = [
@@ -252,6 +257,9 @@ class Previewer(ParserBase):
             raise RuntimeError(message)
 
     def clear_cache(self):
+        # 递增代号，让上一个剧集尚未返回的请求结果作废
+        PreviewerInfo.generation += 1
+
         PreviewerInfo.info_data = {}
         PreviewerInfo.media_type = MediaType.UNKNOWN
         PreviewerInfo.attribute = 0

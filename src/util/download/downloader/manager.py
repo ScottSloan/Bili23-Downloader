@@ -5,6 +5,10 @@ from ...common.translator import Translator
 from ..task.info import TaskInfo
 from .downloader import Downloader
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 class DownloaderManager:
     def __init__(self):
         # task_id 与 Downloader 绑定
@@ -50,6 +54,17 @@ class DownloaderManager:
         
         if downloader:
             downloader.wait(callback)
+
+    def shutdown(self):
+        # 退出前让所有下载器停止工作。必须排在 AsyncTask.safe_quit() 之前：
+        # 分片线程阻塞在 socket 读上，只有关掉会话才会立即返回，
+        # 否则等待预算会全部耗在读超时上；正在转码的 FFmpeg 线程同理。
+        for downloader in list(self.downloaders.values()):
+            try:
+                downloader.shutdown()
+
+            except Exception:
+                logger.exception("停止下载任务失败：%s", getattr(downloader, "task_info", None))
 
     def show_notification(self):
         # 如果没有正在下载的任务了，发射下载完成的通知信号

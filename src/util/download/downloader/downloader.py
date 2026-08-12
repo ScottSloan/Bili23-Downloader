@@ -11,9 +11,9 @@ from ...common.config import config
 from ...common.io.file import File
 
 from ...parse.additional.worker import AdditionalParseWorker
+from ...parse.additional.chapter import ChapterParser
 from ...thread.pool import GlobalThreadPoolTask
-from ...network.request import get_cookies, get_mounts, get_ssl_context
-from ...network.proxy import Proxy
+from ...network.request import get_cookies, get_proxy_mounts, get_ssl_context
 from ...thread.async_ import AsyncTask
 
 from ..task.manager import task_manager
@@ -77,6 +77,9 @@ class TokenBucket:
 
 class ChunkWorker(QRunnable):
     max_retries = 5
+    # 每写满这么多字节就 flush 一次并记录断点。进程崩溃时 Python 缓冲区里的数据会丢，
+    # flush 之后数据已交给操作系统，即便进程被强杀也仍在磁盘上，断点因此是可信的。
+    flush_interval = 1024 * 1024
     retryable_status_codes = {408, 429, 500, 502, 503, 504}
     permanent_status_codes = {400, 401, 403, 404, 405, 410, 416}
     permanent_errnos = {
@@ -107,6 +110,7 @@ class ChunkWorker(QRunnable):
         self.session = session
         self.file_key = file_key
         self.chunk_index = chunk_index
+        self.offset_key = str(chunk_index)      # 断点表随任务快照走 JSON，键统一用字符串
         self.chunk_range = chunk_range
         self.chunk_size = chunk_range[1] - chunk_range[0]
         self.file_path = file_path
@@ -180,6 +184,14 @@ class ChunkWorker(QRunnable):
         self.stop_event.set()
         self._invoke_download_error(message)
 
+    def _notify_chunk_finished(self):
+        QMetaObject.invokeMethod(
+            self.parent, "on_chunk_finished",
+            Qt.ConnectionType.QueuedConnection,
+            Q_ARG(str, self.file_key),
+            Q_ARG(int, self.chunk_index)
+        )
+
     def _interruptible_sleep(self, seconds: float):
         # 分段休眠，保证暂停、取消能够及时生效，而不必等满整个退避时间
         while seconds > 0:
@@ -205,11 +217,49 @@ class ChunkWorker(QRunnable):
             if self.on_chunk_end:
                 self.on_chunk_end()
 
-    def _download_chunk(self):
-        headers = {
-            "Range": f"bytes={self.chunk_range[0]}-{self.chunk_range[1] - 1}"
-        }
+    def _get_offsets(self):
+        # 分片断点表由 calc_chunk_list 预先建好，此处只会改写已有键的值
+        file_info = self.task_info.Download.files.get(self.file_key)
 
+        if isinstance(file_info, dict):
+            offsets = file_info.get("chunk_offsets")
+
+            if isinstance(offsets, dict):
+                return offsets
+
+        return None
+
+    def _commit_offset(self, written: int):
+        # 记录本分片已 flush 落盘的字节数。只在 flush/close 成功之后调用，
+        # 保证记录的断点绝不会超过磁盘上真实存在的数据。
+        offsets = self._get_offsets()
+
+        if offsets is None:
+            return
+
+        with self.lock:
+            offsets[self.offset_key] = written
+
+    def _load_offset(self):
+        offsets = self._get_offsets()
+
+        if offsets is None:
+            return 0
+
+        with self.lock:
+            try:
+                return max(min(int(offsets.get(self.offset_key, 0)), self.chunk_size), 0)
+
+            except (TypeError, ValueError):
+                return 0
+
+    def _download_chunk(self):
+        chunk_start, chunk_end = self.chunk_range
+
+        # 本分片已确认落盘的字节数。重试时从这里断点续传，而不是整片重下：
+        # 原先一次网络抖动就会让最多 4MB 已下载的数据作废，界面上直接表现为进度回退。
+        # 该值同时会写进任务快照，进程崩溃后重启也能从这里继续，而不是退回到上一个整片边界。
+        written = self._load_offset()
         attempt = 0
 
         while (
@@ -217,24 +267,51 @@ class ChunkWorker(QRunnable):
             and self.parent.is_generation_active(self.generation)
             and attempt < self.max_retries
         ):
-            downloaded = 0
+            if written >= self.chunk_size:
+                # 整片已写满。服务端返回的 Content-Length 大于分片实际剩余时会走到这里，
+                # 此时再发请求只会得到一个非法 Range（416），直接按完成处理。
+                self._notify_chunk_finished()
+
+                break
+
+            headers = {
+                "Range": f"bytes={chunk_start + written}-{chunk_end - 1}"
+            }
+
+            downloaded = 0      # 本轮从服务端收到的字节数
+            pending = 0         # 已 write 但尚未 flush、因而还不能计入断点的字节数
+            expected_size = 0
+            flushed = False
+
             try:
-                with open(self.file_path, "r+b") as f:
-                    f.seek(self.chunk_range[0])
+                f = open(self.file_path, "r+b")
+
+                try:
+                    f.seek(chunk_start + written)
 
                     with self.session.stream("GET", self.url, headers = headers, follow_redirects = True, timeout = 10) as response:
                         response.raise_for_status()
 
+                        if written and response.status_code != 206:
+                            # 服务端忽略了 Range，续传位置无从谈起，只能整片从头重来
+                            with self.lock:
+                                self.task_info.Download.downloaded_size = max(self.task_info.Download.downloaded_size - written, 0)
+
+                            written = 0
+                            self._commit_offset(0)
+
+                            raise StopIteration("服务端未按 Range 返回 206，分片将从头重新下载")
+
                         # 获取服务端实际承诺下发的体量。若是最后一个切片且 CDN 数据缩水，它将以实际值为准
-                        expected_size = int(response.headers.get("Content-Length", self.chunk_size))
-                        
+                        expected_size = int(response.headers.get("Content-Length", self.chunk_size - written))
+
                         for chunk in response.iter_bytes(chunk_size = 8192):
                             if (
                                 self.stop_event.is_set()
                                 or not self.parent.is_generation_active(self.generation)
                             ):
                                 break
-                            
+
                             if chunk:
                                 chunk_len = len(chunk)
                                 if self.token_bucket:
@@ -242,25 +319,48 @@ class ChunkWorker(QRunnable):
 
                                 f.write(chunk)
                                 downloaded += chunk_len
-                                
+                                pending += chunk_len
+
                                 with self.lock:
                                     self.task_info.Download.downloaded_size += chunk_len
-                                    
+
+                                if pending >= self.flush_interval:
+                                    # 定期把缓冲区交给操作系统并推进断点，
+                                    # 这样崩溃后恢复最多只损失 flush_interval 字节，而不是整个分片
+                                    f.flush()
+
+                                    written += pending
+                                    pending = 0
+
+                                    self._commit_offset(written)
+
+                finally:
+                    # 无论正常结束还是中途抛错，都要先关闭文件（隐含 flush）。
+                    # 这一步必须在外层 except 之前完成：关闭成功即代表本轮写入的字节
+                    # 确实落盘，可以计入断点，重试时从这里续传而不是整片重下。
+                    try:
+                        f.close()
+
+                        written += pending
+                        pending = 0
+                        flushed = True
+
+                        self._commit_offset(written)
+
+                    except Exception:
+                        logger.exception("关闭分片文件失败，本轮数据将重新下载: %s", self.file_path)
+
                 # 如果中途被停止，跳出循环退出
                 if (
                     self.stop_event.is_set()
                     or not self.parent.is_generation_active(self.generation)
                 ):
                     break
-                    
+
                 # 检查区块是否真下载到了服务端承诺的大小（原为严格检测 self.chunk_size）
                 if downloaded >= expected_size:
-                    QMetaObject.invokeMethod(
-                        self.parent, "on_chunk_finished",
-                        Qt.ConnectionType.QueuedConnection,
-                        Q_ARG(str, self.file_key),
-                        Q_ARG(int, self.chunk_index)
-                    )
+                    self._notify_chunk_finished()
+
                     break
                 else:
                     # 提前结束但没有报错，说明连接意外断开，触发重试
@@ -269,10 +369,12 @@ class ChunkWorker(QRunnable):
             except Exception as exc:
                 if self.stop_event.is_set():
                     break
-                
-                # 发生异常（断网、超时等），清空本轮的下载计数并等待后重试（区块从头下）
-                with self.lock:
-                    self.task_info.Download.downloaded_size = max(self.task_info.Download.downloaded_size - downloaded, 0)
+
+                if not flushed and pending:
+                    # 文件没能正常关闭，只有最后一次 flush 之后的那部分数据无法确认落盘，
+                    # 回退这部分计数并从上一个确认过的断点重来；已 flush 的部分依旧有效
+                    with self.lock:
+                        self.task_info.Download.downloaded_size = max(self.task_info.Download.downloaded_size - pending, 0)
 
                 attempt += 1
                 retryable = self._is_retryable_exception(exc)
@@ -282,6 +384,15 @@ class ChunkWorker(QRunnable):
                     break
 
                 self._interruptible_sleep(min(2 ** (attempt - 1), 8))
+
+# 正在销毁流程中的下载器。
+#
+# ParseWorker / ChunkWorker 都持有 Downloader 的引用，并且是在自己的线程上结束的。
+# 一旦 DownloaderManager 已经把它移出字典，最后一个 Python 引用就可能落在工作线程手里，
+# 对象随之在工作线程被回收 —— 而它是 GUI 线程的 QObject，成员里还有 QTimer，
+# 跨线程析构会触发 "Timers cannot be stopped from another thread" 并破坏 Qt 内部状态。
+# 这里在销毁流程期间替它保管一份引用，直到 _finalize_delete 在 GUI 线程上执行完毕。
+_pending_delete: set = set()
 
 class Downloader(QObject):
     def __init__(self, task_info: TaskInfo):
@@ -301,6 +412,10 @@ class Downloader(QObject):
 
         self.chunk_size = 4 * 1024 * 1024
         self.download_list = {}
+        self.merger = None
+
+        # 线程池交由 GUI 线程释放，见 _release_thread_pool
+        self._releasing_pool = None
 
         self._stop_event = Event()
         self.update_lock = Lock()
@@ -317,6 +432,17 @@ class Downloader(QObject):
         
         self._completion_triggered = False
         self._download_error_triggered = False
+
+        # ChunkWorker / ParseWorker / _start_worker_in_background 都持有本对象的裸引用，
+        # 并在自己的线程上通过 QMetaObject.invokeMethod 回调过来。若在它们跑完之前就
+        # deleteLater()，C++ 对象会先一步析构，跨线程的回调就落到已释放的内存上。
+        # 这里记录还有多少外部线程持有引用，全部归零后才真正销毁。
+        self._ref_lock = Lock()
+        self._external_refs = 0
+        self._delete_pending = False
+        self._delete_finalized = False
+
+        self.last_sampled_time = 0.0
 
         self.speed_timer = QTimer()
         self.speed_timer.setInterval(1000)
@@ -340,8 +466,21 @@ class Downloader(QObject):
                 self.task_info.Download.status = DownloadStatus.PARSING
                 self._stop_event.clear()
 
-                parse_worker = ParseWorker(self.task_info, self)
-                GlobalThreadPoolTask.run(parse_worker)
+                # 对象正在销毁时不再启动解析，否则回调会落到已析构的对象上
+                if not self._acquire_ref():
+                    return
+
+                # 解析失败会自动重试，等待期间用户可能暂停或取消任务，
+                # 因此把停止标记一并交给 worker，让它能及时放弃
+                parse_worker = ParseWorker(self.task_info, self, on_finished = self._release_ref, stop_event = self._stop_event)
+
+                try:
+                    GlobalThreadPoolTask.run(parse_worker)
+
+                except Exception:
+                    self._release_ref()
+
+                    raise
             else:
                 self.task_info.Download.info_label = Translator.TIP_MESSAGES("ADDITIONAL_FILES")
                 self.update_item(self.task_info)
@@ -389,6 +528,13 @@ class Downloader(QObject):
         self._download_error_triggered = True
         self.task_info.Download.status = DownloadStatus.FAILED
         self._stop_event.set()
+
+        # 提升代次，令仍排在线程池里的分片作废。否则用户点重试时 start() 会先清掉
+        # stop_event，这批旧分片就可能在新代次分配之前被唤醒，拿着已关闭的会话乱写计数。
+        with self.start_worker_lock:
+            self.download_generation += 1
+            self.start_worker_requested = False
+
         self._close_session()
         self.speed_timer.stop()
 
@@ -446,11 +592,24 @@ class Downloader(QObject):
                 generation = self.download_generation
 
             # 磁盘检查、预分配和启动分片属于准备工作，不能阻塞 GUI 事件循环。
-            GlobalThreadPoolTask.run_func(
-                self._start_worker_in_background,
-                generation
-            )
-        
+            # 对象正在销毁时直接放弃，避免后台任务回调到已析构的对象上
+            if not self._acquire_ref():
+                with self.start_worker_lock:
+                    self.start_worker_pending = False
+
+                return
+
+            try:
+                GlobalThreadPoolTask.run_func(
+                    self._start_worker_in_background,
+                    generation
+                )
+
+            except Exception:
+                self._release_ref()
+
+                raise
+
         except Exception as e:
             with self.start_worker_lock:
                 self.start_worker_pending = False
@@ -483,6 +642,9 @@ class Downloader(QObject):
 
             self._queue_wait_callback_if_idle()
 
+            # 必须放在最后：释放引用后本对象随时可能被销毁
+            self._release_ref()
+
     def is_generation_active(self, generation: int):
         return generation == self.download_generation
 
@@ -502,8 +664,14 @@ class Downloader(QObject):
 
         # 计算文件所需空间
         file_size = info.get("file_size", 0)
-        current_size = path.stat().st_size if path.exists() else 0
+        file_exists = path.exists()
+        current_size = path.stat().st_size if file_exists else 0
         required_space = max(file_size - current_size, 0)
+
+        if not file_exists:
+            # 目标文件已不存在（被手动删除或清理工具移除），此前记录的分片进度全部作废。
+            # 否则只会补下剩余分片，最终拼出一个中间全是空洞的文件。
+            self._reset_file_progress(file_key)
 
         # 检查磁盘空间并预分配文件
         self._check_disk_space(path, required_space)
@@ -511,6 +679,18 @@ class Downloader(QObject):
         info["file_path"] = path
         chunk_list = self.calc_chunk_list(file_key, file_size, self.chunk_size)
         self.calc_downloaded_size()
+
+        if not chunk_list:
+            # 该文件其实已经下载完毕，只是出队记录没能落盘（例如出队前进程被杀）。
+            # 直接补做出队并处理下一个文件，切勿重建分片表把整个文件重下一遍。
+            QMetaObject.invokeMethod(
+                self,
+                "on_file_completed",
+                Qt.ConnectionType.QueuedConnection,
+                Q_ARG(str, file_key)
+            )
+
+            return
 
         # 对于每个区块，启动一个下载线程。区块下载完成后会从 chunk_list 中移除，直到全部完成。
         for chunk_index in chunk_list:
@@ -542,10 +722,45 @@ class Downloader(QObject):
 
         task_manager.update_async(self.task_info)
 
+    def _reset_file_progress(self, file_key: str):
+        file_info = self.task_info.Download.files.get(file_key)
+
+        if not isinstance(file_info, dict):
+            return
+
+        with self.update_lock:
+            file_info["chunks_list"] = []
+            file_info["total_chunks"] = 0
+            file_info["finished_chunks"] = 0
+            file_info["chunk_offsets"] = {}
+
     def start_merge(self):
+        # 合并失败后可以重试，上一次的 Merger 不再需要。它挂在本对象的 parent 链上，
+        # 不主动释放就会一直累积到任务结束
+        self._release_merger()
+
         self.task_info.Download.status = DownloadStatus.MERGING
-        merge_worker = Merger(self.task_info, parent=self)
-        merge_worker.start()
+
+        self.merger = Merger(self.task_info, parent = self)
+        self.merger.start()
+
+    def _release_merger(self):
+        # 先停掉 FFmpeg 线程再释放对象：Merger 与其中的 FFmpegRunner 都挂在
+        # 本对象的 parent 链上，销毁 Downloader 会连带析构它们，
+        # 而销毁一个仍在运行的 QThread 会让 Qt 直接 qFatal 中止进程
+        merger = self.merger
+        self.merger = None
+
+        if merger is None:
+            return
+
+        try:
+            merger.stop()
+            merger.deleteLater()
+
+        except RuntimeError:
+            # C++ 侧已经析构，无需再处理
+            pass
 
     def pause(self):
         with self.start_worker_lock:
@@ -557,6 +772,9 @@ class Downloader(QObject):
 
         self._close_session()
         self.speed_timer.stop()
+
+        # 暂停后测速定时器不再触发，这里补一次快照，否则最近一秒内完成的分片不会落盘
+        task_manager.update_async(self.task_info)
 
     def resume(self):
         self.task_info.Download.status = DownloadStatus.DOWNLOADING
@@ -572,16 +790,36 @@ class Downloader(QObject):
 
     def calc_chunk_list(self, file_key: str, total_size: int, chunk_size: int) -> list:
         file_info = self.task_info.Download.files[file_key]
-        if chunk_list := file_info.get("chunks_list"):
-            return chunk_list
-        
-        total_chunks = (total_size + chunk_size - 1) // chunk_size if total_size > 0 else 0
-        if total_chunks == 0:
-            total_chunks = 1
-            
-        chunk_list = list(range(total_chunks))
-        file_info["total_chunks"] = total_chunks
-        file_info["chunks_list"] = chunk_list.copy()
+
+        with self.update_lock:
+            # 以 total_chunks 判断分片表是否已建立，切勿判断 chunks_list 是否为空：
+            # 分片全部完成后 chunks_list 会被清空，按空值重建等于把整个文件当作从未下载过，
+            # 崩溃恰好发生在「最后一片完成」与「文件出队」之间时就会整片重下。
+            if file_info.get("total_chunks"):
+                # 返回副本：调用方会边遍历边启动分片，而 on_chunk_finished 会在 GUI 线程上
+                # 从同一个列表里移除已完成的分片，直接遍历原列表会漏启动一部分分片。
+                chunk_list = list(file_info.get("chunks_list") or [])
+
+            else:
+                total_chunks = (total_size + chunk_size - 1) // chunk_size if total_size > 0 else 0
+                if total_chunks == 0:
+                    total_chunks = 1
+
+                chunk_list = list(range(total_chunks))
+                file_info["total_chunks"] = total_chunks
+                file_info["chunks_list"] = chunk_list.copy()
+
+            # 预先为每个分片建好断点条目。ChunkWorker 之后只改写已有键的值，
+            # 不会在别的线程序列化任务快照的同时增删键。
+            offsets = file_info.get("chunk_offsets")
+
+            if not isinstance(offsets, dict):
+                offsets = {}
+                file_info["chunk_offsets"] = offsets
+
+            for index in chunk_list:
+                offsets.setdefault(str(index), 0)
+
         return chunk_list
 
     def calc_chunk_range(self, chunk_index: int, chunk_size: int, total_size: int):
@@ -591,21 +829,36 @@ class Downloader(QObject):
 
     def calc_downloaded_size(self):
         downloaded_size = 0
-        
-        for file_info in self.task_info.Download.files.values():
-            total_chunks = file_info.get("total_chunks", 0)
-            file_size = file_info.get("file_size", 0)
-            chunks_list = file_info.get("chunks_list", [])
-
-            if total_chunks > 0:
-                # 只累加确实已经完全下载完成的区块的实际大小
-                for i in range(total_chunks):
-                    if i not in chunks_list:
-                        start = i * self.chunk_size
-                        end = min(start + self.chunk_size, file_size) if file_size > 0 else 0
-                        downloaded_size += (end - start)
 
         with self.update_lock:
+            for file_info in self.task_info.Download.files.values():
+                total_chunks = file_info.get("total_chunks", 0)
+                file_size = file_info.get("file_size", 0)
+                chunks_list = file_info.get("chunks_list", [])
+                offsets = file_info.get("chunk_offsets") or {}
+
+                if total_chunks > 0:
+                    remaining = set(chunks_list)
+
+                    for i in range(total_chunks):
+                        start = i * self.chunk_size
+                        end = min(start + self.chunk_size, file_size) if file_size > 0 else 0
+
+                        if i not in remaining:
+                            # 已完整下载的区块，累加其实际大小
+                            downloaded_size += (end - start)
+
+                        else:
+                            # 未完成的区块也把已确认落盘的部分算进来，
+                            # 否则恢复下载时进度会退回到上一个整片边界
+                            try:
+                                offset = int(offsets.get(str(i), 0))
+
+                            except (TypeError, ValueError):
+                                offset = 0
+
+                            downloaded_size += max(min(offset, end - start), 0)
+
             self.task_info.Download.downloaded_size = downloaded_size
     
     @Slot(str, int)
@@ -616,20 +869,33 @@ class Downloader(QObject):
                 file_info["finished_chunks"] += 1
                 file_info["chunks_list"].remove(chunk_index)
 
-            total = file_info.get("total_chunks", 1)
-            current_progress = int((file_info.get("finished_chunks", 0) / total) * 100) if total > 0 else 100
+            # 以剩余分片是否为空判断文件是否下载完成。finished_chunks 只是展示用的计数，
+            # 一旦因为历史数据异常而与实际分片数对不上，就会提前把文件判定为完成。
+            file_completed = file_info.get("total_chunks", 0) > 0 and not file_info.get("chunks_list")
+
+        if file_completed:
+            self.on_file_completed(file_key)
+            return
 
         task_manager.update_async(self.task_info)
 
-        if current_progress >= 100:
-            if file_key in self.task_info.Download.queue:
-                self.task_info.Download.queue.remove(file_key)
-
-            if self.task_info.Download.queue and not self._stop_event.is_set():
-                self.start_download()
-                return
-
         # 若队列全空，且任务没被暂停/取消，意味着所有文件下载完成
+        if not self.task_info.Download.queue and self.task_info.Download.status == DownloadStatus.DOWNLOADING:
+            self.on_download_completed()
+
+    @Slot(str)
+    def on_file_completed(self, file_key: str):
+        # 出队必须与分片状态在同一个快照里落盘。若先写库再出队，崩溃窗口内保存下来的记录
+        # 会是「分片全部完成但文件仍在队列中」，重启后该文件会被当作从未下载过而整片重下。
+        if file_key in self.task_info.Download.queue:
+            self.task_info.Download.queue.remove(file_key)
+
+        task_manager.update_async(self.task_info)
+
+        if self.task_info.Download.queue and not self._stop_event.is_set():
+            self.start_download()
+            return
+
         if not self.task_info.Download.queue and self.task_info.Download.status == DownloadStatus.DOWNLOADING:
             self.on_download_completed()
 
@@ -640,6 +906,7 @@ class Downloader(QObject):
                     "chunks_list": [],
                     "total_chunks": 0,
                     "finished_chunks": 0,
+                    "chunk_offsets": {},
                     "file_size": download_info["download_list"][file_key].get("file_size", 0)
                 } for file_key in download_info["download_queue"]
             }
@@ -668,7 +935,8 @@ class Downloader(QObject):
 
         limits = httpx.Limits(max_keepalive_connections = config.get(config.download_thread), max_connections = config.get(config.download_thread))
         transport = httpx.HTTPTransport(retries = 5, verify = ssl_context)
-        mounts = get_mounts(Proxy().get_proxies())
+        # 与解析请求共用同一套代理模式判定
+        mounts = get_proxy_mounts()
 
         headers = {
             "Referer": self.task_info.Episode.url,
@@ -703,14 +971,28 @@ class Downloader(QObject):
         subtitles = self.task_info.Download.type & DownloadType.SUBTITLE != 0
         cover = self.task_info.Download.type & DownloadType.COVER != 0
         metadata = self.task_info.Download.type & DownloadType.METADATA != 0
+        chapter = ChapterParser.is_available(self.task_info)
 
-        if any([danmaku, subtitles, cover, metadata]):
+        if any([danmaku, subtitles, cover, metadata, chapter]):
             self.task_info.Download.status = DownloadStatus.ADDITIONAL_PROCESSING
-            
+
+            # 附加内容解析同样跑在独立线程上，并且回调本对象，
+            # 必须与 ParseWorker 一样纳入引用计数，否则销毁流程不会等它结束
+            if not self._acquire_ref():
+                return
+
             worker = AdditionalParseWorker(self.task_info)
             worker.success.connect(self.wait_merge)
             worker.error.connect(self.on_parse_error)
-            AsyncTask.run(worker)
+            worker.finished.connect(self._release_ref)
+
+            try:
+                AsyncTask.run(worker)
+
+            except Exception:
+                self._release_ref()
+
+                raise
         else:
             self.wait_merge()
 
@@ -778,16 +1060,24 @@ class Downloader(QObject):
     def start_timer(self):
         if self.speed_timer.isActive():
             return
-        
+
         self.last_sampled_size = self.task_info.Download.downloaded_size
+        self.last_sampled_time = time.monotonic()
         self.speed_timer.start()
 
     def _calculate_speed(self):
         with self.update_lock:
             current_size = self.task_info.Download.downloaded_size
 
-        speed = current_size - self.last_sampled_size
-        self.task_info.Download.speed = speed if speed > 0 else 0
+        # 按实际经过的时间折算。QTimer 只保证不早于 1s 触发，界面繁忙时
+        # 间隔会明显拉长，直接拿差值当速度会把瞬时速度显示得偏高。
+        now = time.monotonic()
+        elapsed = now - self.last_sampled_time if self.last_sampled_time else 1.0
+        self.last_sampled_time = now
+
+        delta = current_size - self.last_sampled_size
+        self.task_info.Download.speed = int(delta / elapsed) if elapsed > 0 and delta > 0 else 0
+
         total = getattr(self.task_info.Download, "total_size", 0)
         self.task_info.Download.progress = int(current_size / total * 100) if total > 0 else 100
         self.last_sampled_size = current_size
@@ -798,7 +1088,37 @@ class Downloader(QObject):
         if not self.task_info.Download.queue and self.task_info.Download.status == DownloadStatus.DOWNLOADING:
             self.on_download_completed()
 
+    def shutdown(self):
+        """
+        进程退出前的快速收敛：让后台线程尽早停下来，但不销毁本对象
+
+        与 on_delete 的区别是不走引用计数与销毁流程 —— 进程马上就要结束，
+        对象由操作系统回收，这里只需保证没有线程还在读写文件和网络。
+        """
+        self._stop_event.set()
+
+        with self.start_worker_lock:
+            self.download_generation += 1
+            self.start_worker_requested = False
+
+        self.speed_timer.stop()
+
+        pool = self.thread_pool
+
+        if pool is not None:
+            # 丢弃尚未开始的分片，已在运行的分片会因为会话关闭而立即出错退出
+            pool.clear()
+
+        # 关闭会话后阻塞在 socket 读上的分片会立刻返回，
+        # 否则退出流程要一直等到读超时（5s）才能推进
+        self._close_session()
+
+        self._release_merger()
+
     def on_delete(self):
+        # 在移出管理器之前先登记，保证销毁期间始终有一份来自 GUI 线程的引用
+        _pending_delete.add(self)
+
         self._stop_event.set()
 
         # 提升代次，令仍在运行的分片线程尽快退出，并且不再回调本对象
@@ -806,14 +1126,82 @@ class Downloader(QObject):
             self.download_generation += 1
             self.start_worker_requested = False
 
-        self._close_session()
         self.speed_timer.stop()
 
+        # 必须赶在 deleteLater 之前停掉 FFmpeg，否则销毁 parent 链时
+        # 会析构仍在运行的 FFmpegRunner
+        self._release_merger()
+
+        with self._ref_lock:
+            self._delete_pending = True
+
+            # 线程池释放线程本身也算一个持有者，保证下面至少会触发一次归零检查。
+            # 这里必须直接自增：_delete_pending 已经置位，_acquire_ref 会拒绝
+            self._external_refs += 1
+
+        # 关闭会话要等连接池释放，批量取消时逐个在 GUI 线程上关闭会让界面卡住数秒，
+        # 因此与线程池的等待一并放到后台线程执行
         self._release_thread_pool()
+
+    def _acquire_ref(self):
+        """
+        登记一个外部持有者，成功返回 True
+
+        销毁流程一旦启动就必须拒绝：此时 _finalize_delete 可能已经排在 GUI 事件队列里，
+        再放行新的后台任务，任务结束时回调的就是已经析构的 C++ 对象，
+        跨线程的 invokeMethod 会落到已释放的内存上。
+        """
+        with self._ref_lock:
+            if self._delete_pending or self._delete_finalized:
+                return False
+
+            self._external_refs += 1
+
+            return True
+
+    def _release_ref(self):
+        with self._ref_lock:
+            self._external_refs -= 1
+
+            should_finalize = (
+                self._delete_pending
+                and self._external_refs <= 0
+                and not self._delete_finalized
+            )
+
+            if should_finalize:
+                self._delete_finalized = True
+
+        if should_finalize:
+            # 销毁必须回到对象所属的 GUI 线程执行
+            QMetaObject.invokeMethod(
+                self,
+                "_finalize_delete",
+                Qt.ConnectionType.QueuedConnection
+            )
+
+    @Slot()
+    def _finalize_delete(self):
+        # 本槽是排队执行的，从决定销毁到真正执行之间隔着一轮事件循环。
+        # 期间若又有持有者登记进来，必须放弃本次销毁，改由最后一个持有者释放时重新触发，
+        # 否则 C++ 对象会先于仍在运行的后台任务析构
+        with self._ref_lock:
+            if self._external_refs > 0:
+                self._delete_finalized = False
+
+                return
 
         self.task_info = None
         self.download_list = None
+
+        # 线程池已经跑完，在本线程（GUI 线程）上释放
+        self._releasing_pool = None
+
         self.deleteLater()
+
+        # 放在最后：本槽运行在 GUI 线程上，此处释放最后一份引用，
+        # 后续的 Python 回收就不会发生在工作线程里
+        _pending_delete.discard(self)
 
     def _release_thread_pool(self):
         # QThreadPool 析构时会调用 waitForDone()。若在 GUI 线程上释放引用，
@@ -821,7 +1209,15 @@ class Downloader(QObject):
         pool = self.thread_pool
         self.thread_pool = None
 
+        # QThreadPool 的 affinity 在 GUI 线程。若只由下面的闭包持有，闭包结束时
+        # 它就会在那个裸线程里被回收，等于跨线程析构一个 QObject。
+        # 这里替它保管一份引用，改由 _finalize_delete 在 GUI 线程上释放。
+        self._releasing_pool = pool
+
         if pool is None:
+            self._close_session()
+            self._release_ref()
+
             return
 
         # 丢弃尚未开始的分片任务，只需等待已在运行的部分
@@ -829,10 +1225,17 @@ class Downloader(QObject):
 
         def release():
             try:
+                # 先断开连接，正在读取响应的分片会立即出错退出，无需等到读超时
+                self._close_session()
+
                 pool.waitForDone()
 
             except Exception:
                 logger.exception("等待下载线程池退出时发生异常")
+
+            finally:
+                # 分片线程已全部退出，不会再有人回调本对象
+                self._release_ref()
 
         thread = Thread(target = release, name = "downloader-pool-release", daemon = True)
         thread.start()

@@ -18,6 +18,10 @@ class SignalBus:
         update_parse_list = Signal(str, str, object, object)
         update_parse_list_count = Signal(str, int)
 
+        # 自动解析、互动视频探查等场景下，向已有的解析列表追加节点。
+        # 解析线程不得直接改动解析列表所使用的树，只能通过本信号把新节点交给 GUI 线程挂载
+        append_parse_list_nodes = Signal(object)
+
         preview_init = Signal(dict, bool)
         preview_finish = Signal()
 

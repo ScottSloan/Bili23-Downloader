@@ -4,8 +4,9 @@ class FFmpegCommand:
         self.outputs = []
         self.params = []
 
-    def add_input(self, input_path: str):
-        self.inputs.append(input_path)
+    def add_input(self, input_path: str, *options: str):
+        # options 为该路输入的前置参数，如 -f concat，统一走此处以保证输入索引可靠
+        self.inputs.append((list(options), input_path))
 
         return self
 
@@ -19,11 +20,36 @@ class FFmpegCommand:
 
         return self
 
+    def add_cover(self, cover_path: str, *maps: str):
+        # 将封面作为附加视频流嵌入，maps 为各路流的映射关系
+        self.add_input(cover_path)
+
+        for map_param in maps:
+            self.add_param("-map", map_param)
+
+        return (
+            self
+            .add_param("-c:v:1", "png")
+            .add_param("-disposition:v:1", "attached_pic")
+            .add_param("-pix_fmt:v:1", "rgba")
+        )
+
+    def add_chapter(self, chapter_path: str):
+        # 将 ffmetadata 格式的章节文件作为额外输入写入最终文件
+        # MKV 原生支持章节；MP4 由 FFmpeg 同时写入 Nero chpl 与 QuickTime 章节轨，两者命令一致
+        # 此处只指定 -map_chapters，不使用 -map_metadata，否则全局元数据会被章节文件覆盖
+        index = len(self.inputs)
+
+        # ffmetadata 输入不含任何流，不会影响封面等 -map 参数的流映射
+        self.add_input(chapter_path, "-f", "ffmetadata")
+
+        return self.add_param("-map_chapters", str(index))
+
     def build(self):
         command = ["ffmpeg", "-y"]
 
-        for input_path in self.inputs:
-            command.extend(["-i", input_path])
+        for options, input_path in self.inputs:
+            command.extend([*options, "-i", input_path])
 
         command.extend(self.params)
 
@@ -33,63 +59,42 @@ class FFmpegCommand:
         return command
     
     @classmethod
-    def merge_video_audio(cls, video_path: str, audio_path: str, output_path: str, cover_path: str = None):
+    def merge_video_audio(cls, video_path: str, audio_path: str, output_path: str, cover_path: str = None, chapter_path: str = None):
+        command = (
+            cls()
+            .add_input(video_path)
+            .add_input(audio_path)
+            .add_param("-c:v", "copy")
+            .add_param("-c:a", "copy")
+        )
+
         if cover_path:
-            # 如果存在封面，就在合并视频和音频的命令里加上相关参数
-            return (
-                cls()
-                .add_input(video_path)
-                .add_input(audio_path)
-                .add_input(cover_path)
-                .add_param("-map", "0:v:0")
-                .add_param("-map", "1:a:0")
-                .add_param("-map", "2:v:0")
-                .add_param("-c:v", "copy")
-                .add_param("-c:a", "copy")
-                .add_param("-c:v:1", "png")
-                .add_param("-disposition:v:1", "attached_pic")
-                .add_param("-pix_fmt:v:1", "rgba")
-                .add_output(output_path)
-            )
-        
-        else:
-            return (
-                cls()
-                .add_input(video_path)
-                .add_input(audio_path)
-                .add_param("-c:v", "copy")
-                .add_param("-c:a", "copy")
-                .add_output(output_path)
-            )
-    
+            # 封面为第三路输入，索引为 2
+            command.add_cover(cover_path, "0:v:0", "1:a:0", "2:v:0")
+
+        if chapter_path:
+            command.add_chapter(chapter_path)
+
+        return command.add_output(output_path)
+
     @classmethod
-    def merge_video_parts(cls, lists_path: str, output_path: str, cover_path: str = None):
+    def merge_video_parts(cls, lists_path: str, output_path: str, cover_path: str = None, chapter_path: str = None):
+        command = (
+            cls()
+            .add_input(lists_path, "-f", "concat", "-safe", "0")
+            .add_param("-c:v", "copy")
+            .add_param("-c:a", "copy")
+        )
+
         if cover_path:
-            return (
-                cls()
-                .add_input(cover_path)
-                .add_param("-f", "concat")
-                .add_param("-safe", "0")
-                .add_param("-i", lists_path)
-                .add_param("-c:v", "copy")
-                .add_param("-c:a", "copy")
-                .add_param("-map", "1:v:0")
-                .add_param("-map", "0:v:0")
-                .add_param("-c:v:1", "png")
-                .add_param("-disposition:v:1", "attached_pic")
-                .add_param("-pix_fmt:v:1", "rgba")
-                .add_output(output_path)
-            )
-        else:
-            return (
-                cls()
-                .add_param("-f", "concat")
-                .add_param("-safe", "0")
-                .add_param("-i", lists_path)
-                .add_param("-c:v", "copy")
-                .add_param("-c:a", "copy")
-                .add_output(output_path)
-            )
+            # 分片视频为第一路输入，封面为第二路输入
+            # 音频用可选映射（0:a?），避免显式 -map 之后音轨被丢弃，同时兼容没有音轨的分片
+            command.add_cover(cover_path, "0:v:0", "0:a?", "1:v:0")
+
+        if chapter_path:
+            command.add_chapter(chapter_path)
+
+        return command.add_output(output_path)
 
     @classmethod
     def convert_m4a_to_mp3(cls, input_path: str, output_path: str):

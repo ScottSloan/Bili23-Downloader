@@ -27,3 +27,6 @@ uv.toml
 
 # webui
 /src/webui/
+
+# claude
+.claude

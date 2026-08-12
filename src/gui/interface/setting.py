@@ -3,12 +3,12 @@ from PySide6.QtCore import Qt
 
 from qfluentwidgets import (
     SettingCardGroup, PushSettingCard, ComboBoxSettingCard, MSFluentWindow, MessageBox, FluentIcon,
-    setTheme, setThemeColor
+    setThemeColor
 )
 
 from gui.component.widget.scroll import ScrollArea
 from gui.component.setting import (
-    PrioritySettingCard, DanmakuSettingCard, SubtitleSettingCard, CoverSettingCard, MetadataSettingCard, CDNSettingCard, ProxySettingCard,
+    PrioritySettingCard, DanmakuSettingCard, SubtitleSettingCard, CoverSettingCard, ChapterSettingCard, MetadataSettingCard, CDNSettingCard, ProxySettingCard,
     FFmpegSettingCard, NumberSettingCard, DownloadFormatCard, DownloadPathSettingCard, ParsingSettingCard, WindowBehaviorSettingCard,
     DownloadHandlingSettingCard, DownloadConcurrencySettingCard, PersonalizationCard, CheckUpdateSettingCard, OtherAdvancedSettingCard
 )
@@ -59,11 +59,12 @@ class SettingInterface(ScrollArea):
         self.download_format_card = DownloadFormatCard(self)
 
         # Additional
-        self.additional_group = SettingCardGroup(self.tr("Danmaku, Subtitles, Cover, and Metadata"), self)
+        self.additional_group = SettingCardGroup(self.tr("Danmaku, Subtitles, Cover, Chapters, and Metadata"), self)
 
         self.danmaku_setting_card = DanmakuSettingCard(parent = self)
         self.subtitle_setting_card = SubtitleSettingCard(parent = self)
         self.cover_setting_card = CoverSettingCard(parent = self)
+        self.chapter_setting_card = ChapterSettingCard(parent = self)
         self.metadata_setting_card = MetadataSettingCard(parent = self)
 
         # File Naming
@@ -106,6 +107,7 @@ class SettingInterface(ScrollArea):
         self.additional_group.addSettingCard(self.danmaku_setting_card)
         self.additional_group.addSettingCard(self.subtitle_setting_card)
         self.additional_group.addSettingCard(self.cover_setting_card)
+        self.additional_group.addSettingCard(self.chapter_setting_card)
         self.additional_group.addSettingCard(self.metadata_setting_card)
 
         # File Naming Convention
@@ -145,7 +147,7 @@ class SettingInterface(ScrollArea):
 
     def connect_signals(self):
         # Interface
-        config.themeChanged.connect(setTheme)
+        # config.themeChanged -> setTheme 已在主窗口中连接，此处不再重复连接
         config.appRestartSig.connect(self.show_restart_message)
         self.personalization_card.accentColorChanged.connect(setThemeColor)
         self.personalization_card.mica_effect_switch.checkedChanged.connect(signal_bus.interface.mica_effect_changed)
@@ -172,6 +174,7 @@ class SettingInterface(ScrollArea):
         self.cdn_card.custom_provider_btn.clicked.connect(self.on_custom_cdn_server_list)
         self.ffmpeg_card.source_choice.currentIndexChanged.connect(self.on_change_ffmpeg_source)
         self.ffmpeg_card.custom_btn.clicked.connect(self.on_change_ffmpeg_path)
+        self.proxy_card.proxy_mode_choice.currentIndexChanged.connect(self.on_change_proxy_mode)
         self.proxy_card.custom_btn.clicked.connect(self.on_custom_proxy)
         self.log_card.clicked.connect(self.on_view_logs)
 
@@ -295,6 +298,10 @@ class SettingInterface(ScrollArea):
         
         config.set(config.custom_ffmpeg_path, file_path)
         self.ffmpeg_card.custom_group.setContent(file_path)
+
+    def on_change_proxy_mode(self, index: int):
+        # 仅手动设置模式才需要配置代理服务器
+        self.proxy_card.custom_group.setEnabled(index == 2)
 
     def on_custom_proxy(self):
         from ..dialog.setting.proxy import ProxyDialog

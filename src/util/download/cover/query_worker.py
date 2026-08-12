@@ -1,6 +1,8 @@
 from PySide6.QtCore import QRunnable, Qt, QBuffer, QMetaObject, Q_ARG, QSize
 from PySide6.QtGui import QImage
 
+from shiboken6 import isValid
+
 from ...network.request import SyncNetWorkRequest, ResponseType
 
 from urllib.parse import urlencode
@@ -53,6 +55,11 @@ class CoverQueryWorker(QRunnable):
         self.return_to_model(image)
 
     def return_to_model(self, image: QImage):
+        # 封面请求耗时可达数秒，期间界面可能已被销毁，
+        # 向一个 C++ 侧已析构的 QObject 投递调用会直接触发访问违例
+        if self.model is None or not isValid(self.model):
+            return
+
         QMetaObject.invokeMethod(
             self.model,
             "updateRowCover",

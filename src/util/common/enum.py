@@ -60,6 +60,11 @@ class MetadataType(Enum):
     NFO = "nfo"
     JSON = "json"
 
+class ProxyMode(Enum):
+    DISABLED = "disabled"       # 不启用代理，始终直连
+    SYSTEM = "system"           # 跟随系统代理（环境变量，Windows / macOS 上还包括系统代理设置）
+    MANUAL = "manual"           # 使用程序内手动配置的代理服务器
+
 class ProxyType(Enum):
     HTTP = "http"
     # SOCKS4 = "socks4"
@@ -133,6 +138,7 @@ class DownloadType(IntFlag):
     SUBTITLE         = 1 << 3       # 下载字幕
     COVER            = 1 << 4       # 下载封面
     METADATA         = 1 << 5       # 下载元数据
+    CHAPTER          = 1 << 6       # 嵌入章节信息
 
 class VideoContainer(Enum):
     MP4 = "mp4"

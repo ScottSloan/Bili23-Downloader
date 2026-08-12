@@ -3,7 +3,7 @@ from PySide6.QtCore import Qt
 
 from qfluentwidgets import SubtitleLabel, BodyLabel
 
-from gui.component.widget import DragListWidget
+from gui.component.widget.list_widget import DragListWidget
 from gui.component.dialog import DialogBase
 
 class PriorityDialog(DialogBase):

@@ -10,7 +10,6 @@ from util.common.style_sheet import StyleSheet
 from util.common.config import config
 
 import webbrowser
-import sys
 
 class UpdateDialog(FluentDialogBase):
     def __init__(self, info: dict, parent = None):
@@ -113,4 +112,10 @@ class UpdateDialog(FluentDialogBase):
         self._can_close = True
         self.close()
 
-        sys.exit(0)
+        # 走主窗口的关闭流程，保证下载任务停止、数据库写入落盘，
+        # 而不是直接结束解释器
+        if self._parent_window is not None:
+            self._parent_window.request_exit()
+
+        else:
+            QApplication.quit()

@@ -7,9 +7,10 @@ from qfluentwidgets import (
     TeachingTipTailPosition, TeachingTip
 )
 
-from gui.component.widget import (
-    TransparentToolButton, SegmentedWidget, IndeterminateProgressSplitPushButton, SeasonComboBox, ProgressTipWidget,
-)
+from gui.component.widget.button import TransparentToolButton, IndeterminateProgressSplitPushButton
+from gui.component.widget.combobox import SeasonComboBox
+from gui.component.widget.progress_tip import ProgressTipWidget
+from gui.component.widget.segment import SegmentedWidget
 from gui.component.parse_list import ParseTreeView
 
 from util.common.enum import ToastNotificationCategory, AutoSelectMode, ParserType, DuplicateDownloadResolution
@@ -214,7 +215,7 @@ class ParseBase(QFrame):
         config.set(config.auto_parse_teaching_tip_shown, True)
 
         TeachingTip.create(
-            target = self.segmented_widget.pager_widget.menu_btn,
+            target = self.segmented_widget.pager_widget.auto_parse_btn,
             title = self.tr("Auto-parse Pagination"),
             content = self.tr("Click here to automatically parse all pages."),
             icon = InfoBarIcon.INFORMATION,
@@ -367,7 +368,7 @@ class ParseInterface(ParseBase):
 
         self.parse_list = ParseTreeView(self.main_window, parent = self)
 
-        self.segmented_widget = SegmentedWidget(self)
+        self.segmented_widget = SegmentedWidget(self.main_window, self)
         self.segmented_widget.hide()
 
         self.season_choice = SeasonComboBox(self)
@@ -424,6 +425,7 @@ class ParseInterface(ParseBase):
         self.download_btn.clicked.connect(self.on_download)
 
         signal_bus.parse.update_parse_list.connect(self.on_update_parse_list)
+        signal_bus.parse.append_parse_list_nodes.connect(self.on_append_parse_list_nodes)
         signal_bus.parse.update_parse_list_count.connect(self.on_update_parse_list_count)
         signal_bus.parse.update_preview_info.connect(self.update_previewer_info)
         signal_bus.parse.search_keyword.connect(self.parse_list.search_keywords)
@@ -435,6 +437,7 @@ class ParseInterface(ParseBase):
 
         self.segmented_widget.search_widget.scrollToItem.connect(self.scroll_to_item)
         self.segmented_widget.search_widget.checkMatches.connect(self.check_matches)
+        self.segmented_widget.pager_widget.auto_parse_btn.clicked.connect(self.on_auto_parse)
 
         self.season_choice.changeSeason.connect(self.on_season_changed)
 
@@ -495,6 +498,10 @@ class ParseInterface(ParseBase):
 
         if config.get(config.parse_history):
             GlobalThreadPoolTask.run_func(history_manager.add_history, title, self.url_box.text(), category_name)
+
+    def on_append_parse_list_nodes(self, nodes: list):
+        # 自动解析、互动视频探查过程中追加节点，解析历史已在建立根节点时记录，此处无需重复写入
+        self.parse_list.append_nodes(nodes)
 
     def on_download(self):
         # 只有在获取媒体信息成功时才允许下载

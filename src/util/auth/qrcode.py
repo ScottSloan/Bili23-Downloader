@@ -1,4 +1,4 @@
-from PySide6.QtCore import QObject, Signal, QSize, Qt, QTimer
+from PySide6.QtCore import QObject, Signal, Slot, QSize, Qt, QTimer
 from PySide6.QtGui import QImage, QPainter, QPixmap
 
 from ..network.request import NetworkRequestWorker
@@ -78,17 +78,6 @@ class QRCode(AuthBase, QObject):
         )
 
     def generate(self):
-        def on_success(response: dict):
-            if self._cleaned_up:
-                return
-
-            self.check_response(response)
-
-            self.qrcode_url = response["data"]["url"]
-            self.qrcode_key = response["data"]["qrcode_key"]
-
-            self.qrcode_generated.emit(self._build_qrcode_pixmap(self.qrcode_url))
-
         params = {
             "source": "main-fe-header",
             "go_url": "https://www.bilibili.com/",
@@ -98,33 +87,57 @@ class QRCode(AuthBase, QObject):
         url = f"https://passport.bilibili.com/x/passport-login/web/qrcode/generate?{urlencode(params)}"
 
         worker = NetworkRequestWorker(url)
-        worker.success.connect(on_success)
+        # 连到本对象的方法而非闭包，Qt 会把回调排队回 GUI 线程：QPixmap 只能在 GUI 线程构造
+        worker.success.connect(self.on_generate_success)
         worker.error.connect(self.on_error)
 
         AsyncTask.run(worker)
 
-    def check_scan_status(self):
-        def on_success(response: dict):
-            if self._cleaned_up:
-                return
+    @Slot(object)
+    def on_generate_success(self, response: dict):
+        if self._cleaned_up:
+            return
 
+        try:
             self.check_response(response)
 
-            code = response["data"]["code"]
+        except RuntimeError:
+            # check_response 内部已经发出过 error 信号
+            return
 
-            if code == QRCodeScanStatus.SUCCESS:
-                self.update_cookies()
+        self.qrcode_url = response["data"]["url"]
+        self.qrcode_key = response["data"]["qrcode_key"]
 
-            if self.timer.isActive():
-                self.update_scan_status.emit(code)
+        self.qrcode_generated.emit(self._build_qrcode_pixmap(self.qrcode_url))
 
+    def check_scan_status(self):
         url = f"https://passport.bilibili.com/x/passport-login/web/qrcode/poll?qrcode_key={self.qrcode_key}"
 
         worker = NetworkRequestWorker(url)
-        worker.success.connect(on_success)
+        # 同上，回调里要访问 GUI 线程的 QTimer，必须由 Qt 排队回来
+        worker.success.connect(self.on_poll_success)
         worker.error.connect(self.on_error)
 
         AsyncTask.run(worker)
+
+    @Slot(object)
+    def on_poll_success(self, response: dict):
+        if self._cleaned_up:
+            return
+
+        try:
+            self.check_response(response)
+
+        except RuntimeError:
+            return
+
+        code = response["data"]["code"]
+
+        if code == QRCodeScanStatus.SUCCESS:
+            self.update_cookies()
+
+        if self.timer.isActive():
+            self.update_scan_status.emit(code)
 
     def start_polling(self):
         self.timer.start(1000)

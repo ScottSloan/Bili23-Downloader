@@ -305,6 +305,7 @@ class Translator:
             "DOWNLOADING_DANMAKU": translate("TIP_MESSAGES", "Downloading Danmaku..."),
             "DOWNLOADING_SUBTITLES": translate("TIP_MESSAGES", "Downloading Subtitles..."),
             "DOWNLOADING_COVER": translate("TIP_MESSAGES", "Downloading Cover..."),
+            "PARSING_CHAPTER": translate("TIP_MESSAGES", "Parsing Chapters..."),
             "SCRAPING_METADATA": translate("TIP_MESSAGES", "Scraping Metadata..."),
             "PARSING_INTERACTIVE_VIDEO_NODE": translate("TIP_MESSAGES", "Parsing node: {title}"),
             "PARSING_PAGE": translate("TIP_MESSAGES", "Parsing page {page}, total {total_page} pages, progress: {progress}%"),
@@ -397,6 +398,11 @@ Note: If the download path is on an external storage device such as a USB drive,
     def DUPLICATE_DOWNLOAD_GUIDE():
         return translate("DUPLICATE_DOWNLOAD_GUIDE", """This feature detects duplicates based on unique video identifiers (e.g., BV/av IDs), not filenames.
 Please note that download history is the sole basis for recognizing downloaded videos. Clearing it will prevent the system from identifying existing downloads, which may result in duplicate downloads.""")
+
+    @staticmethod
+    def BATCH_SELECT_GUIDE():
+        return translate("BATCH_SELECT_GUIDE", """Press Ctrl + A to select all items, Ctrl + D to deselect all items
+You can also press shift + click to select a range of items.""")
 
     @staticmethod
     @get_map_method

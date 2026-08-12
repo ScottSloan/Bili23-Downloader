@@ -36,7 +36,13 @@ class Database:
         if conn is None:
             conn = sqlite3.connect(self.path, timeout = self.timeout)
 
-            conn.execute("PRAGMA journal_mode = WAL")
+            # 切换 journal_mode 需要短暂地取得排他锁，而 QThreadPool 的线程是短命的，
+            # 频繁建连时这一步会与真正的写入互相阻塞。已经是 WAL 时直接跳过。
+            mode = conn.execute("PRAGMA journal_mode").fetchone()
+
+            if not mode or str(mode[0]).lower() != "wal":
+                conn.execute("PRAGMA journal_mode = WAL")
+
             conn.execute("PRAGMA synchronous = NORMAL")
             conn.execute(f"PRAGMA busy_timeout = {int(self.timeout * 1000)}")
 
@@ -95,6 +101,19 @@ class Database:
 
         with conn:
             conn.executescript(script)
+
+    def get_user_version(self) -> int:
+        # 借助 SQLite 自带的 user_version 记录数据结构版本，避免与配置文件的版本号耦合
+        result = self.query("PRAGMA user_version")
+
+        return int(result[0][0]) if result else 0
+
+    def set_user_version(self, version: int):
+        conn = self.get_connection()
+
+        # PRAGMA 不支持参数绑定，因此在拼接前强制转换为整数
+        with conn:
+            conn.execute(f"PRAGMA user_version = {int(version)}")
 
     def vacuum(self):
         # VACUUM 无法在事务中执行，先提交挂起的事务再回收空间

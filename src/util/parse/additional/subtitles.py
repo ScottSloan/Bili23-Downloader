@@ -14,8 +14,8 @@ class SubtitlesParser(AdditionalParserBase):
     def __init__(self, task_info: TaskInfo):
         super().__init__(task_info)
 
-    def parse(self):
-        subtitles_data_list = self._get_subtitles_data_list()
+    def parse(self, player_data: dict):
+        subtitles_data_list = self._get_subtitles_data_list(player_data)
 
         for entry in subtitles_data_list:
             language = entry["language"]
@@ -84,10 +84,10 @@ class SubtitlesParser(AdditionalParserBase):
     def _to_json(self, data: dict):
         return json_dumps(data, indent = 2), "json"
 
-    def _get_subtitles_data_list(self):
+    def _get_subtitles_data_list(self, player_data: dict):
         subtitles_data_list = []
 
-        subtitles_url_list = self._get_subtitles_url_list()
+        subtitles_url_list = player_data.get("subtitle", {}).get("subtitles", [])
         language_config = config.get(config.subtitle_language)
 
         for entry in subtitles_url_list:
@@ -114,21 +114,3 @@ class SubtitlesParser(AdditionalParserBase):
         response = request.run()
 
         return response
-
-    def _get_subtitles_url_list(self):
-        params = {
-            "bvid": self.task_info.Episode.bvid,
-            "cid": self.task_info.Episode.cid,
-            "dm_img_list": "[]",
-            "dm_img_str": "V2ViR0wgMS4wIChPcGVuR0wgRVMgMi4wIENocm9taXVtKQ",
-            "dm_cover_img_str": "QU5HTEUgKE5WSURJQSwgTlZJRElBIEdlRm9yY2UgUlRYIDQwNjAgTGFwdG9wIEdQVSAoMHgwMDAwMjhFMCkgRGlyZWN0M0QxMSB2c181XzAgcHNfNV8wLCBEM0QxMSlHb29nbGUgSW5jLiAoTlZJRElBKQ",
-            "dm_img_inter": '{"ds":[],"wh":[5231,6067,75],"of":[475,950,475]}',
-        }
-        
-        url = f"https://api.bilibili.com/x/player/wbi/v2?{self.enc_wbi(params)}"
-
-        request = SyncNetWorkRequest(url)
-        response = request.run()
-
-        return response["data"]["subtitle"]["subtitles"]
-    

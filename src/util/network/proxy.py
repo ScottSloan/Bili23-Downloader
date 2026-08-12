@@ -1,9 +1,9 @@
-from ..common.enum import ProxyType
+from ..common.enum import ProxyMode, ProxyType
 from ..common.config import config
 
 class Proxy:
     def __init__(self):
-        self.enabled = config.get(config.proxy_enabled)
+        self.mode = config.get(config.proxy_mode)
         self.type = config.get(config.proxy_type)
 
         self.server = config.get(config.proxy_server)
@@ -12,7 +12,8 @@ class Proxy:
         self.password = config.get(config.proxy_password)
 
     def set_data(self, data: dict):
-        self.enabled = True
+        # 供代理测试使用：无论当前是哪种模式，都以传入的这份配置为准
+        self.mode = ProxyMode.MANUAL
 
         self.type = data.get("type")
         self.server = data.get("server")
@@ -27,7 +28,8 @@ class Proxy:
             else:
                 return f"{protocol}://{self.server}:{self.port}"
             
-        if not self.enabled:
+        # 仅手动设置模式才使用程序内配置的代理服务器，其余模式交由调用方处理
+        if self.mode != ProxyMode.MANUAL:
             return None
             
         match self.type:

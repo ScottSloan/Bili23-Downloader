@@ -6,7 +6,9 @@ from qfluentwidgets import (
     BodyLabel, LineEdit, HyperlinkButton, SubtitleLabel
 )
 
-from gui.component.widget import IndeterminateProgressPushButton, CidComboBox, SectionLabel, ImageLabel
+from gui.component.widget.button import IndeterminateProgressPushButton
+from gui.component.widget.combobox import CidComboBox
+from gui.component.widget.label import SectionLabel, ImageLabel
 from gui.component.dialog import DialogBase
 
 from util.common.enum import ToastNotificationCategory, QRCodeScanStatus

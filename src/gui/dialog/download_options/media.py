@@ -1,10 +1,10 @@
 from PySide6.QtWidgets import QVBoxLayout
-from PySide6.QtCore import QTimer
+from PySide6.QtCore import QTimer, Signal
 
 from qfluentwidgets import MessageBox
 
 from gui.dialog.download_options.card import MediaInfoCard, MediaOptionsCard
-from gui.component.widget import ScrollArea
+from gui.component.widget.scroll import ScrollArea
 
 from util.parse.preview.info import PreviewerInfo
 from util.common.data import video_quality_map, audio_quality_map, video_codec_map
@@ -13,6 +13,9 @@ from util.common.signal_bus import signal_bus
 from util.common.config import config
 
 class MediaSettingsPage(ScrollArea):
+    # 下载内容发生变化时发出，用于刷新下载内容预览
+    preview_changed = Signal()
+
     def __init__(self, parent = None):
         super().__init__(parent = parent)
 
@@ -43,6 +46,9 @@ class MediaSettingsPage(ScrollArea):
         self.media_info_card.video_quality_widget.custom_btn.clicked.connect(self.on_adjust_video_quality_priority)
         self.media_info_card.audio_quality_widget.custom_btn.clicked.connect(self.on_adjust_audio_quality_priority)
         self.media_info_card.video_codec_widget.custom_btn.clicked.connect(self.on_adjust_video_codec_priority)
+
+        self.media_options_card.download_video_stream_switch.checkedChanged.connect(self.preview_changed)
+        self.media_options_card.download_audio_stream_switch.checkedChanged.connect(self.preview_changed)
 
     def init_media_info(self):
         self.media_info_card.update_choice_data(PreviewerInfo.video_quality_choice_data, PreviewerInfo.audio_quality_choice_data, PreviewerInfo.video_codec_choice_data)
@@ -114,7 +120,13 @@ class MediaSettingsPage(ScrollArea):
             self.media_options_card.download_video_stream or
             self.media_options_card.download_audio_stream
         )
-    
+
+    def get_download_preview(self):
+        return {
+            "video": self.media_options_card.download_video_stream,
+            "audio": self.media_options_card.download_audio_stream
+        }
+
     def on_adjust_video_quality_priority(self):
         from ..setting.priority import PriorityDialog
 

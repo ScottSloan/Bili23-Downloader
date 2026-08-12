@@ -7,6 +7,8 @@ from .item_delegate import DownloadItemDelegate
 from .model import DownloadListModel
 from .proxy_model import DownloadListProxyModel
 
+from gui.component.widget.smooth_scroll import applySmoothScroll
+
 from util.download.downloader.manager import downloader_manager
 from util.download.task.info import TaskInfo
 
@@ -20,6 +22,8 @@ from typing import List
 class DownloadListView(ListView):
     def __init__(self, parent = None):
         super().__init__(parent)
+
+        applySmoothScroll(self)
 
         self._emptyTextTip = ""
         self._auto_manage_concurrent = False

@@ -8,14 +8,17 @@ from qfluentwidgets import (
 
 from .serializer import LanguageSerializer, ScalingSerializer
 from .enum import (
-    Language, WhenClose, DanmakuType, SubtitleType, CoverType, MetadataType, ProxyType, FFmpegSource, NumberingType,
-    Scaling, FileConflictResolution, VideoContainer, AutoSelectMode, Area, DuplicateDownloadResolution
+    Language, WhenClose, DanmakuType, SubtitleType, CoverType, MetadataType, ProxyMode, ProxyType, FFmpegSource,
+    NumberingType, Scaling, FileConflictResolution, VideoContainer, AutoSelectMode, Area, DuplicateDownloadResolution
 )
 from ._json import json_loads
 
+from threading import Lock
 from pathlib import Path
 import logging
+import json
 import sys
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -290,9 +293,9 @@ class DefaultValue:
 class APPConfig(QConfig):
     # APP
     app_name = "Bili23 Downloader"
-    app_version = "2.12.1"
-    app_comparable_version = "2.12.1"
-    app_config_version = 2100
+    app_version = "2.13.0"
+    app_comparable_version = "2.13.0"
+    app_config_version = 2130
     config_version = ConfigItem("Application", "config_version", app_config_version)
 
     # Interface
@@ -355,6 +358,8 @@ class APPConfig(QConfig):
     attach_cover = ConfigItem("Additional", "attach_cover", False, BoolValidator())
     delete_cover_after_attach = ConfigItem("Additional", "delete_cover_after_attach", False, BoolValidator())
 
+    embed_chapter = ConfigItem("Additional", "embed_chapter", False, BoolValidator())
+
     download_metadata = ConfigItem("Additional", "download_metadata", False, BoolValidator())
     metadata_type = OptionsConfigItem("Additional", "metadata_type", MetadataType.NFO, OptionsValidator(MetadataType), EnumSerializer(MetadataType))
 
@@ -371,7 +376,7 @@ class APPConfig(QConfig):
     ffmpeg_source = OptionsConfigItem("Advanced", "ffmpeg_source", FFmpegSource.BUNDLED, OptionsValidator(FFmpegSource), EnumSerializer(FFmpegSource), restart = True)
     custom_ffmpeg_path = ConfigItem("Advanced", "custom_ffmpeg_path", "", restart = True)
 
-    proxy_enabled = ConfigItem("Advanced", "proxy_enabled", False, BoolValidator(), restart = True)
+    proxy_mode = OptionsConfigItem("Advanced", "proxy_mode", ProxyMode.SYSTEM, OptionsValidator(ProxyMode), EnumSerializer(ProxyMode), restart = True)
     proxy_type = OptionsConfigItem("Advanced", "proxy_type", ProxyType.HTTP, OptionsValidator(ProxyType), EnumSerializer(ProxyType))
     proxy_server = ConfigItem("Advanced", "proxy_server", "")
     proxy_port = ConfigItem("Advanced", "proxy_port", 80)
@@ -447,6 +452,35 @@ class APPConfig(QConfig):
     tutorial_dialog_shown = ConfigItem("Misc", "tutorial_dialog_shown", False, BoolValidator())
     select_area_dialog_shown = ConfigItem("Misc", "select_area_dialog_shown", False, BoolValidator())
 
+    # 写盘串行化。qfluentwidgets 的 save() 直接 open(..., "w") 覆写整个文件，没有任何保护，
+    # 而 config.set() 默认会立即触发写盘 —— 登录相关的请求回调各自跑在自己的工作线程上
+    # （cookie_manager.init_cookie_info 在启动时会并发发出三个请求），
+    # 两个线程同时打开同一个文件写入，配置会被写成互相交错的内容。
+    _save_lock = Lock()
+
+    def save(self):
+        with self._save_lock:
+            self._cfg.file.parent.mkdir(parents = True, exist_ok = True)
+
+            # 先写临时文件再原子替换。就地截断写一旦在中途被打断，留下的就是一个残缺的配置文件，
+            # 用户的全部设置随之丢失；而退出流程走的是 os._exit，不会等待仍在写盘的线程。
+            temp_path = self._cfg.file.parent / f"{self._cfg.file.name}.tmp"
+
+            try:
+                with open(temp_path, "w", encoding = "utf-8") as f:
+                    json.dump(self._cfg.toDict(), f, ensure_ascii = False, indent = 4)
+
+                os.replace(temp_path, self._cfg.file)
+
+            except Exception:
+                logger.exception("保存配置文件失败")
+
+                try:
+                    temp_path.unlink(missing_ok = True)
+
+                except Exception:
+                    pass
+
 def check_need_patch():
     # 检查是否需要修补配置文件
     if config_path.exists():
@@ -462,15 +496,22 @@ def check_need_patch():
             if "config_version" in data.get("Application", {}):
                 config_version = data.get("Application", {}).get("config_version", 0)
 
-                return config_version < config.app_config_version, config_version
+                return config_version < config.app_config_version, config_version, data
             else:
-                return True, 0
+                return True, 0, data
     else:
-        return False, 0
+        return False, 0, {}
 
-def patch_config(config_version: int):
+def patch_config(config_version: int, data: dict):
     # 配置文件修补
-    
+    if config_version < 2130:
+        # 2.13.0 起代理设置由 proxy_enabled 开关改为 proxy_mode 三态选择。
+        # 旧版开着代理开关的迁移为手动设置，其余保持默认的跟随系统代理
+        if data.get("Advanced", {}).get("proxy_enabled"):
+            config.set(config.proxy_mode, ProxyMode.MANUAL)
+
+            logger.info("代理设置已迁移为手动设置")
+
     # 完成修补，写入新的 config_version
     config.set(config.config_version, config.app_config_version)
     config.save()
@@ -487,9 +528,9 @@ if not config_path.exists():
 qconfig.load(config_path, config)
 
 # 判断是否需要修补配置文件
-need_patch, config_version = check_need_patch()
+need_patch, config_version, data = check_need_patch()
 
 if need_patch:
     logger.info("检测到旧版本配置文件，正在进行修补")
 
-    patch_config(config_version)
+    patch_config(config_version, data)

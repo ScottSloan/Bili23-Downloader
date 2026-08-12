@@ -1,4 +1,5 @@
 from ...common.translator import Translator
+from ...common.signal_bus import signal_bus
 from ...common.enum import ParserType
 from ...common.config import config
 
@@ -7,6 +8,8 @@ from ...thread.pool import GlobalThreadPoolTask
 
 from .tree import TreeItem, Attribute
 from .base import EpisodeParserBase
+
+from typing import List
 
 class DynamicEpisodeParser(EpisodeParserBase):
     # 不同于其他类型的解析器，动态解析器支持实时更新剧集列表，无需等待所有节点解析完成再更新界面
@@ -19,6 +22,9 @@ class DynamicEpisodeParser(EpisodeParserBase):
         self.parser = None
         self.root_node_initialized = False
 
+        # 已投递的节点总数。树本身归 GUI 线程所有，这里不能通过 root_node.count() 去数
+        self.node_count = 0
+
     def init_root_node(self, title):
         node_data = {
             "number": Translator.EPISODE_TYPE(self.category_name),
@@ -28,9 +34,27 @@ class DynamicEpisodeParser(EpisodeParserBase):
         self.root_node = TreeItem(node_data)
         self.root_node.set_attribute(Attribute.TREE_NODE_BIT)
 
+        # 只在这里发出一次全量更新，建立一棵空的树。
+        # 自此之后 root_node 归 GUI 线程所有，解析线程只能通过 append_nodes 追加内容
         self.update_episode_list(self.root_node)
 
         return self.root_node
+
+    def append_nodes(self, nodes: List[TreeItem]):
+        """
+        把新解析出的节点交给 GUI 线程挂到解析列表上
+
+        绝不能在解析线程里直接改动 root_node：这棵树同时被 GUI 线程的 ParseModel 使用，
+        在后台增删子节点会让 QTreeView 缓存的行布局与模型脱节，
+        随后视图访问模型时就会越界，进程直接被访问违例终止，且不留任何 Python 栈。
+        """
+        if not nodes:
+            return
+
+        self.node_count += len(nodes)
+
+        # 传出去的是节点本身而非引用视图，投递后解析线程不再持有它们
+        signal_bus.parse.append_parse_list_nodes.emit(list(nodes))
 
     def init_episode_parser(self, parser_type: ParserType):
         # 根据不同的 parser_type 初始化对应的剧集数据解析器
@@ -83,11 +107,8 @@ class DynamicEpisodeParser(EpisodeParserBase):
         if config.get(config.auto_add_to_download_list):
             GlobalThreadPoolTask.run_func(task_manager.create, node.get_all_children(to_dict = True), False)
 
-        # 去除 raw_node 最外层的根节点，直接返回其子节点列表
-        for child in node.children:
-            self.root_node.add_child(child)
-
-        self.update_episode_list(self.root_node)
+        # 去除 raw_node 最外层的根节点，只把其子节点交给 GUI 线程挂载
+        self.append_nodes(node.children)
 
         return self.parser.episode_count
 
@@ -100,7 +121,7 @@ class DynamicEpisodeParser(EpisodeParserBase):
             "cid": cid,
             "cover": self.info_data["pic"],
             "duration": 0,
-            "number": self.root_node.count() + 1,
+            "number": self.node_count + 1,
             "pubtime": self.info_data["pubdate"],
             "title": title,
             "related_titles": {
@@ -112,6 +133,4 @@ class DynamicEpisodeParser(EpisodeParserBase):
         child_node = TreeItem(node_data)
         child_node.set_attribute(Attribute.INTERACTIVE_BIT | Attribute.VIDEO_BIT)
 
-        self.root_node.add_child(child_node)
-
-        self.update_episode_list(self.root_node)
+        self.append_nodes([child_node])

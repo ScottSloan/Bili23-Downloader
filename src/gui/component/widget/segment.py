@@ -9,10 +9,10 @@ from .pager import Pager
 from util.common.icon import ExtendedFluentIcon
 
 class SegmentedWidget(QWidget):
-    def __init__(self, parent = None):
+    def __init__(self, parent_window, parent = None):
         super().__init__(parent)
 
-        self.parent_window = parent
+        self.parent_window = parent_window
 
         self.setFixedHeight(32)
 
@@ -45,8 +45,8 @@ class SegmentedWidget(QWidget):
     def on_show_choice_menu(self):
         menu = RoundMenu(parent = self)
 
-        menu.addAction(self._create_action(FluentIcon.SEARCH, self.tr("Search"), self.switch_to_search))
-        menu.addAction(self._create_action(ExtendedFluentIcon.CHOOSE_PAGE, self.tr("Page"), self.switch_to_pager))
+        menu.addAction(self._create_action(FluentIcon.SEARCH, self.tr("Search results"), self.switch_to_search))
+        menu.addAction(self._create_action(ExtendedFluentIcon.CHOOSE_PAGE, self.tr("Pagination"), self.switch_to_pager))
 
         menu.exec(self.choice_btn.mapToGlobal(self.choice_btn.rect().bottomLeft()))
 

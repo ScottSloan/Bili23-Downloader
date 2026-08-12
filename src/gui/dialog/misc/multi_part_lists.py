@@ -3,13 +3,13 @@ from PySide6.QtWidgets import QHBoxLayout
 
 from qfluentwidgets import SubtitleLabel, BodyLabel, CheckBox
 
-from gui.component.widget import CheckListView
+from gui.component.widget.tree_view import CheckListView
 from gui.component.dialog import DialogBase
 
 from util.parse.episode.video import VideoEpisodeParser
 from util.common.enum import ToastNotificationCategory
 from util.parse.parser.video import VideoParser
-from util.parse.episode.tree import TreeItem, Attribute
+from util.parse.episode.tree import TreeItem, Attribute, EpisodeData
 from util.common.signal_bus import signal_bus
 from util.thread.async_ import AsyncTask
 from util.common.config import config
@@ -27,29 +27,30 @@ class ParseWorker(QObject):
 
     @Slot()
     def run(self):
-        try:
-            # 解析视频 URL，获取视频信息数据
-            video_parser = VideoParser()
+        # 本对话框与解析界面可以同时解析，这里只登记为活跃，不清空解析界面已有的剧集数据
+        with EpisodeData.parsing(clear_cache = False):
+            try:
+                # 解析视频 URL，获取视频信息数据
+                video_parser = VideoParser()
 
-            info_data = video_parser.parse(self.url, get_info_data = True)
+                info_data = video_parser.parse(self.url, get_info_data = True)
 
-            # 去除 ugc_season 字段，避免影响后续的分P解析
-            if "ugc_season" in info_data["data"]:
-                del info_data["data"]["ugc_season"]
+                # 去除 ugc_season 字段，避免影响后续的分P解析
+                if "ugc_season" in info_data["data"]:
+                    del info_data["data"]["ugc_season"]
 
-            # 解析视频分P列表
-            episode_parser = VideoEpisodeParser(info_data, "USER_UPLOADS")
-            node = episode_parser.parse(update_episode_list = False)
+                # 解析视频分P列表
+                episode_parser = VideoEpisodeParser(info_data, "USER_UPLOADS")
+                node = episode_parser.parse(update_episode_list = False)
 
-            self.success.emit(node)
+                self.success.emit(node)
 
-        except Exception as e:
-            self.error.emit(str(e))
-            
-        finally:
-            self.finished.emit()
+            except Exception as e:
+                self.error.emit(str(e))
 
-            self.deleteLater()
+            finally:
+                # deleteLater 由 AsyncTask 统一挂在 finished 上，此处不再重复调用
+                self.finished.emit()
 
 class MultiPartListsDialog(DialogBase):
     def __init__(self, item: dict, parent = None):
@@ -94,9 +95,13 @@ class MultiPartListsDialog(DialogBase):
 
         worker = ParseWorker(self.item.get("url", ""))
         worker.success.connect(self.update_multi_part_list)
-        worker.error.connect(lambda e: self.show_top_toast_message(ToastNotificationCategory.ERROR, "解析失败", e))
+        # 连到 lambda 会在解析线程里就地执行，弹通知必须回到 GUI 线程，因此改用本对话框的方法
+        worker.error.connect(self.on_parse_error)
 
         AsyncTask.run(worker)
+
+    def on_parse_error(self, error: str):
+        self.show_top_toast_message(ToastNotificationCategory.ERROR, "解析失败", error)
 
     def update_multi_part_list(self, node: TreeItem):
         for index, child in enumerate(node.children):

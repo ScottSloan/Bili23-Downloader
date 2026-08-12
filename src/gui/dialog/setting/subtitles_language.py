@@ -1,6 +1,6 @@
 from qfluentwidgets import SubtitleLabel, RadioButton
 
-from gui.component.widget import CheckListView
+from gui.component.widget.tree_view import CheckListView
 from gui.component.dialog import DialogBase
 
 from util.common.data import subtitles_language_list

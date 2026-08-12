@@ -4,7 +4,7 @@ from PySide6.QtCore import Qt, QSize
 from qfluentwidgets import SubtitleLabel, BodyLabel, CommandBar, Action
 
 from gui.component.setting import ParseActionWidget
-from gui.component.widget import ColumnTreeWidget
+from gui.component.widget.tree_widget import ColumnTreeWidget
 from gui.component.dialog import DialogBase
 
 from util.common.icon import ExtendedFluentIcon

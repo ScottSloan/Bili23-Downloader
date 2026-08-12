@@ -1,8 +1,8 @@
-from PySide6.QtCore import QObject, Signal
+from PySide6.QtCore import QObject, Signal, Slot
 
 from ..common.translator import Translator
 
-from ..network.request import NetworkRequestWorker, client, update_cookies as sync_cookies_from_config
+from ..network.request import NetworkRequestWorker, set_client_cookies, delete_client_cookies, update_cookies as sync_cookies_from_config
 from ..thread.async_ import AsyncTask
 from .base import AuthBase
 
@@ -87,61 +87,56 @@ class CookieLogin(AuthBase, QObject):
 
         self._pending_restore = True
 
-        def on_success(response: dict):
-            if self._cleaned_up:
-                return
-
-            data: dict = response.get("data", {})
-
-            if data.get("isLogin"):
-                self._pending_restore = False
-
-                self.update_cookies()
-
-                self.login_success.emit()
-
-            else:
-                self.restore_cookies()
-
-                self.on_error(Translator.ERROR_MESSAGES("COOKIE_INVALID"))
-
-        def on_verify_error(error_message: str):
-            if self._cleaned_up:
-                return
-
-            self.restore_cookies()
-
-            self.on_error(error_message)
-
         # 通过 nav 接口校验 Cookie 是否有效
         url = "https://api.bilibili.com/x/web-interface/nav"
 
         worker = NetworkRequestWorker(url)
-        worker.success.connect(on_success)
-        worker.error.connect(on_verify_error)
+        # 校验结果要回写 Cookie 与配置，连到闭包会让这些写入落在请求线程里，
+        # 因此连到本对象的方法，由 Qt 排队回 GUI 线程执行
+        worker.success.connect(self.on_verify_success)
+        worker.error.connect(self.on_verify_error)
 
         AsyncTask.run(worker)
 
-    def apply_login_cookies(self, cookies: dict):
-        for key in LOGIN_COOKIE_KEYS:
-            value = cookies.get(key, "")
+    @Slot(object)
+    def on_verify_success(self, response: dict):
+        if self._cleaned_up:
+            return
 
-            if value:
-                client.cookies.set(
-                    name = key,
-                    value = value,
-                    domain = ".bilibili.com",
-                    path = "/"
-                )
+        data: dict = response.get("data", {})
+
+        if data.get("isLogin"):
+            self._pending_restore = False
+
+            self.update_cookies()
+
+            self.login_success.emit()
+
+        else:
+            self.restore_cookies()
+
+            self.on_error(Translator.ERROR_MESSAGES("COOKIE_INVALID"))
+
+    @Slot(str)
+    def on_verify_error(self, error_message: str):
+        if self._cleaned_up:
+            return
+
+        self.restore_cookies()
+
+        self.on_error(error_message)
+
+    def apply_login_cookies(self, cookies: dict):
+        set_client_cookies({
+            key: value
+            for key in LOGIN_COOKIE_KEYS
+            if (value := cookies.get(key, ""))
+        })
 
     def restore_cookies(self):
         # 移除已应用的登录 Cookie，并恢复为配置中保存的 Cookie
         self._pending_restore = False
 
-        for key in LOGIN_COOKIE_KEYS:
-            try:
-                client.cookies.delete(key, domain = ".bilibili.com", path = "/")
-            except KeyError:
-                pass
+        delete_client_cookies(LOGIN_COOKIE_KEYS)
 
         sync_cookies_from_config()

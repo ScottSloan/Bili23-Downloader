@@ -2,9 +2,13 @@ from PySide6.QtGui import QPainter, QColor, QFontMetrics
 
 from qfluentwidgets import ListView, Action, isDarkTheme, setFont
 
+from gui.component.widget.smooth_scroll import applySmoothScroll
+
 class ContextMenuListViewBase(ListView):
     def __init__(self, parent = None):
         super().__init__(parent)
+
+        applySmoothScroll(self)
 
         self._emptyTextTip = ""
 

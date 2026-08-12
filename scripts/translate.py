@@ -56,6 +56,7 @@ sources = [
     "src/gui/dialog/download_options/dialog.py",
     "src/gui/dialog/download_options/download.py",
     "src/gui/dialog/download_options/media.py",
+    "src/gui/dialog/download_options/preview.py",
     "src/gui/dialog/main_window/about.py",
     "src/gui/dialog/main_window/exit.py",
     "src/gui/dialog/main_window/terms.py",

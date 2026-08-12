@@ -3,7 +3,7 @@ from PySide6.QtGui import QIcon, QPixmap
 from PySide6.QtCore import Qt, QTimer
 
 from qfluentwidgets import (
-    MSFluentWindow, SystemThemeListener, NavigationItemPosition, FluentIcon, InfoBadge, qrouter
+    MSFluentWindow, SystemThemeListener, NavigationItemPosition, FluentIcon, InfoBadge, qrouter, setTheme
 )
 
 from util.common.enum import ToastNotificationCategory, WhenClose
@@ -15,7 +15,10 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-class MainWindowBase:
+class MainWindowBase(MSFluentWindow):
+    def __init__(self):
+        super().__init__()
+
     def run_post_terms_checks(self: "MainWindow") -> None:
         signal_bus.update.check.emit(False)
 
@@ -103,7 +106,7 @@ class MainWindowBase:
 
             webbrowser.open("https://bili23.scott-sloan.cn/doc/introduction.html")
 
-    def show_login_teaching_tip(self: "MainWindow"):
+    def show_login_teaching_tip(self):
         from qfluentwidgets import TeachingTip, TeachingTipTailPosition
 
         TeachingTip.create(
@@ -174,7 +177,7 @@ class MainWindowBase:
 
         self.download_info_badge.move(self.download_btn.width() - 4, 111)
 
-    def check_download_path(self):
+    def check_download_path(self: "MainWindow"):
         from util.common.io.directory import Directory
 
         download_path = config.get(config.download_path)
@@ -190,7 +193,7 @@ class MainWindowBase:
 
             logger.error("下载目录不可访问或缺少写入权限：%s", download_path)
 
-    def check_ffmpeg(self):
+    def check_ffmpeg(self: "MainWindow"):
         if config.no_ffmpeg_available:
             signal_bus.toast.show_long_message.emit(
                 ToastNotificationCategory.ERROR,
@@ -269,7 +272,7 @@ class MainWindowBase:
 
         self._updateStackedBackground()
 
-class MainWindow(MainWindowBase, MSFluentWindow):
+class MainWindow(MainWindowBase):
     def __init__(self):
         super().__init__()
 
@@ -282,6 +285,12 @@ class MainWindow(MainWindowBase, MSFluentWindow):
         self.current_route_key = "ParseInterface"
         self.flyout_initialized = False
         self.initialized = False
+
+        # 由托盘菜单、强制更新等入口置位，令 on_close 跳过"关闭时的行为"设置直接退出
+        self.force_close = False
+
+        # 设置界面构造耗时约 0.5 秒，且多数启动过程中并不会用到，推迟到首次进入设置页时再创建
+        self.setting_interface = None
 
         self.init_UI()
 
@@ -356,17 +365,14 @@ class MainWindow(MainWindowBase, MSFluentWindow):
     def init_deferred_ui(self):
         from gui.component.widget.flyout import FavoriteFlyoutWidget
         from gui.component.sys_tray import SystemTrayIcon
-        
+
         from qfluentwidgets import Flyout
 
         from .download import DownloadInterface
-        from .setting import SettingInterface
 
         self.download_interface = DownloadInterface(self)
-        self.setting_interface = SettingInterface(self)
 
         self._addSubInterface(self.download_interface)
-        self._addSubInterface(self.setting_interface)
 
         self.system_tray_icon = SystemTrayIcon(self)
         self.system_tray_icon.show()
@@ -384,7 +390,24 @@ class MainWindow(MainWindowBase, MSFluentWindow):
         self.flyout_widget.closed.connect(self.flyout.fadeOut)
         self.flyout.closed.connect(self.reset_route_key)
 
+    def ensure_setting_interface(self):
+        # 首次进入设置页时才构造设置界面
+        if self.setting_interface is not None:
+            return
+
+        from .setting import SettingInterface
+
+        self.setting_interface = SettingInterface(self)
+
+        self._addSubInterface(self.setting_interface)
+
+        # _addSubInterface 中建立的 clicked -> switchTo 连接对本次点击不生效，此处手动切换一次
+        self.switchTo(self.setting_interface)
+
     def connect_signals(self):
+        # 跟随系统主题切换。该连接原先建立在设置界面中，设置界面改为懒加载后需要提前到此处
+        config.themeChanged.connect(setTheme)
+
         signal_bus.toast.show.connect(self.show_toast_notification)
         signal_bus.toast.show_long_message.connect(self.show_toast_notification_long_message)
 
@@ -398,13 +421,18 @@ class MainWindow(MainWindowBase, MSFluentWindow):
         self.parse_btn.clicked.connect(lambda: self.update_route_key("ParseInterface"))
         self.download_btn.clicked.connect(lambda: self.update_route_key("DownloadInterface"))
         self.setting_btn.clicked.connect(lambda: self.update_route_key("SettingInterface"))
+        self.setting_btn.clicked.connect(self.ensure_setting_interface)
 
     def init_utils(self):
         QApplication.processEvents()
 
         self.init_deferred_ui()
 
+        from util.ffmpeg import init_ffmpeg
         from util.misc.update import Updater
+
+        # 探测 FFmpeg 涉及磁盘 IO，放在首屏之后执行，check_ffmpeg 依赖其结果
+        init_ffmpeg()
 
         # 监听系统主题变化
         self.theme_listener = SystemThemeListener(self)
@@ -425,6 +453,7 @@ class MainWindow(MainWindowBase, MSFluentWindow):
         self.run_post_terms_checks()
 
     def closeEvent(self, e):
+        from util.download.downloader.manager import downloader_manager
         from util.download.task.manager import task_manager
         from util.thread.async_ import AsyncTask
 
@@ -435,20 +464,26 @@ class MainWindow(MainWindowBase, MSFluentWindow):
         # 隐藏窗口，给用户反馈正在关闭的状态，避免长时间无响应的感觉
         self.hide()
 
+        # 先让后台工作真正停下来，再去等线程退出。分片线程阻塞在 socket 读上，
+        # 不关掉会话的话，safe_quit 的等待预算会全部耗在读超时上
+        downloader_manager.shutdown()
+
         AsyncTask.safe_quit()
 
         # 任务状态是异步写入的，退出前等待队列中的写入落盘
         task_manager.shutdown()
 
-        if self.theme_listener.isRunning():
-            self.theme_listener.quit()
-            self.theme_listener.wait(1000)
+        # 主题监听线程阻塞在系统的注册表变更通知上，quit() 唤不醒它。
+        # 这里既不强杀也不销毁：terminate() 在 Windows 上会在任意指令处杀死线程，
+        # 若当时正持有 CRT 堆锁，之后任何一次 free 都会崩溃；而销毁一个仍在运行的
+        # QThread 会让 Qt 直接 qFatal。交给 shutdown_process() 随进程一起回收。
+        #
+        # 强制更新对话框可能赶在 init_utils 完成之前就要求退出，此时监听器尚未创建
+        theme_listener = getattr(self, "theme_listener", None)
 
-            if self.theme_listener.isRunning():
-                self.theme_listener.terminate()
-                self.theme_listener.wait(1000)
-                
-            self.theme_listener.deleteLater()
+        if theme_listener is not None and theme_listener.isRunning():
+            theme_listener.quit()
+            theme_listener.wait(500)
 
         super().closeEvent(e)
 
@@ -458,7 +493,22 @@ class MainWindow(MainWindowBase, MSFluentWindow):
 
         return super().resizeEvent(e)
 
+    def request_exit(self):
+        """
+        供托盘菜单、强制更新等入口调用，无条件退出程序
+
+        这些入口以前直接 sys.exit()，绕开了 closeEvent 里的收尾工作：
+        下载任务不会停止、数据库写入队列不会落盘，而且解释器随后清理全局变量时
+        会析构仍在运行的 QThread，把退出变成崩溃。
+        """
+        self.force_close = True
+
+        self.close()
+
     def on_close(self):
+        if self.force_close:
+            return True
+
         match config.get(config.when_close_window):
             case WhenClose.MINIMIZE:
                 self.hide()

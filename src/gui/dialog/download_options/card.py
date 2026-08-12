@@ -6,7 +6,8 @@ from qfluentwidgets import (
 )
 
 from gui.component.setting.card import ExpandGroupSettingCard
-from gui.component.widget import DictComboBox, ToolButton
+from gui.component.widget.button import ToolButton
+from gui.component.widget.combobox import DictComboBox
 
 from util.common.data import (
     reversed_video_quality_map, reversed_audio_quality_map, reversed_video_codec_map, reversed_audio_codec_map

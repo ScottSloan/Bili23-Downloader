@@ -3,7 +3,7 @@ from PySide6.QtWidgets import QFrame, QHBoxLayout, QVBoxLayout
 from qfluentwidgets import SubtitleLabel, Pivot, PopUpAniStackedWidget
 
 from gui.component.download_list import TopStackedWidget, DownloadListView
-from gui.component.widget import PivotItem
+from gui.component.widget.pivot import PivotItem
 
 from util.download.task.query_worker import QueryWorker
 from util.download.task.info import TaskInfo

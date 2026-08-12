@@ -3,14 +3,15 @@ from PySide6.QtCore import Qt, QSize
 from qfluentwidgets import SubtitleLabel, BodyLabel, CommandBar, Action, FluentIcon
 
 from gui.component.setting import EditActionWidget
-from gui.component.widget import DragTreeWidget
+from gui.component.widget.tree_widget import DragTreeWidget
 from gui.component.dialog import DialogBase
 from .edit_host import EditHostDialog
 
-from util.common.config import config, DefaultValue
 from util.common.icon import ExtendedFluentIcon
 from util.common.translator import Translator
 from util.network.cdn import CDN
+
+from copy import deepcopy
 
 class CDNServerDialog(DialogBase):
     def __init__(self, parent = None):
@@ -18,7 +19,10 @@ class CDNServerDialog(DialogBase):
 
         self.init_UI()
 
-        self.cdn_list = CDN.get_cdn_server_list()
+        # 必须深拷贝：CDN.get_cdn_server_list() 返回的是配置里的同一个对象，
+        # 直接编辑等于绕过 accept() 改写配置（用户点取消也已生效），
+        # 而 accept() 里的 config.set 又会因为新旧值是同一个对象而判定「无变化」跳过写盘
+        self.cdn_list = deepcopy(CDN.get_cdn_server_list())
 
         self.init_cdn_list()
 
@@ -98,7 +102,8 @@ class CDNServerDialog(DialogBase):
             self.cdn_server_list.scrollToBottom()
 
     def on_reset_to_default(self):
-        self.cdn_list = DefaultValue.cn_cdn_server_list.copy()
+        # 按当前区域取默认列表，海外区域原先也会被重置成国内节点
+        self.cdn_list = CDN.get_default_cdn_server_list()
 
         self.init_cdn_list()
 

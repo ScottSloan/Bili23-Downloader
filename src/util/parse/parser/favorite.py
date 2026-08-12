@@ -1,5 +1,6 @@
 from ...network.request import NetworkRequestWorker
 from ...download.cover.manager import cover_manager
+from ...thread.dispatcher import post_to_main_thread
 from ...thread.async_ import AsyncTask
 from ...common.config import config
 from .base import ParserBase
@@ -14,6 +15,9 @@ class FavoriteParser(ParserBase):
     def __init__(self):
         super().__init__()
         
+        # 由调用方注入，可能是信号的 emit，也可能直接是列表控件的方法。
+        # 本类不是 QObject，几个 on_xxx_success 都是在请求线程里直连执行的，
+        # 因此统一经 post_to_main_thread 投递，避免在子线程里更新控件
         self.success_callback = None
         self.ps = 24
 
@@ -91,8 +95,8 @@ class FavoriteParser(ParserBase):
                 "cover": fid,
                 "cover_id": f"__query__{fid}" if count > 0 else None
             })
-        
-        self.success_callback(entry_list)
+
+        post_to_main_thread(self.success_callback, entry_list)
 
     def on_get_subscription_list_success(self, response: dict):
         entry_list = []
@@ -112,7 +116,7 @@ class FavoriteParser(ParserBase):
                 "cover_id": cover_manager.arrange_cover_id(cover)
             })
 
-        self.success_callback(entry_list)
+        post_to_main_thread(self.success_callback, entry_list)
 
     def on_get_follow_list_success(self, response: dict):
         entry_list = []
@@ -138,7 +142,7 @@ class FavoriteParser(ParserBase):
                 "cover_id": cover_manager.arrange_cover_id(cover)
             })
         
-        self.success_callback(entry_list, self.get_extra_data(response))
+        post_to_main_thread(self.success_callback, entry_list, self.get_extra_data(response))
 
     def get_extra_data(self, response: dict):
         count = response["data"]["total"]

@@ -4,7 +4,7 @@ from PySide6.QtCore import Qt
 
 from qfluentwidgets import BodyLabel, CheckBox, ComboBox, ColorPickerButton
 
-from gui.component.widget import SpinBox, DoubleSpinBox
+from gui.component.widget.spinbox import SpinBox, DoubleSpinBox
 
 from util.common.data import subtitles_alignment_map
 from util.common.translator import Translator

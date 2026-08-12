@@ -1,3 +1,5 @@
+from PySide6.QtCore import QObject, Slot
+
 from ...common.data import reversed_video_quality_map
 from ...common.signal_bus import signal_bus
 from ...common.enum import MediaType
@@ -11,8 +13,12 @@ from .info import PreviewerInfo
 from collections import defaultdict
 from typing import Callable
 
-class VideoInfoParser:
+class VideoInfoParser(QObject):
+    # 继承 QObject 是为了让 QueryInfoWorker 的信号能排队回 GUI 线程：
+    # callback 指向下载选项对话框的控件方法，在查询线程里直连调用等于在子线程操作 QWidget
     def __init__(self):
+        super().__init__()
+
         self.callback: Callable = None
         self.video_info_map = {}
 
@@ -95,7 +101,7 @@ class VideoInfoParser:
             codec_id = video_info["codecid"]
 
             if cached_info := PreviewerInfo.cache["video"][quality_id][codec_id]:
-                self.callback(cached_info)
+                self._invoke_callback(cached_info)
 
             else:
                 if "size" in video_info.keys():
@@ -106,12 +112,14 @@ class VideoInfoParser:
                 else:
                     worker = QueryInfoWorker(video_info)
                     worker.success.connect(self.on_query_info_success)
-                    worker.error.connect(lambda error: self.callback(None))
+                    # 连到 lambda 会在查询线程里就地执行，改用本对象的方法由 Qt 排队回 GUI 线程
+                    worker.error.connect(self.on_query_info_error)
 
                     AsyncTask.run(worker)
         else:
-            self.callback(None)
+            self._invoke_callback(None)
 
+    @Slot(dict, object)
     def on_query_info_success(self, media_info: dict, file_size: int):
         quality_id = media_info["id"]
         codec_id = media_info["codecid"]
@@ -127,7 +135,22 @@ class VideoInfoParser:
 
         PreviewerInfo.cache["video"][quality_id][codec_id] = info.copy()
 
-        self.callback(info)
+        self._invoke_callback(info)
+
+    @Slot(str)
+    def on_query_info_error(self, error: str):
+        self._invoke_callback(None)
+
+    def _invoke_callback(self, info: dict):
+        if not self.callback:
+            return
+
+        try:
+            self.callback(info)
+
+        except RuntimeError:
+            # 回调指向下载选项对话框的控件，排队执行时对话框可能已经关闭，C++ 对象已销毁
+            pass
 
     def get_video_info(self, video_quality_id: int, video_codec_id: int):
         if video_quality_id == 200:

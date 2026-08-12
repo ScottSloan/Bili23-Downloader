@@ -7,6 +7,8 @@ from ...common.signal_bus import signal_bus
 from ...common.translator import Translator
 from ...common.config import config
 
+from ...parse.additional.chapter import ChapterParser
+
 from ...ffmpeg.command import FFmpegCommand
 from ...ffmpeg.runner import FFmpegRunner
 
@@ -24,11 +26,37 @@ class Merger(QObject):
 
         self.task_info = task_info
         self._has_error = False
+        self._stopped = False
         self._ffmpeg_runner = None
 
         self._output_audio_file = None
         self._embedded_cover_file_name = None
         self._delete_cover_after_embedding = False
+
+    def stop(self, timeout: int = 3000):
+        """
+        终止正在进行的 FFmpeg 任务，返回其线程是否已退出
+
+        FFmpegRunner 是 QThread，且挂在本对象的 parent 链上。若在它仍然运行时
+        销毁 Downloader，整条链会被连带析构，Qt 随即 qFatal 中止进程。
+        因此销毁本对象之前必须先在这里把线程收干净。
+        """
+        self._stopped = True
+
+        runner = self._ffmpeg_runner
+
+        if runner is None:
+            return True
+
+        try:
+            if not runner.isRunning():
+                return True
+
+            return runner.stop(timeout)
+
+        except RuntimeError:
+            # C++ 侧已经析构，无需再处理
+            return True
 
     def start(self):
         if self.task_info.Download.merge_video_audio:
@@ -65,7 +93,8 @@ class Merger(QObject):
                 video_path = self.temp_video_file_name,
                 audio_path = self.temp_audio_file_name,
                 output_path = self.temp_output_file_name,
-                cover_path = self.check_attach_cover()
+                cover_path = self.check_attach_cover(),
+                chapter_path = self.check_attach_chapter()
             )
 
             self._run_merge_command(merge_cmd, cwd)
@@ -89,7 +118,8 @@ class Merger(QObject):
         merge_cmd = FFmpegCommand.merge_video_parts(
             lists_path = lists_path,
             output_path = self.temp_output_file_name,
-            cover_path = self.check_attach_cover()
+            cover_path = self.check_attach_cover(),
+            chapter_path = self.check_attach_chapter()
         )
 
         self._run_merge_command(merge_cmd, cwd)
@@ -133,7 +163,7 @@ class Merger(QObject):
             self.set_error_message(Translator.ERROR_MESSAGES("RENAME_FAILED"), str(e))
 
     def on_merge_completed(self, return_code: int, stdout: str, stderr: str):
-        if getattr(self, "_has_error", False):
+        if getattr(self, "_has_error", False) or self._stopped:
             return
 
         try:
@@ -152,6 +182,7 @@ class Merger(QObject):
                 safe_remove(cwd, *self.task_info.File.relative_files)
 
             self.delete_embedded_cover()
+            self.delete_embedded_chapter()
             self.add_file(final_output_file_name, *kept_original_files, clear = True)
             self.mark_as_completed()
 
@@ -159,7 +190,7 @@ class Merger(QObject):
             self.set_error_message(Translator.ERROR_MESSAGES("RENAME_FAILED"), str(e))
 
     def on_convert_completed(self, return_code: int, stdout: str, stderr: str):
-        if getattr(self, "_has_error", False):
+        if getattr(self, "_has_error", False) or self._stopped:
             return
 
         try:
@@ -215,6 +246,11 @@ class Merger(QObject):
             return []
 
     def on_merge_error(self, error: Exception, stdout: str, stderr: str):
+        # 主动终止 FFmpeg 必然带回一个非零返回码，这不是真正的合并失败，
+        # 不能据此把任务标记为失败
+        if self._stopped:
+            return
+
         error_map = {
             "No space left on device": "INSUFFICIENT_SPACE",
             "Permission denied": "PERMISSION_DENIED",
@@ -310,6 +346,19 @@ class Merger(QObject):
     def delete_embedded_cover(self):
         if self._embedded_cover_file_name and self._delete_cover_after_embedding:
             safe_remove(self.get_cwd(), self._embedded_cover_file_name)
+
+    def check_attach_chapter(self):
+        # 章节文件由 ChapterParser 在附加内容解析阶段生成，视频没有章节时不会存在
+        chapter_file_name = ChapterParser.get_file_name(self.task_info.Basic.task_id)
+
+        if Path(self.get_cwd(), chapter_file_name).exists():
+            return chapter_file_name
+
+        return None
+
+    def delete_embedded_chapter(self):
+        # 章节文件仅为中间文件，合并成功后删除；合并失败时保留，重试可直接复用
+        safe_remove(self.get_cwd(), ChapterParser.get_file_name(self.task_info.Basic.task_id))
 
     def create_lists_file(self, video_parts_count: int):
         cwd = self.get_cwd()

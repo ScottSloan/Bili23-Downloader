@@ -78,28 +78,27 @@ class ParseWorker(WorkerBase, QObject):
 
     @Slot()
     def run(self):
-        EpisodeData.clear_cache()
+        # 整段解析都登记为活跃，期间其他解析发起的 clear_cache() 不会擦掉这里写入的数据
+        with EpisodeData.parsing():
+            try:
+                self.parser_type = self.get_parser_type(self.url)
 
-        try:
-            self.parser_type = self.get_parser_type(self.url)
+                self.get_redirect_url()
 
-            self.get_redirect_url()
+                parser = self.get_parser(self.parser_type)
 
-            parser = self.get_parser(self.parser_type)
+                parser.parse(self.url, self.pn)
 
-            parser.parse(self.url, self.pn)
+                self.success.emit(parser.get_category_name(), parser.get_extra_data())
 
-            self.success.emit(parser.get_category_name(), parser.get_extra_data())
+            except Exception as e:
+                self.on_error()
 
-        except Exception as e:
-            self.on_error()
+                self.error.emit(str(e))
 
-            self.error.emit(str(e))
-
-        finally:
-            self.finished.emit()
-
-            self.deleteLater()
+            finally:
+                # deleteLater 由 AsyncTask 统一挂在 finished 上，此处不再重复调用
+                self.finished.emit()
 
     def get_redirect_url(self):
         from .parser.festival import FestivalParser
@@ -135,21 +134,23 @@ class ProgressParseWorker(WorkerBase, QObject):
 
     @Slot()
     def run(self):
-        try:
-            parser = self._get_parser()
-            parser.parse()
+        # 自动解析是在已有解析结果的基础上继续补充，不清空旧数据，只登记为活跃
+        with EpisodeData.parsing(clear_cache = False):
+            try:
+                parser = self._get_parser()
+                parser.parse()
 
-            self.success.emit(parser.get_category_name(), {})
+                self.success.emit(parser.get_category_name(), {})
 
-            logger.info("自动解析完成")
+                logger.info("自动解析完成")
 
-        except Exception as e:
-            logger.exception("解析失败")
+            except Exception as e:
+                logger.exception("解析失败")
 
-            self.error.emit(str(e))
+                self.error.emit(str(e))
 
-        finally:
-            self.finished.emit()
+            finally:
+                self.finished.emit()
 
     def _get_parser(self):
         match self.data.parser_type:

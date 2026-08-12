@@ -13,6 +13,7 @@ from ...thread.pool import GlobalThreadPoolTask
 
 from ..cover.manager import cover_manager
 from .reparse_worker import ReparseWorker
+from .hash_id import calc_hash_id
 from .db import TaskDatabase
 from .info import TaskInfo
 
@@ -22,7 +23,6 @@ from typing import List
 from uuid import uuid4
 from concurrent.futures import ThreadPoolExecutor
 import logging
-import hashlib
 import re
 
 logger = logging.getLogger(__name__)
@@ -33,6 +33,9 @@ class TaskManager:
         self._add_to_queue_toast_shown = False
         self._add_to_queue_toast_lock = Lock()
         self._update_lock = Lock()
+        # 自动解析、二次解析会让多个线程池线程同时进入 create()，
+        # 编号的「取值 + 自增」必须是一个原子操作，否则会分配出重复的序号
+        self._numbering_lock = Lock()
         self._pending_updates = {}
         self._update_flush_scheduled = False
         # 所有对 task.db 的写入都在这一个线程上串行执行：既保证了顺序，
@@ -105,7 +108,8 @@ class TaskManager:
             DownloadType.DANMAKU: config.get(config.download_danmaku),
             DownloadType.SUBTITLE: config.get(config.download_subtitle),
             DownloadType.COVER: config.get(config.download_cover),
-            DownloadType.METADATA: config.get(config.download_metadata)
+            DownloadType.METADATA: config.get(config.download_metadata),
+            DownloadType.CHAPTER: config.get(config.embed_chapter)
         }
 
         type = 0
@@ -182,18 +186,19 @@ class TaskManager:
                 episode_info[title] = re.sub(r'[\/\\\:\*\?\"\<\>\|]', '_', episode_info.get(title, ""))
 
     def __get_number(self, episode_info: dict = None):
+        # 调用方已持有 _numbering_lock
         match config.get(config.numbering_type):
             case NumberingType.CONTINUOUS:
                 # 全局顺序编号
                 return config.global_starting_number
-            
+
             case NumberingType.FROM_SPECIFIED:
                 # 返回 current_starting_number，然后自增
                 _current = config.current_starting_number
                 config.current_starting_number += 1
 
                 return _current
-            
+
             case _:
                 return episode_info.get("number", "")
 
@@ -210,15 +215,17 @@ class TaskManager:
                 if self._check_duplicate(episode_info):
                     continue
 
-                # 先判断重复下载，再分配编号
-                number = self.__get_number(episode_info)
+                # 先判断重复下载，再分配编号。
+                # 取号与自增必须在同一把锁内完成，否则并发创建任务时会分配出重复的编号
+                with self._numbering_lock:
+                    number = self.__get_number(episode_info)
+
+                    # 全局起始编号自增
+                    config.global_starting_number += 1
 
                 task_info = self.__episode_info_to_task_info(episode_info, number)
 
                 task_info_list.append(task_info)
-
-                # 全局起始编号自增
-                config.global_starting_number += 1
 
             except Exception as error:
                 title = episode_info.get("title", "")
@@ -231,12 +238,15 @@ class TaskManager:
                 )
 
         if task_info_list:
-            # 存储到数据库，并添加到下载列表
+            # 存储到数据库，并添加到下载列表。
+            # 记录在当前线程组装（create 由解析线程调用），写入则投递到唯一的写线程。
+            # 批量解析时会有多个解析线程同时创建任务，若各自直接写库，就会与进度写入
+            # 争抢 SQLite 的写锁；busy_timeout 为 30s，进度快照可能被阻塞数十秒无法落盘。
             try:
-                self.db_manager.add_tasks(task_info_list)
+                records = [self.db_manager.build_record(task_info) for task_info in task_info_list]
 
             except Exception as error:
-                logger.exception("保存下载任务失败")
+                logger.exception("组装下载任务记录失败")
 
                 signal_bus.toast.show_long_message.emit(
                     ToastNotificationCategory.ERROR,
@@ -245,6 +255,8 @@ class TaskManager:
                 )
 
                 return
+
+            self._update_executor.submit(self._add_storage, records)
 
             signal_bus.download.add_to_downloading_list.emit(task_info_list)
             signal_bus.download.auto_manage_concurrent_downloads.emit()
@@ -273,10 +285,12 @@ class TaskManager:
     def update_async(self, task_info: TaskInfo):
         # 高频进度更新只保留每个任务最新快照，并由单独线程串行写入数据库。
         task_id = task_info.Basic.task_id
-        data = json_dumps(task_info.to_dict())
 
+        # 取样必须在锁内完成。若把 json_dumps 放在锁外，同一个任务的两个调用方
+        # （GUI 线程的测速定时器、后台线程的 start_worker）可能先后取样却以相反的
+        # 顺序写入 _pending_updates，旧快照覆盖新快照，重启后表现为下载进度倒退。
         with self._update_lock:
-            self._pending_updates[task_id] = (task_id, data)
+            self._pending_updates[task_id] = (task_id, json_dumps(task_info.to_dict()))
 
             if self._update_flush_scheduled:
                 return
@@ -289,7 +303,7 @@ class TaskManager:
         # 退出前把已投递的写入落盘。写入都在同一个线程上排队，
         # 因此只要等待队尾的任务完成即可，超时后不再继续阻塞退出流程。
         try:
-            self._update_executor.submit(lambda: None).result(timeout = timeout)
+            self._update_executor.submit(self._flush_pending_snapshots).result(timeout = timeout)
 
         except Exception:
             logger.exception("等待下载任务写入完成超时")
@@ -310,12 +324,43 @@ class TaskManager:
                 updates = list(self._pending_updates.values())
                 self._pending_updates.clear()
 
-            try:
-                # 一次事务写入全部快照。逐条提交时每条约 18ms，批量提交后整批不到 1ms。
-                self.db_manager.update_task_json_many(updates)
+            self._write_updates(updates)
 
-            except Exception:
-                logger.exception("异步保存下载任务失败，本批共 %d 条", len(updates))
+    def _flush_pending_snapshots(self):
+        # 结构性写入（新增、删除、移动）前先把已取样的进度快照落盘，
+        # 保证入库顺序与取样顺序一致，不会出现 UPDATE 排到 INSERT 前面。
+        while True:
+            with self._update_lock:
+                if not self._pending_updates:
+                    return
+
+                updates = list(self._pending_updates.values())
+                self._pending_updates.clear()
+
+            self._write_updates(updates)
+
+    def _write_updates(self, updates: List[tuple]):
+        try:
+            # 一次事务写入全部快照。逐条提交时每条约 18ms，批量提交后整批不到 1ms。
+            self.db_manager.update_task_json_many(updates)
+
+        except Exception:
+            logger.exception("异步保存下载任务失败，本批共 %d 条", len(updates))
+
+    def _add_storage(self, records: List[tuple]):
+        self._flush_pending_snapshots()
+
+        try:
+            self.db_manager.add_task_records(records)
+
+        except Exception as error:
+            logger.exception("保存下载任务失败，本批共 %d 条", len(records))
+
+            signal_bus.toast.show_long_message.emit(
+                ToastNotificationCategory.ERROR,
+                Translator.ERROR_MESSAGES("DOWNLOAD_FAILED"),
+                str(error)
+            )
 
     def delete(self, task_info: TaskInfo, completed: bool = False):
         # 结构性操作与进度写入共用同一个写线程，天然保证先后顺序，
@@ -332,6 +377,8 @@ class TaskManager:
         self._update_executor.submit(self._delete_storage, task_id_list, completed)
 
     def _delete_storage(self, task_id_list: List[str], completed: bool):
+        self._flush_pending_snapshots()
+
         try:
             self.db_manager.delete_tasks(task_id_list, completed)
 
@@ -391,6 +438,8 @@ class TaskManager:
         self._update_executor.submit(self._mark_as_completed_storage, record)
 
     def _mark_as_completed_storage(self, record: tuple):
+        self._flush_pending_snapshots()
+
         try:
             self.db_manager.move_to_completed(record)
 
@@ -422,6 +471,8 @@ class TaskManager:
         signal_bus.download.auto_manage_concurrent_downloads.emit()
 
     def _recreate_storage(self, record: tuple):
+        self._flush_pending_snapshots()
+
         try:
             self.db_manager.recreate_task(record)
 
@@ -485,49 +536,13 @@ class TaskManager:
 
     def _calc_hash_id(self, episode_info: dict):
         # 根据 episode_info 计算 hash_id
-        attr = episode_info.get("attribute", 0)
-
-        if attr & Attribute.VIDEO_BIT:
-            # 投稿视频
-            metadata = {
-                "bvid": episode_info.get("bvid"),
-                "cid": episode_info.get("cid"),
-                "aid": episode_info.get("aid")
-            }
-
-        elif attr & Attribute.BANGUMI_BIT:
-            # 剧集类
-            metadata = {
-                "bvid": episode_info.get("bvid"),
-                "cid": episode_info.get("cid"),
-                "aid": episode_info.get("aid"),
-                "ep_id": episode_info.get("ep_id")
-            }
-
-        elif attr & Attribute.CHEESE_BIT:
-            # 课程类
-            metadata = {
-                "aid": episode_info.get("aid"),
-                "cid": episode_info.get("cid"),
-                "ep_id": episode_info.get("ep_id")
-            }
-
-        elif attr & Attribute.AUDIO_BIT:
-            # 音乐类
-            metadata = {
-                "sid": episode_info.get("sid")
-            }
-
-        else:
-            # 属性缺失或未知时同样要给出可区分的 hash，否则会抛出异常导致任务创建失败
-            metadata = {
-                "aid": episode_info.get("aid"),
-                "bvid": episode_info.get("bvid"),
-                "cid": episode_info.get("cid"),
-                "ep_id": episode_info.get("ep_id"),
-                "sid": episode_info.get("sid")
-            }
-
-        return hashlib.md5(json_dumps(metadata).encode("utf-8")).hexdigest()
+        return calc_hash_id(
+            episode_info.get("attribute", 0),
+            aid = episode_info.get("aid"),
+            bvid = episode_info.get("bvid"),
+            cid = episode_info.get("cid"),
+            ep_id = episode_info.get("ep_id"),
+            sid = episode_info.get("sid")
+        )
     
 task_manager = TaskManager()

@@ -108,6 +108,104 @@ logging.basicConfig(
     handlers = [stream_handler, file_handler]
 )
 
+# --------- Crash Handler ---------
+
+# Qt 内部的访问违例、qFatal 等原生崩溃不经过 Python 异常机制，进程会被直接终止，
+# app.log 里不会留下任何痕迹，表现为"无预兆退出"。faulthandler 在收到 SIGSEGV /
+# EXCEPTION_ACCESS_VIOLATION 等信号时，直接通过文件描述符写出所有线程的 Python 栈，
+# 不依赖仍然可用的解释器状态，是这类崩溃唯一能拿到的现场。
+import faulthandler
+import threading
+import atexit
+
+crash_log_path = log_path.parent / "crash.log"
+
+# 崩溃栈是追加写入的，文件过大时先归档，避免历史记录无限堆积
+if crash_log_path.exists() and crash_log_path.stat().st_size > 1024 * 1024:
+    crash_log_path.replace(crash_log_path.with_suffix(".log.old"))
+
+# faulthandler 只保留 fileno，必须持有文件对象本身，否则被 GC 关闭后写入的是失效的描述符
+crash_log_file = open(crash_log_path, "a", encoding = "utf-8")
+
+def write_crash_log(reason: str, dump_traceback: bool = False):
+    timestamp = datetime.now().isoformat(sep = " ", timespec = "milliseconds")
+
+    crash_log_file.write(f"\n{'=' * 78}\n[{timestamp}] {reason}\n{'=' * 78}\n")
+    crash_log_file.flush()
+
+    if dump_traceback:
+        faulthandler.dump_traceback(file = crash_log_file, all_threads = True)
+
+        crash_log_file.flush()
+
+# 每次启动都写一条分隔标记，用于区分本次运行与历史崩溃记录
+write_crash_log(f"进程启动，PID {os.getpid()}")
+
+faulthandler.enable(file = crash_log_file, all_threads = True)
+
+def handle_uncaught_exception(exc_type, exc_value, exc_traceback):
+    # 主线程中未被捕获的 Python 异常
+    if issubclass(exc_type, KeyboardInterrupt):
+        sys.__excepthook__(exc_type, exc_value, exc_traceback)
+
+        return
+
+    logging.getLogger("crash").critical("主线程未捕获的异常", exc_info = (exc_type, exc_value, exc_traceback))
+
+    write_crash_log(f"主线程未捕获的异常：{exc_type.__name__}: {exc_value}", dump_traceback = True)
+
+def handle_uncaught_thread_exception(args):
+    # 子线程中未被捕获的 Python 异常，默认只打到 stderr，打包后会直接丢失
+    if issubclass(args.exc_type, SystemExit):
+        return
+
+    thread_name = args.thread.name if args.thread else "unknown"
+
+    logging.getLogger("crash").critical(
+        "子线程 %s 未捕获的异常", thread_name, exc_info = (args.exc_type, args.exc_value, args.exc_traceback)
+    )
+
+    write_crash_log(f"子线程 {thread_name} 未捕获的异常：{args.exc_type.__name__}: {args.exc_value}", dump_traceback = True)
+
+sys.excepthook = handle_uncaught_exception
+threading.excepthook = handle_uncaught_thread_exception
+
+# 正常退出会留下这条记录。崩溃日志末尾若没有它，说明进程是被强行终止的，
+# 据此可以区分"硬崩溃"与"意外走到了正常退出流程"
+atexit.register(lambda: write_crash_log("进程正常退出"))
+
+def shutdown_process(exit_code: int = 0):
+    """
+    结束进程，跳过解释器的清理流程
+
+    QThread 若在仍然运行时被析构，Qt 会直接 qFatal 中止进程，在 Windows 上表现为
+    0xC0000409（FAST_FAIL_FATAL_APP_EXIT），日志里只留下一行
+    "QThread: Destroyed while thread is still running"，没有任何 Python 栈。
+
+    退出时总有一些线程停不下来：卡在尚未超时的网络请求里的 worker、仍在转码的 FFmpeg、
+    阻塞在注册表通知上的系统主题监听。它们的 QThread 由 Python 侧持有所有权，
+    解释器清理模块全局变量时会连带析构，于是"正常退出"变成了崩溃。
+    shiboken 的 invalidate() 拦不住这一步（实测 isValid 仍为 True），
+    唯一可靠的办法是不给解释器清理的机会 —— 落盘工作在调用本函数之前均已完成，
+    剩下的线程交给操作系统随进程一起回收。
+    """
+    write_crash_log("进程正常退出")
+
+    try:
+        logging.shutdown()
+
+    except Exception:
+        pass
+
+    for stream in (sys.stdout, sys.stderr):
+        try:
+            stream.flush()
+
+        except Exception:
+            pass
+
+    os._exit(exit_code)
+
 # --------- Disable PySide6 Warnings ---------
 from PySide6.QtCore import QtMsgType, qInstallMessageHandler
 
@@ -115,7 +213,7 @@ def qt_message_handler(mode, context, message):
     # 忽略特定的 Qt 警告
     if "QFont::setPointSize" in message or "OpenType support missing" in message or "CreateFontFaceFromHDC" in message:
         return
-    
+
     # 其他 Qt 日志转发到 Python logging
     logger = logging.getLogger("Qt")
 
@@ -126,7 +224,13 @@ def qt_message_handler(mode, context, message):
         logger.error(message)
 
     elif mode == QtMsgType.QtFatalMsg:
+        # qFatal 之后 Qt 会立即 abort，这是最后的记录机会
         logger.critical(message)
+
+        for handler in logging.getLogger().handlers:
+            handler.flush()
+
+        write_crash_log(f"Qt 致命错误：{message}", dump_traceback = True)
 
     elif mode == QtMsgType.QtInfoMsg:
         logger.info(message)
@@ -138,7 +242,7 @@ qInstallMessageHandler(qt_message_handler)
 
 # --------- Imports ---------
 
-from PySide6.QtCore import Qt, QLocale, QTranslator, QLockFile, QTimer
+from PySide6.QtCore import Qt, QLocale, QTranslator, QLockFile, QTimer, Signal
 from PySide6.QtNetwork import QLocalServer, QLocalSocket
 from PySide6.QtWidgets import QApplication
 from PySide6.QtGui import QFont
@@ -156,6 +260,9 @@ APP_MUTEX_NAME = "B096F0C1-D105-4EF9-86E1-5E87DA884EA4"
 logger = logging.getLogger(__name__)
 
 class Application(QApplication):
+    # 网络栈在后台线程预热完成后发出，用于把后续的登录态初始化切回 GUI 线程
+    network_ready = Signal()
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -165,6 +272,7 @@ class Application(QApplication):
         self.app_mutex_handle = None
 
         self.aboutToQuit.connect(self.cleanup_instance_state)
+        self.network_ready.connect(self.init_auth_info)
 
         self.init_single_instance()
 
@@ -281,29 +389,37 @@ class Application(QApplication):
         self.installTranslator(self.bili23_translator)
 
     def bootstrap_startup_tasks(self):
-        # 将登录态与用户信息初始化放到首屏之后，避免阻塞窗口展示
-        from util.auth.cookie import cookie_manager
-        from util.auth.user import user_manager
+        # 网络栈预热与登录态初始化都放到首屏之后，避免阻塞窗口展示
+        self.warmup_network_stack()
 
-        self.warmup_ssl_context()
-
-        cookie_manager.init_cookie_info()
-        user_manager.init_user_info()
-
-    def warmup_ssl_context(self):
-        # 首次构建 SSL 上下文需要加载完整的 CA 证书列表（约 0.5 秒）。
-        # 提前在后台线程完成，避免第一次发起下载时在 GUI 线程上付出这笔开销。
-        from util.network.request import get_ssl_context
+    def warmup_network_stack(self):
+        # 导入 httpx 需要连带加载 httpcore 等一系列模块（约 0.3 秒），首次构建 SSL 上下文
+        # 需要加载完整的 CA 证书列表（约 0.5 秒）。两者都放到后台线程完成，避免在 GUI 线程
+        # 上付出这笔开销。
         from threading import Thread
 
         def warmup():
             try:
+                import httpx  # noqa: F401
+
+                from util.network.request import get_ssl_context
+
                 get_ssl_context()
 
             except Exception:
-                logger.exception("预热 SSL 上下文失败")
+                logger.exception("预热网络栈失败")
 
-        Thread(target = warmup, name = "ssl-warmup", daemon = True).start()
+            # Qt 对象只能在 GUI 线程创建，通过跨线程信号切回主线程再发起请求
+            self.network_ready.emit()
+
+        Thread(target = warmup, name = "network-warmup", daemon = True).start()
+
+    def init_auth_info(self):
+        from util.auth.cookie import cookie_manager
+        from util.auth.user import user_manager
+
+        cookie_manager.init_cookie_info()
+        user_manager.init_user_info()
 
     def _msw_create_mutex(self, name: str):
         import ctypes
@@ -341,7 +457,11 @@ def _main():
 
     QTimer.singleShot(0, app.bootstrap_startup_tasks)
 
-    app.exec()
+    exit_code = app.exec()
+
+    # 事件循环退出时 aboutToQuit 已经触发，实例锁与数据库写入均已收尾，
+    # 此处不再让解释器去清理那些可能仍在运行的线程对象
+    shutdown_process(exit_code)
 
 if __name__ == "__main__":
     _main()

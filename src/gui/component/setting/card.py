@@ -232,7 +232,7 @@ class PrioritySettingCard(ExpandGroupSettingCard):
         self.hyper_label.clicked.connect(lambda: self.showGuideMessageBox(self.tr("Instructions"), Translator.PRIORITY_GUIDE()))
 
 class DanmakuSettingCard(ExpandGroupSettingCard):
-    def __init__(self, full_mode = True, parent = None):
+    def __init__(self, parent = None):
         super().__init__(ExtendedFluentIcon.COMMENT, self.tr("Danmaku Download Settings"), self.tr("Adjust danmaku download settings"), parent)
 
         self.download_switch = SettingSwitchButton(config.download_danmaku, parent = self)
@@ -240,19 +240,17 @@ class DanmakuSettingCard(ExpandGroupSettingCard):
         self.type_choice = SettingComboBox(config.danmaku_type, ["xml", "ass", "json"], parent = self)
         self.type_choice.setFixedWidth(120)
 
+        self.custom_style_btn = PushButton(self.tr("Customize…"), self)
+
         self.viewLayout.setContentsMargins(0, 0, 0, 0)
         self.viewLayout.setSpacing(0)
 
         self.addGroup("", self.tr("Download Danmaku"), "", self.download_switch)
         self.addGroup("", self.tr("Danmaku Format"), "", self.type_choice)
-
-        if full_mode:
-            self.custom_style_btn = PushButton(self.tr("Customize…"), self)
-            
-            self.addGroup("", self.tr("Danmaku Style"), self.tr("Only effective for ASS format danmaku"), self.custom_style_btn)
+        self.addGroup("", self.tr("Danmaku Style"), self.tr("Only effective for ASS format danmaku"), self.custom_style_btn)
 
 class SubtitleSettingCard(ExpandGroupSettingCard):
-    def __init__(self, full_mode = True, parent = None):
+    def __init__(self, parent = None):
         super().__init__(ExtendedFluentIcon.SUBTITLES, self.tr("Subtitle Download Settings"), self.tr("Adjust subtitle download settings"), parent)
 
         self.download_switch = SettingSwitchButton(config.download_subtitle, parent = self)
@@ -260,18 +258,16 @@ class SubtitleSettingCard(ExpandGroupSettingCard):
         self.type_choice = SettingComboBox(config.subtitle_type, ["srt", "lrc", "txt", "ass", "json"], parent = self)
         self.type_choice.setFixedWidth(120)
 
+        self.language_btn = PushButton(self.tr("Customize…"), self)
+        self.custom_style_btn = PushButton(self.tr("Customize…"), self)
+
         self.viewLayout.setContentsMargins(0, 0, 0, 0)
         self.viewLayout.setSpacing(0)
 
         self.addGroup("", self.tr("Download Subtitles"), "", self.download_switch)
         self.addGroup("", self.tr("Subtitle Format"), "", self.type_choice)
-
-        if full_mode:
-            self.language_btn = PushButton(self.tr("Customize…"), self)
-            self.custom_style_btn = PushButton(self.tr("Customize…"), self)
-
-            self.addGroup("", self.tr("Subtitle Language"), "", self.language_btn)
-            self.addGroup("", self.tr("Subtitle Style"), self.tr("Only effective for ASS format subtitles"), self.custom_style_btn)
+        self.addGroup("", self.tr("Subtitle Language"), "", self.language_btn)
+        self.addGroup("", self.tr("Subtitle Style"), self.tr("Only effective for ASS format subtitles"), self.custom_style_btn)
 
 class CoverSettingCard(ExpandGroupSettingCard):
     def __init__(self, parent = None):
@@ -325,6 +321,17 @@ class CoverSettingCard(ExpandGroupSettingCard):
 
         can_delete_cover = can_embed_cover and self.attach_cover_switch.isChecked()
         self.delete_cover_after_attach_group.setEnabled(can_delete_cover)
+
+class ChapterSettingCard(ExpandGroupSettingCard):
+    def __init__(self, parent = None):
+        super().__init__(FluentIcon.BOOK_SHELF, self.tr("Chapter Settings"), self.tr("Adjust chapter settings"), parent)
+
+        self.download_switch = SettingSwitchButton(config.embed_chapter, parent = self)
+
+        self.viewLayout.setContentsMargins(0, 0, 0, 0)
+        self.viewLayout.setSpacing(0)
+
+        self.addGroup("", self.tr("Embed Chapters"), self.tr("Embed the video chapters into the video file, only effective when merging video and audio"), self.download_switch)
 
 class MetadataSettingCard(ExpandGroupSettingCard):
     def __init__(self, parent = None):
@@ -441,15 +448,17 @@ class ProxySettingCard(ExpandGroupSettingCard):
     def __init__(self, parent = None):
         super().__init__(ExtendedFluentIcon.SERVER, self.tr("Proxy Settings"), self.tr("Adjust proxy server settings used for parsing and downloading"), parent)
 
-        self.enable_proxy_switch = SettingSwitchButton(config.proxy_enabled, parent = self)
+        self.proxy_mode_choice = SettingComboBox(config.proxy_mode, [self.tr("Do not use proxy"), self.tr("Use system proxy"), self.tr("Manual configuration")], parent = self)
 
         self.custom_btn = PushButton(self.tr("Configure…"), self)
 
         self.viewLayout.setContentsMargins(0, 0, 0, 0)
         self.viewLayout.setSpacing(0)
 
-        self.addGroup("", self.tr("Use Proxy Server"), "", self.enable_proxy_switch)
-        self.addGroup("", self.tr("Configure Proxy Server"), "", self.custom_btn)
+        self.addGroup("", self.tr("Proxy Mode"), self.tr("Select the proxy used for parsing and downloading"), self.proxy_mode_choice)
+        self.custom_group = self.addGroup("", self.tr("Configure Proxy Server"), "", self.custom_btn)
+
+        self.custom_group.setEnabled(self.proxy_mode_choice.currentIndex() == 2)
 
 class FFmpegSettingCard(ExpandGroupSettingCard):
     def __init__(self, parent_window, parent = None):

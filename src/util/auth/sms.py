@@ -1,4 +1,4 @@
-from PySide6.QtCore import QObject, Signal
+from PySide6.QtCore import QObject, Signal, Slot
 
 from ..network.request import NetworkRequestWorker, RequestType
 from ..common.signal_bus import signal_bus
@@ -44,16 +44,6 @@ class SMS(AuthBase, QObject):
         super().on_error(message)
 
     def send(self):
-        def on_success(response: dict):
-            if self._cleaned_up:
-                return
-
-            self.check_response(response)
-
-            CaptchaInfo.captcha_key = response["data"]["captcha_key"]
-
-            self.sms_sent.emit()
-
         params = {
                 "cid": SMSInfo.cid,
                 "tel": SMSInfo.tel,
@@ -67,22 +57,29 @@ class SMS(AuthBase, QObject):
         url = "https://passport.bilibili.com/x/passport-login/web/sms/send"
 
         worker = NetworkRequestWorker(url, request_type = RequestType.POST, params = params)
-        worker.success.connect(on_success)
+        # 连到本对象的方法而非闭包，由 Qt 排队回 GUI 线程，避免在请求线程里改动全局登录状态
+        worker.success.connect(self.on_send_success)
         worker.error.connect(self.on_error)
 
         AsyncTask.run(worker)
 
-    def login(self):
-        def on_success(response: dict):
-            if self._cleaned_up:
-                return
+    @Slot(object)
+    def on_send_success(self, response: dict):
+        if self._cleaned_up:
+            return
 
+        try:
             self.check_response(response)
 
-            self.update_cookies()
+        except RuntimeError:
+            # check_response 内部已经发出过 error 信号
+            return
 
-            self.sms_login_success.emit()
+        CaptchaInfo.captcha_key = response["data"]["captcha_key"]
 
+        self.sms_sent.emit()
+
+    def login(self):
         params = {
                 "cid": SMSInfo.cid,
                 "tel": SMSInfo.tel,
@@ -95,10 +92,25 @@ class SMS(AuthBase, QObject):
         url = "https://passport.bilibili.com/x/passport-login/web/login/sms"
 
         worker = NetworkRequestWorker(url, request_type = RequestType.POST, params = params)
-        worker.success.connect(on_success)
+        worker.success.connect(self.on_login_success)
         worker.error.connect(self.on_error)
 
         AsyncTask.run(worker)
+
+    @Slot(object)
+    def on_login_success(self, response: dict):
+        if self._cleaned_up:
+            return
+
+        try:
+            self.check_response(response)
+
+        except RuntimeError:
+            return
+
+        self.update_cookies()
+
+        self.sms_login_success.emit()
 
     def update_cid_tel(self, cid: str, tel: str):
         SMSInfo.cid = cid

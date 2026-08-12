@@ -32,7 +32,8 @@ class EpisodeParserBase:
 
         title = node.title
 
-        if not title:
+        # 动态解析会先用一棵空树建立根节点，此时没有子节点可供取标题
+        if not title and node.count():
             child = node.child(0)
 
             if child.has_attribute(Attribute.VIDEO_BIT) or child.has_attribute(Attribute.AUDIO_BIT):

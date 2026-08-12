@@ -2,9 +2,58 @@ from PySide6.QtWidgets import QStyledItemDelegate, QStyleOptionViewItem, QApplic
 from PySide6.QtGui import QPainter, QColor, QFont, QFontMetrics, QPixmap, QPainterPath
 from PySide6.QtCore import QModelIndex, Qt, QRect, Signal, QPoint, QEvent
 
-from qfluentwidgets import isDarkTheme, setFont, drawIcon, ThemeColor, Theme
+from qfluentwidgets import isDarkTheme, drawIcon, getFont, qconfig, ThemeColor, Theme, FluentIconBase
 
 from typing import List
+from collections import OrderedDict
+
+# 绘制缓存。委托的 paint 在滚动时按 可见项 × 元素数 的量级重复调用，下列三项每次都要重新构造，
+# 缓存后可显著降低单帧耗时（单帧耗时超过 16ms 会直接拖慢平滑滚动的动画推进）。
+# 缓存键均包含主题或字体族信息，主题、字体变化后自然落到新的键上，无需主动清理。
+_ICON_PIXMAP_CACHE: dict = {}
+_FONT_CACHE: dict = {}
+_ELIDED_TEXT_CACHE = OrderedDict()
+
+# 省略文本的条目数上限，超出后按最近最少使用淘汰
+_ELIDED_TEXT_CACHE_SIZE = 512
+
+def _getCachedFont(fontSize: int):
+    """按字体族与字号缓存 QFont 与 QFontMetrics
+
+    getFont 每次都会新建 QFont 并从 qconfig 读取字体族，QFontMetrics 也要重新构造。
+    """
+    key = (fontSize, tuple(qconfig.get(qconfig.fontFamilies)))
+
+    cached = _FONT_CACHE.get(key)
+
+    if cached is None:
+        font = getFont(fontSize)
+        cached = (font, QFontMetrics(font), key)
+
+        _FONT_CACHE[key] = cached
+
+    return cached
+
+def _getCachedElidedText(text: str, width: int, metrics: QFontMetrics, font_key: tuple):
+    """缓存省略后的文本
+
+    elidedText 需要逐字符测量文本宽度，而列表滚动时绝大多数文本与列宽都没有变化。
+    """
+    key = (font_key, width, text)
+
+    if key in _ELIDED_TEXT_CACHE:
+        _ELIDED_TEXT_CACHE.move_to_end(key)
+
+        return _ELIDED_TEXT_CACHE[key]
+
+    elided_text = metrics.elidedText(text, Qt.TextElideMode.ElideRight, width)
+
+    _ELIDED_TEXT_CACHE[key] = elided_text
+
+    if len(_ELIDED_TEXT_CACHE) > _ELIDED_TEXT_CACHE_SIZE:
+        _ELIDED_TEXT_CACHE.popitem(last = False)
+
+    return elided_text
 
 class FluentStyledItemDelegate:
     def __init__(self):
@@ -74,9 +123,9 @@ class FluentStyledItemDelegate:
             primaryColor = ThemeColor.PRIMARY.color()
 
         borderColor = ThemeColor.LIGHT_1.color()
-        icon = self._reverseIconColor(icon)
 
-        self._drawButtonBase(painter, rect, primaryColor, borderColor, icon)
+        # 主色按钮的底色较深，图标需要反色显示
+        self._drawButtonBase(painter, rect, primaryColor, borderColor, icon, self._reverseTheme())
 
     def _drawButton(self, painter: QPainter, rect: QRect, icon, hover = False):
         if isDarkTheme():
@@ -96,7 +145,7 @@ class FluentStyledItemDelegate:
 
         self._drawButtonBase(painter, rect, primaryColor, borderColor, icon)
 
-    def _drawButtonBase(self, painter: QPainter, rect: QRect, primaryColor: QColor, borderColor: QColor, icon):
+    def _drawButtonBase(self, painter: QPainter, rect: QRect, primaryColor: QColor, borderColor: QColor, icon, theme = Theme.AUTO):
         painter.setPen(Qt.PenStyle.NoPen)
 
         # 绘制边框
@@ -108,7 +157,49 @@ class FluentStyledItemDelegate:
         painter.drawRoundedRect(rect.adjusted(1, 1, -1, -1), 5, 5)
 
         # 绘制图标
-        drawIcon(icon, painter, rect.adjusted(8, 8, -8, -8))
+        self._drawCachedIcon(painter, rect.adjusted(8, 8, -8, -8), icon, theme)
+
+    def _drawCachedIcon(self, painter: QPainter, rect: QRect, icon, theme = Theme.AUTO):
+        """将图标渲染结果缓存为位图后再绘制
+
+        FluentIcon 的 render 最终走 drawSvgIcon，每次调用都会新建 QSvgRenderer 重新解析 SVG，
+        列表滚动时按 可见项 × 图标数 的量级重复解析。图标种类与尺寸都很有限，缓存位图后直接贴图。
+        """
+        device = painter.device()
+        ratio = device.devicePixelRatioF() if device else 1.0
+
+        key = (self._getIconKey(icon, theme), rect.width(), rect.height(), ratio)
+
+        pixmap = _ICON_PIXMAP_CACHE.get(key)
+
+        if pixmap is None:
+            pixmap = QPixmap(round(rect.width() * ratio), round(rect.height() * ratio))
+            pixmap.setDevicePixelRatio(ratio)
+            pixmap.fill(Qt.GlobalColor.transparent)
+
+            icon_painter = QPainter(pixmap)
+            icon_painter.setRenderHints(QPainter.RenderHint.Antialiasing | QPainter.RenderHint.SmoothPixmapTransform)
+
+            icon_rect = QRect(0, 0, rect.width(), rect.height())
+
+            if isinstance(icon, FluentIconBase):
+                icon.render(icon_painter, icon_rect, theme)
+            else:
+                drawIcon(icon, icon_painter, icon_rect)
+
+            icon_painter.end()
+
+            _ICON_PIXMAP_CACHE[key] = pixmap
+
+        # 位图的逻辑尺寸与 rect 一致，按左上角贴图即可，无需再次缩放
+        painter.drawPixmap(rect.topLeft(), pixmap)
+
+    def _getIconKey(self, icon, theme):
+        # FluentIcon 的资源路径本身已经区分主题，可直接作为缓存键
+        if isinstance(icon, FluentIconBase):
+            return icon.path(theme)
+
+        return str(icon)
 
     def _drawProgressBar(self, painter: QPainter, rect: QRect, value: int, error = False, paused = False):
         if isDarkTheme():
@@ -164,12 +255,9 @@ class FluentStyledItemDelegate:
         self._drawTextBase(painter, rect, text, textColor, 14)
 
     def _drawTextBase(self, painter: QPainter, rect: QRect, text: str, textColor: QColor, fontSize: int, textFlags = None):
-        setFont(painter, fontSize)
+        font, metrics, font_key = _getCachedFont(fontSize)
 
-        font = painter.font()
-
-        metrics = QFontMetrics(font)
-        elided_title = metrics.elidedText(text, Qt.TextElideMode.ElideRight, rect.width())
+        elided_title = _getCachedElidedText(text, rect.width(), metrics, font_key)
 
         painter.setFont(font)
         painter.setPen(textColor)
@@ -203,9 +291,9 @@ class FluentStyledItemDelegate:
 
         return font
 
-    def _reverseIconColor(self, icon):
-        theme = Theme.DARK if not isDarkTheme() else Theme.LIGHT
-        return icon.icon(theme)
+    def _reverseTheme(self):
+        # 取与当前主题相反的主题，使图标在深色底上呈浅色、浅色底上呈深色
+        return Theme.DARK if not isDarkTheme() else Theme.LIGHT
 
 class ContextMenuDelegateBase(QStyledItemDelegate, FluentStyledItemDelegate):
     """
