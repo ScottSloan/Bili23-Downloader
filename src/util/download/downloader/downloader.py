@@ -13,8 +13,7 @@ from ...common.io.file import File
 from ...parse.additional.worker import AdditionalParseWorker
 from ...parse.additional.chapter import ChapterParser
 from ...thread.pool import GlobalThreadPoolTask
-from ...network.request import get_cookies, get_mounts, get_ssl_context
-from ...network.proxy import Proxy
+from ...network.request import get_cookies, get_proxy_mounts, get_ssl_context
 from ...thread.async_ import AsyncTask
 
 from ..task.manager import task_manager
@@ -934,7 +933,8 @@ class Downloader(QObject):
 
         limits = httpx.Limits(max_keepalive_connections = config.get(config.download_thread), max_connections = config.get(config.download_thread))
         transport = httpx.HTTPTransport(retries = 5, verify = ssl_context)
-        mounts = get_mounts(Proxy().get_proxies())
+        # 与解析请求共用同一套代理模式判定
+        mounts = get_proxy_mounts()
 
         headers = {
             "Referer": self.task_info.Episode.url,

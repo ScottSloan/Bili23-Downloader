@@ -174,6 +174,7 @@ class SettingInterface(ScrollArea):
         self.cdn_card.custom_provider_btn.clicked.connect(self.on_custom_cdn_server_list)
         self.ffmpeg_card.source_choice.currentIndexChanged.connect(self.on_change_ffmpeg_source)
         self.ffmpeg_card.custom_btn.clicked.connect(self.on_change_ffmpeg_path)
+        self.proxy_card.proxy_mode_choice.currentIndexChanged.connect(self.on_change_proxy_mode)
         self.proxy_card.custom_btn.clicked.connect(self.on_custom_proxy)
         self.log_card.clicked.connect(self.on_view_logs)
 
@@ -297,6 +298,10 @@ class SettingInterface(ScrollArea):
         
         config.set(config.custom_ffmpeg_path, file_path)
         self.ffmpeg_card.custom_group.setContent(file_path)
+
+    def on_change_proxy_mode(self, index: int):
+        # 仅手动设置模式才需要配置代理服务器
+        self.proxy_card.custom_group.setEnabled(index == 2)
 
     def on_custom_proxy(self):
         from ..dialog.setting.proxy import ProxyDialog

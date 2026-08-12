@@ -2,6 +2,7 @@ from PySide6.QtCore import Signal, QObject, Slot
 
 from ..common._json import json_loads
 from ..common.config import config
+from ..common.enum import ProxyMode
 
 from threading import Lock
 from enum import Enum
@@ -70,9 +71,61 @@ def get_mounts(proxies = None):
     else:
         return None
 
-def _create_client():
+def _get_environment_proxies():
+    # 直接复用 httpx 自身的解析实现，保证 NO_PROXY 里的域名、IPv4、IPv6、localhost 等各种写法
+    # 与 httpx 默认行为完全一致，不去手抄一份容易出现偏差的解析逻辑
+    try:
+        from httpx._utils import get_environment_proxies
+
+        return get_environment_proxies()
+
+    except ImportError:
+        logger.warning("当前 httpx 版本未提供 get_environment_proxies，已跳过系统代理设置")
+
+        return {}
+
+def get_env_mounts():
+    # httpx 只在未显式传入 transport 时才会读取环境变量（Windows / macOS 上还包括系统代理设置）中的代理，
+    # 见 httpx._client 中的 allow_env_proxies = trust_env and transport is None。
+    # 本项目为了设置 retries 并复用全局 SSLContext，一律显式传入 transport，系统代理因此被静默绕过：
+    # 用户明明开着代理，程序却直连 bilibili，部分网络环境下会被服务端重置连接（Error 10054），
+    # 表现为二维码登录等请求直接失败。这里把系统代理手动还原成 mounts，补回 httpx 的默认行为。
+    import httpx
+
+    mounts = {}
+
+    for pattern, proxy_url in _get_environment_proxies().items():
+        if proxy_url is None:
+            # NO_PROXY 命中的地址，None 表示改用 Client 的默认 transport，即直连
+            mounts[pattern] = None
+        else:
+            try:
+                # httpx 对 http(s) 代理不使用 retries，此处与 get_mounts 一样只依赖代理本身的连接行为
+                mounts[pattern] = httpx.HTTPTransport(proxy = proxy_url, verify = get_ssl_context())
+
+            except Exception as e:
+                # httpx 不认识的代理协议（如 socks4）会抛 ValueError，socks5 缺少 socksio 依赖时会抛 ImportError。
+                # 这里只跳过这一条挂载，不要让整个 Client 创建失败，该地址的行为退化为直连
+                logger.warning("系统代理挂载 %s 创建失败，已忽略：%s", pattern, e)
+
+    return mounts or None
+
+def get_proxy_mounts():
+    # 按用户选择的代理模式生成 httpx Client 使用的 mounts，解析与下载共用同一套判定：
+    # 不启用代理 → None（直连）；使用系统代理 → 从环境变量还原；手动设置 → 使用程序内配置的代理服务器
     from .proxy import Proxy
 
+    match config.get(config.proxy_mode):
+        case ProxyMode.MANUAL:
+            return get_mounts(Proxy().get_proxies())
+
+        case ProxyMode.SYSTEM:
+            return get_env_mounts()
+
+        case _:
+            return None
+
+def _create_client():
     import httpx
 
     # 封面加载线程池上限就有 16，叠加解析线程后并发请求数远超 10。
@@ -81,14 +134,21 @@ def _create_client():
     limits = httpx.Limits(max_connections = 32, max_keepalive_connections = 16)
     transport = httpx.HTTPTransport(retries = 3, verify = get_ssl_context())
 
-    if config.get(config.proxy_enabled):
-        logger.info("已启用代理，类型：%s，服务器：%s:%s", config.get(config.proxy_type), config.get(config.proxy_server), config.get(config.proxy_port))
+    mounts = get_proxy_mounts()
+
+    match config.get(config.proxy_mode):
+        case ProxyMode.MANUAL:
+            logger.info("已启用手动代理，类型：%s，服务器：%s:%s", config.get(config.proxy_type), config.get(config.proxy_server), config.get(config.proxy_port))
+
+        case ProxyMode.SYSTEM:
+            # 系统代理地址可能带有账号密码，不写进日志
+            logger.info("已启用系统代理，挂载数量：%s", len(mounts) if mounts else 0)
 
     return httpx.Client(
         limits = limits,
         # 连接、读写仍为 5s；等待空闲连接单独放宽，避免高并发下把排队算成请求超时
         timeout = httpx.Timeout(5.0, pool = 30.0),
-        mounts = get_mounts(Proxy().get_proxies()),
+        mounts = mounts,
         transport = transport,
         follow_redirects = True,
         verify = get_ssl_context()

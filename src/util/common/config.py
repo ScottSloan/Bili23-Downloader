@@ -8,8 +8,8 @@ from qfluentwidgets import (
 
 from .serializer import LanguageSerializer, ScalingSerializer
 from .enum import (
-    Language, WhenClose, DanmakuType, SubtitleType, CoverType, MetadataType, ProxyType, FFmpegSource, NumberingType,
-    Scaling, FileConflictResolution, VideoContainer, AutoSelectMode, Area, DuplicateDownloadResolution
+    Language, WhenClose, DanmakuType, SubtitleType, CoverType, MetadataType, ProxyMode, ProxyType, FFmpegSource,
+    NumberingType, Scaling, FileConflictResolution, VideoContainer, AutoSelectMode, Area, DuplicateDownloadResolution
 )
 from ._json import json_loads
 
@@ -295,7 +295,7 @@ class APPConfig(QConfig):
     app_name = "Bili23 Downloader"
     app_version = "2.13.0"
     app_comparable_version = "2.13.0"
-    app_config_version = 2100
+    app_config_version = 2130
     config_version = ConfigItem("Application", "config_version", app_config_version)
 
     # Interface
@@ -376,7 +376,7 @@ class APPConfig(QConfig):
     ffmpeg_source = OptionsConfigItem("Advanced", "ffmpeg_source", FFmpegSource.BUNDLED, OptionsValidator(FFmpegSource), EnumSerializer(FFmpegSource), restart = True)
     custom_ffmpeg_path = ConfigItem("Advanced", "custom_ffmpeg_path", "", restart = True)
 
-    proxy_enabled = ConfigItem("Advanced", "proxy_enabled", False, BoolValidator(), restart = True)
+    proxy_mode = OptionsConfigItem("Advanced", "proxy_mode", ProxyMode.SYSTEM, OptionsValidator(ProxyMode), EnumSerializer(ProxyMode), restart = True)
     proxy_type = OptionsConfigItem("Advanced", "proxy_type", ProxyType.HTTP, OptionsValidator(ProxyType), EnumSerializer(ProxyType))
     proxy_server = ConfigItem("Advanced", "proxy_server", "")
     proxy_port = ConfigItem("Advanced", "proxy_port", 80)
@@ -502,9 +502,31 @@ def check_need_patch():
     else:
         return False, 0
 
+def read_raw_config():
+    # 读取磁盘上的原始配置。qconfig.load 只会认识当前版本定义的配置项，
+    # 迁移时要读取已经被移除的旧字段，只能重新读一遍文件
+    if not config_path.exists():
+        return {}
+
+    try:
+        with open(config_path, "r", encoding = "utf-8") as f:
+            return json_loads(f.read())
+
+    except Exception as e:
+        logger.error(f"读取配置文件时发生错误：{e}")
+
+        return {}
+
 def patch_config(config_version: int):
     # 配置文件修补
-    
+    if config_version < 2130:
+        # 2.13.0 起代理设置由 proxy_enabled 开关改为 proxy_mode 三态选择。
+        # 旧版开着代理开关的迁移为手动设置，其余保持默认的跟随系统代理
+        if read_raw_config().get("Advanced", {}).get("proxy_enabled"):
+            config.set(config.proxy_mode, ProxyMode.MANUAL)
+
+            logger.info("代理设置已迁移为手动设置")
+
     # 完成修补，写入新的 config_version
     config.set(config.config_version, config.app_config_version)
     config.save()

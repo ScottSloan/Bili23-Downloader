@@ -448,15 +448,17 @@ class ProxySettingCard(ExpandGroupSettingCard):
     def __init__(self, parent = None):
         super().__init__(ExtendedFluentIcon.SERVER, self.tr("Proxy Settings"), self.tr("Adjust proxy server settings used for parsing and downloading"), parent)
 
-        self.enable_proxy_switch = SettingSwitchButton(config.proxy_enabled, parent = self)
+        self.proxy_mode_choice = SettingComboBox(config.proxy_mode, [self.tr("Do not use proxy"), self.tr("Use system proxy"), self.tr("Manual configuration")], parent = self)
 
         self.custom_btn = PushButton(self.tr("Configure…"), self)
 
         self.viewLayout.setContentsMargins(0, 0, 0, 0)
         self.viewLayout.setSpacing(0)
 
-        self.addGroup("", self.tr("Use Proxy Server"), "", self.enable_proxy_switch)
-        self.addGroup("", self.tr("Configure Proxy Server"), "", self.custom_btn)
+        self.addGroup("", self.tr("Proxy Mode"), self.tr("Select the proxy used for parsing and downloading"), self.proxy_mode_choice)
+        self.custom_group = self.addGroup("", self.tr("Configure Proxy Server"), "", self.custom_btn)
+
+        self.custom_group.setEnabled(self.proxy_mode_choice.currentIndex() == 2)
 
 class FFmpegSettingCard(ExpandGroupSettingCard):
     def __init__(self, parent_window, parent = None):
