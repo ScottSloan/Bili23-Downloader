@@ -400,37 +400,37 @@ You can also press shift + click to select a range of items.</source>
 <context>
     <name>CDNServerDialog</name>
     <message>
-        <location filename="../../gui/dialog/setting/cdn_server.py" line="26"/>
+        <location filename="../../gui/dialog/setting/cdn_server.py" line="30"/>
         <source>Customize Service Provider CDN</source>
         <translation>自訂服務商 CDN</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/cdn_server.py" line="32"/>
+        <location filename="../../gui/dialog/setting/cdn_server.py" line="36"/>
         <source>Add</source>
         <translation>新增</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/cdn_server.py" line="27"/>
+        <location filename="../../gui/dialog/setting/cdn_server.py" line="31"/>
         <source>Drag items to reorder. Higher items have higher priority.</source>
         <translation>拖曳清單項目調整順序，位置越上方優先權越高。</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/cdn_server.py" line="33"/>
+        <location filename="../../gui/dialog/setting/cdn_server.py" line="37"/>
         <source>Reset to Default</source>
         <translation>重設為預設值</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/cdn_server.py" line="51"/>
+        <location filename="../../gui/dialog/setting/cdn_server.py" line="55"/>
         <source>Node</source>
         <translation>節點</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/cdn_server.py" line="52"/>
+        <location filename="../../gui/dialog/setting/cdn_server.py" line="56"/>
         <source>Provider</source>
         <translation>服務商</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/cdn_server.py" line="53"/>
+        <location filename="../../gui/dialog/setting/cdn_server.py" line="57"/>
         <source>Actions</source>
         <translation>操作</translation>
     </message>
@@ -1329,7 +1329,7 @@ If you continue, please disable the &quot;Preallocate file space&quot; option. (
 <context>
     <name>Downloader</name>
     <message>
-        <location filename="../../util/download/downloader/downloader.py" line="926"/>
+        <location filename="../../util/download/downloader/downloader.py" line="928"/>
         <source>Audio</source>
         <translation>音訊</translation>
     </message>
@@ -2014,14 +2014,6 @@ File name: {filename}</source>
         <source>Automatically parse all nodes</source>
         <translation>自動解析所有節點</translation>
     </message>
-    <message>
-        <source>Manually select nodes</source>
-        <translation type="vanished">手動選擇節點</translation>
-    </message>
-    <message>
-        <source>Don&apos;t ask again</source>
-        <translation type="vanished">不再詢問</translation>
-    </message>
 </context>
 <context>
     <name>JumpToPageDialog</name>
@@ -2259,131 +2251,91 @@ Bilibili 的影片通常將影片串流與音訊串流分開儲存與傳輸，�
 <context>
     <name>MainWindow</name>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="308"/>
+        <location filename="../../gui/interface/main_window.py" line="311"/>
         <source>Parser</source>
         <translation>解析</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="314"/>
+        <location filename="../../gui/interface/main_window.py" line="317"/>
         <source>Downloads</source>
         <translation>下載</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="325"/>
+        <location filename="../../gui/interface/main_window.py" line="328"/>
         <source>Favorites</source>
         <translation>收藏</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="334"/>
+        <location filename="../../gui/interface/main_window.py" line="337"/>
         <source>About</source>
         <translation>關於</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="352"/>
+        <location filename="../../gui/interface/main_window.py" line="355"/>
         <source>Settings</source>
         <translation>設定</translation>
-    </message>
-    <message>
-        <source>Welcome to Bili23 Downloader</source>
-        <translation type="vanished">歡迎使用 Bili23 Downloader</translation>
-    </message>
-    <message>
-        <source>It is recommended to read the user guide and FAQs when using for the first time, to help you get started quickly and make full use of all features.</source>
-        <translation type="vanished">首次使用時建議先查看使用說明與常見問題，幫助您更快上手並充分利用各項功能。</translation>
-    </message>
-    <message>
-        <source>View</source>
-        <translation type="vanished">查看</translation>
-    </message>
-    <message>
-        <source>Skip</source>
-        <translation type="vanished">跳過</translation>
-    </message>
-    <message>
-        <source>Download Directory Invalid</source>
-        <translation type="vanished">下載目錄無效</translation>
-    </message>
-    <message>
-        <source>The current download directory is inaccessible or lacks write permissions. Please reset it.</source>
-        <translation type="vanished">目前下載目錄無法存取或沒有寫入權限，請重新設定。</translation>
-    </message>
-    <message>
-        <source>FFmpeg Not Found</source>
-        <translation type="vanished">找不到 FFmpeg</translation>
-    </message>
-    <message>
-        <source>No FFmpeg executable found. Please ensure FFmpeg is installed and configured correctly.</source>
-        <translation type="vanished">找不到 FFmpeg 執行檔。請確保已正確安裝並設定 FFmpeg。</translation>
-    </message>
-    <message>
-        <source>Login Required</source>
-        <translation type="vanished">需要登入</translation>
-    </message>
-    <message>
-        <source>Please log in to your account first.</source>
-        <translation type="vanished">請先登入帳號</translation>
     </message>
 </context>
 <context>
     <name>MainWindowBase</name>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="94"/>
+        <location filename="../../gui/interface/main_window.py" line="97"/>
         <source>Welcome to Bili23 Downloader</source>
         <translation>歡迎使用 Bili23 Downloader</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="95"/>
+        <location filename="../../gui/interface/main_window.py" line="98"/>
         <source>It is recommended to read the user guide and FAQs when using for the first time, to help you get started quickly and make full use of all features.</source>
         <translation>首次使用時建議先查看使用說明與常見問題，幫助您更快上手並充分利用各項功能。</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="98"/>
+        <location filename="../../gui/interface/main_window.py" line="101"/>
         <source>View</source>
         <translation>查看</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="99"/>
+        <location filename="../../gui/interface/main_window.py" line="102"/>
         <source>Skip</source>
         <translation>跳過</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="111"/>
+        <location filename="../../gui/interface/main_window.py" line="114"/>
         <source>Log in to your account</source>
         <translation>登入帳號</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="112"/>
+        <location filename="../../gui/interface/main_window.py" line="115"/>
         <source>Click the avatar to log in to your Bilibili account. 
 Download functionality will be limited if you&apos;re not logged in.</source>
         <translation>點擊頭像登入嘅 Bilibili 帳號，未登入狀態下下載功能將受到限制。</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="187"/>
+        <location filename="../../gui/interface/main_window.py" line="190"/>
         <source>Download Directory Invalid</source>
         <translation>下載目錄無效</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="188"/>
+        <location filename="../../gui/interface/main_window.py" line="191"/>
         <source>The current download directory is inaccessible or lacks write permissions. Please reset it.</source>
         <translation>目前下載目錄無法存取或沒有寫入權限，請重新設定。</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="197"/>
+        <location filename="../../gui/interface/main_window.py" line="200"/>
         <source>FFmpeg Not Found</source>
         <translation>找不到 FFmpeg</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="198"/>
+        <location filename="../../gui/interface/main_window.py" line="201"/>
         <source>No FFmpeg executable found. Please ensure FFmpeg is installed and configured correctly.</source>
         <translation>找不到 FFmpeg 執行檔。請確保已正確安裝並設定 FFmpeg。</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="207"/>
+        <location filename="../../gui/interface/main_window.py" line="210"/>
         <source>Login Required</source>
         <translation>需要登入</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="208"/>
+        <location filename="../../gui/interface/main_window.py" line="211"/>
         <source>Please log in to your account first.</source>
         <translation>請先登入帳號</translation>
     </message>
@@ -3630,10 +3582,6 @@ ISP：{isp}</translation>
         <translation>選擇用於解析與下載的代理</translation>
     </message>
     <message>
-        <source>Use Proxy Server</source>
-        <translation type="vanished">使用代理伺服器</translation>
-    </message>
-    <message>
         <location filename="../../gui/component/setting/card.py" line="459"/>
         <source>Configure Proxy Server</source>
         <translation>設定代理伺服器</translation>
@@ -4248,59 +4196,60 @@ Under no circumstances shall the developer be liable for any direct, indirect, i
     <name>TopStackedWidget</name>
     <message>
         <location filename="../../gui/component/download_list/top_widget.py" line="149"/>
-        <location filename="../../gui/component/download_list/top_widget.py" line="170"/>
+        <location filename="../../gui/component/download_list/top_widget.py" line="174"/>
         <source>Sort</source>
         <translation>排序</translation>
     </message>
     <message>
-        <location filename="../../gui/component/download_list/top_widget.py" line="153"/>
+        <location filename="../../gui/component/download_list/top_widget.py" line="152"/>
+        <location filename="../../gui/component/download_list/top_widget.py" line="177"/>
+        <source>Open Download Directory</source>
+        <translation>開啟下載目錄</translation>
+    </message>
+    <message>
+        <location filename="../../gui/component/download_list/top_widget.py" line="156"/>
         <source>Start All</source>
         <translation>全部開始</translation>
     </message>
     <message>
-        <location filename="../../gui/component/download_list/top_widget.py" line="154"/>
+        <location filename="../../gui/component/download_list/top_widget.py" line="157"/>
         <source>Pause All</source>
         <translation>全部暫停</translation>
     </message>
     <message>
-        <location filename="../../gui/component/download_list/top_widget.py" line="155"/>
+        <location filename="../../gui/component/download_list/top_widget.py" line="158"/>
         <source>Delete All</source>
         <translation>全部刪除</translation>
     </message>
     <message>
-        <location filename="../../gui/component/download_list/top_widget.py" line="174"/>
-        <source>Open Directory</source>
-        <translation>開啟資料夾</translation>
-    </message>
-    <message>
-        <location filename="../../gui/component/download_list/top_widget.py" line="176"/>
+        <location filename="../../gui/component/download_list/top_widget.py" line="181"/>
         <source>Clear All</source>
         <translation>清除記錄</translation>
     </message>
     <message>
-        <location filename="../../gui/component/download_list/top_widget.py" line="200"/>
+        <location filename="../../gui/component/download_list/top_widget.py" line="206"/>
         <source>Creation Time</source>
         <translation>建立時間</translation>
     </message>
     <message>
-        <location filename="../../gui/component/download_list/top_widget.py" line="201"/>
-        <location filename="../../gui/component/download_list/top_widget.py" line="217"/>
+        <location filename="../../gui/component/download_list/top_widget.py" line="207"/>
+        <location filename="../../gui/component/download_list/top_widget.py" line="223"/>
         <source>Title</source>
         <translation>標題名稱</translation>
     </message>
     <message>
-        <location filename="../../gui/component/download_list/top_widget.py" line="202"/>
-        <location filename="../../gui/component/download_list/top_widget.py" line="218"/>
+        <location filename="../../gui/component/download_list/top_widget.py" line="208"/>
+        <location filename="../../gui/component/download_list/top_widget.py" line="224"/>
         <source>File Size</source>
         <translation>檔案大小</translation>
     </message>
     <message>
-        <location filename="../../gui/component/download_list/top_widget.py" line="203"/>
+        <location filename="../../gui/component/download_list/top_widget.py" line="209"/>
         <source>Download Progress</source>
         <translation>下載進度</translation>
     </message>
     <message>
-        <location filename="../../gui/component/download_list/top_widget.py" line="216"/>
+        <location filename="../../gui/component/download_list/top_widget.py" line="222"/>
         <source>Completion Time</source>
         <translation>完成時間</translation>
     </message>

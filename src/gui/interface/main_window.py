@@ -15,7 +15,10 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-class MainWindowBase:
+class MainWindowBase(MSFluentWindow):
+    def __init__(self):
+        super().__init__()
+
     def run_post_terms_checks(self: "MainWindow") -> None:
         signal_bus.update.check.emit(False)
 
@@ -103,7 +106,7 @@ class MainWindowBase:
 
             webbrowser.open("https://bili23.scott-sloan.cn/doc/introduction.html")
 
-    def show_login_teaching_tip(self: "MainWindow"):
+    def show_login_teaching_tip(self):
         from qfluentwidgets import TeachingTip, TeachingTipTailPosition
 
         TeachingTip.create(
@@ -174,7 +177,7 @@ class MainWindowBase:
 
         self.download_info_badge.move(self.download_btn.width() - 4, 111)
 
-    def check_download_path(self):
+    def check_download_path(self: "MainWindow"):
         from util.common.io.directory import Directory
 
         download_path = config.get(config.download_path)
@@ -190,7 +193,7 @@ class MainWindowBase:
 
             logger.error("下载目录不可访问或缺少写入权限：%s", download_path)
 
-    def check_ffmpeg(self):
+    def check_ffmpeg(self: "MainWindow"):
         if config.no_ffmpeg_available:
             signal_bus.toast.show_long_message.emit(
                 ToastNotificationCategory.ERROR,
@@ -269,7 +272,7 @@ class MainWindowBase:
 
         self._updateStackedBackground()
 
-class MainWindow(MainWindowBase, MSFluentWindow):
+class MainWindow(MainWindowBase):
     def __init__(self):
         super().__init__()
 
