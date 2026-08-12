@@ -496,33 +496,18 @@ def check_need_patch():
             if "config_version" in data.get("Application", {}):
                 config_version = data.get("Application", {}).get("config_version", 0)
 
-                return config_version < config.app_config_version, config_version
+                return config_version < config.app_config_version, config_version, data
             else:
-                return True, 0
+                return True, 0, data
     else:
-        return False, 0
+        return False, 0, {}
 
-def read_raw_config():
-    # 读取磁盘上的原始配置。qconfig.load 只会认识当前版本定义的配置项，
-    # 迁移时要读取已经被移除的旧字段，只能重新读一遍文件
-    if not config_path.exists():
-        return {}
-
-    try:
-        with open(config_path, "r", encoding = "utf-8") as f:
-            return json_loads(f.read())
-
-    except Exception as e:
-        logger.error(f"读取配置文件时发生错误：{e}")
-
-        return {}
-
-def patch_config(config_version: int):
+def patch_config(config_version: int, data: dict):
     # 配置文件修补
     if config_version < 2130:
         # 2.13.0 起代理设置由 proxy_enabled 开关改为 proxy_mode 三态选择。
         # 旧版开着代理开关的迁移为手动设置，其余保持默认的跟随系统代理
-        if read_raw_config().get("Advanced", {}).get("proxy_enabled"):
+        if data.get("Advanced", {}).get("proxy_enabled"):
             config.set(config.proxy_mode, ProxyMode.MANUAL)
 
             logger.info("代理设置已迁移为手动设置")
@@ -543,9 +528,9 @@ if not config_path.exists():
 qconfig.load(config_path, config)
 
 # 判断是否需要修补配置文件
-need_patch, config_version = check_need_patch()
+need_patch, config_version, data = check_need_patch()
 
 if need_patch:
     logger.info("检测到旧版本配置文件，正在进行修补")
 
-    patch_config(config_version)
+    patch_config(config_version, data)

@@ -470,7 +470,9 @@ class Downloader(QObject):
                 if not self._acquire_ref():
                     return
 
-                parse_worker = ParseWorker(self.task_info, self, on_finished = self._release_ref)
+                # 解析失败会自动重试，等待期间用户可能暂停或取消任务，
+                # 因此把停止标记一并交给 worker，让它能及时放弃
+                parse_worker = ParseWorker(self.task_info, self, on_finished = self._release_ref, stop_event = self._stop_event)
 
                 try:
                     GlobalThreadPoolTask.run(parse_worker)
