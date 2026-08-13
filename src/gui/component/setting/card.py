@@ -503,10 +503,12 @@ class WindowBehaviorSettingCard(ExpandGroupSettingCard):
         super().__init__(ExtendedFluentIcon.APPLICATION_WINDOW, self.tr("Window Behavior"), self.tr("Adjust the behavior of the main window during startup, runtime, and shutdown"), parent)
 
         self.silent_start_switch = SettingSwitchButton(config.silent_start, parent = self)
+        self.remember_window_state_switch = SettingSwitchButton(config.remember_window_state, parent = self)
         self.stay_on_top_switch = SettingSwitchButton(config.stay_on_top, parent = self)
         self.when_close_action_choice = SettingComboBox(config.when_close_window, [self.tr("Exit the program"), self.tr("Minimize to system tray"), self.tr("Always ask")], parent = self)
 
         self.addGroup("", self.tr("Silent Start"), self.tr("Start the application without showing the main window"), self.silent_start_switch)
+        self.addGroup("", self.tr("Remember Window State"), self.tr("Restore the window size and position from the last session on startup"), self.remember_window_state_switch)
         self.addGroup("", self.tr("Stay on Top"), self.tr("Keep the window always on top of the desktop"), self.stay_on_top_switch)
         self.addGroup("", self.tr("Close the Main Window"), self.tr("Choose the action when closing the main window"), self.when_close_action_choice)
 
