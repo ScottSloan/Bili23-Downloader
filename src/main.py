@@ -370,7 +370,18 @@ class Application(QApplication):
 
     def setup_app(self):
         self.setAttribute(Qt.ApplicationAttribute.AA_DontCreateNativeWidgetSiblings)
-        
+
+        # Qt 默认从 argv[0] 推导应用名与 X11 的 WM_CLASS。打包后入口是 _pystand_static.int，
+        # 桌面环境据此无法把窗口与 bili23-downloader.desktop 关联，任务栏里的图标和名称都不对。
+        # desktop_file_name 同时决定 Wayland 下的 app_id。
+        #
+        # 注意：AppDataLocation 会拼接 application_name，这里必须晚于模块导入期
+        # （main.py 与 util/common/config.py 中的 appdata_path 均在导入期取值），
+        # 否则用户数据目录会平移一层。
+        self.setApplicationName("Bili23 Downloader")
+        self.setApplicationDisplayName("Bili23 Downloader")
+        self.setDesktopFileName("bili23-downloader")
+
         # 设置默认字体
         self.default_font = self.font()
         self.default_font.setPointSize(10)

@@ -96,5 +96,5 @@ class ParserBase:
                 Translator.ERROR_MESSAGES("LOGIN_REQUIRED_MESSAGE")
             )
 
-            raise RuntimeError("Please log in to your account first.")
+            raise RuntimeError(Translator.ERROR_MESSAGES("LOGIN_REQUIRED_MESSAGE"))
     
