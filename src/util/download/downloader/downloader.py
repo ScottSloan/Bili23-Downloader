@@ -444,7 +444,13 @@ class Downloader(QObject):
 
         self.last_sampled_time = 0.0
 
-        self.speed_timer = QTimer()
+        # 必须挂在本对象的 parent 链上：QTimer 的 affinity 在 GUI 线程，若不设 parent，
+        # 它的 C++ 生命周期就完全由 Python wrapper 的引用计数决定。本对象在销毁流程中
+        # 仍可能被工作线程持有（FuncRunnable 在调用 _release_ref 之后、被线程池删除之前
+        # 一直握着一份引用），一旦 GUI 线程抢先跑完 _finalize_delete，最后一份引用就落在
+        # 那个线程，QTimer 会被跨线程析构。设了 parent 之后，它随 deleteLater 一起
+        # 由 Qt 在 GUI 线程删除，wrapper 之后在哪回收都不再影响 C++ 对象。
+        self.speed_timer = QTimer(self)
         self.speed_timer.setInterval(1000)
         self.speed_timer.timeout.connect(self._calculate_speed)
 
@@ -1223,17 +1229,34 @@ class Downloader(QObject):
         # 丢弃尚未开始的分片任务，只需等待已在运行的部分
         pool.clear()
 
+        # 闭包只捕获这个容器，不直接持有线程池，以便在释放引用计数之前主动放手，
+        # 原因见下方 release() 中的说明
+        holder = [pool]
+
         def release():
             try:
                 # 先断开连接，正在读取响应的分片会立即出错退出，无需等到读超时
                 self._close_session()
 
-                pool.waitForDone()
+                holder[0].waitForDone()
 
             except Exception:
                 logger.exception("等待下载线程池退出时发生异常")
 
             finally:
+                # 必须先放弃本线程对线程池的引用，再释放引用计数。
+                #
+                # _release_ref() 会把 _finalize_delete 排进 GUI 线程的事件队列，而本函数
+                # 返回后 Thread.run() 会清掉 _target，连带释放闭包持有的这份引用。两者相差
+                # 只有几微秒：若 GUI 线程抢先执行完 _finalize_delete（把 _releasing_pool 置空），
+                # 最后一份引用就落在本线程手里，QThreadPool 会在这个裸线程里析构 ——
+                # 它的 affinity 在 GUI 线程，跨线程析构会动到 removePostedEvents 和线程数据，
+                # 正是 GUI 线程此刻在遍历的结构，表现为主线程在事件循环中访问违例，
+                # 且 Python 栈上不留任何线索。
+                #
+                # 主窗口最小化时 GUI 线程几乎空闲，排队的槽会被立即处理，反而更容易撞上。
+                holder[0] = None
+
                 # 分片线程已全部退出，不会再有人回调本对象
                 self._release_ref()
 
