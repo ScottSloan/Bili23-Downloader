@@ -3022,22 +3022,22 @@ For example, if you set the video quality priority to 720P &gt; 1080P &gt; 4K, t
 <context>
     <name>ParseBase</name>
     <message>
-        <location filename="../../gui/interface/parse.py" line="209"/>
+        <location filename="../../gui/interface/parse.py" line="212"/>
         <source>{category_name} ({total_count} total)</source>
         <translation>{category_name}（共 {total_count} 項）</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="234"/>
+        <location filename="../../gui/interface/parse.py" line="237"/>
         <source>Auto-parse Pagination</source>
         <translation>自動解析分頁</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="235"/>
+        <location filename="../../gui/interface/parse.py" line="238"/>
         <source>Click here to automatically parse all pages.</source>
         <translation>點擊此處可進行自動解析分頁操作</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="307"/>
+        <location filename="../../gui/interface/parse.py" line="310"/>
         <source>Skipped duplicate download: {task_title}</source>
         <translation>已跳過重複下載的任務：{task_title}</translation>
     </message>
@@ -3088,62 +3088,62 @@ For example, if you set the video quality priority to 720P &gt; 1080P &gt; 4K, t
 <context>
     <name>ParseInterface</name>
     <message>
-        <location filename="../../gui/interface/parse.py" line="349"/>
+        <location filename="../../gui/interface/parse.py" line="352"/>
         <source>Paste and Parse</source>
         <translation>貼上並解析</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="353"/>
+        <location filename="../../gui/interface/parse.py" line="356"/>
         <source>Link / av / BV / ep / ss / md / Favorites / Profile</source>
         <translation>連結 / av / BV / ep / ss / md / 收藏夾 / 個人空間</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="358"/>
+        <location filename="../../gui/interface/parse.py" line="361"/>
         <source>Parse</source>
         <translation>解析</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="362"/>
+        <location filename="../../gui/interface/parse.py" line="365"/>
         <source>Batch Parse</source>
         <translation>批次解析</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="373"/>
+        <location filename="../../gui/interface/parse.py" line="376"/>
         <source>Parsing History</source>
         <translation>解析記錄</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="377"/>
+        <location filename="../../gui/interface/parse.py" line="380"/>
         <source>Batch Select</source>
         <translation>批次選取</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="381"/>
+        <location filename="../../gui/interface/parse.py" line="384"/>
         <source>Download Options</source>
         <translation>下載選項</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="396"/>
+        <location filename="../../gui/interface/parse.py" line="399"/>
         <source>Download Selected Items</source>
         <translation>下載所選項目</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="510"/>
+        <location filename="../../gui/interface/parse.py" line="513"/>
         <source>Parse Failed</source>
         <translation>解析失敗</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="369"/>
+        <location filename="../../gui/interface/parse.py" line="372"/>
         <source>Search</source>
         <translation>搜尋</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="586"/>
+        <location filename="../../gui/interface/parse.py" line="589"/>
         <source>{category_name} ({selected_count} selected, {total_count} total)</source>
         <translation>{category_name}（已選取 {selected_count} 項，共 {total_count} 項）</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="592"/>
+        <location filename="../../gui/interface/parse.py" line="595"/>
         <source>{category_name} ({total_count} total)</source>
         <translation>{category_name}（共 {total_count} 項）</translation>
     </message>
@@ -3732,32 +3732,37 @@ ISP：{isp}</translation>
 <context>
     <name>SearchDialog</name>
     <message>
-        <location filename="../../gui/dialog/misc/search.py" line="23"/>
+        <location filename="../../gui/dialog/misc/search.py" line="25"/>
         <source>Search</source>
         <translation>搜尋</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/search.py" line="26"/>
+        <location filename="../../gui/dialog/misc/search.py" line="28"/>
         <source>Enter keywords to search</source>
         <translation>請輸入關鍵字</translation>
     </message>
     <message>
         <location filename="../../gui/dialog/misc/search.py" line="42"/>
+        <source>Only the current page can be filtered. To search the full list, parse all pages first.</source>
+        <translation>只能篩選目前頁面，如需搜尋全部內容，請先解析全部分頁。</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialog/misc/search.py" line="52"/>
         <source>Search scope</source>
         <translation>搜尋範圍</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/search.py" line="44"/>
+        <location filename="../../gui/dialog/misc/search.py" line="54"/>
         <source>Filter the current page only</source>
         <translation>僅篩選目前頁面</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/search.py" line="45"/>
+        <location filename="../../gui/dialog/misc/search.py" line="55"/>
         <source>Search all pages, results are provided by Bilibili</source>
         <translation>搜尋全部分頁，由 B 站返回結果</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/search.py" line="73"/>
+        <location filename="../../gui/dialog/misc/search.py" line="83"/>
         <source>Please enter search keywords</source>
         <translation>請輸入搜尋關鍵字</translation>
     </message>

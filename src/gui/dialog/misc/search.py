@@ -7,13 +7,15 @@ from gui.component.dialog import DialogBase
 from util.common.enum import ToastNotificationCategory
 
 class SearchDialog(DialogBase):
-    def __init__(self, server_search_available: bool = False, current_keyword: str = "", parent = None):
+    def __init__(self, server_search_available: bool = False, current_keyword: str = "", paginated: bool = False, parent = None):
         super().__init__(parent = parent)
 
         # 当前解析结果是否来自支持服务端搜索的接口（个人空间、收藏夹、历史记录、稍后再看）
         self.server_search_available = server_search_available
         # 当前链接中已生效的搜索关键词，用于回显
         self.current_keyword = current_keyword
+        # 当前解析结果是否存在分页，决定本地筛选是否覆盖得到全部内容
+        self.paginated = paginated
 
         self.server_search = False
 
@@ -34,6 +36,14 @@ class SearchDialog(DialogBase):
         if self.server_search_available:
             self.viewLayout.addSpacing(10)
             self.viewLayout.addLayout(self.get_scope_layout())
+
+        elif self.paginated:
+            # 接口不支持搜索的分页内容（如合集），本地筛选只能覆盖当前页
+            self.tip_lab = BodyLabel(self.tr("Only the current page can be filtered. To search the full list, parse all pages first."), self)
+            self.tip_lab.setWordWrap(True)
+
+            self.viewLayout.addSpacing(10)
+            self.viewLayout.addWidget(self.tip_lab)
 
         self.widget.setMinimumWidth(450)
 

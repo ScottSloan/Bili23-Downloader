@@ -44,15 +44,18 @@ class ParseBase(QFrame):
         self.processing_duplicate_download = False
         self.duplicate_download_toast_shown = False
 
-        # 当前解析结果是否支持服务端搜索，以及链接中已生效的搜索关键词
+        # 当前解析结果是否分页、是否支持服务端搜索，以及链接中已生效的搜索关键词
+        self.has_pagination = False
         self.server_search_available = False
         self.current_search_keyword = ""
 
     def update_search_state(self: "ParseInterface", extra_data: dict = None):
         # 部分内容（个人空间、收藏夹、历史记录、稍后再看）的接口本身支持按关键词搜索，
-        # 此类内容存在分页，只有交由服务端搜索才能覆盖全部内容
+        # 此类内容存在分页，只有交由服务端搜索才能覆盖全部内容。
+        # 合集等同样分页但接口不支持搜索的内容，只能筛选当前页，需要提示用户先解析全部分页
         extra_data = extra_data or {}
 
+        self.has_pagination = bool(extra_data.get("pagination"))
         self.server_search_available = bool(extra_data.get("server_search"))
         self.current_search_keyword = extra_data.get("keyword", "")
 
@@ -553,7 +556,7 @@ class ParseInterface(ParseBase):
     def on_search(self):
         from ..dialog.misc.search import SearchDialog
 
-        dialog = SearchDialog(self.server_search_available, self.current_search_keyword, self.main_window)
+        dialog = SearchDialog(self.server_search_available, self.current_search_keyword, self.has_pagination, self.main_window)
 
         if dialog.exec():
             if dialog.server_search:
