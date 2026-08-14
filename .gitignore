@@ -30,3 +30,8 @@ uv.toml
 
 # claude
 .claude
+
+# mutagen
+mutagen.yml
+mutagen.yml.lock
+sync.ps1

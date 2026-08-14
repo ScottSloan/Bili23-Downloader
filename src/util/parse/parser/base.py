@@ -4,6 +4,8 @@ from ...common.signal_bus import signal_bus
 from ...common._json import json_dumps
 from ...common.config import config
 
+from ..search_url import extract_keyword
+
 from functools import reduce
 from hashlib import md5
 import urllib.parse
@@ -31,6 +33,22 @@ class ParserBase:
         self.raise_for_status = True
 
         self.error_message = ""
+
+    def get_url_keyword(self):
+        """
+        从链接中提取搜索关键词，供支持服务端搜索的解析类型使用。
+
+        关键词跟随链接传递，因此翻页与自动解析分页无需额外处理即可保持搜索状态。
+        """
+        return extract_keyword(self.url)
+
+    def set_search_keyword(self, keyword: str):
+        """
+        把搜索关键词一并放进接口数据，供 episode 解析器在节点标题中标注。
+
+        自动解析分页复用的也是这份数据，因此无需再单独传递。
+        """
+        self.info_data["data"]["_search_keyword"] = keyword
 
     def find_str(self, pattern: str, url: str, check: bool = True):
         result = re.findall(pattern, url)
@@ -96,5 +114,5 @@ class ParserBase:
                 Translator.ERROR_MESSAGES("LOGIN_REQUIRED_MESSAGE")
             )
 
-            raise RuntimeError("Please log in to your account first.")
+            raise RuntimeError(Translator.ERROR_MESSAGES("LOGIN_REQUIRED_MESSAGE"))
     

@@ -79,8 +79,8 @@ class SettingInterface(ScrollArea):
         self.cdn_card = CDNSettingCard(self.main_window, self)
         self.ffmpeg_card = FFmpegSettingCard(self.main_window, self)
         self.proxy_card = ProxySettingCard(self)
-        self.log_card = PushSettingCard(self.tr("View Logs"), FluentIcon.BOOK_SHELF, self.tr("Logs"), self.tr("View application logs"), self)
         self.other_card = OtherAdvancedSettingCard(self.main_window, self)
+        self.log_card = PushSettingCard(self.tr("View Logs"), FluentIcon.BOOK_SHELF, self.tr("Logs"), self.tr("View application logs"), self)
 
         # Software Update
         self.update_group = SettingCardGroup(self.tr("Updates"), self)
@@ -118,8 +118,8 @@ class SettingInterface(ScrollArea):
         self.advanced_group.addSettingCard(self.cdn_card)
         self.advanced_group.addSettingCard(self.ffmpeg_card)
         self.advanced_group.addSettingCard(self.proxy_card)
-        self.advanced_group.addSettingCard(self.log_card)
         self.advanced_group.addSettingCard(self.other_card)
+        self.advanced_group.addSettingCard(self.log_card)
 
         # Software Update
         self.update_group.addSettingCard(self.check_update_card)

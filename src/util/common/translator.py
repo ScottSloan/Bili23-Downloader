@@ -312,6 +312,7 @@ class Translator:
             "PARSING_LINK": translate("TIP_MESSAGES", "Parsing link {link}, total {total_links} links, progress: {progress}%"),
             "MEDIA_INFO_UPDATED": translate("TIP_MESSAGES", "Media info updated"),
             "ADDED_TO_DOWNLOAD_QUEUE": translate("TIP_MESSAGES", "Added to download queue"),
+            "SEARCH_KEYWORD": translate("TIP_MESSAGES", "Search: {keyword}"),
         }
 
     @staticmethod
@@ -321,6 +322,15 @@ class Translator:
             "DANMAKU": translate("ADDITIONAL_FILES_QUALIFIER", "Danmaku"),
             "SUBTITLES": translate("ADDITIONAL_FILES_QUALIFIER", "Subtitles"),
             "METADATA": translate("ADDITIONAL_FILES_QUALIFIER", "Metadata")
+        }
+
+    @staticmethod
+    @get_map_method
+    def SUBTITLE_TRACK_TITLE(key = None):
+        # 嵌入到视频中的字幕轨标题，会显示在播放器的字幕菜单里
+        # 整句作为格式串翻译，方便各语言使用自己的括号样式
+        return {
+            "AI_GENERATED": translate("SUBTITLE_TRACK_TITLE", "{name} (AI Generated)")
         }
 
     @staticmethod

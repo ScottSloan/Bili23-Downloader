@@ -21,6 +21,7 @@ from util.common.data import url_patterns
 from util.common.config import config
 
 from util.parse.worker import ParseWorker, ProgressParseWorker
+from util.parse.search_url import build_search_url
 from util.parse.preview.previewer import Previewer
 from util.parse.preview.info import PreviewerInfo
 
@@ -43,7 +44,24 @@ class ParseBase(QFrame):
         self.processing_duplicate_download = False
         self.duplicate_download_toast_shown = False
 
+        # 当前解析结果是否分页、是否支持服务端搜索，以及链接中已生效的搜索关键词
+        self.has_pagination = False
+        self.server_search_available = False
+        self.current_search_keyword = ""
+
+    def update_search_state(self: "ParseInterface", extra_data: dict = None):
+        # 部分内容（个人空间、收藏夹、历史记录、稍后再看）的接口本身支持按关键词搜索，
+        # 此类内容存在分页，只有交由服务端搜索才能覆盖全部内容。
+        # 合集等同样分页但接口不支持搜索的内容，只能筛选当前页，需要提示用户先解析全部分页
+        extra_data = extra_data or {}
+
+        self.has_pagination = bool(extra_data.get("pagination"))
+        self.server_search_available = bool(extra_data.get("server_search"))
+        self.current_search_keyword = extra_data.get("keyword", "")
+
     def check_extra_data(self: "ParseInterface", extra_data: dict):
+        self.update_search_state(extra_data)
+
         if extra_data:
             # 判断是否显示分页组件
             if extra_data.get("pagination"):
@@ -488,6 +506,7 @@ class ParseInterface(ParseBase):
         self.progress_widget.hide_tip()
 
         # 重置解析结果和搜索状态
+        self.update_search_state()
         self.reset_search()
         self.reset_parse_list()
 
@@ -537,12 +556,22 @@ class ParseInterface(ParseBase):
     def on_search(self):
         from ..dialog.misc.search import SearchDialog
 
-        dialog = SearchDialog(self.main_window)
-        
-        if dialog.exec():
-            matches = self.parse_list.search_keywords(dialog.keywords)
+        dialog = SearchDialog(self.server_search_available, self.current_search_keyword, self.has_pagination, self.main_window)
 
-            self.segmented_widget.show_search(matches)
+        if dialog.exec():
+            if dialog.server_search:
+                self.on_server_search(dialog.keywords)
+
+            else:
+                matches = self.parse_list.search_keywords(dialog.keywords)
+
+                self.segmented_widget.show_search(matches)
+
+    def on_server_search(self, keywords: str):
+        # 关键词写回链接后重新解析，翻页与自动解析分页均沿用该链接，无需另行维护搜索状态
+        self.reset_search()
+
+        self.reparse(build_search_url(self.url_box.text(), keywords))
 
     def on_batch_select(self):
         from ..dialog.misc.batch_select import BatchSelectDialog

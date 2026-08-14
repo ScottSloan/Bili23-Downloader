@@ -60,6 +60,15 @@ class DefaultValue:
         "other": 0
     }
 
+    # width 为 0 表示尚无有效记录，此时窗口按默认尺寸居中显示
+    window_state = {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "maximized": False
+    }
+
     video_quality_priority = [
         127,
         126,
@@ -293,8 +302,8 @@ class DefaultValue:
 class APPConfig(QConfig):
     # APP
     app_name = "Bili23 Downloader"
-    app_version = "2.13.0"
-    app_comparable_version = "2.13.0"
+    app_version = "2.14.0"
+    app_comparable_version = "2.14.0"
     app_config_version = 2130
     config_version = ConfigItem("Application", "config_version", app_config_version)
 
@@ -320,6 +329,8 @@ class APPConfig(QConfig):
     completed_list_sort_ascending = ConfigItem("Behavior", "completed_list_sort_ascending", True, BoolValidator())
 
     silent_start = ConfigItem("Behavior", "silent_start", False, BoolValidator())
+    remember_window_state = ConfigItem("Behavior", "remember_window_state", False, BoolValidator())
+    window_state = ConfigItem("Behavior", "window_state", DefaultValue.window_state)
     stay_on_top = ConfigItem("Behavior", "stay_on_top", False, BoolValidator())
     when_close_window = OptionsConfigItem("Behavior", "when_close_window", WhenClose.ALWAYS_ASK, OptionsValidator(WhenClose), EnumSerializer(WhenClose))
 
@@ -347,11 +358,15 @@ class APPConfig(QConfig):
     download_danmaku = ConfigItem("Additional", "download_danmaku", False, BoolValidator())
     danmaku_type = OptionsConfigItem("Additional", "danmaku_type", DanmakuType.ASS, OptionsValidator(DanmakuType), EnumSerializer(DanmakuType))
     danmaku_style = ConfigItem("Additional", "danmaku_style", DefaultValue.danmaku_style)
+    embed_danmaku = ConfigItem("Additional", "embed_danmaku", False, BoolValidator())
+    delete_danmaku_after_embed = ConfigItem("Additional", "delete_danmaku_after_embed", False, BoolValidator())
 
     download_subtitle = ConfigItem("Additional", "download_subtitle", False, BoolValidator())
     subtitle_type = OptionsConfigItem("Additional", "subtitle_type", SubtitleType.ASS, OptionsValidator(SubtitleType), EnumSerializer(SubtitleType))
     subtitle_language = ConfigItem("Additional", "subtitle_language", DefaultValue.subtitle_language)
     subtitle_style = ConfigItem("Additional", "subtitle_style", DefaultValue.subtitle_style)
+    embed_subtitle = ConfigItem("Additional", "embed_subtitle", False, BoolValidator())
+    delete_subtitle_after_embed = ConfigItem("Additional", "delete_subtitle_after_embed", False, BoolValidator())
 
     download_cover = ConfigItem("Additional", "download_cover", False, BoolValidator())
     cover_type = OptionsConfigItem("Additional", "cover_type", CoverType.JPG, OptionsValidator(CoverType), EnumSerializer(CoverType))

@@ -23,7 +23,7 @@ class HistoryEpisodeParser(EpisodeParserBase):
     def list_parser(self):
         node_data = {
             "number": Translator.EPISODE_TYPE("HISTORY"),
-            "title": ""
+            "title": self.get_node_title()
         }
 
         root_node = TreeItem(node_data)
@@ -107,4 +107,5 @@ class HistoryEpisodeParser(EpisodeParserBase):
         item.set_attribute(Attribute.HISTORY_BIT | Attribute.NEED_PARSE_BIT)
 
     def get_node_title(self):
-        return ""
+        # 无关键词时返回空标题，由 update_episode_list 回退为分类名称
+        return self.with_search_keyword("")

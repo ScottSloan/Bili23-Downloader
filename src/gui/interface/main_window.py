@@ -1,6 +1,6 @@
 from PySide6.QtWidgets import QApplication, QWidget
 from PySide6.QtGui import QIcon, QPixmap
-from PySide6.QtCore import Qt, QTimer
+from PySide6.QtCore import Qt, QTimer, QRect
 
 from qfluentwidgets import (
     MSFluentWindow, SystemThemeListener, NavigationItemPosition, FluentIcon, InfoBadge, qrouter, setTheme
@@ -161,6 +161,107 @@ class MainWindowBase(MSFluentWindow):
             self.initialized = True
             self.show()
 
+    def apply_window_state(self: "MainWindow", show = True):
+        # 开启窗口状态记忆时恢复上次退出时的大小与位置，否则按默认尺寸居中显示
+        state = self.get_saved_window_state()
+
+        if state is None:
+            self.resize(950, 600)
+            self.center_on_screen(show = show)
+
+            return
+
+        # 用 move + resize 而非 setGeometry：保存时取的是 pos()（窗口框架位置），
+        # 两者语义一致，反复保存恢复才不会逐次偏移
+        self.move(state.get("x"), state.get("y"))
+        self.resize(state.get("width"), state.get("height"))
+
+        if show:
+            self.initialized = True
+
+            if state.get("maximized"):
+                self.showMaximized()
+            else:
+                self.show()
+
+    def get_saved_window_state(self: "MainWindow"):
+        # 读取上次保存的窗口状态，未开启记忆或记录不可用时返回 None
+        if not config.get(config.remember_window_state):
+            return None
+
+        state = config.get(config.window_state)
+
+        if not isinstance(state, dict):
+            return None
+
+        try:
+            x, y = int(state.get("x", 0)), int(state.get("y", 0))
+            width, height = int(state.get("width", 0)), int(state.get("height", 0))
+
+        except (TypeError, ValueError):
+            logger.warning("窗口状态记录无效，将使用默认窗口大小和位置")
+
+            return None
+
+        # width 为 0 表示尚无记录；小于最小尺寸的记录同样丢弃
+        if width < self.minimumWidth() or height < self.minimumHeight():
+            return None
+
+        if not self.is_window_position_visible(x, y, width):
+            logger.warning("上次保存的窗口位置不在任何屏幕内，将使用默认窗口位置")
+
+            return None
+
+        return {
+            "x": x,
+            "y": y,
+            "width": width,
+            "height": height,
+            "maximized": bool(state.get("maximized", False))
+        }
+
+    @staticmethod
+    def is_window_position_visible(x: int, y: int, width: int):
+        # 上次使用的显示器可能已被移除，或分辨率、缩放发生了变化，直接沿用保存的位置会让窗口落到屏幕外。
+        # 只要标题栏（顶部 40px）还与某块屏幕的可用区域相交，用户就能把窗口拖回来，即视为可用
+        title_bar_rect = QRect(x, y, width, 40)
+
+        return any(screen.availableGeometry().intersects(title_bar_rect) for screen in QApplication.screens())
+
+    def track_normal_geometry(self: "MainWindow"):
+        # 记录窗口处于普通状态时的几何，供最大化状态下退出时取用。
+        # 不用 Qt 的 normalGeometry()：它返回的是客户区矩形，与 pos() 取到的框架位置差一圈边框，
+        # 「最大化退出 —— 启动恢复」来回几次窗口会逐渐缩小
+        if self.isMaximized() or self.isFullScreen() or self.isMinimized():
+            return
+
+        self.normal_geometry = QRect(self.pos(), self.size())
+
+    def save_window_state(self: "MainWindow"):
+        if not config.get(config.remember_window_state):
+            return
+
+        # 静默启动后从托盘直接退出时窗口从未显示过，此时的几何是构造时的默认值，保存下来会覆盖掉有效记录
+        if not self.initialized:
+            return
+
+        maximized = self.isMaximized() or self.isFullScreen()
+
+        # 最大化时当前几何是铺满屏幕后的值，改用最后一次普通状态下的几何，
+        # 否则下次启动取消最大化会得到一个铺满屏幕的窗口
+        rect = self.normal_geometry if maximized else QRect(self.pos(), self.size())
+
+        if rect is None or rect.width() <= 0 or rect.height() <= 0:
+            return
+
+        config.set(config.window_state, {
+            "x": rect.x(),
+            "y": rect.y(),
+            "width": rect.width(),
+            "height": rect.height(),
+            "maximized": maximized
+        })
+
     def update_download_btn_badge_info(self: "MainWindow", count: int):
         if self.download_info_badge.isHidden():
             self.download_info_badge.show()
@@ -246,8 +347,7 @@ class MainWindowBase(MSFluentWindow):
 
     def _activate_window(self: "MainWindow"):
         if not self.initialized:
-            self.resize(950, 600)
-            self.center_on_screen(show = True)
+            self.apply_window_state(show = True)
 
         if self.isMinimized():
             self.showNormal()
@@ -286,6 +386,9 @@ class MainWindow(MainWindowBase):
         self.flyout_initialized = False
         self.initialized = False
 
+        # 最后一次处于普通状态（非最大化、非最小化）时的窗口几何
+        self.normal_geometry = None
+
         # 由托盘菜单、强制更新等入口置位，令 on_close 跳过"关闭时的行为"设置直接退出
         self.force_close = False
 
@@ -294,7 +397,7 @@ class MainWindow(MainWindowBase):
 
         self.init_UI()
 
-        self.center_on_screen(not config.get(config.silent_start))
+        self.apply_window_state(show = not config.get(config.silent_start))
 
         # 设置鼠标指针为等待状态，直到工具初始化完成
         QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
@@ -461,6 +564,9 @@ class MainWindow(MainWindowBase):
             e.ignore()
             return
 
+        # 必须赶在 hide 之前记录，隐藏后窗口的几何信息在部分平台上不再可靠
+        self.save_window_state()
+
         # 隐藏窗口，给用户反馈正在关闭的状态，避免长时间无响应的感觉
         self.hide()
 
@@ -491,7 +597,14 @@ class MainWindow(MainWindowBase):
         if hasattr(self, "parse_interface"):
             self.parse_interface.adjust_column_width()
 
+        self.track_normal_geometry()
+
         return super().resizeEvent(e)
+
+    def moveEvent(self, e):
+        self.track_normal_geometry()
+
+        return super().moveEvent(e)
 
     def request_exit(self):
         """
@@ -511,10 +624,14 @@ class MainWindow(MainWindowBase):
 
         match config.get(config.when_close_window):
             case WhenClose.MINIMIZE:
+                # 最小化到托盘后可能长时间不再显示，先把当前几何记下来，
+                # 之后从托盘退出时窗口已隐藏，取到的值未必准确
+                self.save_window_state()
+
                 self.hide()
 
                 return False
-            
+
             case WhenClose.ALWAYS_ASK:
                 from ..dialog.main_window.exit import ExitDialog
 
@@ -523,8 +640,10 @@ class MainWindow(MainWindowBase):
                 if dialog.exec():
                     if dialog.exit_checked:
                         return True
-                    
+
                     else:
+                        self.save_window_state()
+
                         self.hide()
 
                         return False

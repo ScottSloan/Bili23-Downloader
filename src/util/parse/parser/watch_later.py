@@ -15,9 +15,13 @@ class WatchLaterParser(ParserBase):
         self.url = url
         self.pn = pn
 
+        self.keyword = self.get_url_keyword()
+
         self.check_login()
 
         self.get_history_info()
+
+        self.set_search_keyword(self.keyword)
 
         if get_info_data:
             return self.info_data
@@ -30,7 +34,8 @@ class WatchLaterParser(ParserBase):
             "pn": self.pn,
             "ps": self.ps,
             "viewed": 0,
-            "key": "",
+            # 稍后再看接口的关键词参数名为 key，与其他接口的 keyword 不同
+            "key": self.keyword,
             "asc": False,
             "need_split": True,
             "web_location": "333.881"
@@ -57,5 +62,7 @@ class WatchLaterParser(ParserBase):
                 "total_pages": math.ceil(count / self.ps),
                 "total_items": count,
                 "current_page": self.pn
-            }
+            },
+            "server_search": True,
+            "keyword": self.keyword
         }

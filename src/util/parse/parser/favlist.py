@@ -25,8 +25,11 @@ class FavlistParser(ParserBase):
         self.pn = pn
 
         self.media_id = self.get_media_id()
+        self.keyword = self.get_url_keyword()
 
         self.get_favlist()
+
+        self.set_search_keyword(self.keyword)
 
         if get_info_data:
             return self.info_data
@@ -39,7 +42,7 @@ class FavlistParser(ParserBase):
             "media_id": self.media_id,
             "pn": self.pn,
             "ps": self.ps,
-            "keyword": "",
+            "keyword": self.keyword,
             "order": "mtime",
             "type": 0,
             "tid": 0,
@@ -68,6 +71,8 @@ class FavlistParser(ParserBase):
                 "total_pages": math.ceil(count / self.ps),
                 "total_items": count,
                 "current_page": self.pn
-            }
+            },
+            "server_search": True,
+            "keyword": self.keyword
         }
     

@@ -1,4 +1,5 @@
 from ...common.signal_bus import signal_bus
+from ...common.translator import Translator
 from ...common.enum import AutoSelectMode
 from ...common.config import config
 from ...format.units import Units
@@ -17,6 +18,21 @@ class EpisodeParserBase:
         self.target_number: int | str = kwargs.get("target_number")
 
         self.episode_count = 0
+
+    def get_search_keyword(self):
+        return self.info_data.get("_search_keyword", "")
+
+    def with_search_keyword(self, title: str):
+        # 搜索状态下在节点标题中标注关键词，使解析列表与解析历史能区分出不同的搜索结果
+        keyword = self.get_search_keyword()
+
+        if not keyword:
+            return title
+
+        label = Translator.TIP_MESSAGES("SEARCH_KEYWORD").format(keyword = keyword)
+
+        # 历史记录、稍后再看本身没有标题，只保留关键词，分类名由列表另行显示
+        return "{title} - {label}".format(title = title, label = label) if title else label
 
     def get_display_number(self, default_number: int):
         if self.target_number is not None and self.target_number != "":

@@ -7,6 +7,10 @@
 <h1 align="center">Bili23-Downloader</h1>
 
 <p align="center">
+    🌐&nbsp;&nbsp;<a href="README.md"><kbd>简体中文</kbd></a>&nbsp;&nbsp;<kbd><b>English</b></kbd>
+</p>
+
+<p align="center">
     <img src="https://img.shields.io/github/v/release/ScottSloan/Bili23-Downloader?style=flat-square" alt="Release"/>
     <img src="https://img.shields.io/github/license/ScottSloan/Bili23-Downloader?style=flat-square" alt="License"/>
     <img src="https://img.shields.io/github/downloads/ScottSloan/Bili23-Downloader/total?style=flat-square" alt="Downloads"/>
@@ -21,10 +25,6 @@
         <a href="https://bili23.scott-sloan.cn/doc/intro.html">Documentation</a>
         <span> • </span>
         <a href="#-download">Download</a>
-        <span> • </span>
-        <a href="README.md">中文</a>
-        <span> • </span>
-        <a href="README_en.md">English</a>
     </h3>
 </div>
 
@@ -39,17 +39,21 @@
 | Feature | Detailed Description |
 | :--- | :--- |
 | 🖥️ **Cross-Platform** | Fully compatible with **Windows** (including Win 7), **Linux**, and **macOS** desktop operating systems. |
-| 🎨 **Modern UI** | Based on Fluent Design, supports seamless light/dark theme switching and native High-DPI scaling. | 
-| 🚀 **Multithreading & Acceleration**| Native integration of multi-threaded parallel downloading, breakpoint resuming, and automatic network error retries for extreme download speed. |
-| 🔗 **Multi-Type Parsing** | Fully supports: `Standard Videos`, `Bangumi`, `Movies`, `Courses`, `User Space`, `Favorites`, `Weekly Must-Watch`, `Subscriptions`, `Watch Later`, `History`, etc., with batch mode support. |
-| ⚙️ **Media Customization**| **Video**: 8K, 4K, HDR, Dolby Vision <br>**Audio**: Hi-Res Lossless, Dolby Atmos <br>**Codec**: AVC, HEVC, AV1 |
-| 💬 **Danmaku & Subtitles** | **Danmaku**: `xml`, `ass`, `json` <br>**Subtitles**: `srt`, `lrc`, `txt`, `ass`, `json` |
-| 🖼️ **Cover Extraction & Embedding**| Losslessly save covers (`jpg`, `png`, `avif`, `webp`), natively supports embedding posters directly into output video files. |
+| 🎨 **Modern UI** | Based on Fluent Design, supports seamless light/dark theme switching and native High-DPI scaling. It also remembers the window position and size, restoring them on the next launch. | 
+| 🚀 **Multithreading & Acceleration**| Native integration of multi-threaded parallel downloading, breakpoint resuming, and automatic network error retries for extreme download speed, plus a global speed limit option. |
+| 🔗 **Multi-Type Parsing** | Fully supports: `Standard Videos`, `Bangumi`, `Movies`, `Courses`, `Interactive Videos`, `Audio (au/am)`, `User Space`, `Favorites`, `Weekly Must-Watch`, `Subscriptions`, `Watch Later`, `History`, etc. |
+| 🔍 **Batch & Search** | **Batch parsing** by pasting multiple standard video links at once; **keyword search** for User Space, Favorites, History, and Watch Later (filter the current page only, or search all pages); download items can also be **auto-selected** by preset conditions once parsing completes. |
+| ⚙️ **Media Customization**| **Video**: 8K, 4K, HDR, Dolby Vision <br>**Audio**: Hi-Res Lossless, Dolby Atmos <br>**Codec**: AVC, HEVC, AV1 <br>Preview exactly what will be downloaded before starting. |
+| 💬 **Danmaku & Subtitles** | **Danmaku**: `xml`, `ass`, `json` <br>**Subtitles**: `srt`, `lrc`, `txt`, `ass`, `json` <br>Customizable danmaku and subtitle styles, selectable subtitle languages, and `ass` danmaku/subtitles can be embedded into `mkv` containers. |
+| 🖼️ **Covers & Chapters**| Losslessly save covers (`jpg`, `png`, `avif`, `webp`), natively supports embedding posters directly into output video files (with an option to delete the original image afterwards), and can write video **chapter information**. |
 | 🧩 **NFO Metadata** | Automatically scrapes and generates local media metadata formats complying with standards of media centers like **Kodi**, **Jellyfin**, and **Emby**. |
-| 📁 **Classification & Naming** | Built-in powerful rule engine, supporting highly customizable local file naming templates and multi-level directory classification modes. |
+| 📁 **Classification & Naming** | Built-in powerful rule engine, with dedicated naming templates and multi-level directory classification modes for standard videos, bangumi, courses, interactive videos, favorites, user space, history, watch later, weekly must-watch, audio, and more. |
 | 📦 **Format Muxing**| Smart audio & video stream mixing/extraction, supports output format to `mp4` or `mkv` to fulfill broad device compatibility requirements. |
-| 🌐 **i18n Support** | Built-in multi-language interface out of the box: Simplified Chinese, Traditional Chinese, and English. |
-| 🔒 **Secure Auth**| Supports quick and secure **QR Code Login** and **SMS Verification Login**. |
+| 🚫 **Duplicate Detection**| Download history is recorded automatically, so downloading the same content again raises a prompt and can be skipped outright, saving bandwidth and disk space. |
+| 🌐 **Network & Proxy** | Three proxy modes are available — **no proxy**, **system proxy**, and **manual configuration** — along with geolocation-based CDN node selection to improve download speed, and customizable User-Agent and Host. |
+| 📋 **Clipboard Monitoring** | Automatically detects Bilibili links copied to the clipboard and jumps straight into parsing and downloading after confirmation. |
+| 🌍 **i18n Support** | Built-in multi-language interface out of the box: Simplified Chinese, Traditional Chinese, and English. |
+| 🔒 **Secure Auth**| Supports quick and secure **QR Code Login**, **SMS Verification Login**, and **Cookie Login**. |
 | 📖 **Open Source & Free**| Released under the **GPL-3.0** License, fully open-source, no in-app purchases, no ads, embracing community contribution. |
 
 ## 📥 Download
