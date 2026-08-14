@@ -312,6 +312,7 @@ class Translator:
             "PARSING_LINK": translate("TIP_MESSAGES", "Parsing link {link}, total {total_links} links, progress: {progress}%"),
             "MEDIA_INFO_UPDATED": translate("TIP_MESSAGES", "Media info updated"),
             "ADDED_TO_DOWNLOAD_QUEUE": translate("TIP_MESSAGES", "Added to download queue"),
+            "SEARCH_KEYWORD": translate("TIP_MESSAGES", "Search: {keyword}"),
         }
 
     @staticmethod

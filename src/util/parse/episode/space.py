@@ -29,6 +29,10 @@ class SpaceEpisodeParser(EpisodeParserBase):
         root_node = TreeItem(node_data)
         root_node.set_attribute(Attribute.TREE_NODE_BIT)
 
+        # 按关键词搜索时可能没有任何结果
+        if not self.info_data["list"].get("vlist"):
+            return root_node
+
         for episode in self.info_data["list"]["vlist"]:
             self.episode_count += 1
 
@@ -85,4 +89,4 @@ class SpaceEpisodeParser(EpisodeParserBase):
         item.set_attribute(Attribute.SPACE_BIT | Attribute.NEED_PARSE_BIT)
 
     def get_node_title(self):
-        return self.info_data["info"]["name"]
+        return self.with_search_keyword(self.info_data["info"]["name"])

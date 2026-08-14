@@ -16,9 +16,13 @@ class HistoryParser(ParserBase):
         self.url = url
         self.pn = pn
 
+        self.keyword = self.get_url_keyword()
+
         self.check_login()
 
         self.get_history_info()
+
+        self.set_search_keyword(self.keyword)
 
         if get_info_data:
             return self.info_data
@@ -29,7 +33,7 @@ class HistoryParser(ParserBase):
     def get_history_info(self):
         params = {
             "pn": self.pn,
-            "keyword": "",
+            "keyword": self.keyword,
             "business": "archive",
             "add_time_start": 0,
             "add_time_end": 0,
@@ -60,5 +64,7 @@ class HistoryParser(ParserBase):
                 "total_pages": math.ceil(count / self.ps),
                 "total_items": count,
                 "current_page": self.pn
-            }
+            },
+            "server_search": True,
+            "keyword": self.keyword
         }

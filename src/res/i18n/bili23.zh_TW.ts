@@ -4,17 +4,17 @@
 <context>
     <name>ADDITIONAL_FILES_QUALIFIER</name>
     <message>
-        <location filename="../../util/common/translator.py" line="321"/>
+        <location filename="../../util/common/translator.py" line="322"/>
         <source>Danmaku</source>
         <translation>彈幕</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="322"/>
+        <location filename="../../util/common/translator.py" line="323"/>
         <source>Subtitles</source>
         <translation>字幕</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="323"/>
+        <location filename="../../util/common/translator.py" line="324"/>
         <source>Metadata</source>
         <translation>元數據</translation>
     </message>
@@ -291,7 +291,7 @@
 <context>
     <name>BATCH_SELECT_GUIDE</name>
     <message>
-        <location filename="../../util/common/translator.py" line="413"/>
+        <location filename="../../util/common/translator.py" line="414"/>
         <source>Press Ctrl + A to select all items, Ctrl + D to deselect all items
 You can also press shift + click to select a range of items.</source>
         <translation>按 Ctrl + A 全選，Ctrl + D 取消全選
@@ -889,7 +889,7 @@ You can also press shift + click to select a range of items.</source>
 <context>
     <name>DUPLICATE_DOWNLOAD_GUIDE</name>
     <message>
-        <location filename="../../util/common/translator.py" line="408"/>
+        <location filename="../../util/common/translator.py" line="409"/>
         <source>This feature detects duplicates based on unique video identifiers (e.g., BV/av IDs), not filenames.
 Please note that download history is the sole basis for recognizing downloaded videos. Clearing it will prevent the system from identifying existing downloads, which may result in duplicate downloads.</source>
         <translation>本功能透過影片唯一識別碼（如 BV號、av號）判斷是否重複，與檔案名稱無關。
@@ -1349,7 +1349,7 @@ If you continue, please disable the &quot;Preallocate file space&quot; option. (
 <context>
     <name>Downloader</name>
     <message>
-        <location filename="../../util/download/downloader/downloader.py" line="928"/>
+        <location filename="../../util/download/downloader/downloader.py" line="934"/>
         <source>Audio</source>
         <translation>音訊</translation>
     </message>
@@ -1473,12 +1473,12 @@ If you continue, please disable the &quot;Preallocate file space&quot; option. (
 <context>
     <name>ERROR_CODE_EXPLANATION</name>
     <message>
-        <location filename="../../util/common/translator.py" line="420"/>
+        <location filename="../../util/common/translator.py" line="421"/>
         <source>Request blocked, client IP has been banned</source>
         <translation>請求遭封鎖，用戶端IP已被禁止</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="421"/>
+        <location filename="../../util/common/translator.py" line="422"/>
         <source>Paid content requires purchasing</source>
         <translation>付費內容需要購買</translation>
     </message>
@@ -2233,7 +2233,7 @@ Message:
 <context>
     <name>MEDIA_INFO_GUIDE</name>
     <message>
-        <location filename="../../util/common/translator.py" line="337"/>
+        <location filename="../../util/common/translator.py" line="338"/>
         <source>The media info shown here defaults to the first video in the parsed results. If multiple videos are available, this information may not exactly match the one you download—use it for reference only.
 
 To view detailed media info for a specific video, right-click its entry in the parse list and select &quot;Update Media Info&quot;.
@@ -2249,7 +2249,7 @@ Note: Videos protected by DRM can only be downloaded up to 1080P; higher qualiti
 <context>
     <name>MEDIA_OPTIONS_GUIDE</name>
     <message>
-        <location filename="../../util/common/translator.py" line="345"/>
+        <location filename="../../util/common/translator.py" line="346"/>
         <source>Media options control how video and audio streams are downloaded and whether they are automatically merged after download.
 Videos on Bilibili typically store and transmit video and audio streams separately. During download, both parts must be fetched individually and can then be merged into a complete video file using FFmpeg. These settings determine which streams to download and whether to keep the original unmerged files.
 
@@ -2720,7 +2720,7 @@ To get a single complete video file, please enable &quot;Merge video and audio&q
 <context>
     <name>NAMING_RULE_GUIDE</name>
     <message>
-        <location filename="../../util/common/translator.py" line="356"/>
+        <location filename="../../util/common/translator.py" line="357"/>
         <source>Customize the file name and folder structure using variables.
 
 Rules:
@@ -2754,7 +2754,7 @@ For advanced usage, see the help documentation.</source>
 <context>
     <name>NUMBERING_GUIDE</name>
     <message>
-        <location filename="../../util/common/translator.py" line="391"/>
+        <location filename="../../util/common/translator.py" line="392"/>
         <source>This setting affects the value of the {number} variable in the naming rule. By default, the program’s preset naming rule does not include {number}. If you want to use numbering, please add {number} to your naming rule first.
 
 The meaning of each &quot;Numbering Mode&quot; option is as follows:
@@ -2952,7 +2952,7 @@ The meaning of each &quot;Numbering Mode&quot; option is as follows:
 <context>
     <name>PREALLOCATE_GUIDE</name>
     <message>
-        <location filename="../../util/common/translator.py" line="402"/>
+        <location filename="../../util/common/translator.py" line="403"/>
         <source>Preallocating file space can improve download performance, especially for large files. When enabled, the program will allocate the required disk space before the download starts, reducing performance overhead caused by repeatedly expanding the file during download and minimizing disk fragmentation.
 
 Note: If the download path is on an external storage device such as a USB drive, and the file system does not support sparse files (e.g., FAT32 or exFAT), please disable this feature—otherwise, the program may become unresponsive.</source>
@@ -2964,7 +2964,7 @@ Note: If the download path is on an external storage device such as a USB drive,
 <context>
     <name>PRIORITY_GUIDE</name>
     <message>
-        <location filename="../../util/common/translator.py" line="385"/>
+        <location filename="../../util/common/translator.py" line="386"/>
         <source>The program will attempt downloads in the order of your configured priority. The actual video quality, audio quality, or codec you can download still depends on what is available in the video itself—priority only determines which option is tried first among multiple available choices.
 
 For example, if you set the video quality priority to 720P &gt; 1080P &gt; 4K, the program will first try to download 720P; if 720P is unavailable, it will then try 1080P and then 4K in sequence.</source>
@@ -3022,22 +3022,22 @@ For example, if you set the video quality priority to 720P &gt; 1080P &gt; 4K, t
 <context>
     <name>ParseBase</name>
     <message>
-        <location filename="../../gui/interface/parse.py" line="194"/>
+        <location filename="../../gui/interface/parse.py" line="209"/>
         <source>{category_name} ({total_count} total)</source>
         <translation>{category_name}（共 {total_count} 項）</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="219"/>
+        <location filename="../../gui/interface/parse.py" line="234"/>
         <source>Auto-parse Pagination</source>
         <translation>自動解析分頁</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="220"/>
+        <location filename="../../gui/interface/parse.py" line="235"/>
         <source>Click here to automatically parse all pages.</source>
         <translation>點擊此處可進行自動解析分頁操作</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="292"/>
+        <location filename="../../gui/interface/parse.py" line="307"/>
         <source>Skipped duplicate download: {task_title}</source>
         <translation>已跳過重複下載的任務：{task_title}</translation>
     </message>
@@ -3088,62 +3088,62 @@ For example, if you set the video quality priority to 720P &gt; 1080P &gt; 4K, t
 <context>
     <name>ParseInterface</name>
     <message>
-        <location filename="../../gui/interface/parse.py" line="334"/>
+        <location filename="../../gui/interface/parse.py" line="349"/>
         <source>Paste and Parse</source>
         <translation>貼上並解析</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="338"/>
+        <location filename="../../gui/interface/parse.py" line="353"/>
         <source>Link / av / BV / ep / ss / md / Favorites / Profile</source>
         <translation>連結 / av / BV / ep / ss / md / 收藏夾 / 個人空間</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="343"/>
+        <location filename="../../gui/interface/parse.py" line="358"/>
         <source>Parse</source>
         <translation>解析</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="347"/>
+        <location filename="../../gui/interface/parse.py" line="362"/>
         <source>Batch Parse</source>
         <translation>批次解析</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="358"/>
+        <location filename="../../gui/interface/parse.py" line="373"/>
         <source>Parsing History</source>
         <translation>解析記錄</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="362"/>
+        <location filename="../../gui/interface/parse.py" line="377"/>
         <source>Batch Select</source>
         <translation>批次選取</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="366"/>
+        <location filename="../../gui/interface/parse.py" line="381"/>
         <source>Download Options</source>
         <translation>下載選項</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="381"/>
+        <location filename="../../gui/interface/parse.py" line="396"/>
         <source>Download Selected Items</source>
         <translation>下載所選項目</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="494"/>
+        <location filename="../../gui/interface/parse.py" line="510"/>
         <source>Parse Failed</source>
         <translation>解析失敗</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="354"/>
+        <location filename="../../gui/interface/parse.py" line="369"/>
         <source>Search</source>
         <translation>搜尋</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="560"/>
+        <location filename="../../gui/interface/parse.py" line="586"/>
         <source>{category_name} ({selected_count} selected, {total_count} total)</source>
         <translation>{category_name}（已選取 {selected_count} 項，共 {total_count} 項）</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="566"/>
+        <location filename="../../gui/interface/parse.py" line="592"/>
         <source>{category_name} ({total_count} total)</source>
         <translation>{category_name}（共 {total_count} 項）</translation>
     </message>
@@ -3724,7 +3724,7 @@ ISP：{isp}</translation>
 <context>
     <name>SUBTITLE_TRACK_TITLE</name>
     <message>
-        <location filename="../../util/common/translator.py" line="332"/>
+        <location filename="../../util/common/translator.py" line="333"/>
         <source>{name} (AI Generated)</source>
         <translation>{name}（AI 生成）</translation>
     </message>
@@ -3732,17 +3732,32 @@ ISP：{isp}</translation>
 <context>
     <name>SearchDialog</name>
     <message>
-        <location filename="../../gui/dialog/misc/search.py" line="14"/>
+        <location filename="../../gui/dialog/misc/search.py" line="23"/>
         <source>Search</source>
         <translation>搜尋</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/search.py" line="17"/>
+        <location filename="../../gui/dialog/misc/search.py" line="26"/>
         <source>Enter keywords to search</source>
         <translation>請輸入關鍵字</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/search.py" line="31"/>
+        <location filename="../../gui/dialog/misc/search.py" line="42"/>
+        <source>Search scope</source>
+        <translation>搜尋範圍</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialog/misc/search.py" line="44"/>
+        <source>Filter the current page only</source>
+        <translation>僅篩選目前頁面</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialog/misc/search.py" line="45"/>
+        <source>Search all pages, results are provided by Bilibili</source>
+        <translation>搜尋全部分頁，由 B 站返回結果</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialog/misc/search.py" line="73"/>
         <source>Please enter search keywords</source>
         <translation>請輸入搜尋關鍵字</translation>
     </message>
@@ -4085,7 +4100,7 @@ ISP：{isp}</translation>
 <context>
     <name>TERMS_OF_USE</name>
     <message>
-        <location filename="../../util/common/translator.py" line="373"/>
+        <location filename="../../util/common/translator.py" line="374"/>
         <source>&lt;html&gt;This software is intended solely for personal learning and research purposes. Any content downloaded through this project &lt;b&gt;is strictly limited to personal, non-commercial use and must not be used for any commercial purpose, public distribution, sharing, resale, or unlawful profit.&lt;/b&gt;
 &lt;br&gt;&lt;br&gt;
 This software operates exclusively based on the user&apos;s own legitimate account access rights and &lt;b&gt;does not bypass any paywalls, membership restrictions, or technical protection measures.&lt;/b&gt; You may only download content that you are authorized to access through your normal login on the target platform. If your account does not have permission to access certain content, this software must not be used to obtain it.
@@ -4207,6 +4222,11 @@ Under no circumstances shall the developer be liable for any direct, indirect, i
         <location filename="../../util/common/translator.py" line="314"/>
         <source>Added to download queue</source>
         <translation>已加入下載佇列</translation>
+    </message>
+    <message>
+        <location filename="../../util/common/translator.py" line="315"/>
+        <source>Search: {keyword}</source>
+        <translation>搜尋：{keyword}</translation>
     </message>
     <message>
         <location filename="../../util/common/translator.py" line="297"/>

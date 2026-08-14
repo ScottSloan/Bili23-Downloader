@@ -100,4 +100,4 @@ class FavlistEpisodeParser(EpisodeParserBase):
         item.set_attribute(Attribute.FAVLIST_BIT | Attribute.NEED_PARSE_BIT)
 
     def get_node_title(self):
-        return self.info_data["info"]["title"]
+        return self.with_search_keyword(self.info_data["info"]["title"])
