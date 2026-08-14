@@ -170,9 +170,21 @@ def handle_uncaught_thread_exception(args):
 sys.excepthook = handle_uncaught_exception
 threading.excepthook = handle_uncaught_thread_exception
 
+# 进程退出阶段 Qt 与解释器都在拆各自的状态，此时冒出来的线程警告没有诊断价值 ——
+# 进程马上就结束了，不会再演变成访问违例。置位后不再记录这类警告，
+# 以免每次正常退出都往崩溃日志里灌一份无用的栈，并盖过"进程正常退出"这行标记
+_shutting_down = False
+
+def _on_normal_exit():
+    global _shutting_down
+
+    _shutting_down = True
+
+    write_crash_log("进程正常退出")
+
 # 正常退出会留下这条记录。崩溃日志末尾若没有它，说明进程是被强行终止的，
 # 据此可以区分"硬崩溃"与"意外走到了正常退出流程"
-atexit.register(lambda: write_crash_log("进程正常退出"))
+atexit.register(_on_normal_exit)
 
 def shutdown_process(exit_code: int = 0):
     """
@@ -189,6 +201,11 @@ def shutdown_process(exit_code: int = 0):
     唯一可靠的办法是不给解释器清理的机会 —— 落盘工作在调用本函数之前均已完成，
     剩下的线程交给操作系统随进程一起回收。
     """
+    global _shutting_down
+
+    # 本函数走 os._exit()，atexit 不会执行，因此在这里置位
+    _shutting_down = True
+
     write_crash_log("进程正常退出")
 
     try:
@@ -209,6 +226,26 @@ def shutdown_process(exit_code: int = 0):
 # --------- Disable PySide6 Warnings ---------
 from PySide6.QtCore import QtMsgType, qInstallMessageHandler
 
+# 这类警告意味着 Qt 的内部状态已经被破坏，紧随其后往往就是访问违例。
+#
+# 崩溃真正发生时，主线程通常已经停在 app.exec() 里，faulthandler 打出来的栈上
+# 没有任何业务代码的线索（只能看到 _main 一帧）。而警告发出的这一刻，做出跨线程
+# 操作的那个线程还在栈上，此时记录全部线程的 Python 栈，比事后从崩溃现场倒推
+# 有效得多 —— 它能直接指出是谁在什么位置动了不属于自己线程的对象。
+THREAD_SAFETY_WARNINGS = (
+    "Cannot create children for a parent that is in a different thread",
+    "Cannot send events to objects owned by a different thread",
+    "Timers cannot be stopped from another thread",
+    "Destroyed while thread is still running",
+    "was not called from the main thread",
+    "QThreadStorage",
+)
+
+# 同一类警告可能在短时间内反复出现，每次都 dump 会把 crash.log 撑爆，
+# 而重复的栈并不会带来新信息，因此每个标记只记录首次。
+# 多线程并发命中时最多多写一份，不影响判断，无需加锁
+_dumped_thread_warnings = set()
+
 def qt_message_handler(mode, context, message):
     # 忽略特定的 Qt 警告
     if "QFont::setPointSize" in message or "OpenType support missing" in message or "CreateFontFaceFromHDC" in message:
@@ -219,6 +256,15 @@ def qt_message_handler(mode, context, message):
 
     if mode == QtMsgType.QtWarningMsg:
         logger.warning(message)
+
+        if not _shutting_down:
+            for marker in THREAD_SAFETY_WARNINGS:
+                if marker in message and marker not in _dumped_thread_warnings:
+                    _dumped_thread_warnings.add(marker)
+
+                    write_crash_log(f"Qt 线程安全警告：{message}", dump_traceback = True)
+
+                    break
 
     elif mode == QtMsgType.QtCriticalMsg:
         logger.error(message)
