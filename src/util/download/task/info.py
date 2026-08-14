@@ -36,6 +36,11 @@ class FileInfo(InfoBase):
 
     relative_files: list[str] = field(default_factory = list)
 
+    # 待嵌入的字幕轨（含弹幕轨），由附加内容解析阶段登记，Merger 据此拼接 FFmpeg 命令
+    # 每项为 {"file": 相对文件名, "title": 轨道标题, "language": 语言码, "kind": "danmaku" | "subtitle"}
+    # 文件名中带有随界面语言变化的限定词和语言后缀，Merger 无法自行反推，因此必须在此登记
+    subtitle_track_list: list[dict] = field(default_factory = list)
+
 @dataclass
 class EpisodeInfo(InfoBase):
     attribute: int = 0

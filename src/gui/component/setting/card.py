@@ -17,6 +17,7 @@ from util.thread.pool import GlobalThreadPoolTask
 from util.common.icon import ExtendedFluentIcon
 from util.common.io.directory import Directory
 from util.common.translator import Translator
+from util.common.enum import VideoContainer
 
 from pathlib import Path
 import logging
@@ -242,12 +243,38 @@ class DanmakuSettingCard(ExpandGroupSettingCard):
 
         self.custom_style_btn = PushButton(self.tr("Customize…"), self)
 
+        self.embed_switch = SettingSwitchButton(config.embed_danmaku, parent = self)
+        self.delete_after_embed_switch = SettingSwitchButton(config.delete_danmaku_after_embed, parent = self)
+
         self.viewLayout.setContentsMargins(0, 0, 0, 0)
         self.viewLayout.setSpacing(0)
 
         self.addGroup("", self.tr("Download Danmaku"), "", self.download_switch)
         self.addGroup("", self.tr("Danmaku Format"), "", self.type_choice)
         self.addGroup("", self.tr("Danmaku Style"), self.tr("Only effective for ASS format danmaku"), self.custom_style_btn)
+        self.embed_group = self.addGroup("", self.tr("Embed Danmaku"), self.tr("Embed danmaku into the video file as a subtitle track, only available when the format is ASS and the output container is MKV"), self.embed_switch)
+        self.delete_after_embed_group = self.addGroup("", self.tr("Delete Danmaku After Embedding"), self.tr("Delete the original danmaku file after embedding it into the video file"), self.delete_after_embed_switch)
+
+        self.update_embed_option_states()
+
+        self.download_switch.checkedChanged.connect(self.update_embed_option_states)
+        self.type_choice.currentIndexChanged.connect(self.update_embed_option_states)
+        self.embed_switch.checkedChanged.connect(self.update_embed_option_states)
+
+        # 输出容器格式在另一张卡片上，借 ConfigItem 自带的信号做跨卡片联动
+        config.video_container.valueChanged.connect(self.update_embed_option_states)
+
+    def update_embed_option_states(self, *_):
+        # 切换到 MP4 或非 ASS 格式时只置灰、不重置开关：容器格式是会被临时来回切换的选项，
+        # 重置会让用户切回 MKV 后还得重新开一遍。运行时另有静默跳过兜底
+        can_embed = (
+            self.download_switch.isChecked()
+            and self.type_choice.currentText() == "ass"
+            and config.get(config.video_container) == VideoContainer.MKV
+        )
+
+        self.embed_group.setEnabled(can_embed)
+        self.delete_after_embed_group.setEnabled(can_embed and self.embed_switch.isChecked())
 
 class SubtitleSettingCard(ExpandGroupSettingCard):
     def __init__(self, parent = None):
@@ -261,6 +288,9 @@ class SubtitleSettingCard(ExpandGroupSettingCard):
         self.language_btn = PushButton(self.tr("Customize…"), self)
         self.custom_style_btn = PushButton(self.tr("Customize…"), self)
 
+        self.embed_switch = SettingSwitchButton(config.embed_subtitle, parent = self)
+        self.delete_after_embed_switch = SettingSwitchButton(config.delete_subtitle_after_embed, parent = self)
+
         self.viewLayout.setContentsMargins(0, 0, 0, 0)
         self.viewLayout.setSpacing(0)
 
@@ -268,6 +298,27 @@ class SubtitleSettingCard(ExpandGroupSettingCard):
         self.addGroup("", self.tr("Subtitle Format"), "", self.type_choice)
         self.addGroup("", self.tr("Subtitle Language"), "", self.language_btn)
         self.addGroup("", self.tr("Subtitle Style"), self.tr("Only effective for ASS format subtitles"), self.custom_style_btn)
+        self.embed_group = self.addGroup("", self.tr("Embed Subtitles"), self.tr("Embed subtitles into the video file as subtitle tracks, only available when the format is ASS and the output container is MKV"), self.embed_switch)
+        self.delete_after_embed_group = self.addGroup("", self.tr("Delete Subtitles After Embedding"), self.tr("Delete the original subtitle files after embedding them into the video file"), self.delete_after_embed_switch)
+
+        self.update_embed_option_states()
+
+        self.download_switch.checkedChanged.connect(self.update_embed_option_states)
+        self.type_choice.currentIndexChanged.connect(self.update_embed_option_states)
+        self.embed_switch.checkedChanged.connect(self.update_embed_option_states)
+
+        # 输出容器格式在另一张卡片上，借 ConfigItem 自带的信号做跨卡片联动
+        config.video_container.valueChanged.connect(self.update_embed_option_states)
+
+    def update_embed_option_states(self, *_):
+        can_embed = (
+            self.download_switch.isChecked()
+            and self.type_choice.currentText() == "ass"
+            and config.get(config.video_container) == VideoContainer.MKV
+        )
+
+        self.embed_group.setEnabled(can_embed)
+        self.delete_after_embed_group.setEnabled(can_embed and self.embed_switch.isChecked())
 
 class CoverSettingCard(ExpandGroupSettingCard):
     def __init__(self, parent = None):

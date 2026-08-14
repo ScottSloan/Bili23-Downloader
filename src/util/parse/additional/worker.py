@@ -45,6 +45,10 @@ class AdditionalParseWorker(QObject):
         # 读取 Download Type 标志位，决定下载哪种类型的附加文件
         attr = self.task_info.Download.type
 
+        # 待嵌入的字幕轨在下方逐条追加。任务暂停恢复或失败重试时会重新走一遍附加内容解析，
+        # 不先清空就会把同一个 ASS 文件重复登记，最终被嵌入多条相同的轨道
+        self.task_info.File.subtitle_track_list.clear()
+
         need_subtitle = attr & DownloadType.SUBTITLE != 0
         need_chapter = ChapterParser.is_available(self.task_info)
 

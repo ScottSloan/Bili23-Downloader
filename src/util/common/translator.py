@@ -324,6 +324,15 @@ class Translator:
         }
 
     @staticmethod
+    @get_map_method
+    def SUBTITLE_TRACK_TITLE(key = None):
+        # 嵌入到视频中的字幕轨标题，会显示在播放器的字幕菜单里
+        # 整句作为格式串翻译，方便各语言使用自己的括号样式
+        return {
+            "AI_GENERATED": translate("SUBTITLE_TRACK_TITLE", "{name} (AI Generated)")
+        }
+
+    @staticmethod
     def MEDIA_INFO_GUIDE():
         return translate("MEDIA_INFO_GUIDE", """The media info shown here defaults to the first video in the parsed results. If multiple videos are available, this information may not exactly match the one you download—use it for reference only.
 

@@ -32,6 +32,7 @@ class Merger(QObject):
         self._output_audio_file = None
         self._embedded_cover_file_name = None
         self._delete_cover_after_embedding = False
+        self._embedded_subtitle_list = []
 
     def stop(self, timeout: int = 3000):
         """
@@ -94,7 +95,8 @@ class Merger(QObject):
                 audio_path = self.temp_audio_file_name,
                 output_path = self.temp_output_file_name,
                 cover_path = self.check_attach_cover(),
-                chapter_path = self.check_attach_chapter()
+                chapter_path = self.check_attach_chapter(),
+                subtitle_list = self.check_embed_subtitles()
             )
 
             self._run_merge_command(merge_cmd, cwd)
@@ -119,7 +121,8 @@ class Merger(QObject):
             lists_path = lists_path,
             output_path = self.temp_output_file_name,
             cover_path = self.check_attach_cover(),
-            chapter_path = self.check_attach_chapter()
+            chapter_path = self.check_attach_chapter(),
+            subtitle_list = self.check_embed_subtitles()
         )
 
         self._run_merge_command(merge_cmd, cwd)
@@ -182,6 +185,7 @@ class Merger(QObject):
                 safe_remove(cwd, *self.task_info.File.relative_files)
 
             self.delete_embedded_cover()
+            self.delete_embedded_subtitles()
             self.delete_embedded_chapter()
             self.add_file(final_output_file_name, *kept_original_files, clear = True)
             self.mark_as_completed()
@@ -346,6 +350,51 @@ class Merger(QObject):
     def delete_embedded_cover(self):
         if self._embedded_cover_file_name and self._delete_cover_after_embedding:
             safe_remove(self.get_cwd(), self._embedded_cover_file_name)
+
+    def check_embed_subtitles(self):
+        # 待嵌入的弹幕/字幕轨由附加内容解析阶段登记，只有 ASS 格式且输出 MKV 时才会有登记结果
+        if self.task_info.File.merge_file_ext != "mkv":
+            return None
+
+        cwd = self.get_cwd()
+        subtitle_list = []
+
+        for entry in self.task_info.File.subtitle_track_list:
+            if not Path(cwd, entry["file"]).exists():
+                logger.warning(f"字幕文件 {entry['file']} 不存在，无法嵌入")
+                continue
+
+            subtitle_list.append(dict(entry))
+
+        if not subtitle_list:
+            return None
+
+        # 字幕轨排在弹幕轨之前，并把首条字幕标记为默认轨：打开视频即显示字幕，弹幕需手动开启
+        # sort 是稳定排序，同类轨道之间保持解析时的先后顺序
+        subtitle_list.sort(key = lambda entry: 0 if entry["kind"] == "subtitle" else 1)
+
+        if subtitle_list[0]["kind"] == "subtitle":
+            subtitle_list[0]["default"] = True
+
+        self._embedded_subtitle_list = subtitle_list
+
+        return subtitle_list
+
+    def delete_embedded_subtitles(self):
+        # 与封面一致，合并成功后才删除源文件；合并失败时保留，重试可直接复用
+        if not self._embedded_subtitle_list:
+            return
+
+        delete_danmaku = config.get(config.delete_danmaku_after_embed)
+        delete_subtitle = config.get(config.delete_subtitle_after_embed)
+
+        file_list = [
+            entry["file"] for entry in self._embedded_subtitle_list
+            if (delete_danmaku if entry["kind"] == "danmaku" else delete_subtitle)
+        ]
+
+        if file_list:
+            safe_remove(self.get_cwd(), *file_list)
 
     def check_attach_chapter(self):
         # 章节文件由 ChapterParser 在附加内容解析阶段生成，视频没有章节时不会存在

@@ -358,11 +358,15 @@ class APPConfig(QConfig):
     download_danmaku = ConfigItem("Additional", "download_danmaku", False, BoolValidator())
     danmaku_type = OptionsConfigItem("Additional", "danmaku_type", DanmakuType.ASS, OptionsValidator(DanmakuType), EnumSerializer(DanmakuType))
     danmaku_style = ConfigItem("Additional", "danmaku_style", DefaultValue.danmaku_style)
+    embed_danmaku = ConfigItem("Additional", "embed_danmaku", False, BoolValidator())
+    delete_danmaku_after_embed = ConfigItem("Additional", "delete_danmaku_after_embed", False, BoolValidator())
 
     download_subtitle = ConfigItem("Additional", "download_subtitle", False, BoolValidator())
     subtitle_type = OptionsConfigItem("Additional", "subtitle_type", SubtitleType.ASS, OptionsValidator(SubtitleType), EnumSerializer(SubtitleType))
     subtitle_language = ConfigItem("Additional", "subtitle_language", DefaultValue.subtitle_language)
     subtitle_style = ConfigItem("Additional", "subtitle_style", DefaultValue.subtitle_style)
+    embed_subtitle = ConfigItem("Additional", "embed_subtitle", False, BoolValidator())
+    delete_subtitle_after_embed = ConfigItem("Additional", "delete_subtitle_after_embed", False, BoolValidator())
 
     download_cover = ConfigItem("Additional", "download_cover", False, BoolValidator())
     cover_type = OptionsConfigItem("Additional", "cover_type", CoverType.JPG, OptionsValidator(CoverType), EnumSerializer(CoverType))

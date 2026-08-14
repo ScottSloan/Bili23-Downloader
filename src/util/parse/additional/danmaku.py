@@ -21,7 +21,9 @@ class DanmakuParser(AdditionalParserBase):
     def parse(self):
         dict_list = self._get_all_protobuf_parts()
 
-        match config.get(config.danmaku_type):
+        danmaku_type = config.get(config.danmaku_type)
+
+        match danmaku_type:
             case DanmakuType.XML:
                 contents, suffix = self._to_xml(dict_list)
 
@@ -31,7 +33,23 @@ class DanmakuParser(AdditionalParserBase):
             case DanmakuType.JSON:
                 contents, suffix = self._to_json(dict_list)
 
-        self._write(contents, suffix = suffix, name = self.task_info.File.name, qualifier = [Translator.ADDITIONAL_FILES_QUALIFIER("DANMAKU")])
+        file_name = self._write(contents, suffix = suffix, name = self.task_info.File.name, qualifier = [Translator.ADDITIONAL_FILES_QUALIFIER("DANMAKU")])
+
+        self._check_embed_danmaku(danmaku_type, file_name)
+
+    def _check_embed_danmaku(self, danmaku_type: DanmakuType, file_name: str):
+        # 仅 ASS 格式能作为字幕轨嵌入，其余格式即便开着开关也静默跳过
+        if danmaku_type != DanmakuType.ASS:
+            return
+
+        if not config.get(config.embed_danmaku) or not self.is_embed_available(self.task_info):
+            return
+
+        self._add_subtitle_track(
+            file_name,
+            title = Translator.ADDITIONAL_FILES_QUALIFIER("DANMAKU"),
+            kind = "danmaku"
+        )
 
     def _to_xml(self, dict_list: List[dict]) -> tuple:
         xml = DanmakuXML(dict_list, self.task_info.Episode.cid).generate()
