@@ -498,6 +498,24 @@ def _main():
         os.environ["QT_ENABLE_HIGHDPI_SCALING"] = "0"
         os.environ["QT_SCALE_FACTOR"] = scaling_value
 
+    if sys.platform == "linux":
+        # Qt 只要检测到 WAYLAND_DISPLAY 就优先选用 wayland 平台插件。而 Wayland 下窗口装饰
+        # 归客户端负责，qframelesswindow 的 LinuxWindowEffect.addShadowEffect() 在 Linux 上
+        # 又是空实现，无边框窗口不会有任何阴影；走 xcb（Wayland 会话下经由 Xwayland）则由
+        # mutter / kwin 绘制服务端阴影。
+        #
+        # 这里用分号分隔的候选列表而不是写死 xcb：xcb 插件自 Qt 6.5 起依赖 libxcb-cursor0，
+        # 便携版没有包管理器的依赖声明兜底，缺库时 xcb 会初始化失败。列成 "xcb;wayland" 后
+        # Qt 会自动退到 wayland，代价只是没有阴影，而不是整个程序起不来。
+        if "QT_QPA_PLATFORM" not in os.environ:
+            os.environ["QT_QPA_PLATFORM"] = "xcb;wayland"
+
+        # WM_CLASS 的实例名部分，Qt 优先取 RESOURCE_NAME，其次是 argv[0] 的文件名。打包后
+        # argv[0] 是 _pystand_static.int，桌面环境据此无法把窗口关联到 bili23-downloader.desktop，
+        # 任务栏中的图标和名称都会回退成默认值。
+        if "RESOURCE_NAME" not in os.environ:
+            os.environ["RESOURCE_NAME"] = "bili23-downloader"
+
     # Qt 需要在 QApplication 构造时读取平台参数。仅对特殊的 Windows 7
     # 兼容版自动添加参数，同时尊重用户显式传入的 -platform 选项。
     app_args = list(sys.argv)
