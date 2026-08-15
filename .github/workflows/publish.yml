@@ -12,6 +12,18 @@ on:
         description: "Release tag or version name, for example v2.00.3 or v2.00.3-rc1"
         required: true
         type: string
+      build_windows:
+        description: "Build Windows packages"
+        type: boolean
+        default: true
+      build_linux:
+        description: "Build Linux packages"
+        type: boolean
+        default: true
+      build_macos:
+        description: "Build macOS packages"
+        type: boolean
+        default: true
 
 jobs:
   get-version:
@@ -21,6 +33,9 @@ jobs:
       VERSION_NAME: ${{ steps.set-version.outputs.VERSION_NAME }}
       IS_PRERELEASE: ${{ steps.set-version.outputs.IS_PRERELEASE }}
       RPM_RELEASE: ${{ steps.set-version.outputs.RPM_RELEASE }}
+      BUILD_WINDOWS: ${{ steps.set-targets.outputs.BUILD_WINDOWS }}
+      BUILD_LINUX: ${{ steps.set-targets.outputs.BUILD_LINUX }}
+      BUILD_MACOS: ${{ steps.set-targets.outputs.BUILD_MACOS }}
     steps:
       - name: Set version
         id: set-version
@@ -50,7 +65,25 @@ jobs:
           echo "VERSION=2.15.0" >> $GITHUB_OUTPUT
           echo "VERSION_NAME=2.15.0" >> $GITHUB_OUTPUT
 
+      - name: Set build targets
+        id: set-targets
+        env:
+          DEFAULT_BUILD_WINDOWS: "false"
+          DEFAULT_BUILD_LINUX: "true"
+          DEFAULT_BUILD_MACOS: "false"
+        run: |
+          if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
+            echo "BUILD_WINDOWS=${{ inputs.build_windows }}" >> $GITHUB_OUTPUT
+            echo "BUILD_LINUX=${{ inputs.build_linux }}" >> $GITHUB_OUTPUT
+            echo "BUILD_MACOS=${{ inputs.build_macos }}" >> $GITHUB_OUTPUT
+          else
+            echo "BUILD_WINDOWS=$DEFAULT_BUILD_WINDOWS" >> $GITHUB_OUTPUT
+            echo "BUILD_LINUX=$DEFAULT_BUILD_LINUX" >> $GITHUB_OUTPUT
+            echo "BUILD_MACOS=$DEFAULT_BUILD_MACOS" >> $GITHUB_OUTPUT
+          fi
+
   windows-build:
+    if: needs.get-version.outputs.BUILD_WINDOWS == 'true'
     needs: get-version
     env:
       VERSION: ${{ needs.get-version.outputs.VERSION }}
@@ -202,6 +235,7 @@ jobs:
             Bili23-Downloader_${{ env.VERSION_NAME }}_windows_x64_for_win7.exe
   
   linux-build:
+    if: needs.get-version.outputs.BUILD_LINUX == 'true'
     needs: get-version
     env:
       VERSION: ${{ needs.get-version.outputs.VERSION }}
@@ -450,6 +484,7 @@ jobs:
             Bili23-Downloader_${{ env.VERSION_NAME }}_linux_${{ matrix.rpm_arch }}.rpm
 
   macos-build:
+    if: needs.get-version.outputs.BUILD_MACOS == 'true'
     needs: get-version
     env:
       VERSION: ${{ needs.get-version.outputs.VERSION }}
@@ -576,10 +611,10 @@ jobs:
   
   publish:
     if: github.event_name != 'workflow_dispatch'
-    needs: [windows-build, linux-build, macos-build]
+    needs: [get-version, windows-build, linux-build, macos-build]
     env:
-      VERSION_NAME: ${{ needs.windows-build.outputs.VERSION_NAME }}
-      IS_PRERELEASE: ${{ needs.windows-build.outputs.IS_PRERELEASE }}
+      VERSION_NAME: ${{ needs.get-version.outputs.VERSION_NAME }}
+      IS_PRERELEASE: ${{ needs.get-version.outputs.IS_PRERELEASE }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
