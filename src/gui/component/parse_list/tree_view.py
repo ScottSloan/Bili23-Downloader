@@ -10,6 +10,7 @@ from gui.component.widget.smooth_scroll import applySmoothScroll
 
 from util.common.icon import ExtendedFluentIcon
 from util.common.signal_bus import signal_bus
+from util.common.enum import AutoSelectMode
 from util.common.config import config
 
 from util.parse.episode.tree import TreeItem, Attribute
@@ -34,6 +35,10 @@ class ParseTreeView(TreeView):
         self._expand_queue = deque()
         self._expand_callback = None
         self._expand_batch_size = 100
+
+        # 链接明确指向的那一项，由 update_tree 依据解析结果给出的定位信息确定，
+        # 用于自动勾选与获取媒体信息，链接未指向具体视频时为 None
+        self._current_episode_item: TreeItem = None
 
         # Shift 范围勾选：锚点为上一次手动点击复选框的项，按对象保存以免排序后失效
         self._check_anchor: TreeItem = None
@@ -393,13 +398,21 @@ class ParseTreeView(TreeView):
         self._model.root_node = root_node
         self._model.endResetModel()
 
+        # 手动勾选模式下不勾选、不滚动，但仍要记录链接指向的项，媒体信息预览需要用到
+        manual = config.get(config.auto_select_mode) == AutoSelectMode.MANUAL
+
         target_item = self.locate_to_item_by_episode_data(
             current_episode_data,
-            scroll = False
+            scroll = False,
+            check = not manual
         )
 
+        self._current_episode_item = target_item
+
+        scroll_target = None if manual else target_item
+
         self._schedule_expand_all(
-            lambda: self.scroll_to_item(target_item) if target_item else None
+            lambda: self.scroll_to_item(scroll_target) if scroll_target else None
         )
 
     def append_nodes(self, nodes: list):
@@ -504,6 +517,14 @@ class ParseTreeView(TreeView):
         total_items = self.get_all_items()
 
         return total_items[0].to_dict() if total_items else None
+
+    def get_preview_item_info(self):
+        # 链接明确指向某个视频时，用该视频的信息作为媒体信息预览的来源，
+        # 否则退回解析结果中的第一个视频
+        if self._current_episode_item is not None:
+            return self._current_episode_item.to_dict()
+
+        return self.get_first_item_info()
 
     def check_all_items(self, uncheck = False):
         # 只需要改变根节点的状态，子节点会自动跟随
@@ -636,7 +657,7 @@ class ParseTreeView(TreeView):
             # 选中该项
             self.setCurrentIndex(index)
 
-    def locate_to_item_by_episode_data(self, current_episode_data: tuple = None, scroll = True):
+    def locate_to_item_by_episode_data(self, current_episode_data: tuple = None, scroll = True, check = True):
         # 没传入剧集数据，不做任何操作
         if not current_episode_data:
             return None
@@ -644,19 +665,24 @@ class ParseTreeView(TreeView):
         key = current_episode_data[0]
         value = current_episode_data[1]
 
+        # 未取到有效值时不做匹配，否则会匹配到 TreeItem 中同名字段的默认值
+        if not value:
+            return None
+
         # 根据传入的剧集数据定位到对应的项目
         all_items = self.get_all_items()
 
-        # 不仅滚动到该项，还要自动选中
         for item in all_items:
-            if getattr(item, key) == value:
-                item.set_checked_state(Qt.CheckState.Checked)
+            if getattr(item, key, None) == value:
+                if check:
+                    # 不仅滚动到该项，还要自动选中
+                    item.set_checked_state(Qt.CheckState.Checked)
+
+                    self.viewport().update()
+                    self.update_check_state()
 
                 if scroll:
                     self.scroll_to_item(item)
-
-                self.viewport().update()
-                self.update_check_state()
 
                 return item
 
