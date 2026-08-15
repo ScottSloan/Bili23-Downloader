@@ -2,8 +2,8 @@ name: Publish release
 
 on:
   push:
-    # branches:
-    #   - dev
+    branches:
+      - dev
     tags:
       - "v*"
   workflow_dispatch:
@@ -20,6 +20,7 @@ jobs:
       VERSION: ${{ steps.set-version.outputs.VERSION }}
       VERSION_NAME: ${{ steps.set-version.outputs.VERSION_NAME }}
       IS_PRERELEASE: ${{ steps.set-version.outputs.IS_PRERELEASE }}
+      RPM_RELEASE: ${{ steps.set-version.outputs.RPM_RELEASE }}
     steps:
       - name: Set version
         id: set-version
@@ -37,12 +38,17 @@ jobs:
 
           if echo "$TAG_NAME" | grep -q -- '-rc'; then
             echo "IS_PRERELEASE=true" >> $GITHUB_OUTPUT
+
+            # rpm 的 Release 字段不允许出现连字符，因此把 2.00.5-rc1 拆成
+            # Version: 2.00.5 + Release: 0.rc1，前缀 0 保证预发布版排序低于正式版的 1
+            echo "RPM_RELEASE=0.$(echo "${TAG_NAME#*-}" | tr '-' '.')" >> $GITHUB_OUTPUT
           else
             echo "IS_PRERELEASE=false" >> $GITHUB_OUTPUT
+            echo "RPM_RELEASE=1" >> $GITHUB_OUTPUT
           fi
 
-          # echo "VERSION=2.00.5" >> $GITHUB_OUTPUT
-          # echo "VERSION_NAME=2.00.5" >> $GITHUB_OUTPUT
+          echo "VERSION=2.15.0" >> $GITHUB_OUTPUT
+          echo "VERSION_NAME=2.15.0" >> $GITHUB_OUTPUT
 
   windows-build:
     needs: get-version
@@ -200,6 +206,7 @@ jobs:
     env:
       VERSION: ${{ needs.get-version.outputs.VERSION }}
       VERSION_NAME: ${{ needs.get-version.outputs.VERSION_NAME }}
+      RPM_RELEASE: ${{ needs.get-version.outputs.RPM_RELEASE }}
     outputs:
       VERSION: ${{ env.VERSION }}
       VERSION_NAME: ${{ env.VERSION_NAME }}
@@ -209,10 +216,12 @@ jobs:
           - arch: amd64
             os: ubuntu-latest
             python_arch: x64
+            rpm_arch: x86_64
 
           - arch: arm64
             os: ubuntu-24.04-arm
             python_arch: arm64
+            rpm_arch: aarch64
 
     runs-on: ${{ matrix.os }}
     steps:
@@ -324,6 +333,113 @@ jobs:
 
           dpkg-deb --build buildroot Bili23-Downloader_${{ env.VERSION_NAME }}_linux_${{ matrix.arch }}.deb
 
+      - name: Install rpm build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y rpm
+
+      - name: Package Linux rpm version
+        run: |
+          RPM_TOP="$PWD/rpmbuild"
+          RPM_ROOT="$RPM_TOP/SOURCES/rpmroot"
+
+          mkdir -p "$RPM_TOP"/{BUILD,BUILDROOT,RPMS,SOURCES,SPECS,SRPMS}
+
+          # 目录结构与 deb 基本一致，区别是入口脚本放在 /usr/bin
+          # （/usr/local 由 filesystem 包管理，rpm 包不应往里写文件）
+          mkdir -p "$RPM_ROOT"/opt
+          mkdir -p "$RPM_ROOT"/usr/bin
+          mkdir -p "$RPM_ROOT"/usr/share/applications
+          mkdir -p "$RPM_ROOT"/usr/share/icons/hicolor/scalable/apps
+
+          cp -r Bili23-Downloader "$RPM_ROOT"/opt/
+
+          # 图标依赖 src/res/icon 目录仍然存在，缺失时直接失败，避免产出没有图标的包
+          test -f src/res/icon/app.svg
+          cp src/res/icon/app.svg "$RPM_ROOT"/usr/share/icons/hicolor/scalable/apps/bili23-downloader.svg
+
+          # desktop 文件
+          cat << 'EOF' > "$RPM_ROOT"/usr/share/applications/bili23-downloader.desktop
+          [Desktop Entry]
+          Type=Application
+          Name=Bili23 Downloader
+          Exec=/usr/bin/bili23-downloader
+          Icon=bili23-downloader
+          Categories=Utility;
+          Terminal=false
+          Comment=A cross-platform video downloader for Bilibili
+          StartupWMClass=bili23-downloader
+          EOF
+
+          # 入口文件
+          cat << 'EOF' > "$RPM_ROOT"/usr/bin/bili23-downloader
+          #!/bin/bash
+          cd /opt/Bili23-Downloader
+          exec ./bili23-downloader "$@"
+          EOF
+
+          chmod +x "$RPM_ROOT"/usr/bin/bili23-downloader
+
+          # spec 文件
+          cat << 'EOF' > "$RPM_TOP"/SPECS/bili23-downloader.spec
+          # 打包的是预编译产物，rpm 的几项默认后处理必须全部关掉：
+          # debug_package         —— 没有源码和符号，生成 debuginfo 子包会直接构建失败
+          # __os_install_post     —— 其中的 brp-strip 会 strip 静态链接的 loader 与 ffmpeg
+          # __brp_python_bytecompile —— 会用系统 Python 重新编译 script/ 下的代码，版本不符即失败
+          %global debug_package %{nil}
+          %global __os_install_post %{nil}
+          %global __brp_python_bytecompile %{nil}
+
+          Name:           bili23-downloader
+          Version:        ${{ env.VERSION }}
+          Release:        ${{ env.RPM_RELEASE }}
+          Summary:        A cross-platform video downloader for Bilibili
+          License:        GPL-3.0-or-later
+          URL:            https://bili23.scott-sloan.cn
+
+          # 运行时自带全部依赖。若开启自动扫描，捆绑的 Qt 库会被登记成系统级 Provides，
+          # 同时生成大量无法满足的 Requires；且 libxcb-cursor 在各发行版中包名不一致，
+          # 写死任何一个都会导致另一些发行版装不上，因此不声明 Requires
+          AutoReqProv:    no
+
+          %description
+          Bili23 Downloader is a cross-platform video downloader for Bilibili.
+
+          %install
+          mkdir -p %{buildroot}
+          cp -a %{_sourcedir}/rpmroot/. %{buildroot}/
+          # 打进包里的权限会随构建机的 umask 变化（可能是 775/664），
+          # 用 _fixperms 归一为目录 755、文件 644，同时保留已有的可执行位
+          %{_fixperms} %{buildroot}
+
+          %files
+          %defattr(-,root,root,-)
+          /opt/Bili23-Downloader
+          /usr/bin/bili23-downloader
+          /usr/share/applications/bili23-downloader.desktop
+          /usr/share/icons/hicolor/scalable/apps/bili23-downloader.svg
+
+          %postun
+          # 参数为 0 表示卸载，为 1 表示升级。rpm 升级的顺序是
+          # 「安装新版本文件 → 执行旧版本的卸载脚本」，无条件删除会把刚装好的新版本一并删掉
+          # 注意：spec 的注释行中不要出现百分号，rpm 会在注释里照样做宏展开
+          if [ $1 -eq 0 ]; then
+              rm -rf /opt/Bili23-Downloader
+          fi
+          EOF
+
+          rpmbuild -bb \
+            --target ${{ matrix.rpm_arch }} \
+            --define "_topdir $RPM_TOP" \
+            "$RPM_TOP"/SPECS/bili23-downloader.spec
+
+          mv "$RPM_TOP"/RPMS/${{ matrix.rpm_arch }}/*.rpm \
+            Bili23-Downloader_${{ env.VERSION_NAME }}_linux_${{ matrix.rpm_arch }}.rpm
+
+          # 输出包信息便于在构建日志中核对
+          rpm -qip Bili23-Downloader_${{ env.VERSION_NAME }}_linux_${{ matrix.rpm_arch }}.rpm
+          rpm -qp --requires Bili23-Downloader_${{ env.VERSION_NAME }}_linux_${{ matrix.rpm_arch }}.rpm
+
       - name: Upload Linux artifacts
         uses: actions/upload-artifact@v6
         with:
@@ -331,6 +447,7 @@ jobs:
           path: |
             Bili23-Downloader_${{ env.VERSION_NAME }}_linux_${{ matrix.arch }}_portable.tar.gz
             Bili23-Downloader_${{ env.VERSION_NAME }}_linux_${{ matrix.arch }}.deb
+            Bili23-Downloader_${{ env.VERSION_NAME }}_linux_${{ matrix.rpm_arch }}.rpm
 
   macos-build:
     needs: get-version
