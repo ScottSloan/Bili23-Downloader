@@ -3435,27 +3435,27 @@ For example, if you set the video quality priority to 720P &gt; 1080P &gt; 4K, t
 <context>
     <name>ProfileCard</name>
     <message>
-        <location filename="../../gui/component/profile.py" line="38"/>
+        <location filename="../../gui/component/profile.py" line="46"/>
         <source>Logout</source>
         <translation>登出</translation>
     </message>
     <message>
-        <location filename="../../gui/component/profile.py" line="41"/>
+        <location filename="../../gui/component/profile.py" line="49"/>
         <source>Profile</source>
         <translation>個人空間</translation>
     </message>
     <message>
-        <location filename="../../gui/component/profile.py" line="60"/>
+        <location filename="../../gui/component/profile.py" line="68"/>
         <source>Log Out</source>
         <translation>登出</translation>
     </message>
     <message>
-        <location filename="../../gui/component/profile.py" line="60"/>
+        <location filename="../../gui/component/profile.py" line="68"/>
         <source>Are you sure you want to log out? This will also clear locally stored cookies.</source>
         <translation>確定要登出嗎？這將會同時清除本機儲存的 Cookies。</translation>
     </message>
     <message>
-        <location filename="../../gui/component/profile.py" line="66"/>
+        <location filename="../../gui/component/profile.py" line="74"/>
         <source>Successfully logged out</source>
         <translation>登出成功</translation>
     </message>
@@ -3758,8 +3758,8 @@ ISP：{isp}</translation>
     </message>
     <message>
         <location filename="../../gui/dialog/misc/search.py" line="55"/>
-        <source>Search all pages, results are provided by Bilibili</source>
-        <translation>搜尋全部分頁，由 B 站返回結果</translation>
+        <source>Search all pages</source>
+        <translation>搜尋全部分頁</translation>
     </message>
     <message>
         <location filename="../../gui/dialog/misc/search.py" line="83"/>
