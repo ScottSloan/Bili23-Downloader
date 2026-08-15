@@ -250,12 +250,12 @@ jobs:
           - arch: amd64
             os: ubuntu-latest
             python_arch: x64
-            rpm_arch: x86_64
+            gnu_arch: x86_64
 
           - arch: arm64
             os: ubuntu-24.04-arm
             python_arch: arm64
-            rpm_arch: aarch64
+            gnu_arch: aarch64
 
     runs-on: ${{ matrix.os }}
     steps:
@@ -264,10 +264,10 @@ jobs:
       - name: Clean up files
         run: |
           # 清理不需要的资源文件以减小安装包体积
-          rm -rf src\res\icon
-          rm -rf src\res\image
-          rm -rf src\res\i18n\bili23.zh_CN.ts
-          rm -rf src\res\i18n\bili23.zh_TW.ts
+          rm -rf src/res/icon
+          rm -rf src/res/image
+          rm -rf src/res/i18n/bili23.zh_CN.ts
+          rm -rf src/res/i18n/bili23.zh_TW.ts
 
       - name: Setup Python
         uses: actions/setup-python@v6
@@ -295,6 +295,28 @@ jobs:
 
           python -m compileall Bili23-Downloader
 
+      - name: Install packaging tools
+        run: |
+          sudo apt-get update
+          # rpm: 构建 rpm 包
+          # librsvg2-bin: 把 svg 图标转成 AppImage 用的 png 缩略图
+          # appstream: 校验 AppStream 元数据
+          sudo apt-get install -y rpm librsvg2-bin appstream
+
+      - name: Prepare AppStream metadata
+        run: |
+          # deb、rpm、AppImage 三种包共用同一份元数据，版本与发布日期在此注入
+          mkdir -p metainfo
+
+          # 连引号一起匹配，避免替换到注释等正文中出现的同名字样
+          sed -e "s/version=\"__VERSION__\"/version=\"${{ env.VERSION_NAME }}\"/" \
+              -e "s/date=\"__DATE__\"/date=\"$(date -u +%F)\"/" \
+              assets/com.scottsloan.bili23.metainfo.xml > metainfo/com.scottsloan.bili23.metainfo.xml
+
+          # --no-net：只做本地规范校验，不去请求 screenshot 的远程图片，
+          # 否则构建结果会取决于官网当时是否可达
+          appstreamcli validate --no-net metainfo/com.scottsloan.bili23.metainfo.xml
+
       - name: Package Linux version
         run: |
           # 便携版：直接打包为 tar.gz
@@ -305,10 +327,12 @@ jobs:
           mkdir -p buildroot/usr/local/bin
           mkdir -p buildroot/usr/share/applications
           mkdir -p buildroot/usr/share/icons/hicolor/scalable/apps
+          mkdir -p buildroot/usr/share/metainfo
           mkdir -p buildroot/opt/Bili23-Downloader
 
           cp -r Bili23-Downloader buildroot/opt/
-          cp src/res/icon/app.svg buildroot/usr/share/icons/hicolor/scalable/apps/bili23-downloader.svg
+          cp assets/app.svg buildroot/usr/share/icons/hicolor/scalable/apps/bili23-downloader.svg
+          cp metainfo/com.scottsloan.bili23.metainfo.xml buildroot/usr/share/metainfo/
 
           export GLIBC_VERSION=${{ matrix.arch == 'amd64' && '2.31' || '2.39' }}
 
@@ -367,11 +391,6 @@ jobs:
 
           dpkg-deb --build buildroot Bili23-Downloader_${{ env.VERSION_NAME }}_linux_${{ matrix.arch }}.deb
 
-      - name: Install rpm build tools
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y rpm
-
       - name: Package Linux rpm version
         run: |
           RPM_TOP="$PWD/rpmbuild"
@@ -385,12 +404,12 @@ jobs:
           mkdir -p "$RPM_ROOT"/usr/bin
           mkdir -p "$RPM_ROOT"/usr/share/applications
           mkdir -p "$RPM_ROOT"/usr/share/icons/hicolor/scalable/apps
+          mkdir -p "$RPM_ROOT"/usr/share/metainfo
 
           cp -r Bili23-Downloader "$RPM_ROOT"/opt/
 
-          # 图标依赖 src/res/icon 目录仍然存在，缺失时直接失败，避免产出没有图标的包
-          test -f src/res/icon/app.svg
-          cp src/res/icon/app.svg "$RPM_ROOT"/usr/share/icons/hicolor/scalable/apps/bili23-downloader.svg
+          cp assets/app.svg "$RPM_ROOT"/usr/share/icons/hicolor/scalable/apps/bili23-downloader.svg
+          cp metainfo/com.scottsloan.bili23.metainfo.xml "$RPM_ROOT"/usr/share/metainfo/
 
           # desktop 文件
           cat << 'EOF' > "$RPM_ROOT"/usr/share/applications/bili23-downloader.desktop
@@ -452,6 +471,7 @@ jobs:
           /usr/bin/bili23-downloader
           /usr/share/applications/bili23-downloader.desktop
           /usr/share/icons/hicolor/scalable/apps/bili23-downloader.svg
+          /usr/share/metainfo/com.scottsloan.bili23.metainfo.xml
 
           %postun
           # 参数为 0 表示卸载，为 1 表示升级。rpm 升级的顺序是
@@ -463,16 +483,84 @@ jobs:
           EOF
 
           rpmbuild -bb \
-            --target ${{ matrix.rpm_arch }} \
+            --target ${{ matrix.gnu_arch }} \
             --define "_topdir $RPM_TOP" \
             "$RPM_TOP"/SPECS/bili23-downloader.spec
 
-          mv "$RPM_TOP"/RPMS/${{ matrix.rpm_arch }}/*.rpm \
-            Bili23-Downloader_${{ env.VERSION_NAME }}_linux_${{ matrix.rpm_arch }}.rpm
+          mv "$RPM_TOP"/RPMS/${{ matrix.gnu_arch }}/*.rpm \
+            Bili23-Downloader_${{ env.VERSION_NAME }}_linux_${{ matrix.gnu_arch }}.rpm
 
           # 输出包信息便于在构建日志中核对
-          rpm -qip Bili23-Downloader_${{ env.VERSION_NAME }}_linux_${{ matrix.rpm_arch }}.rpm
-          rpm -qp --requires Bili23-Downloader_${{ env.VERSION_NAME }}_linux_${{ matrix.rpm_arch }}.rpm
+          rpm -qip Bili23-Downloader_${{ env.VERSION_NAME }}_linux_${{ matrix.gnu_arch }}.rpm
+          rpm -qp --requires Bili23-Downloader_${{ env.VERSION_NAME }}_linux_${{ matrix.gnu_arch }}.rpm
+
+      - name: Package Linux AppImage version
+        run: |
+          APPDIR="$PWD/Bili23-Downloader.AppDir"
+
+          mkdir -p "$APPDIR"/usr/lib
+          mkdir -p "$APPDIR"/usr/share/applications
+          mkdir -p "$APPDIR"/usr/share/icons/hicolor/scalable/apps
+          mkdir -p "$APPDIR"/usr/share/metainfo
+
+          cp -r Bili23-Downloader "$APPDIR"/usr/lib/
+
+          # desktop 文件：Exec 必须是不带路径的命令名、Icon 不带扩展名，
+          # 否则 appimagetool 的 desktop-file-validate 会拒绝
+          cat << 'EOF' > "$APPDIR"/bili23-downloader.desktop
+          [Desktop Entry]
+          Type=Application
+          Name=Bili23 Downloader
+          Exec=bili23-downloader
+          Icon=bili23-downloader
+          Categories=Utility;
+          Terminal=false
+          Comment=A cross-platform video downloader for Bilibili
+          StartupWMClass=bili23-downloader
+          EOF
+
+          cp "$APPDIR"/bili23-downloader.desktop "$APPDIR"/usr/share/applications/
+          cp metainfo/com.scottsloan.bili23.metainfo.xml "$APPDIR"/usr/share/metainfo/
+
+          # 图标：AppDir 根目录一份供 appimagetool 使用，标准路径一份供桌面集成使用
+          cp assets/app.svg "$APPDIR"/bili23-downloader.svg
+          cp assets/app.svg "$APPDIR"/usr/share/icons/hicolor/scalable/apps/bili23-downloader.svg
+
+          # .DirIcon 用 png，文件管理器普遍不渲染 svg 缩略图
+          rsvg-convert -w 256 -h 256 assets/app.svg -o "$APPDIR"/.DirIcon
+
+          # AppRun：AppImage 每次运行的挂载点都不同（/tmp/.mount_XXXXXX），
+          # loader 依赖 PYSTAND_HOME 与工作目录定位 bundle/ffmpeg，必须在启动时动态解析
+          cat << 'EOF' > "$APPDIR"/AppRun
+          #!/bin/bash
+          HERE="$(dirname "$(readlink -f "${0}")")"
+          export PYSTAND_HOME="$HERE/usr/lib/Bili23-Downloader"
+          cd "$PYSTAND_HOME"
+          exec ./bili23-downloader "$@"
+          EOF
+
+          chmod +x "$APPDIR"/AppRun
+
+          wget -q https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-${{ matrix.gnu_arch }}.AppImage
+
+          # runtime 单独取 type2-runtime 的构建，它是静态链接且支持 fuse3。
+          # appimagetool 自带的旧 runtime 依赖 libfuse2，而 Ubuntu 22.04+ 与 Debian 12+
+          # 默认只装 fuse3，用户会直接遇到 dlopen libfuse.so.2 失败
+          wget -q https://github.com/AppImage/type2-runtime/releases/download/continuous/runtime-${{ matrix.gnu_arch }}
+
+          chmod +x appimagetool-${{ matrix.gnu_arch }}.AppImage
+
+          # appimagetool 自身也是 AppImage，runner 上同样没有 libfuse2，需要解包后运行
+          export APPIMAGE_EXTRACT_AND_RUN=1
+          export ARCH=${{ matrix.gnu_arch }}
+
+          # --no-appstream：元数据已在前面用 appstreamcli --no-net 校验过。
+          # appimagetool 自己那次校验会联网拉取 screenshot，构建成败将取决于官网可达性
+          ./appimagetool-${{ matrix.gnu_arch }}.AppImage \
+            --no-appstream \
+            --runtime-file runtime-${{ matrix.gnu_arch }} \
+            "$APPDIR" \
+            Bili23-Downloader_${{ env.VERSION_NAME }}_linux_${{ matrix.gnu_arch }}.AppImage
 
       - name: Upload Linux artifacts
         uses: actions/upload-artifact@v6
@@ -481,7 +569,8 @@ jobs:
           path: |
             Bili23-Downloader_${{ env.VERSION_NAME }}_linux_${{ matrix.arch }}_portable.tar.gz
             Bili23-Downloader_${{ env.VERSION_NAME }}_linux_${{ matrix.arch }}.deb
-            Bili23-Downloader_${{ env.VERSION_NAME }}_linux_${{ matrix.rpm_arch }}.rpm
+            Bili23-Downloader_${{ env.VERSION_NAME }}_linux_${{ matrix.gnu_arch }}.rpm
+            Bili23-Downloader_${{ env.VERSION_NAME }}_linux_${{ matrix.gnu_arch }}.AppImage
 
   macos-build:
     if: needs.get-version.outputs.BUILD_MACOS == 'true'
@@ -510,10 +599,10 @@ jobs:
       - name: Clean up files
         run: |
           # 清理不需要的资源文件以减小安装包体积
-          rm -rf src\res\icon
-          rm -rf src\res\image
-          rm -rf src\res\i18n\bili23.zh_CN.ts
-          rm -rf src\res\i18n\bili23.zh_TW.ts
+          rm -rf src/res/icon
+          rm -rf src/res/image
+          rm -rf src/res/i18n/bili23.zh_CN.ts
+          rm -rf src/res/i18n/bili23.zh_TW.ts
 
       - name: Setup Python
         uses: actions/setup-python@v6
