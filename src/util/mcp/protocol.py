@@ -32,6 +32,18 @@ SERVER_INSTRUCTIONS = (
 
 # JSON-RPC 错误码。-32020 与 -32022 来自 MCP 规范为协议保留的区间，
 # 不要自行改动取值，客户端按这些码做分支
+# 缓存提示。规范要求所有 resultType 为 "complete" 的结果都必须带上 ttlMs 与
+# cacheScope，缺失会被客户端判为非法结果而整个拒收（不是降级处理）。
+#
+# 我们声明 listChanged 为 false，不发送变更通知，客户端只能靠 TTL 感知变化：
+# 工具列表会随「允许下载操作」开关增减，所以取一个较短的值，让用户改完设置后
+# 很快生效；discover 的内容只随程序版本变，可以缓存久一些。
+#
+# cacheScope 取 public：两者都只包含工具描述与服务器信息，不含用户数据。
+TOOLS_CACHE_TTL_MS = 60_000
+DISCOVER_CACHE_TTL_MS = 300_000
+CACHE_SCOPE = "public"
+
 PARSE_ERROR = -32700
 INVALID_REQUEST = -32600
 METHOD_NOT_FOUND = -32601
@@ -175,8 +187,12 @@ class Dispatcher:
             case "tools/list":
                 result = {"tools": self.tools.list_schemas()}
 
+                # 缓存提示只属于 modern 协议，legacy 结果不带 resultType，
+                # 自然也不该带这两个字段
                 if modern:
                     result["resultType"] = "complete"
+                    result["ttlMs"] = TOOLS_CACHE_TTL_MS
+                    result["cacheScope"] = CACHE_SCOPE
 
                 return 200, make_result(request_id, result)
 
@@ -194,6 +210,8 @@ class Dispatcher:
             "supportedVersions": SUPPORTED_VERSIONS,
             "capabilities": {"tools": {"listChanged": False}},
             "instructions": SERVER_INSTRUCTIONS,
+            "ttlMs": DISCOVER_CACHE_TTL_MS,
+            "cacheScope": CACHE_SCOPE,
             "_meta": {SERVER_INFO_KEY: self._server_info()},
         }
 

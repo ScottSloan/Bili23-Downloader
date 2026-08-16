@@ -70,6 +70,24 @@ def _collect_episodes(limit: int):
 
     return [_episode_to_dict(item) for item in items[:limit]], len(items)
 
+# MCP 上一次解析结束时界面的状态指纹：(全部条目 id, 被勾选的条目 id)
+#
+# 用户开着自动选择（config.auto_select_mode）时，解析完成后条目会被自动勾上，
+# 于是"有勾选项"这个信号会被我们自己上一次解析污染 —— 不加区分的话，
+# 第二次 parse_url 起就会永远被守卫拒绝，模型只能解析一次。
+#
+# 用指纹把两种勾选分开：与指纹完全一致，说明是上次解析留下的自动勾选、
+# 用户没碰过，可以安全覆盖；对不上，才是用户真的在挑东西。
+_last_snapshot = None
+
+def _take_snapshot(interface):
+    parse_list = interface.parse_list
+
+    return (
+        frozenset(item.episode_id for item in parse_list.get_all_items()),
+        frozenset(item.episode_id for item in parse_list.get_checked_items()),
+    )
+
 def _parse_busy_reason():
     """
     检查当前是否适合发起解析
@@ -86,13 +104,34 @@ def _parse_busy_reason():
     if interface is None:
         return "The application window is not ready yet."
 
-    if interface.parse_list.get_checked_items_count() > 0:
-        return (
-            "The user currently has items selected in the parse list. Parsing a new link "
-            "would discard that selection. Ask the user to finish or clear it first."
-        )
+    if interface.parse_list.get_checked_items_count() == 0:
+        return None
 
-    return None
+    # 勾选状态与上次解析结束时完全一致 —— 是自动选择留下的，不是用户挑的
+    if _last_snapshot is not None and _take_snapshot(interface) == _last_snapshot:
+        return None
+
+    return (
+        "The user currently has items selected in the parse list. Parsing a new link "
+        "would discard that selection. Ask the user to finish or clear it first."
+    )
+
+def _record_snapshot():
+    global _last_snapshot
+
+    def take():
+        interface = get_parse_interface()
+
+        return _take_snapshot(interface) if interface is not None else None
+
+    try:
+        _last_snapshot = call_in_main_thread(take, timeout = 5.0)
+
+    except Exception:
+        # 取不到就置空，退回"有勾选就拒绝"的保守行为
+        logger.exception("记录解析列表状态失败")
+
+        _last_snapshot = None
 
 def _do_parse(url: str, timeout: float, preview_timeout: float = 30.0):
     """
@@ -168,6 +207,11 @@ def _do_parse(url: str, timeout: float, preview_timeout: float = 30.0):
 
         except Exception:
             logger.exception("断开预览完成信号失败")
+
+        # 无论成功、失败还是超时都重新取一次指纹：它记的是"界面此刻的样子"，
+        # 只有反映真实状态才能在下次解析时正确区分自动勾选与用户勾选。
+        # 放在等预览之后，此时自动选择已经应用完毕
+        _record_snapshot()
 
 def tool_parse_url(arguments: dict) -> dict:
     url = (arguments.get("url") or "").strip()

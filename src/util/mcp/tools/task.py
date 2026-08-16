@@ -38,11 +38,14 @@ def _task_to_dict(task_info, verbose: bool = False) -> dict:
         data["completed_time"] = task_info.Basic.completed_time
 
         if task_info.File.name:
-            data["file_path"] = os.path.join(
+            # 不建子文件夹时 folder 是 "."，直接 join 会拼出 "Downloads\.\xxx"；
+            # download_path 又是正斜杠，join 后分隔符混用。normpath 一并收拾干净，
+            # 免得把这种路径喂给模型后它再原样传回来
+            data["file_path"] = os.path.normpath(os.path.join(
                 task_info.File.download_path,
                 task_info.File.folder,
                 task_info.File.name,
-            )
+            ))
 
         if task_info.Episode.video_quality:
             data["video_quality"] = task_info.Episode.video_quality
