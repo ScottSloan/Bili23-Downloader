@@ -264,20 +264,30 @@ class TaskManager:
             if show_toast:
                 self._show_add_to_queue_toast()
 
-    def query(self, completed: bool = False) -> List[TaskInfo]:
-        result = self.db_manager.query_tasks(completed)
+    def query(self, completed: bool = False, limit: int = None) -> List[TaskInfo]:
+        # limit 为空时取全部；传入后只反序列化最近的若干条，见 db.query_tasks
+        result = self.db_manager.query_tasks(completed, limit)
 
-        task_info_list = []
+        return [self._build_task_info(entry) for entry in result]
 
-        for entry in result:
-            data = entry[0]  # 获取 data 列
+    def query_by_id(self, task_id: str) -> TaskInfo:
+        """按 task_id 取单条，未完成与已完成两张表都找。找不到返回 None"""
+        for completed in (False, True):
+            result = self.db_manager.query_task_by_id(task_id, completed)
 
-            task_info = TaskInfo()
-            task_info.from_dict(json_loads(data))
+            if result:
+                return self._build_task_info(result[0])
 
-            task_info_list.append(task_info)
+        return None
 
-        return task_info_list
+    def count(self, completed: bool = False) -> int:
+        return self.db_manager.count_tasks(completed)
+
+    def _build_task_info(self, entry) -> TaskInfo:
+        task_info = TaskInfo()
+        task_info.from_dict(json_loads(entry[0]))  # 取 data 列
+
+        return task_info
 
     def update(self, task_info: TaskInfo):
         self.update_async(task_info)

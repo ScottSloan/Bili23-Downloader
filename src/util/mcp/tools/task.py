@@ -9,6 +9,33 @@ import os
 
 logger = logging.getLogger(__name__)
 
+# 任务列表的返回条数上限。比解析列表（100/500）保守得多：解析结果是用户刚点开的
+# 一份内容，条数有限；已完成的下载任务却是长期累积的，攒到几百条时全量返回会占掉
+# 大量上下文，而调用方要看的几乎总是"在下的"和"最近的"
+DEFAULT_TASK_LIMIT = 30
+MAX_TASK_LIMIT = 200
+
+def _clamp_limit(value) -> int:
+    if not isinstance(value, int) or isinstance(value, bool):
+        return DEFAULT_TASK_LIMIT
+
+    return max(1, min(value, MAX_TASK_LIMIT))
+
+def _list_sort_key(task_info):
+    """
+    未完成的排在前面，各自再按"最近"倒序 —— 截断时优先保留最相关的那些
+
+    已完成的以完成时间为准，未完成的以创建时间为准，与两张表 SQL 的 ORDER BY
+    取同一列：否则数据库按完成时间截出前 N 条，这里却按创建时间排序，
+    取回的集合和呈现的顺序会对不上。
+    """
+    completed_time = task_info.Basic.completed_time
+
+    if completed_time:
+        return (True, -completed_time)
+
+    return (False, -task_info.Basic.created_time)
+
 def _status_name(value: int) -> str:
     from ...common.enum import DownloadStatus
 
@@ -64,17 +91,20 @@ def _task_to_dict(task_info, verbose: bool = False) -> dict:
 
     return data
 
-def _query_tasks(completed: bool):
+def _query_tasks(completed: bool, limit: int = None):
     """
     读取任务列表
 
     正在下载的任务，其进度是高频写入、异步落盘的，数据库里的快照会滞后。
     downloader_manager 持有的 TaskInfo 才是实时的，因此优先取内存中的那份。
+
+    limit 会一路下推到 SQL 的 ORDER BY ... LIMIT，不是查回来再切：任务攒到
+    几百条时，差别是"反序列化几百条 JSON"和"反序列化几十条"。
     """
     from ...download.downloader.manager import downloader_manager
     from ...download.task.manager import task_manager
 
-    task_info_list = task_manager.query(completed)
+    task_info_list = task_manager.query(completed, limit)
 
     result = []
 
@@ -87,16 +117,13 @@ def _query_tasks(completed: bool):
 
 def _find_task(task_id: str):
     from ...download.downloader.manager import downloader_manager
+    from ...download.task.manager import task_manager
 
     if live := downloader_manager.downloaders.get(task_id):
         return live.task_info
 
-    for completed in (False, True):
-        for task_info in _query_tasks(completed):
-            if task_info.Basic.task_id == task_id:
-                return task_info
-
-    return None
+    # 走 task_id 上的 UNIQUE 约束直接命中，不再把两张表整个读出来逐条比对
+    return task_manager.query_by_id(task_id)
 
 def tool_list_tasks(arguments: dict) -> dict:
     state = arguments.get("state", "downloading")
@@ -104,20 +131,45 @@ def tool_list_tasks(arguments: dict) -> dict:
     if state not in ("downloading", "completed", "all"):
         return error_result("The 'state' argument must be one of: downloading, completed, all.")
 
+    limit = _clamp_limit(arguments.get("limit"))
+
     def collect():
+        # 已完成的任务是历史累积，攒到几百条时全量返回会占掉可观的上下文，
+        # 而调用方真正要看的几乎总是"在下的"和"最近的"。这里按此排序后截断，
+        # 并把总数一并返回，让模型知道自己只看到了一部分。
+        #
+        # limit 只下推给已完成表，未完成的一律全取。两者性质不同：
+        #
+        #   已完成表是历史累积，会长到几百上千条，而调用方只要最近几条；
+        #   未完成表是"当前工作集"，且**不能按创建时间截断** —— 正在下载的任务
+        #   往往是最早创建的那几个，按 created_time DESC 取前 N 条反而会把它们
+        #   丢掉，模型就看不见正在下的东西了。它下完即移入已完成表，不会累积。
+        from ...download.task.manager import task_manager
+
         tasks = []
+        total = 0
 
         if state in ("downloading", "all"):
-            tasks += [_task_to_dict(t) for t in _query_tasks(False)]
+            tasks += _query_tasks(False)
+            total += task_manager.count(False)
 
         if state in ("completed", "all"):
-            tasks += [_task_to_dict(t) for t in _query_tasks(True)]
+            tasks += _query_tasks(True, limit)
+            total += task_manager.count(True)
 
-        return tasks
+        tasks.sort(key = _list_sort_key)
 
-    tasks = call_in_main_thread(collect, timeout = 20.0)
+        return [_task_to_dict(t) for t in tasks[:limit]], total
 
-    return text_result(f"{len(tasks)} task(s).", {"count": len(tasks), "tasks": tasks})
+    tasks, total = call_in_main_thread(collect, timeout = 20.0)
+
+    if total > len(tasks):
+        summary = f"{len(tasks)} of {total} task(s); use a larger 'limit' to see more."
+
+    else:
+        summary = f"{total} task(s)."
+
+    return text_result(summary, {"total": total, "returned": len(tasks), "tasks": tasks})
 
 def tool_get_task_status(arguments: dict) -> dict:
     task_id = (arguments.get("task_id") or "").strip()
@@ -158,7 +210,11 @@ def register(registry):
     registry.register(
         name = "list_tasks",
         title = "List Download Tasks",
-        description = "List download tasks with their current status and progress.",
+        description = (
+            "List download tasks with their current status and progress. Covers every task "
+            "in the application, including ones the user created. Unfinished tasks come "
+            "first, then the most recently created; the result is truncated to 'limit'."
+        ),
         input_schema = {
             "type": "object",
             "properties": {
@@ -166,6 +222,15 @@ def register(registry):
                     "type": "string",
                     "enum": ["downloading", "completed", "all"],
                     "description": "Which tasks to list. Defaults to 'downloading'.",
+                },
+                "limit": {
+                    "type": "integer",
+                    "description": (
+                        f"Maximum number of tasks to return (1-{MAX_TASK_LIMIT}, "
+                        f"default {DEFAULT_TASK_LIMIT}). The response reports the true total."
+                    ),
+                    "minimum": 1,
+                    "maximum": MAX_TASK_LIMIT,
                 },
             },
             "additionalProperties": False,

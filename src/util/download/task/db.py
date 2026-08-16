@@ -128,18 +128,43 @@ class TaskDatabase(Database):
                 CREATE INDEX IF NOT EXISTS "idx_download_task_hash_id" ON "download_task" ("hash_id");
                 CREATE INDEX IF NOT EXISTS "idx_completed_task_hash_id" ON "completed_task" ("hash_id");
                 """)
-        
-    def query_tasks(self, completed: bool = False):
-        if completed:
-            result = self.query("""
-                SELECT data FROM completed_task
-            """)
-        else:
-            result = self.query("""
-                SELECT data FROM download_task
+
+        # 按时间倒序取最近若干条是列表查询的固定形态，没有索引时 SQLite 要全表扫加排序。
+        # 索引不改变数据本身，CREATE INDEX IF NOT EXISTS 是幂等的，无需递增表结构版本
+        self.execute_script("""
+            CREATE INDEX IF NOT EXISTS "idx_download_task_created_time" ON "download_task" ("created_time");
+            CREATE INDEX IF NOT EXISTS "idx_completed_task_completed_time" ON "completed_task" ("completed_time");
             """)
 
-        return result
+    def query_tasks(self, completed: bool = False, limit: int = None):
+        """
+        读取任务记录
+
+        limit 为空时返回全部（界面启动时要恢复整个列表）。传入 limit 则按时间
+        倒序只取最近的若干条 —— 已完成的任务是长期累积的，调用方只要最近几条时
+        不该把几百条 JSON 全反序列化一遍。
+        """
+        table, order_column = ("completed_task", "completed_time") if completed else ("download_task", "created_time")
+
+        if limit is None:
+            return self.query(f'SELECT data FROM "{table}"')
+
+        return self.query(
+            f'SELECT data FROM "{table}" ORDER BY "{order_column}" DESC LIMIT ?', (limit,)
+        )
+
+    def query_task_by_id(self, task_id: str, completed: bool = False):
+        """按 task_id 直接取一条，task_id 上有 UNIQUE 约束，不必扫全表"""
+        table = "completed_task" if completed else "download_task"
+
+        return self.query(f'SELECT data FROM "{table}" WHERE "task_id" = ?', (task_id,))
+
+    def count_tasks(self, completed: bool = False) -> int:
+        table = "completed_task" if completed else "download_task"
+
+        result = self.query(f'SELECT COUNT(*) FROM "{table}"')
+
+        return result[0][0] if result else 0
 
     def build_record(self, task_info: TaskInfo, completed: bool = False) -> tuple:
         # 组装一条待写入的记录。调用方可在自己的线程上预先组装，避免写线程读到中途被改写的 task_info
