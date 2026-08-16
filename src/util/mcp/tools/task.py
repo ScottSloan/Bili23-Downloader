@@ -38,13 +38,22 @@ def _task_to_dict(task_info, verbose: bool = False) -> dict:
         data["completed_time"] = task_info.Basic.completed_time
 
         if task_info.File.name:
+            # File.name 是不带扩展名的基名，容器扩展名在 merge_file_ext 里
+            # （拼法与 Merger.final_output_file_name 一致，扩展名不带点）。
+            # 不补上的话给出的就是一个磁盘上并不存在的路径，模型照着用必然出错。
+            # merge_file_ext 只在存在合并步骤时才赋值，为空就只能给基名
+            file_name = task_info.File.name
+
+            if task_info.File.merge_file_ext:
+                file_name = f"{file_name}.{task_info.File.merge_file_ext}"
+
             # 不建子文件夹时 folder 是 "."，直接 join 会拼出 "Downloads\.\xxx"；
             # download_path 又是正斜杠，join 后分隔符混用。normpath 一并收拾干净，
             # 免得把这种路径喂给模型后它再原样传回来
             data["file_path"] = os.path.normpath(os.path.join(
                 task_info.File.download_path,
                 task_info.File.folder,
-                task_info.File.name,
+                file_name,
             ))
 
         if task_info.Episode.video_quality:
