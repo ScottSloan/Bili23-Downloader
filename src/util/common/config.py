@@ -303,8 +303,8 @@ class DefaultValue:
 class APPConfig(QConfig):
     # APP
     app_name = "Bili23 Downloader"
-    app_version = "2.14.0"
-    app_comparable_version = "2.14.0"
+    app_version = "2.15.0"
+    app_comparable_version = "2.15.0"
     app_config_version = 2140
     config_version = ConfigItem("Application", "config_version", app_config_version)
 
@@ -401,6 +401,14 @@ class APPConfig(QConfig):
 
     user_agent = ConfigItem("Advanced", "user_agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0")
 
+    # MCP
+    # 默认关闭。开启后会在本地环回地址上监听一个 HTTP 端点，供 AI 客户端调用，
+    # 必须由用户显式启用，且访问需要携带 mcp_token
+    mcp_enabled = ConfigItem("MCP", "mcp_enabled", False, BoolValidator())
+    mcp_port = RangeConfigItem("MCP", "mcp_port", 23330, RangeValidator(1024, 65535))
+    mcp_token = ConfigItem("MCP", "mcp_token", "")
+    mcp_allow_download = ConfigItem("MCP", "mcp_allow_download", True, BoolValidator())
+
     # Update
     include_prerelease = ConfigItem("Update", "include_prerelease", False, BoolValidator())
 
@@ -452,11 +460,15 @@ class APPConfig(QConfig):
     keep_original_files = False
     keep_original_files_type = 0
 
+    # MCP 运行时状态，仅供界面展示，不落盘
+    mcp_running = False
+    mcp_last_error = ""
+
     # Misc
     target_naming_rule_id = None
     global_starting_number = 1
     current_starting_number = None
-    
+
     main_window_ready = False
 
     show_auto_parse_dialog = ConfigItem("Misc", "show_auto_parse_dialog", False, BoolValidator())

@@ -303,6 +303,13 @@ INSTANCE_LOCK_TIMEOUT_MS = 10_000
 INSTANCE_SERVER_NAME = "bili23_downloader_single_instance"
 APP_MUTEX_NAME = "B096F0C1-D105-4EF9-86E1-5E87DA884EA4"
 
+# 唤醒已有实例时携带的命令字。activate 会把窗口拉到前台，ensure-running 只是
+# 确认进程存在（MCP 桥接脚本用它拉起程序，此时弹出窗口只会打断用户手头的事）
+INSTANCE_COMMAND_ACTIVATE = b"activate"
+INSTANCE_COMMAND_ENSURE_RUNNING = b"ensure-running"
+
+ENSURE_RUNNING_FLAG = "--ensure-running"
+
 logger = logging.getLogger(__name__)
 
 class Application(QApplication):
@@ -316,6 +323,9 @@ class Application(QApplication):
         self.instance_server: QLocalServer = None
         self.pending_instance_activation = False
         self.app_mutex_handle = None
+
+        # 由 MCP 桥接脚本拉起时只需确认进程存在，不要抢用户的焦点
+        self.ensure_running_mode = ENSURE_RUNNING_FLAG in sys.argv
 
         self.aboutToQuit.connect(self.cleanup_instance_state)
         self.network_ready.connect(self.init_auth_info)
@@ -340,7 +350,9 @@ class Application(QApplication):
         self.instance_lock.removeStaleLockFile()
 
         if not self.instance_lock.tryLock(0):
-            if self.wake_existing_instance():
+            command = INSTANCE_COMMAND_ENSURE_RUNNING if self.ensure_running_mode else INSTANCE_COMMAND_ACTIVATE
+
+            if self.wake_existing_instance(command):
                 sys.exit(0)
 
             logger.warning("无法获取实例锁，程序已在运行中")
@@ -364,18 +376,32 @@ class Application(QApplication):
         if self.instance_server is None:
             return
 
+        should_activate = False
+
         while self.instance_server.hasPendingConnections():
             socket = self.instance_server.nextPendingConnection()
 
             if socket is None:
                 continue
 
+            # 读出命令字再决定是否抢焦点。第二个实例总是先写命令再断开，
+            # 因此这里只需等一小段时间；读不到内容时按旧行为激活窗口，
+            # 保证与不发送命令字的旧版本兼容
+            command = INSTANCE_COMMAND_ACTIVATE
+
+            if socket.waitForReadyRead(200):
+                command = bytes(socket.readAll().data()).strip() or INSTANCE_COMMAND_ACTIVATE
+
             socket.disconnectFromServer()
             socket.deleteLater()
 
-        self.activate_existing_instance()
+            if command != INSTANCE_COMMAND_ENSURE_RUNNING:
+                should_activate = True
 
-    def wake_existing_instance(self) -> bool:
+        if should_activate:
+            self.activate_existing_instance()
+
+    def wake_existing_instance(self, command: bytes = INSTANCE_COMMAND_ACTIVATE) -> bool:
         socket = QLocalSocket()
         socket.connectToServer(INSTANCE_SERVER_NAME)
 
@@ -383,7 +409,7 @@ class Application(QApplication):
             logger.warning("无法唤醒已运行的实例")
             return False
 
-        socket.write(b"activate")
+        socket.write(command)
         socket.flush()
         socket.waitForBytesWritten(500)
         socket.disconnectFromServer()
@@ -403,6 +429,11 @@ class Application(QApplication):
             self.activate_existing_instance()
 
     def cleanup_instance_state(self):
+        # MCP 的监听线程必须在这里收敛。它由 Python 侧持有，若留到解释器清理
+        # 全局变量时才被析构，"正常退出"就会变成崩溃 —— 与 shutdown_process()
+        # 注释里描述的是同一类问题
+        self.stop_mcp_server()
+
         if hasattr(self, "instance_lock"):
             self.instance_lock.unlock()
 
@@ -413,6 +444,15 @@ class Application(QApplication):
         if self.instance_server is not None:
             self.instance_server.close()
             QLocalServer.removeServer(INSTANCE_SERVER_NAME)
+
+    def stop_mcp_server(self):
+        try:
+            from util.mcp import stop_mcp_server
+
+            stop_mcp_server()
+
+        except Exception:
+            logger.exception("停止 MCP 服务器失败")
 
     def setup_app(self):
         self.setAttribute(Qt.ApplicationAttribute.AA_DontCreateNativeWidgetSiblings)
@@ -448,6 +488,26 @@ class Application(QApplication):
     def bootstrap_startup_tasks(self):
         # 网络栈预热与登录态初始化都放到首屏之后，避免阻塞窗口展示
         self.warmup_network_stack()
+
+        self.start_mcp_server()
+
+    def start_mcp_server(self):
+        # 默认关闭，未启用时连模块都不导入 —— http.server 与整条解析、下载链路
+        # 都不应该出现在启动路径上（test/smoke_startup.py 对此有断言）。
+        #
+        # 这里已经晚于 init_single_instance()，非主实例早在 __init__ 里就退出了，
+        # 因此不必再判断自己是不是主实例
+        if not config.get(config.mcp_enabled):
+            return
+
+        try:
+            from util.mcp import start_mcp_server
+
+            start_mcp_server()
+
+        except Exception:
+            # 端口占用、配置异常都不能影响程序本身可用
+            logger.exception("启动 MCP 服务器失败")
 
     def warmup_network_stack(self):
         # 导入 httpx 需要连带加载 httpcore 等一系列模块（约 0.3 秒），首次构建 SSL 上下文
@@ -518,7 +578,11 @@ def _main():
 
     # Qt 需要在 QApplication 构造时读取平台参数。仅对特殊的 Windows 7
     # 兼容版自动添加参数，同时尊重用户显式传入的 -platform 选项。
-    app_args = list(sys.argv)
+    #
+    # --ensure-running 是本程序自己的开关（见 Application.ensure_running_mode），
+    # 不传给 Qt，避免它对未知参数发出警告
+    app_args = [arg for arg in sys.argv if arg != ENSURE_RUNNING_FLAG]
+
     if qt_win7_compatible and not any(arg == "-platform" or arg.startswith("-platform=") for arg in app_args):
         app_args.extend(["-platform", "windows:nodirectwrite"])
 

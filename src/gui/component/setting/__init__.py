@@ -3,7 +3,7 @@ from .card import (
     ChapterSettingCard, MetadataSettingCard, NumberSettingCard, CDNSettingCard, ProxySettingCard, FFmpegSettingCard,
     DownloadFormatCard, ParsingSettingCard, WindowBehaviorSettingCard, DownloadHandlingSettingCard,
     DownloadConcurrencySettingCard, DownloadConcurrencySettingCard, PersonalizationCard,
-    CheckUpdateSettingCard, OtherAdvancedSettingCard
+    CheckUpdateSettingCard, OtherAdvancedSettingCard, MCPSettingCard
 )
 from .group import FontGroup, BorderGroup, ColorGroup, MarginGroup, AlignmentGroup, AdvancedGroup, ResolutionGroup
 from .widget import (
