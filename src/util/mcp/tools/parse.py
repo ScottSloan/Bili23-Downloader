@@ -25,11 +25,25 @@ def get_parse_interface():
 
     return getattr(window, "parse_interface", None)
 
-def _episode_to_dict(item) -> dict:
+def build_item_index(items) -> dict:
+    """
+    条目在解析列表中的位置就是它对外的 id
+
+    不能拿 TreeItem.episode_id 当键：那是 EpisodeData 里**视频级**元数据的缓存键，
+    同一个视频的所有分P 共享同一个值（分P 之间只有 cid 不同），多集番剧同理。
+    用它建索引，10 个分P 会在字典里互相覆盖只剩最后一条 —— 模型想下第 3P，
+    实际拿到第 10P，而且全程没有任何报错。
+
+    位置是纯局部标识，只在本次解析结果内有效；解析新链接后列表整体替换，
+    编号自然跟着换，与"id 指向当前列表"的语义一致。
+    """
+    return {str(position): item for position, item in enumerate(items, 1)}
+
+def _episode_to_dict(item_id: str, item) -> dict:
     from ...parse.episode.tree import Attribute
 
     data = {
-        "episode_id": item.episode_id,
+        "episode_id": item_id,
         "title": item.title,
         "number": item.number,
         "duration": item.duration,
@@ -68,7 +82,15 @@ def _collect_episodes(limit: int):
 
     items = interface.parse_list.get_all_items()
 
-    return [_episode_to_dict(item) for item in items[:limit]], len(items)
+    # 先按完整列表编号再截断，保证 limit 不会改变任何条目的 id
+    index = build_item_index(items)
+
+    episodes = [
+        _episode_to_dict(item_id, item)
+        for item_id, item in list(index.items())[:limit]
+    ]
+
+    return episodes, len(items)
 
 # MCP 上一次解析结束时界面的状态指纹：(全部条目 id, 被勾选的条目 id)
 #

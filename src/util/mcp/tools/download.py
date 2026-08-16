@@ -4,7 +4,7 @@ from ...common.signal_bus import signal_bus
 from ..invoke import call_in_main_thread
 
 from . import text_result, error_result
-from .parse import get_parse_interface, _media_info_error
+from .parse import get_parse_interface, build_item_index, _media_info_error
 
 from threading import Event
 import logging
@@ -26,9 +26,11 @@ def _collect_episode_info(episode_ids: list):
     if interface is None:
         return None, [], []
 
-    index = {item.episode_id: item for item in interface.parse_list.get_all_items()}
+    # 必须与 parse 侧用同一套编号，否则模型拿到的 id 在这里对不上号
+    index = build_item_index(interface.parse_list.get_all_items())
 
     found = []
+    found_ids = []
     missing = []
     needs_reparse = []
 
@@ -47,8 +49,9 @@ def _collect_episode_info(episode_ids: list):
             continue
 
         found.append(item.to_dict())
+        found_ids.append(episode_id)
 
-    return found, missing, needs_reparse
+    return found, found_ids, missing, needs_reparse
 
 def tool_create_download(arguments: dict) -> dict:
     episode_ids = arguments.get("episode_ids")
@@ -66,7 +69,7 @@ def tool_create_download(arguments: dict) -> dict:
 
     # 先校验 id 再看媒体信息：传错 id 却收到"媒体信息不可用"会把模型引向
     # 完全无关的方向，它会去重新解析而不是纠正 id
-    found, missing, needs_reparse = call_in_main_thread(
+    found, found_ids, missing, needs_reparse = call_in_main_thread(
         _collect_episode_info, episode_ids, timeout = 15.0
     )
 
@@ -107,12 +110,15 @@ def tool_create_download(arguments: dict) -> dict:
         from PySide6.QtCore import QTimer
 
         # 界面上的"已下载"角标。放在这里而不是校验阶段：校验之后仍可能因为
-        # 媒体信息缺失而不创建任何任务，那时标记就是假的
+        # 媒体信息缺失而不创建任何任务，那时标记就是假的。
+        #
+        # 按位置 id 精确标记，不能拿 item.episode_id 去比对：同一视频的分P
+        # 共享那个值，只下了第 3P 也会把 10 个分P 全标成已下载
         if interface := get_parse_interface():
-            target_ids = {episode.get("episode_id") for episode in found}
+            index = build_item_index(interface.parse_list.get_all_items())
 
-            for item in interface.parse_list.get_all_items():
-                if item.episode_id in target_ids:
+            for item_id in found_ids:
+                if item := index.get(item_id):
                     item.downloaded = True
 
         # 起始编号跟着界面的下载入口走，否则文件名里的序号会从上次的位置续下去
