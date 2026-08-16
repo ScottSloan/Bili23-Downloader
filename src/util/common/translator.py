@@ -36,6 +36,7 @@ class Translator:
             "8K": translate("VIDEO_QUALITY", "8K UHD"),
             "DOLBY_VISION": translate("VIDEO_QUALITY", "Dolby Vision"),
             "HDR": translate("VIDEO_QUALITY", "HDR True Color"),
+            "4K_SDR": translate("VIDEO_QUALITY", "4K SDR Enhanced"),
             "4K": translate("VIDEO_QUALITY", "4K UHD"),
             "1080P60": translate("VIDEO_QUALITY", "1080P 60fps"),
             "1080P+": translate("VIDEO_QUALITY", "1080P High Bitrate"),

@@ -184,7 +184,7 @@ class ParseWorker(QRunnable, ParserBase):
             "cid": self.task_info.Episode.cid,
             "qn": self.task_info.Download.video_quality_id,
             "fnver": 0,
-            "fnval": 12240,
+            "fnval": 143312,
             "fourk": 1
         }
 

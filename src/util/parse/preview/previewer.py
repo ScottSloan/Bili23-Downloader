@@ -150,7 +150,7 @@ class Previewer(ParserBase, QObject):
             "cid": episode_data["cid"],
             "qn": 80,
             "fnver": 0,
-            "fnval": 12240,
+            "fnval": 143312,
             "fourk": 1
         }
 

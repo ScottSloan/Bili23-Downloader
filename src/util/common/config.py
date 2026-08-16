@@ -73,6 +73,7 @@ class DefaultValue:
         127,
         126,
         125,
+        122,
         120,
         116,
         112,
@@ -304,7 +305,7 @@ class APPConfig(QConfig):
     app_name = "Bili23 Downloader"
     app_version = "2.14.0"
     app_comparable_version = "2.14.0"
-    app_config_version = 2130
+    app_config_version = 2140
     config_version = ConfigItem("Application", "config_version", app_config_version)
 
     # Interface
@@ -526,6 +527,24 @@ def patch_config(config_version: int, data: dict):
             config.set(config.proxy_mode, ProxyMode.MANUAL)
 
             logger.info("代理设置已迁移为手动设置")
+
+    if config_version < 2140:
+        # 2.14.0 起支持 SDR 增强（qn 122）。画质优先级列表是一份完整枚举，
+        # 选择画质时只遍历列表内的值，旧配置里没有 122 就永远选不中该画质；
+        # 且优先级对话框是按配置列表渲染的，缺项不仅调不了，保存后还会把它彻底丢掉。
+        # 因此这里补进列表，位置与默认值一致（HDR 之后、4K 之前），用户自定义过的顺序不受影响
+        video_quality_priority = config.get(config.video_quality_priority).copy()
+
+        if 122 not in video_quality_priority:
+            if 120 in video_quality_priority:
+                video_quality_priority.insert(video_quality_priority.index(120), 122)
+            else:
+                # 找不到 4K 作为锚点时兜底追加，至少保证该画质可被选中
+                video_quality_priority.append(122)
+
+            config.set(config.video_quality_priority, video_quality_priority)
+
+            logger.info("SDR 增强画质已补入画质优先级列表")
 
     # 完成修补，写入新的 config_version
     config.set(config.config_version, config.app_config_version)

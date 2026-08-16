@@ -35,3 +35,6 @@ uv.toml
 mutagen.yml
 mutagen.yml.lock
 sync.ps1
+
+# playwright
+/.playwright-mcp
