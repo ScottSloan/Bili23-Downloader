@@ -35,6 +35,7 @@ class Previewer(ParserBase, QObject):
         QObject.__init__(self)
 
         self.show_toast = False
+        self.candidates = []
 
         self.video_info_parser = VideoInfoParser()
         self.audio_info_parser = AudioInfoParser()
@@ -44,13 +45,27 @@ class Previewer(ParserBase, QObject):
 
         signal_bus.parse.preview_init.connect(self.on_init)
 
-    def on_init(self, episode_data: dict, show_toast: bool):
-        if episode_data is None:
+    def on_init(self, episode_data_list: list, show_toast: bool):
+        # 候选项按顺序尝试，取不到媒体信息就换下一个。
+        # 用户手动指定某一项时只会传来这一项，失败即失败，不会擅自换成别的视频
+        self.candidates = [episode_data for episode_data in episode_data_list if episode_data]
+
+        if not self.candidates:
             return
 
         self.show_toast = show_toast
 
+        self.start_next_candidate(from_fallback = False)
+
+    def start_next_candidate(self, from_fallback: bool):
+        episode_data = self.candidates.pop(0)
+
         self.clear_cache()
+
+        # 记录媒体信息取自哪个视频，供下载选项对话框显示
+        PreviewerInfo.episode_title = episode_data.get("title", "")
+        PreviewerInfo.episode_number = episode_data.get("number", "")
+        PreviewerInfo.from_fallback = from_fallback
 
         # clear_cache 已递增代号，此后到达的旧请求结果都会被丢弃
         token = PreviewerInfo.generation
@@ -110,14 +125,23 @@ class Previewer(ParserBase, QObject):
 
         self.parse_info()
 
-    def on_init_error(self, error: str):
+    def on_init_error(self, error: str, allow_fallback: bool = True):
         # 标记出错 flag
         PreviewerInfo.error_occurred = True
         PreviewerInfo.error_message = error
 
-        signal_bus.toast.show.emit(ToastNotificationCategory.ERROR, "获取媒体信息失败", error)
-
         logger.exception("获取媒体信息失败: %s", error)
+
+        if allow_fallback and self.candidates:
+            # 充电专属、付费等内容取不到媒体信息，整个解析结果就都会被判定为不可下载，
+            # 用户只能自己右键换一项重新获取。此处自动换下一个候选，
+            # 全部失败时才提示，避免中途弹出会被重试消解掉的错误
+            logger.info("尝试使用下一个视频重新获取媒体信息")
+
+            self.start_next_candidate(from_fallback = True)
+            return
+
+        signal_bus.toast.show.emit(ToastNotificationCategory.ERROR, "获取媒体信息失败", error)
 
     def parse_info(self):
         try:
@@ -251,7 +275,8 @@ class Previewer(ParserBase, QObject):
         if token != PreviewerInfo.generation:
             return
 
-        self.on_init_error(error)
+        # 网络层就失败了，换一个视频同样请求不到，直接把错误报给用户
+        self.on_init_error(error, allow_fallback = False)
 
     def check_need_parse(self, ep_attr: int):
         attr_list = [
@@ -288,6 +313,8 @@ class Previewer(ParserBase, QObject):
         PreviewerInfo.info_data = {}
         PreviewerInfo.media_type = MediaType.UNKNOWN
         PreviewerInfo.attribute = 0
+        PreviewerInfo.episode_title = ""
+        PreviewerInfo.from_fallback = False
         PreviewerInfo.cache = {
             "video": defaultdict(lambda: defaultdict(dict)),
             "audio": defaultdict(dict)

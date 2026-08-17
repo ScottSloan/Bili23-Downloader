@@ -152,9 +152,10 @@ class ParseBase(QFrame):
         self.parse_list.check_items(items)
 
     def update_previewer_info(self: "ParseInterface"):
-        if episode_info := self.parse_list.get_preview_item_info():
-            # 优先取链接指向的那个视频，链接未指向具体视频时取解析结果中的第一个视频
-            signal_bus.parse.preview_init.emit(episode_info, False)
+        # 首选链接指向的那个视频，链接未指向具体视频时取解析结果中的第一个视频，
+        # 其余为备选，供首选项取不到媒体信息时依次重试
+        if candidates := self.parse_list.get_preview_candidates():
+            signal_bus.parse.preview_init.emit(candidates, False)
 
     def check_preview_info(self: "ParseInterface"):
         if PreviewerInfo.error_occurred:

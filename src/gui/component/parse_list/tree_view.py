@@ -526,6 +526,27 @@ class ParseTreeView(TreeView):
 
         return self.get_first_item_info()
 
+    def get_preview_candidates(self, limit: int = 3):
+        # 首选项若是充电专属、付费等无权限的视频，媒体信息就取不到，
+        # 整个解析结果都会被判定为不可下载。此处额外给出几个备选，
+        # 让解析界面在首选项失败时能换一个视频重试
+        all_items = self.get_all_items()
+
+        if not all_items:
+            return []
+
+        primary = self._current_episode_item if self._current_episode_item is not None else all_items[0]
+
+        # 带备注的多半是充电专属、付费等取不到媒体信息的项，排到后面
+        backups = sorted(
+            (item for item in all_items if item is not primary),
+            key = lambda item: bool(item.badge)
+        )
+
+        candidates = [primary] + backups[:max(0, limit - 1)]
+
+        return [item.to_dict() for item in candidates]
+
     def check_all_items(self, uncheck = False):
         # 只需要改变根节点的状态，子节点会自动跟随
         self._model.root_node.set_checked_state(Qt.CheckState.Unchecked if uncheck else Qt.CheckState.Checked)
@@ -707,7 +728,8 @@ class ParseTreeView(TreeView):
         self.update_check_state()
 
     def on_update_media_info(self, episode_data: dict):
-        signal_bus.parse.preview_init.emit(episode_data, True)
+        # 用户指名要这一项，失败也不换别的视频
+        signal_bus.parse.preview_init.emit([episode_data], True)
 
     def mark_item_as_downloaded(self, item_list: List[TreeItem]):
         for item in item_list:

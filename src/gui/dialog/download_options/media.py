@@ -51,6 +51,8 @@ class MediaSettingsPage(ScrollArea):
         self.media_options_card.download_audio_stream_switch.checkedChanged.connect(self.preview_changed)
 
     def init_media_info(self):
+        self.media_info_card.update_source_description()
+
         self.media_info_card.update_choice_data(PreviewerInfo.video_quality_choice_data, PreviewerInfo.audio_quality_choice_data, PreviewerInfo.video_codec_choice_data)
 
         self.on_change_video_info_choice()

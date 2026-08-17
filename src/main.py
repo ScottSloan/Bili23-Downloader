@@ -1,11 +1,24 @@
-# --------- System Version Check ---------
-
-# 低于 Windows 10 1809 的系统不支持 QT 6
-
 import platform
 import ctypes
 import locale
 import sys
+
+# --------- MCP stdio 桥接 ---------
+
+# 只认 stdio 传输的 MCP 客户端（如 Claude Desktop）会把本程序当作服务器拉起，
+# 此时只做 stdio ↔ HTTP 转发，不启动界面。
+#
+# 这段必须排在所有其他逻辑之前：桥接进程不需要 GUI，也就不该为它加载 Qt，
+# 更不该走下面的 Windows 版本检查（能连上的程序本身就跑在受支持的系统上）。
+
+if "--mcp-stdio" in sys.argv:
+    from util.mcp.stdio_bridge import run_stdio_bridge
+
+    sys.exit(run_stdio_bridge())
+
+# --------- System Version Check ---------
+
+# 低于 Windows 10 1809 的系统不支持 QT 6
 
 
 # 标记经过特殊处理、可在 Windows 7 上运行的 PySide 版本。该版本需要在
