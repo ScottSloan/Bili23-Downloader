@@ -1,5 +1,6 @@
 from PySide6.QtWidgets import QWidget, QHBoxLayout
 from PySide6.QtCore import Qt
+from PySide6.QtGui import QFontMetrics
 
 from qfluentwidgets import (
     FluentIcon, SwitchButton, IndicatorPosition, SettingCard, ComboBox
@@ -52,6 +53,7 @@ class MediaInfoCard(ExpandGroupSettingCard):
         self.viewLayout.setContentsMargins(0, 0, 0, 0)
         self.viewLayout.setSpacing(0)
 
+        self.source_group = self.addGroup(FluentIcon.MOVIE, self.tr("Source Video"), "", QWidget(self))
         self.video_quality_group = self.addGroup(FluentIcon.VIDEO, self.tr("Video Quality"), "", self.video_quality_widget)
         self.audio_quality_group = self.addGroup(FluentIcon.MUSIC, self.tr("Audio Quality"), "", self.audio_quality_widget)
         self.video_codec_group = self.addGroup(FluentIcon.CODE, self.tr("Video Codec"), "", self.video_codec_widget)
@@ -67,6 +69,26 @@ class MediaInfoCard(ExpandGroupSettingCard):
         self.video_quality_widget.choice.set_current_data(config.video_quality_id)
         self.audio_quality_widget.choice.set_current_data(config.audio_quality_id)
         self.video_codec_widget.choice.set_current_data(config.video_codec_id)
+
+    def update_source_description(self):
+        # 说明当前的清晰度、编码等信息取自哪个视频。
+        # 解析结果包含多个视频时，媒体信息只取其中一个，且首选项无权限时会自动换用备选，
+        # 不说明来源的话，用户看到的清晰度可能与自己要下载的视频对不上
+        title = PreviewerInfo.episode_title or self.tr("Unknown")
+
+        if PreviewerInfo.from_fallback:
+            content = self.tr("{title} · media info of the video the link points to is unavailable, this one is used instead").format(title = title)
+        else:
+            content = title
+
+        content = "#{number} - {content}".format(number = PreviewerInfo.episode_number, content = content)
+
+        # 对话框宽度固定，标题过长时省略，完整内容放到工具提示里
+        label = self.source_group.contentLabel
+
+        self.source_group.setContent(QFontMetrics(label.font()).elidedText(content, Qt.TextElideMode.ElideRight, 540))
+
+        label.setToolTip(content)
 
     def update_choice_data(self, video_data: dict, audio_data: dict, codec_data: dict):
         self.video_quality_widget.choice.clear()

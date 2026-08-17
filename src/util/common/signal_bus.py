@@ -22,7 +22,10 @@ class SignalBus:
         # 解析线程不得直接改动解析列表所使用的树，只能通过本信号把新节点交给 GUI 线程挂载
         append_parse_list_nodes = Signal(object)
 
-        preview_init = Signal(dict, bool)
+        # 按顺序尝试的媒体信息预览候选项。首选项取不到媒体信息（多为充电专属、付费等
+        # 无权限的视频）时自动换下一个，全部失败才提示用户。
+        # 用户手动指定某一项时只传该项，失败即提示
+        preview_init = Signal(list, bool)
         preview_finish = Signal()
 
         query_video_info = Signal(int, int, object)
