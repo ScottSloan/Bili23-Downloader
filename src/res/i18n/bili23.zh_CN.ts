@@ -2244,7 +2244,7 @@ Message:
     </message>
     <message>
         <location filename="../../gui/component/setting/card.py" line="727"/>
-        <location filename="../../gui/component/setting/card.py" line="730"/>
+        <location filename="../../gui/component/setting/card.py" line="733"/>
         <source>Copy</source>
         <translation>复制</translation>
     </message>
@@ -2254,107 +2254,117 @@ Message:
         <translation>重新生成</translation>
     </message>
     <message>
+        <location filename="../../gui/component/setting/card.py" line="737"/>
+        <source>HTTP (Claude Code, etc.)</source>
+        <translation>HTTP 直连（Claude Code 等）</translation>
+    </message>
+    <message>
         <location filename="../../gui/component/setting/card.py" line="740"/>
+        <source>stdio (Claude Desktop, etc.)</source>
+        <translation>stdio 桥接（Claude Desktop 等）</translation>
+    </message>
+    <message>
+        <location filename="../../gui/component/setting/card.py" line="753"/>
         <source>Enable MCP Server</source>
         <translation>启用 MCP 服务器</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="740"/>
+        <location filename="../../gui/component/setting/card.py" line="753"/>
         <source>Listen on the local loopback address only. Disabled by default.</source>
         <translation>仅监听本地回环地址，默认关闭</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="741"/>
+        <location filename="../../gui/component/setting/card.py" line="754"/>
         <source>Status</source>
         <translation>状态</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="742"/>
+        <location filename="../../gui/component/setting/card.py" line="755"/>
         <source>Port</source>
         <translation>端口</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="742"/>
+        <location filename="../../gui/component/setting/card.py" line="755"/>
         <source>Takes effect after the server restarts</source>
         <translation>重启服务器后生效</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="743"/>
+        <location filename="../../gui/component/setting/card.py" line="756"/>
         <source>Allow Download Operations</source>
         <translation>允许下载操作</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="743"/>
+        <location filename="../../gui/component/setting/card.py" line="756"/>
         <source>Let AI clients create, pause and cancel download tasks. Turn off to expose read-only tools.</source>
         <translation>允许 AI 客户端创建、暂停和取消下载任务，关闭后仅提供只读功能</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="744"/>
+        <location filename="../../gui/component/setting/card.py" line="757"/>
         <source>Access Token</source>
         <translation>访问令牌</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="744"/>
+        <location filename="../../gui/component/setting/card.py" line="757"/>
         <source>Required by every request. Treat it like a password.</source>
         <translation>每次请求都需要提供，请像密码一样妥善保管</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="745"/>
+        <location filename="../../gui/component/setting/card.py" line="758"/>
         <source>Client Configuration</source>
         <translation>客户端配置</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="745"/>
+        <location filename="../../gui/component/setting/card.py" line="758"/>
         <source>Copy a ready-to-use MCP client configuration</source>
         <translation>复制可直接使用的 MCP 客户端配置</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="749"/>
+        <location filename="../../gui/component/setting/card.py" line="762"/>
         <source>View Documentation</source>
         <translation>查看帮助文档</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="769"/>
+        <location filename="../../gui/component/setting/card.py" line="781"/>
         <source>Disabled</source>
         <translation>已关闭</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="772"/>
+        <location filename="../../gui/component/setting/card.py" line="784"/>
         <source>Listening on 127.0.0.1:{port}</source>
         <translation>正在监听 127.0.0.1:{port}</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="775"/>
+        <location filename="../../gui/component/setting/card.py" line="787"/>
         <source>Failed to start: {error}</source>
         <translation>启动失败：{error}</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="778"/>
+        <location filename="../../gui/component/setting/card.py" line="790"/>
         <source>Not running</source>
         <translation>未运行</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="805"/>
+        <location filename="../../gui/component/setting/card.py" line="817"/>
         <source>Access token copied</source>
         <translation>已复制访问令牌</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="809"/>
+        <location filename="../../gui/component/setting/card.py" line="821"/>
         <source>Regenerate Access Token</source>
         <translation>重新生成访问令牌</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="810"/>
+        <location filename="../../gui/component/setting/card.py" line="822"/>
         <source>Existing AI clients will stop working until they are reconfigured with the new token. Continue?</source>
         <translation>现有 AI 客户端将无法继续使用，需要使用新令牌重新配置。是否继续？</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="823"/>
+        <location filename="../../gui/component/setting/card.py" line="835"/>
         <source>Access token regenerated</source>
         <translation>已重新生成访问令牌</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="840"/>
+        <location filename="../../gui/component/setting/card.py" line="844"/>
         <source>Client configuration copied</source>
         <translation>已复制客户端配置</translation>
     </message>

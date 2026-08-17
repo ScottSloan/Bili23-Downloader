@@ -727,7 +727,20 @@ class MCPSettingCard(ExpandGroupSettingCard):
         self.copy_token_btn = PushButton(self.tr("Copy"), self)
         self.regenerate_token_btn = PushButton(self.tr("Regenerate"), self)
 
-        self.copy_config_btn = PrimaryPushButton(self.tr("Copy"), self)
+        # 客户端分两种：一种支持 HTTP 直连（Claude Code 等），一种只认 stdio
+        # 传输（Claude Desktop 等，配置里填 url 会被当作非法条目跳过）。
+        # 让用户自己去分辨哪个客户端支持什么不现实，两种配置都给
+        self.copy_config_btn = DropDownPushButton(text = self.tr("Copy"), parent = self)
+
+        config_menu = RoundMenu(parent = self.copy_config_btn)
+        config_menu.addAction(Action(
+            FluentIcon.GLOBE, self.tr("HTTP (Claude Code, etc.)"), triggered = self.on_copy_http_config
+        ))
+        config_menu.addAction(Action(
+            FluentIcon.COMMAND_PROMPT, self.tr("stdio (Claude Desktop, etc.)"), triggered = self.on_copy_stdio_config
+        ))
+
+        self.copy_config_btn.setMenu(config_menu)
 
         token_layout = QHBoxLayout()
         token_layout.setContentsMargins(0, 0, 0, 0)
@@ -752,7 +765,6 @@ class MCPSettingCard(ExpandGroupSettingCard):
 
         self.copy_token_btn.clicked.connect(self.on_copy_token)
         self.regenerate_token_btn.clicked.connect(self.on_regenerate_token)
-        self.copy_config_btn.clicked.connect(self.on_copy_config)
 
         self.enable_switch.checkedChanged.connect(self.on_toggle_enabled)
         self.port_box.valueChanged.connect(self.on_port_changed)
@@ -822,19 +834,32 @@ class MCPSettingCard(ExpandGroupSettingCard):
 
         signal_bus.toast.show.emit(ToastNotificationCategory.SUCCESS, "", self.tr("Access token regenerated"))
 
-    def on_copy_config(self):
+    def _copy_config(self, entry: dict):
         import json
 
-        payload = {
-            "mcpServers": {
-                "bili23-downloader": {
-                    "type": "http",
-                    "url": f"http://127.0.0.1:{config.get(config.mcp_port)}/mcp",
-                    "headers": {"Authorization": f"Bearer {self._ensure_token()}"},
-                }
-            }
-        }
-
-        QApplication.clipboard().setText(json.dumps(payload, indent = 2))
+        QApplication.clipboard().setText(
+            json.dumps({"mcpServers": {"bili23-downloader": entry}}, indent = 2)
+        )
 
         signal_bus.toast.show.emit(ToastNotificationCategory.SUCCESS, "", self.tr("Client configuration copied"))
+
+    def on_copy_http_config(self):
+        self._copy_config({
+            "type": "http",
+            "url": f"http://127.0.0.1:{config.get(config.mcp_port)}/mcp",
+            "headers": {"Authorization": f"Bearer {self._ensure_token()}"},
+        })
+
+    def on_copy_stdio_config(self):
+        from util.mcp.stdio_bridge import stdio_launch_command
+
+        command = stdio_launch_command()
+
+        # 令牌不写进配置：桥接会自己从 config.json 读，用户重新生成令牌后
+        # 不必再改一遍客户端配置
+        self._ensure_token()
+
+        self._copy_config({
+            "command": command[0],
+            "args": command[1:],
+        })
