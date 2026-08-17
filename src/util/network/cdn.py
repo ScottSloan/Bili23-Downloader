@@ -139,6 +139,12 @@ class CDN:
         return filtered_url_list
 
     @staticmethod
+    def is_mall_course_url(url: str) -> bool:
+        # 会员购商城课程的视频存在单独的存储桶里，只有部分节点有这份数据：
+        # 这类链接直接跳过节点替换
+        return "/mallxcodeboss/" in url or "gen=playurlv2_itemsvideo" in url
+
+    @staticmethod
     def replace(url_list: list[str]) -> list[str]:
         new_url_list = []
 
@@ -147,6 +153,9 @@ class CDN:
         cdn_server_list = list(CDN.get_cdn_server_list() or [])
 
         for url in url_list:
+            if CDN.is_mall_course_url(url):
+                continue
+
             for entry in cdn_server_list:
                 node = entry.get("host")
 

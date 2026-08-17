@@ -89,6 +89,8 @@ class Attribute(IntFlag):
 
     FAVORITE_WITH_MULTI_PART_VIDEO_BIT        = 1 << 17                  # 收藏夹中是否包含分P视频
 
+    LESSON_BIT                                = 1 << 18                  # 是否为会员购商城课程
+
 class TreeItemBase:
     def __init__(self):
         self.parent: TreeItem = None
@@ -258,6 +260,12 @@ class TreeItem(TreeItemBase):
         self.uploader = item_data.get("uploader", "")
         self.uploader_uid = item_data.get("uploader_uid", 0)
 
+        # 会员购商城课程的定位信息，该类课程没有 aid / cid / ep_id
+        self.course_id = item_data.get("course_id", 0)
+        self.lesson_id = item_data.get("lesson_id", 0)
+        self.item_id = item_data.get("item_id", 0)
+        self.section_id = item_data.get("section_id", 0)
+
         self.downloaded = False
 
     def set_attribute(self, flag: int):
@@ -292,6 +300,14 @@ class TreeItem(TreeItemBase):
                 "uploader": self.uploader,
                 "uploader_uid": self.uploader_uid
             }
+
+        if self.section_id:
+            data.update({
+                "course_id": self.course_id,
+                "lesson_id": self.lesson_id,
+                "item_id": self.item_id,
+                "section_id": self.section_id
+            })
 
         return data
     

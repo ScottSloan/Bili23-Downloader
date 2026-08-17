@@ -5,6 +5,7 @@ url_patterns = [
     ("video", re.compile(r"bilibili\.com/video/([a-zA-Z0-9]+)")),
     ("bangumi", re.compile(r"bilibili\.com/bangumi/(play|media)/(ss\d+|ep\d+|md\d+)")),
     ("cheese", re.compile(r"bilibili\.com/cheese/play/(ss\d+|ep\d+)")),
+    ("lesson", re.compile(r"mall\.bilibili\.com/lesson/play")),
     #("live", re.compile(r"live\.bilibili\.com/(\d+)")),
     ("list", re.compile(r"space\.bilibili\.com/(\d+)/lists")),
     ("favlist", re.compile(r"space\.bilibili\.com/(\d+)/favlist")),

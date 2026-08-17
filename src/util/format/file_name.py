@@ -187,6 +187,7 @@ class FileNameFormatter:
             Attribute.INTERACTIVE_BIT: ConventionType.INTERACTIVE_VIDEO,
             Attribute.BANGUMI_BIT: ConventionType.BANGUMI,
             Attribute.CHEESE_BIT: ConventionType.CHEESE,
+            Attribute.LESSON_BIT: ConventionType.CHEESE,
         }
 
         for attr, type_id in type_map.items():

@@ -1,8 +1,9 @@
 from PySide6.QtCore import QRunnable, QMetaObject, Qt, Q_ARG
 
-from ...network.request import SyncNetWorkRequest
+from ...network.request import SyncNetWorkRequest, RequestType
 from ...parse.episode.tree import Attribute
 from ...parse.parser.base import ParserBase
+from ...parse.parser.lesson import LESSON_PLAY_DETAIL_URL, build_lesson_media_info, build_lesson_play_payload
 
 from ...common.enum import DownloadType, MediaType
 from ...common.translator import Translator
@@ -144,6 +145,9 @@ class ParseWorker(QRunnable, ParserBase):
         elif attr & Attribute.CHEESE_BIT:
             self.get_cheese_info()
 
+        elif attr & Attribute.LESSON_BIT:
+            self.get_lesson_info()
+
         elif attr & Attribute.AUDIO_BIT:
             self.get_audio_info()
 
@@ -216,6 +220,21 @@ class ParseWorker(QRunnable, ParserBase):
         self.check_response(response)
 
         self.info_data = response.copy()["data"]
+
+    def get_lesson_info(self):
+        payload = build_lesson_play_payload(
+            self.task_info.Episode.course_id,
+            self.task_info.Episode.lesson_id,
+            self.task_info.Episode.item_id,
+            self.task_info.Episode.section_id
+        )
+
+        request = SyncNetWorkRequest(LESSON_PLAY_DETAIL_URL, RequestType.POST, json_data = payload)
+        response = request.run()
+
+        self.check_response(response)
+
+        self.info_data = build_lesson_media_info(response.copy()["data"])
 
     def get_audio_info(self):
         params = {

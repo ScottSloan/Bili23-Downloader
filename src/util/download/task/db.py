@@ -371,5 +371,9 @@ class TaskDatabase(Database):
             cid = task_info.Episode.cid,
             ep_id = task_info.Episode.ep_id,
             sid = task_info.Episode.sid,
-            task_id = task_info.Basic.task_id
+            task_id = task_info.Basic.task_id,
+            course_id = task_info.Episode.course_id,
+            lesson_id = task_info.Episode.lesson_id,
+            item_id = task_info.Episode.item_id,
+            section_id = task_info.Episode.section_id
         )

@@ -92,6 +92,8 @@ class TaskManager:
         # EpisodeInfo
         task_info.Episode.from_dict(self.__update_episode_info(episode_info, number))
 
+        self.__trim_download_type(task_info)
+
         # FileNameInfo
         # 下载目录在生成 TaskInfo 时就确定，后续即便修改了下载目录的设置，也不会影响已生成的 TaskInfo 中的下载目录，避免下载过程中下载目录发生变化导致的问题
         task_info.File.download_path = config.get(config.download_path)
@@ -99,6 +101,11 @@ class TaskManager:
         self.__update_file_name_info(task_info)
 
         return task_info
+
+    def __trim_download_type(self, task_info: TaskInfo):
+        if task_info.Episode.attribute & Attribute.LESSON_BIT:
+            # 会员购商城课程没有 aid / cid，也不返回封面
+            task_info.Download.type &= ~(DownloadType.DANMAKU | DownloadType.SUBTITLE | DownloadType.CHAPTER | DownloadType.COVER)
 
     def __determine_download_type(self):
         # 确定下载类型
@@ -130,7 +137,7 @@ class TaskManager:
         episode_info["leaf_title"] = title
 
         # 对于剧集和课程，使用 episode_title 表示剧集名称或课程名称，leaf_title 表示分P标题
-        if attr & Attribute.BANGUMI_BIT != 0 or attr & Attribute.CHEESE_BIT != 0:
+        if attr & Attribute.BANGUMI_BIT != 0 or attr & Attribute.CHEESE_BIT != 0 or attr & Attribute.LESSON_BIT != 0:
             episode_info["episode_title"] = title
 
         data = {
@@ -552,7 +559,11 @@ class TaskManager:
             bvid = episode_info.get("bvid"),
             cid = episode_info.get("cid"),
             ep_id = episode_info.get("ep_id"),
-            sid = episode_info.get("sid")
+            sid = episode_info.get("sid"),
+            course_id = episode_info.get("course_id"),
+            lesson_id = episode_info.get("lesson_id"),
+            item_id = episode_info.get("item_id"),
+            section_id = episode_info.get("section_id")
         )
     
 task_manager = TaskManager()
