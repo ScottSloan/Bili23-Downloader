@@ -336,7 +336,9 @@ class Translator:
 
     @staticmethod
     def MEDIA_INFO_GUIDE():
-        return translate("MEDIA_INFO_GUIDE", """The media info shown here defaults to the first video in the parsed results. If multiple videos are available, this information may not exactly match the one you download—use it for reference only.
+        return translate("MEDIA_INFO_GUIDE", """The media info shown here comes from a single video in the parsed results: the one the link points to, or the first one when the link doesn't point to a specific video. If that video's media info cannot be retrieved—charge-exclusive or paid content, for example—another video is used instead. "Source Video" above shows which one it came from.
+
+If multiple videos are available, this information may not exactly match the one you download—use it for reference only.
 
 To view detailed media info for a specific video, right-click its entry in the parse list and select "Update Media Info".
 

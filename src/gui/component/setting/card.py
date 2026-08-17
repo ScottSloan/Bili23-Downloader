@@ -5,20 +5,21 @@ from PySide6.QtGui import QColor
 from qfluentwidgets import (
     PushButton, FluentIcon, PushSettingCard, qconfig, ColorDialog, PrimaryPushButton, setCustomStyleSheet,
     MessageBox, ExpandGroupSettingCard as _ExpandGroupSettingCard, HyperlinkLabel, DropDownPushButton,
-    RoundMenu, Action, SpinBox
+    RoundMenu, Action
 )
 from qfluentwidgets.components.settings.expand_setting_card import GroupWidget as _GroupWidget
 
 from .widget import SettingSwitchButton, SettingComboBox, SettingSlider
+from ..widget.button import TransparentToolButton
+from ..widget.spinbox import SpinBox
 
-
+from util.common.enum import VideoContainer, ToastNotificationCategory
 from util.common.config import config, isWin11, APPConfig
 from util.thread.pool import GlobalThreadPoolTask
 from util.common.icon import ExtendedFluentIcon
 from util.common.io.directory import Directory
 from util.common.translator import Translator
 from util.common.signal_bus import signal_bus
-from util.common.enum import VideoContainer, ToastNotificationCategory
 
 from pathlib import Path
 import logging
@@ -743,6 +744,12 @@ class MCPSettingCard(ExpandGroupSettingCard):
         self.addGroup("", self.tr("Access Token"), self.tr("Required by every request. Treat it like a password."), token_widget)
         self.addGroup("", self.tr("Client Configuration"), self.tr("Copy a ready-to-use MCP client configuration"), self.copy_config_btn)
 
+        # 这里跳转到在线文档而不是弹说明对话框：配置 AI 客户端要贴 JSON、
+        # 分辨客户端差异，篇幅远超一个对话框能承载的量
+        self.showHyperLinkLabel(self.tr("View Documentation"))
+
+        self.hyper_label.clicked.connect(self.on_open_documentation)
+
         self.copy_token_btn.clicked.connect(self.on_copy_token)
         self.regenerate_token_btn.clicked.connect(self.on_regenerate_token)
         self.copy_config_btn.clicked.connect(self.on_copy_config)
@@ -751,6 +758,11 @@ class MCPSettingCard(ExpandGroupSettingCard):
         self.port_box.valueChanged.connect(self.on_port_changed)
 
         self.update_status()
+
+    def on_open_documentation(self):
+        import webbrowser
+
+        webbrowser.open("https://bili23.scott-sloan.cn/doc/mcp-server.html")
 
     def update_status(self):
         if not config.get(config.mcp_enabled):
