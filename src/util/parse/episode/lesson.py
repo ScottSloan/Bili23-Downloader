@@ -30,7 +30,7 @@ class LessonEpisodeParser(EpisodeParserBase):
         course_title = self.get_course_title()
 
         root_node = TreeItem({
-            "number": Translator.EPISODE_TYPE("COURSE"),
+            "number": Translator.EPISODE_TYPE("MALL_COURSE"),
             "title": course_title
         })
         root_node.set_attribute(Attribute.TREE_NODE_BIT)

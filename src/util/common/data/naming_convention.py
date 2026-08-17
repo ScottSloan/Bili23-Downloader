@@ -7,6 +7,7 @@ convention_type_map = {
     "INTERACTIVE_VIDEO": ConventionType.INTERACTIVE_VIDEO,
     "BANGUMI": ConventionType.BANGUMI,
     "CHEESE": ConventionType.CHEESE,
+    "LESSON": ConventionType.LESSON,
     "FAVORITE": ConventionType.FAVORITE,
     "SPACE": ConventionType.SPACE,
     "HISTORY": ConventionType.HISTORY,
@@ -40,6 +41,9 @@ class VariableListFactory:
             
             case ConventionType.CHEESE:
                 return self._base_variable + self._cheese_variable
+
+            case ConventionType.LESSON:
+                return self._base_variable + self._lesson_variable
             
             case ConventionType.FAVORITE:
                 return self._base_variable + self._normal_variable + self._favorite_variable
@@ -389,6 +393,55 @@ class VariableListFactory:
                 "variable": "{season_id}",
                 "description": "SEASON_ID",
                 "example": "4016"
+            }
+        ]
+
+    @property
+    def _lesson_variable(self):
+        # 会员购商城课程只有 courseId / lessonId / itemId / sectionId 四个标识，
+        # 没有 aid / cid / ep_id，也没有 UP 主与发布时间
+        return [
+            {
+                "name": "series_title",
+                "variable": "{series_title}",
+                "description": "SERIES_TITLE_FOR_LESSON",
+                "example": "《男性生活化减脂》课程 盗月社沐上&闫帅奇联合出品"
+            },
+            {
+                "name": "section_title",
+                "variable": "{section_title}",
+                "description": "SECTION_TITLE_FOR_LESSON",
+                "example": "第一章 入门"
+            },
+            {
+                "name": "episode_title",
+                "variable": "{episode_title}",
+                "description": "EPISODE_TITLE_FOR_LESSON",
+                "example": "DAY1运动-全身燃脂"
+            },
+            {
+                "name": "course_id",
+                "variable": "{course_id}",
+                "description": "COURSE_ID",
+                "example": "1000625147"
+            },
+            {
+                "name": "lesson_id",
+                "variable": "{lesson_id}",
+                "description": "LESSON_ID",
+                "example": "180281190609920"
+            },
+            {
+                "name": "item_id",
+                "variable": "{item_id}",
+                "description": "ITEM_ID",
+                "example": "10302975"
+            },
+            {
+                "name": "section_id",
+                "variable": "{section_id}",
+                "description": "SECTION_ID",
+                "example": "180281190650881"
             }
         ]
 

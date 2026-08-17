@@ -61,6 +61,7 @@ class LessonParser(ParserBase):
     def parse(self, url: str, pn: int):
         self.url = url
 
+        # 商城课程必须购买后才能观看，未登录时接口只会含糊地返回「系统异常」
         self.check_login()
 
         self.get_id_from_url()
@@ -110,4 +111,4 @@ class LessonParser(ParserBase):
         }
 
     def get_parser_type(self):
-        return ParserType.CHEESE
+        return ParserType.LESSON
