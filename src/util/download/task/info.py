@@ -95,6 +95,12 @@ class EpisodeInfo(InfoBase):
     space_owner: str = ""
     space_owner_id: int = 0
 
+    # 会员购商城课程
+    course_id: int = 0
+    lesson_id: int = 0
+    item_id: int = 0
+    section_id: int = 0
+
     # 其他
     video_quality: str = ""
     audio_quality: str = ""

@@ -9,7 +9,8 @@ from qfluentwidgets import (
 from .serializer import LanguageSerializer, ScalingSerializer
 from .enum import (
     Language, WhenClose, DanmakuType, SubtitleType, CoverType, MetadataType, ProxyMode, ProxyType, FFmpegSource,
-    NumberingType, Scaling, FileConflictResolution, VideoContainer, AutoSelectMode, Area, DuplicateDownloadResolution
+    NumberingType, Scaling, FileConflictResolution, VideoContainer, AutoSelectMode, Area, DuplicateDownloadResolution,
+    ConventionType
 )
 from ._json import json_loads
 
@@ -205,6 +206,13 @@ class DefaultValue:
             "default": True
         },
         {
+            "id": "b7a4f0c5-1d2e-4a83-9f61-3c0d7e5b8a19",
+            "name": "DEFAULT_FOR_LESSON",
+            "type": 31,
+            "rule": "{series_title}/{episode_title}",
+            "default": True
+        },
+        {
             "id": "5913e25f-0bf3-4d3c-a608-8416af778a8a",
             "name": "DEFAULT_FOR_FAVORITE",
             "type": 40,
@@ -305,7 +313,7 @@ class APPConfig(QConfig):
     app_name = "Bili23 Downloader"
     app_version = "2.15.0"
     app_comparable_version = "2.15.0"
-    app_config_version = 2140
+    app_config_version = 2150
     config_version = ConfigItem("Application", "config_version", app_config_version)
 
     # Interface
@@ -557,6 +565,34 @@ def patch_config(config_version: int, data: dict):
             config.set(config.video_quality_priority, video_quality_priority)
 
             logger.info("SDR 增强画质已补入画质优先级列表")
+
+    if config_version < 2150:
+        # 2.15.0 起支持会员购商城课程，它是独立的命名类型（31）。命名规则列表是一份完整枚举，
+        # 缺少该类型时 get_rule_from_config() 会返回 None，格式化文件名直接失败，
+        # 任务连名字都取不到。因此为旧配置补上这条默认规则，排在课程之后
+        naming_rule_list = config.get(config.naming_rule_list).copy()
+
+        if not any(entry.get("type") == ConventionType.LESSON for entry in naming_rule_list):
+            lesson_rule = next(
+                entry.copy() for entry in DefaultValue.naming_rule_list
+                if entry["type"] == ConventionType.LESSON
+            )
+
+            # 用户可能为课程建过多条自定义规则，插在最后一条之后，不要把这一组拆开
+            cheese_index = next(
+                (index for index in range(len(naming_rule_list) - 1, -1, -1)
+                 if naming_rule_list[index].get("type") == ConventionType.CHEESE),
+                None
+            )
+
+            if cheese_index is None:
+                naming_rule_list.append(lesson_rule)
+            else:
+                naming_rule_list.insert(cheese_index + 1, lesson_rule)
+
+            config.set(config.naming_rule_list, naming_rule_list)
+
+            logger.info("商城课程命名规则已补入命名规则列表")
 
     # 完成修补，写入新的 config_version
     config.set(config.config_version, config.app_config_version)

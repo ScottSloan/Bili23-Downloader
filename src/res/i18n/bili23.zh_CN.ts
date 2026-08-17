@@ -616,6 +616,11 @@ You can also press shift + click to select a range of items.</source>
         <source>Music</source>
         <translation>音乐</translation>
     </message>
+    <message>
+        <location filename="../../util/common/translator.py" line="159"/>
+        <source>Mall Courses</source>
+        <translation>会员购课程</translation>
+    </message>
 </context>
 <context>
     <name>ChapterSettingCard</name>
@@ -884,6 +889,11 @@ You can also press shift + click to select a range of items.</source>
         <location filename="../../util/common/translator.py" line="141"/>
         <source>Preset: Music</source>
         <translation>预设规则：音乐</translation>
+    </message>
+    <message>
+        <location filename="../../util/common/translator.py" line="140"/>
+        <source>Preset: Mall Courses</source>
+        <translation>预设规则：会员购课程</translation>
     </message>
 </context>
 <context>
@@ -1468,6 +1478,11 @@ If you continue, please disable the &quot;Preallocate file space&quot; option. (
         <location filename="../../util/common/translator.py" line="91"/>
         <source>Music</source>
         <translation>音乐</translation>
+    </message>
+    <message>
+        <location filename="../../util/common/translator.py" line="85"/>
+        <source>Mall Courses</source>
+        <translation>会员购课程</translation>
     </message>
 </context>
 <context>
@@ -4809,6 +4824,41 @@ Under no circumstances shall the developer be liable for any direct, indirect, i
         <location filename="../../util/common/translator.py" line="178"/>
         <source>Uploader name</source>
         <translation>UP主昵称</translation>
+    </message>
+    <message>
+        <location filename="../../util/common/translator.py" line="219"/>
+        <source>Mall courses title</source>
+        <translation>会员购课程标题</translation>
+    </message>
+    <message>
+        <location filename="../../util/common/translator.py" line="220"/>
+        <source>Chapter title (courses title if not divided into chapters)</source>
+        <translation>章节名称（未分章节时为课程标题）</translation>
+    </message>
+    <message>
+        <location filename="../../util/common/translator.py" line="221"/>
+        <source>Lesson title</source>
+        <translation>课时标题</translation>
+    </message>
+    <message>
+        <location filename="../../util/common/translator.py" line="222"/>
+        <source>Mall courses id</source>
+        <translation>会员购课程ID</translation>
+    </message>
+    <message>
+        <location filename="../../util/common/translator.py" line="223"/>
+        <source>Mall lesson id</source>
+        <translation>会员购课程lesson ID</translation>
+    </message>
+    <message>
+        <location filename="../../util/common/translator.py" line="224"/>
+        <source>Mall item id</source>
+        <translation>会员购商品ID</translation>
+    </message>
+    <message>
+        <location filename="../../util/common/translator.py" line="225"/>
+        <source>Mall section id</source>
+        <translation>会员购课时ID</translation>
     </message>
 </context>
 <context>

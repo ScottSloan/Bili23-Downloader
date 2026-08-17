@@ -78,7 +78,7 @@ class MetadataNFO:
                 "qualifier": [Translator.ADDITIONAL_FILES_QUALIFIER("METADATA")]
             })
 
-        if attr & Attribute.BANGUMI_BIT != 0 or attr & Attribute.CHEESE_BIT != 0:
+        if attr & Attribute.BANGUMI_BIT != 0 or attr & Attribute.CHEESE_BIT != 0 or attr & Attribute.LESSON_BIT != 0:
             # 确保 tvshow.nfo 不重复生成
             if not self._is_tvshow_exists():
                 contents_list.append({

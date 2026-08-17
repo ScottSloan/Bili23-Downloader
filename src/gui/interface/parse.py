@@ -119,8 +119,8 @@ class ParseBase(QFrame):
 
                         # == 0 时无需处理
 
-                    case ParserType.CHEESE.value:
-                        # 课程
+                    case ParserType.CHEESE.value | ParserType.LESSON.value:
+                        # 课程、会员购商城课程
 
                         # 同理，默认行为是选中对应剧集，所以只需处理选中正片的情况
                         if conditions.get("bangumi") == 1:

@@ -5,10 +5,11 @@ from ...common.signal_bus import signal_bus
 from ...common.translator import Translator
 from ...common.config import config
 
-from ...network.request import NetworkRequestWorker
+from ...network.request import NetworkRequestWorker, RequestType
 from ...thread.async_ import AsyncTask
 
 from ..parser.base import ParserBase
+from ..parser.lesson import LESSON_PLAY_DETAIL_URL, build_lesson_media_info, build_lesson_play_payload
 from ..episode.tree import Attribute
 
 from .audio_info import AudioInfoParser
@@ -85,6 +86,9 @@ class Previewer(ParserBase, QObject):
 
         elif ep_attr & Attribute.CHEESE_BIT:
             self.get_cheese_info(episode_data, token)
+
+        elif ep_attr & Attribute.LESSON_BIT:
+            self.get_lesson_info(episode_data, token)
 
         elif ep_attr & Attribute.AUDIO_BIT:
             self.get_audio_info(episode_data, token)
@@ -197,6 +201,16 @@ class Previewer(ParserBase, QObject):
 
         self._request_media_info(url, "cheese", token)
 
+    def get_lesson_info(self, episode_data: dict, token: int):
+        payload = build_lesson_play_payload(
+            episode_data.get("course_id", 0),
+            episode_data.get("lesson_id", 0),
+            episode_data.get("item_id", 0),
+            episode_data.get("section_id", 0)
+        )
+
+        self._request_media_info(LESSON_PLAY_DETAIL_URL, "lesson", token, request_type = RequestType.POST, json_data = payload)
+
     def get_audio_info(self, episode_data: dict, token: int):
         params = {
             "sid": episode_data["sid"],
@@ -208,7 +222,7 @@ class Previewer(ParserBase, QObject):
 
         self._request_media_info(url, "audio", token)
 
-    def _request_media_info(self, url: str, parser_type: str, token: int):
+    def _request_media_info(self, url: str, parser_type: str, token: int, request_type: RequestType = RequestType.GET, json_data: dict = None):
         # 两个闭包都跑在请求线程里，只负责把结果连同发起时的代号转发出去，不碰任何共享状态
         def on_success(response: dict):
             self._media_info_ready.emit(response, parser_type, url, token)
@@ -216,7 +230,7 @@ class Previewer(ParserBase, QObject):
         def on_error(error: str):
             self._media_info_failed.emit(error, token)
 
-        worker = NetworkRequestWorker(url)
+        worker = NetworkRequestWorker(url, request_type, json_data = json_data)
         worker.success.connect(on_success)
         worker.error.connect(on_error)
 
@@ -238,8 +252,19 @@ class Previewer(ParserBase, QObject):
         if parser_type == "audio":
             response["data"]["format"] = "m4a"
 
-        # 剧集接口的数据在 result 下，其余都在 data 下
-        PreviewerInfo.info_data = response.copy()["result" if parser_type == "bangumi" else "data"]
+        try:
+            if parser_type == "lesson":
+                # 商城课程拿到的是一条 mp4 直链，先包装成 playurl 的 mp4 格式
+                info_data = build_lesson_media_info(response.copy()["data"])
+            else:
+                # 剧集接口的数据在 result 下，其余都在 data 下
+                info_data = response.copy()["result" if parser_type == "bangumi" else "data"]
+
+        except Exception as e:
+            self.on_init_error(str(e))
+            return
+
+        PreviewerInfo.info_data = info_data
         PreviewerInfo.info_data["parser_type"] = parser_type
         PreviewerInfo.info_data["query_url"] = url
 
