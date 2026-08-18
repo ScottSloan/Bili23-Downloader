@@ -36,6 +36,34 @@ def _list_sort_key(task_info):
 
     return (False, -task_info.Basic.created_time)
 
+def _output_file_name(task_info) -> str:
+    """
+    产物文件名（含扩展名），取不到时返回空串
+
+    优先用 relative_files 里记录的实际文件名。合并完成时那份名字是
+    safe_rename 的返回值，重名会带上 " (1)" 之类的后缀，只靠 File.name
+    拼是拼不出来的；界面的"打开文件位置"同样以 relative_files[0] 为准。
+
+    下载尚未结束时里面装的还是分片临时文件，此时退回按扩展名拼一个预期路径：
+    合并过就用容器扩展名，否则用视频或音频自身的扩展名 —— 视频优先，
+    因为不合并而保留两个原始文件时，界面也是把视频排在前面的。
+    都取不到才给基名，否则给出的路径连扩展名都没有，模型照着用必然出错。
+    """
+    from ...common.enum import DownloadStatus
+
+    if task_info.Download.status == DownloadStatus.COMPLETED and task_info.File.relative_files:
+        return task_info.File.relative_files[0]
+
+    if not task_info.File.name:
+        return ""
+
+    file_info = task_info.File
+
+    if ext := (file_info.merge_file_ext or file_info.video_file_ext or file_info.audio_file_ext):
+        return f"{file_info.name}.{ext}"
+
+    return file_info.name
+
 def _status_name(value: int) -> str:
     from ...common.enum import DownloadStatus
 
@@ -64,16 +92,7 @@ def _task_to_dict(task_info, verbose: bool = False) -> dict:
         data["created_time"] = task_info.Basic.created_time
         data["completed_time"] = task_info.Basic.completed_time
 
-        if task_info.File.name:
-            # File.name 是不带扩展名的基名，容器扩展名在 merge_file_ext 里
-            # （拼法与 Merger.final_output_file_name 一致，扩展名不带点）。
-            # 不补上的话给出的就是一个磁盘上并不存在的路径，模型照着用必然出错。
-            # merge_file_ext 只在存在合并步骤时才赋值，为空就只能给基名
-            file_name = task_info.File.name
-
-            if task_info.File.merge_file_ext:
-                file_name = f"{file_name}.{task_info.File.merge_file_ext}"
-
+        if file_name := _output_file_name(task_info):
             # 不建子文件夹时 folder 是 "."，直接 join 会拼出 "Downloads\.\xxx"；
             # download_path 又是正斜杠，join 后分隔符混用。normpath 一并收拾干净，
             # 免得把这种路径喂给模型后它再原样传回来
