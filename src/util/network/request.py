@@ -69,22 +69,41 @@ def get_ssl_context():
     return _ssl_context
 
 def _create_ssl_context():
-    # 与 httpx 默认行为保持一致：优先使用环境变量指定的证书，否则回退到 certifi 提供的证书列表
+    # 证书来源的优先级与 httpx 默认行为保持一致：优先使用环境变量指定的证书，否则回退到 certifi 提供的证书列表
     try:
         if cert_file := os.environ.get("SSL_CERT_FILE"):
-            return ssl.create_default_context(cafile = cert_file)
+            context = ssl.create_default_context(cafile = cert_file)
 
-        if cert_dir := os.environ.get("SSL_CERT_DIR"):
-            return ssl.create_default_context(capath = cert_dir)
+        elif cert_dir := os.environ.get("SSL_CERT_DIR"):
+            context = ssl.create_default_context(capath = cert_dir)
 
-        import certifi
+        else:
+            import certifi
 
-        return ssl.create_default_context(cafile = certifi.where())
+            context = ssl.create_default_context(cafile = certifi.where())
 
     except Exception:
         logger.exception("构建 SSL 上下文失败，已回退到系统默认证书")
 
+        # 不带 cafile / capath 调用时，create_default_context 内部就会加载系统证书，无需再叠加
         return ssl.create_default_context()
+
+    _load_system_certs(context)
+
+    return context
+
+def _load_system_certs(context: ssl.SSLContext):
+    # certifi 只收录公共 CA。杀毒软件的 HTTPS 扫描、代理软件的 MITM、企业与校园的准入网关都会用自签根证书
+    # 重签所有站点的证书，而这类根证书只装进系统证书存储。此时浏览器一切正常，只信任 certifi 的本程序却会对
+    # 所有请求抛 CERTIFICATE_VERIFY_FAILED（unable to get local issuer certificate）。
+    # 因此在 certifi 之上再叠加一份系统根证书，两者并存互补，重复的证书由 OpenSSL 自行忽略。
+    # 注意：传入 cafile / capath 时 create_default_context 不会加载系统证书，必须像这样显式调用。
+    try:
+        context.load_default_certs()
+
+    except Exception:
+        # 叠加失败不影响上面已经加载好的证书，保持原有行为继续可用即可，不必让整个上下文构建失败
+        logger.warning("加载系统根证书失败，仅使用已加载的证书列表", exc_info = True)
 
 def get_mounts(proxies = None):
     import httpx

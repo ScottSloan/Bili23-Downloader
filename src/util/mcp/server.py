@@ -5,7 +5,7 @@ from .protocol import (
     MODERN_VERSION, SUPPORTED_VERSIONS, is_modern_request, unsupported_version_error,
 )
 
-from http.server import HTTPServer, BaseHTTPRequestHandler
+from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 from threading import Event, Thread
 import binascii
 import base64
@@ -81,10 +81,11 @@ class MCPRequestHandler(BaseHTTPRequestHandler):
     def _force_close(self):
         # 处理完一个请求就断开连接。
         #
-        # 服务是单线程串行的（一个 handle_request 一次一个连接），而 HTTP/1.1
-        # 默认保持连接：handler 会在响应发出后继续阻塞在 rfile.readline() 上等待
-        # 同一连接的下一个请求。server.timeout 只作用于 accept，管不到这里，
-        # 于是一个不主动关闭连接的客户端就能把整个服务器占住，后续请求全部卡死。
+        # HTTP/1.1 默认保持连接：handler 会在响应发出后继续阻塞在
+        # rfile.readline() 上等同一连接的下一个请求，而 server.timeout 只作用于
+        # accept，管不到这里。改成每连接一个线程之后，这不再会像单线程时那样
+        # 把整个服务占死，但每个赖着不走的连接都会长期占着一个线程，
+        # 攒起来同样是问题。
         #
         # 工具调用之间本就有模型思考的间隔，复用连接省下的那点握手开销没有意义
         self.close_connection = True
@@ -287,9 +288,33 @@ class MCPRequestHandler(BaseHTTPRequestHandler):
         except (BrokenPipeError, ConnectionResetError):
             logger.debug("MCP 客户端在响应写出前断开")
 
-class MCPHTTPServer(HTTPServer):
+class MCPHTTPServer(ThreadingHTTPServer):
+    """
+    每个连接一个线程
+
+    用多线程不是为了让工具跑得更快 —— 触及解析树、下载队列的操作最终都要
+    投递回 GUI 线程串行执行，那里的排队谁也绕不开。它解决的是**互相阻塞**：
+    单线程时一个还没读完请求体的连接就能把整个服务占住，后面的只读查询
+    （任务进度、登录状态）也得干等。
+
+    带来的代价是共享状态会被真正并行访问，因此有全局状态的工具必须自己加锁，
+    见 tools/parse.py 里的解析互斥。
+    """
     # 端口在快速重启时可能仍处于 TIME_WAIT
     allow_reuse_address = True
+
+    # 请求线程**不能**设成守护线程。
+    #
+    # 守护线程在解释器关闭时会被直接掐掉，而请求线程此刻很可能正握着 Qt 对象
+    # 或停在跨线程调用的等待里，被强杀就是访问违例（实测退出码 0xC0000005）。
+    # 这个仓库在线程析构上已经栽过两次，不要为了"退出快一点"再走回去。
+    #
+    # 保持非守护后，server_close() 会等所有请求线程收敛；配合 stop() 里的
+    # begin_shutdown()，在途请求会立刻失败返回，等待是很短的
+    daemon_threads = False
+
+    # 显式声明：server_close() 必须阻塞到线程结束，不能提前放行
+    block_on_close = True
 
     def __init__(self, address, handler, dispatcher):
         super().__init__(address, handler)

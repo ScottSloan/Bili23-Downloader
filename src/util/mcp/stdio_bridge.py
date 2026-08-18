@@ -366,12 +366,37 @@ class Bridge:
         sys.stdout.write(json.dumps(payload, ensure_ascii = True) + "\n")
         sys.stdout.flush()
 
+def hard_exit(code: int):
+    """
+    绕过解释器的正常收尾直接结束进程
+
+    Linux / macOS 的启动器跑完脚本后还要执行 Py_FinalizeEx()，那一步会做完整的
+    解释器清理（等待非守护线程、GC、释放模块状态）。Windows 的 PyStand 走
+    Py_Main()，SystemExit 会直接终止进程，没有这一段。
+
+    差异的后果是：客户端断开、stdin 已经 EOF、桥接的 run() 也返回了，进程却
+    停在清理里不退出，在系统上留下一个看似还在运行的程序。
+
+    桥接只是一层无状态的转发，没有任何需要优雅收尾的东西，响应也在每次 write
+    时就 flush 过了，直接终止是安全的。
+    """
+    for stream in (sys.stdout, sys.stderr):
+        try:
+            stream.flush()
+
+        except Exception:
+            pass
+
+    os._exit(code)
+
 def run_stdio_bridge(argv = None) -> int:
     """
     stdio 桥接入口
 
     端口与令牌默认从 config.json 读取，这样用户在界面上重新生成令牌之后
     不必再去改一遍客户端配置；命令行参数优先，便于排查问题。
+
+    正常路径不会返回：结束时一律走 hard_exit()，原因见那里的说明。
     """
     configure_streams()
 
@@ -395,7 +420,7 @@ def run_stdio_bridge(argv = None) -> int:
         log("缺少访问令牌：配置文件里没有，也没有通过 --token 传入。")
         log("请先在「设置 → 高级 → MCP 服务器」中启用服务器，令牌会在那里生成。")
 
-        return 2
+        hard_exit(2)
 
     bridge = Bridge(port, token, None if args.no_launch else self_launch_command())
 
@@ -405,4 +430,5 @@ def run_stdio_bridge(argv = None) -> int:
     except KeyboardInterrupt:
         pass
 
-    return 0
+    # 走到这里说明 stdin 已经 EOF（客户端断开）或收到了中断，任务完成
+    hard_exit(0)

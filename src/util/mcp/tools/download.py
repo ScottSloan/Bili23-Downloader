@@ -6,7 +6,7 @@ from ..invoke import call_in_main_thread
 from . import text_result, error_result
 from .parse import get_parse_interface, build_item_index, _media_info_error
 
-from threading import Event
+from threading import Event, Lock
 import logging
 
 logger = logging.getLogger(__name__)
@@ -53,7 +53,21 @@ def _collect_episode_info(episode_ids: list):
 
     return found, found_ids, missing, needs_reparse
 
+# 创建任务同样要互斥：中途会改 config.current_starting_number 这个全局编号，
+# 并且依赖"解析列表此刻的内容"，两个请求交叠会算错序号、取错条目
+_create_lock = Lock()
+
 def tool_create_download(arguments: dict) -> dict:
+    if not _create_lock.acquire(timeout = 5.0):
+        return error_result("Another download request is being processed. Retry shortly.")
+
+    try:
+        return _create_download_locked(arguments)
+
+    finally:
+        _create_lock.release()
+
+def _create_download_locked(arguments: dict) -> dict:
     episode_ids = arguments.get("episode_ids")
 
     if not isinstance(episode_ids, list) or not episode_ids:

@@ -4,7 +4,7 @@ from ..invoke import call_in_main_thread
 
 from . import text_result, error_result
 
-from threading import Event
+from threading import Event, Lock
 import logging
 
 logger = logging.getLogger(__name__)
@@ -101,6 +101,10 @@ def _collect_episodes(limit: int):
 # 用指纹把两种勾选分开：与指纹完全一致，说明是上次解析留下的自动勾选、
 # 用户没碰过，可以安全覆盖；对不上，才是用户真的在挑东西。
 _last_snapshot = None
+
+# 解析的互斥锁。解析全程都在动全局状态，两个解析交叠必然互相破坏，
+# 详见 tool_parse_url 里的说明。它同时也保护了上面那个指纹变量
+_parse_lock = Lock()
 
 def _take_snapshot(interface):
     parse_list = interface.parse_list
@@ -247,6 +251,26 @@ def tool_parse_url(arguments: dict) -> dict:
             "bilibili.com URL, a b23.tv short link, or a bare av / BV / ep / ss / md id."
         )
 
+    # 服务器改成每连接一个线程后，并发的解析请求会真正并行跑进来，而解析全程
+    # 都在动全局状态：EpisodeData 缓存、界面上那一棵解析树、预览完成信号的
+    # 连接与断开。两个解析交叠会互相擦掉结果，preview_finish 更会同时唤醒
+    # 两边的等待，各自都以为自己的媒体信息已经就绪。
+    #
+    # 这类串行是数据结构决定的，不是线程调度能优化掉的，所以直接互斥。
+    # 只读的工具（任务列表、任务状态、登录状态）不受这把锁影响，仍可并发。
+    if not _parse_lock.acquire(timeout = 2.0):
+        return error_result(
+            "Another parse is already running. Only one parse can run at a time because "
+            "it replaces the application's parse list. Retry once it finishes."
+        )
+
+    try:
+        return _parse_url_locked(url, arguments)
+
+    finally:
+        _parse_lock.release()
+
+def _parse_url_locked(url: str, arguments: dict) -> dict:
     if reason := call_in_main_thread(_parse_busy_reason, timeout = 5.0):
         return error_result(reason)
 
