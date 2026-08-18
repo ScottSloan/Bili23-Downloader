@@ -10,6 +10,7 @@ from util.common.enum import ToastNotificationCategory, WhenClose
 from util.common.signal_bus import signal_bus, config
 from util.common.icon import ExtendedFluentIcon
 from util.common.config import config
+from util.misc.macos import activate_app
 
 import logging
 
@@ -356,6 +357,10 @@ class MainWindowBase(MSFluentWindow):
 
         self.raise_()
         self.activateWindow()
+
+        # macOS 上 Qt 的 activateWindow() 只把窗口 order front，不负责让进程本身变成
+        # 前台应用，需要额外走一次 NSApp 激活
+        activate_app()
     
     def _addSubInterface(self: "MainWindow", interface: QWidget):
         interface.setProperty("isStackedTransparent", False)
@@ -398,6 +403,10 @@ class MainWindow(MainWindowBase):
         self.init_UI()
 
         self.apply_window_state(show = not config.get(config.silent_start))
+
+        if not config.get(config.silent_start):
+            # 窗口要等事件循环转起来才真正上屏，激活推迟到下一轮。静默启动时不抢焦点
+            QTimer.singleShot(0, activate_app)
 
         # 设置鼠标指针为等待状态，直到工具初始化完成
         QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
