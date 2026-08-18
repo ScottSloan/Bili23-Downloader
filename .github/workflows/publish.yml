@@ -2,8 +2,8 @@ name: Publish release
 
 on:
   push:
-    branches:
-      - dev
+    # branches:
+    #   - dev
     tags:
       - "v*"
   workflow_dispatch:
@@ -62,14 +62,14 @@ jobs:
             echo "RPM_RELEASE=1" >> $GITHUB_OUTPUT
           fi
 
-          echo "VERSION=2.15.0" >> $GITHUB_OUTPUT
-          echo "VERSION_NAME=2.15.0" >> $GITHUB_OUTPUT
+          #echo "VERSION=2.15.0" >> $GITHUB_OUTPUT
+          #echo "VERSION_NAME=2.15.0" >> $GITHUB_OUTPUT
 
       - name: Set build targets
         id: set-targets
         env:
-          DEFAULT_BUILD_WINDOWS: "false"
-          DEFAULT_BUILD_LINUX: "false"
+          DEFAULT_BUILD_WINDOWS: "true"
+          DEFAULT_BUILD_LINUX: "true"
           DEFAULT_BUILD_MACOS: "true"
         run: |
           if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
