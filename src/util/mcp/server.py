@@ -110,11 +110,13 @@ class MCPRequestHandler(BaseHTTPRequestHandler):
         if not is_origin_allowed(self.headers.get("Origin", "")):
             logger.warning("拒绝来源不合法的 MCP 请求：%s", self.headers.get("Origin"))
 
+            self._drain_body()
             self._send_plain(403, "Forbidden")
 
             return
 
         if self.path.split("?")[0].rstrip("/") not in ("", ENDPOINT_PATH):
+            self._drain_body()
             self._send_plain(404, "Not Found")
 
             return
@@ -166,6 +168,8 @@ class MCPRequestHandler(BaseHTTPRequestHandler):
 
         # 定长比较，避免以耗时差异反推 token
         if not expected or not secrets.compare_digest(token, expected):
+            self._drain_body()
+
             self.send_response(401)
             self.send_header("WWW-Authenticate", 'Bearer realm="Bili23 Downloader MCP"')
             self.send_header("Content-Length", "0")
@@ -175,6 +179,31 @@ class MCPRequestHandler(BaseHTTPRequestHandler):
             return False
 
         return True
+
+    def _drain_body(self):
+        """
+        在拒绝请求之前，把请求体从连接上读掉
+
+        校验失败时若不读就直接关闭，接收缓冲区里还留着客户端发来的数据，
+        此时关闭连接，Windows 会发 RST 而不是正常的 FIN，客户端于是拿到
+        「连接被中止」而不是我们准备好的 401 —— 令牌配错本就是最常见的
+        配置问题，这时候只给出一个网络层错误，用户根本无从排查。
+
+        上限与正常请求一致；超出上限的请求体不再读取，那种请求横竖都要被拒。
+        """
+        try:
+            length = int(self.headers.get("Content-Length", 0))
+
+        except ValueError:
+            return
+
+        if 0 < length <= MAX_BODY_SIZE:
+            try:
+                self.rfile.read(length)
+
+            except OSError:
+                # 连接已经断了，本来也没什么可读的
+                pass
 
     def _read_body(self):
         try:
