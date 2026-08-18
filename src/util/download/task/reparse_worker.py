@@ -19,13 +19,15 @@ logger = logging.getLogger(__name__)
 
 
 class ReparseWorker(QRunnable, ParserBase):
-    def __init__(self, episode_info: dict, show_toast: bool = False):
+    def __init__(self, episode_info: dict, show_toast: bool = False, options: dict = None):
         super().__init__()
 
         self.info_data: dict = None
         self.episode_info: dict = episode_info
         self.original_episode_data: dict = None
         self.show_toast = show_toast
+        # 发起本次下载时指定的选项，二次解析完成后要原样带回 create()
+        self.options = options
 
     def run(self):
         try:
@@ -33,7 +35,7 @@ class ReparseWorker(QRunnable, ParserBase):
 
             episode_node = self.parse_episode_node_info()
 
-            signal_bus.download.create_task.emit(episode_node.get_all_children(to_dict = True), self.show_toast)
+            signal_bus.download.create_task.emit(episode_node.get_all_children(to_dict = True), self.show_toast, self.options)
 
         except Exception as e:
             logger.exception("解析下载任务失败： %s", self.episode_info.get("title", ""))

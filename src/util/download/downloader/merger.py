@@ -5,7 +5,7 @@ from ...common.io.file import safe_remove, safe_rename
 from ...common.timestamp import get_timestamp
 from ...common.signal_bus import signal_bus
 from ...common.translator import Translator
-from ...common.config import config
+from ..task.options import resolve
 
 from ...parse.additional.chapter import ChapterParser
 
@@ -69,7 +69,7 @@ class Merger(QObject):
             self.merge_video_parts()
 
         elif self.task_info.File.audio_file_ext == "m4a":
-            if config.get(config.m4a_to_mp3):
+            if resolve(self.task_info, "m4a_to_mp3"):
                 # 将 m4a 转换为 mp3
                 self.m4a_to_mp3()
                 return
@@ -222,7 +222,7 @@ class Merger(QObject):
             cwd = self.get_cwd()
 
             try:
-                original_file_type = OriginalFileType(config.keep_original_files_type)
+                original_file_type = OriginalFileType(resolve(self.task_info, "keep_original_files_type"))
             except ValueError:
                 original_file_type = OriginalFileType.BOTH
 
@@ -337,11 +337,11 @@ class Merger(QObject):
             )
 
     def check_attach_cover(self):
-        if config.get(config.attach_cover):
+        if resolve(self.task_info, "attach_cover"):
             cover_path = Path(self.get_cwd(), self.cover_file_name)
             if cover_path.exists():
                 self._embedded_cover_file_name = self.cover_file_name
-                self._delete_cover_after_embedding = config.get(config.delete_cover_after_attach)
+                self._delete_cover_after_embedding = resolve(self.task_info, "delete_cover_after_attach")
                 return self.cover_file_name
             else:
                 logger.warning(f"封面文件 {cover_path} 不存在，无法嵌入封面")
@@ -385,8 +385,8 @@ class Merger(QObject):
         if not self._embedded_subtitle_list:
             return
 
-        delete_danmaku = config.get(config.delete_danmaku_after_embed)
-        delete_subtitle = config.get(config.delete_subtitle_after_embed)
+        delete_danmaku = resolve(self.task_info, "delete_danmaku_after_embed")
+        delete_subtitle = resolve(self.task_info, "delete_subtitle_after_embed")
 
         file_list = [
             entry["file"] for entry in self._embedded_subtitle_list
@@ -477,7 +477,7 @@ class Merger(QObject):
     def temp_cover_file_name(self):
         return "cover_{task_id}.{file_ext}".format(
             task_id = self.task_info.Basic.task_id,
-            file_ext = config.get(config.cover_type).value
+            file_ext = resolve(self.task_info, "cover_type").value
         )
 
     @property
@@ -498,4 +498,4 @@ class Merger(QObject):
 
     @property
     def cover_file_name(self):
-        return f"{self.task_info.File.name}.{config.get(config.cover_type).value}"
+        return f"{self.task_info.File.name}.{resolve(self.task_info, 'cover_type').value}"

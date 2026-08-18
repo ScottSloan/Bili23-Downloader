@@ -41,7 +41,9 @@ class SignalBus:
         show_interactive_video_dialog = Signal(dict)
 
     class Download(QObject):
-        create_task = Signal(list, bool)
+        # 第三个参数为本次任务的下载选项覆盖，传 None 表示全部沿用全局设置。
+        # 用 object 而非 dict，以便直接传 None
+        create_task = Signal(list, bool, object)
 
         show_duplicate_download_dialog = Signal(object, object, object)
         show_skip_duplicate_download_toast = Signal(str)

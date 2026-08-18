@@ -13,6 +13,7 @@ from ...thread.pool import GlobalThreadPoolTask
 
 from ..cover.manager import cover_manager
 from .reparse_worker import ReparseWorker
+from .options import pick_option, snapshot
 from .hash_id import calc_hash_id
 from .db import TaskDatabase
 from .info import TaskInfo
@@ -46,8 +47,8 @@ class TaskManager:
 
         signal_bus.download.create_task.connect(self._create_async)
 
-    def _create_async(self, episode_info_list: List[dict], show_toast: bool = False):
-        GlobalThreadPoolTask.run_func(self.create, episode_info_list, show_toast)
+    def _create_async(self, episode_info_list: List[dict], show_toast: bool = False, options: dict = None):
+        GlobalThreadPoolTask.run_func(self.create, episode_info_list, show_toast, options)
 
     def _show_add_to_queue_toast(self):
         with self._add_to_queue_toast_lock:
@@ -70,7 +71,7 @@ class TaskManager:
         with self._add_to_queue_toast_lock:
             self._add_to_queue_toast_shown = False
 
-    def __episode_info_to_task_info(self, episode_info: dict, number) -> TaskInfo:
+    def __episode_info_to_task_info(self, episode_info: dict, number, options: dict = None) -> TaskInfo:
         task_info = TaskInfo()
 
         # BasicInfo
@@ -81,18 +82,23 @@ class TaskManager:
         
         # DownloadInfo
         task_info.Download.status = DownloadStatus.QUEUED
-        task_info.Download.type = self.__determine_download_type()
+        task_info.Download.type = self.__determine_download_type(options)
 
-        task_info.Download.video_quality_id = config.video_quality_id
-        task_info.Download.audio_quality_id = config.audio_quality_id
-        task_info.Download.video_codec_id = config.video_codec_id
-        task_info.Download.merge_video_audio = config.merge_video_audio
-        task_info.Download.keep_original_files = config.keep_original_files
+        task_info.Download.video_quality_id = pick_option(options, "video_quality_id", config.video_quality_id)
+        task_info.Download.audio_quality_id = pick_option(options, "audio_quality_id", config.audio_quality_id)
+        task_info.Download.video_codec_id = pick_option(options, "video_codec_id", config.video_codec_id)
+        task_info.Download.merge_video_audio = pick_option(options, "merge_video_audio", config.merge_video_audio)
+        task_info.Download.keep_original_files = pick_option(options, "keep_original_files", config.keep_original_files)
 
         # EpisodeInfo
         task_info.Episode.from_dict(self.__update_episode_info(episode_info, number))
 
         self.__trim_download_type(task_info)
+
+        # OptionsInfo
+        # 弹幕格式、输出容器等原先要到下载过程中才读全局设置，任务在队列里排队
+        # 期间用户改了设置就会波及它。与下载目录一样，在这里一并固化下来
+        task_info.Options.from_dict(snapshot(options))
 
         # FileNameInfo
         # 下载目录在生成 TaskInfo 时就确定，后续即便修改了下载目录的设置，也不会影响已生成的 TaskInfo 中的下载目录，避免下载过程中下载目录发生变化导致的问题
@@ -107,16 +113,16 @@ class TaskManager:
             # 会员购商城课程没有 aid / cid，也不返回封面
             task_info.Download.type &= ~(DownloadType.DANMAKU | DownloadType.SUBTITLE | DownloadType.CHAPTER | DownloadType.COVER)
 
-    def __determine_download_type(self):
+    def __determine_download_type(self, options: dict = None):
         # 确定下载类型
         attr_dict = {
-            DownloadType.VIDEO: config.download_video_stream,
-            DownloadType.AUDIO: config.download_audio_stream,
-            DownloadType.DANMAKU: config.get(config.download_danmaku),
-            DownloadType.SUBTITLE: config.get(config.download_subtitle),
-            DownloadType.COVER: config.get(config.download_cover),
-            DownloadType.METADATA: config.get(config.download_metadata),
-            DownloadType.CHAPTER: config.get(config.embed_chapter)
+            DownloadType.VIDEO: pick_option(options, "download_video_stream", config.download_video_stream),
+            DownloadType.AUDIO: pick_option(options, "download_audio_stream", config.download_audio_stream),
+            DownloadType.DANMAKU: pick_option(options, "download_danmaku", config.get(config.download_danmaku)),
+            DownloadType.SUBTITLE: pick_option(options, "download_subtitle", config.get(config.download_subtitle)),
+            DownloadType.COVER: pick_option(options, "download_cover", config.get(config.download_cover)),
+            DownloadType.METADATA: pick_option(options, "download_metadata", config.get(config.download_metadata)),
+            DownloadType.CHAPTER: pick_option(options, "embed_chapter", config.get(config.embed_chapter))
         }
 
         type = 0
@@ -165,13 +171,15 @@ class TaskManager:
         task_info.File.name = str(path.name)
         task_info.File.folder = str(path.parent)
 
-    def __check_reparse_needed(self, episode_info: dict, show_toast: bool = False):
+    def __check_reparse_needed(self, episode_info: dict, show_toast: bool = False, options: dict = None):
         if episode_info.get("attribute", 0) & Attribute.NEED_PARSE_BIT:
-            worker = ReparseWorker(episode_info, show_toast)
+            # 二次解析出的条目最终还是要走回 create()，本次指定的下载选项
+            # 必须一并带过去，否则收藏夹、个人空间里的视频会悄悄退回全局设置
+            worker = ReparseWorker(episode_info, show_toast, options)
             GlobalThreadPoolTask.run(worker)
 
             return True
-        
+
         return False
 
     def __filter_illegal_characters(self, episode_info: dict):
@@ -209,17 +217,17 @@ class TaskManager:
             case _:
                 return episode_info.get("number", "")
 
-    def create(self, episode_info_list: List[dict], show_toast: bool = False):
+    def create(self, episode_info_list: List[dict], show_toast: bool = False, options: dict = None):
         task_info_list = []
 
         for episode_info in episode_info_list:
             try:
                 # 判断是否需要重新解析
-                if self.__check_reparse_needed(episode_info, show_toast):
+                if self.__check_reparse_needed(episode_info, show_toast, options):
                     continue
 
                 # 判断是否重复下载
-                if self._check_duplicate(episode_info):
+                if self._check_duplicate(episode_info, options):
                     continue
 
                 # 先判断重复下载，再分配编号。
@@ -230,7 +238,7 @@ class TaskManager:
                     # 全局起始编号自增
                     config.global_starting_number += 1
 
-                task_info = self.__episode_info_to_task_info(episode_info, number)
+                task_info = self.__episode_info_to_task_info(episode_info, number, options)
 
                 task_info_list.append(task_info)
 
@@ -515,14 +523,27 @@ class TaskManager:
 
         self.__update_file_name_info(task_info)
 
-    def _check_duplicate(self, episode_info: dict):
+    def is_duplicate(self, episode_info: dict) -> bool:
+        """
+        查询条目是否已下载过，不触发任何界面交互
+
+        供无人值守的调用方（MCP）在提交前自行预检：_check_duplicate 会按用户
+        设置弹窗或发提示，且被它跳过的条目不会出现在 add_to_downloading_list
+        里 —— 调用方只能干等到超时，也无从得知哪些被跳过了。
+        """
+        return self.db_manager.check_duplicate(self._calc_hash_id(episode_info))
+
+    def _check_duplicate(self, episode_info: dict, options: dict = None):
         hash_id = self._calc_hash_id(episode_info)
 
         result = self.db_manager.check_duplicate(hash_id)
 
         if result:
-            # 触发重复下载，根据用户设置执行相应的操作
-            match config.get(config.duplicate_download_resolution):
+            # 触发重复下载，根据用户设置执行相应的操作。
+            #
+            # 无人值守的调用方（MCP）必须显式指定处理方式：ALWAYS_ASK 会弹窗
+            # 并在此无限等待用户点击，而那种场景下根本没有人会去点
+            match pick_option(options, "duplicate_resolution", config.get(config.duplicate_download_resolution)):
                 case DuplicateDownloadResolution.CONTINUE:
                     # 返回 False 表示继续下载
                     logger.info("已继续重复下载任务: %s", episode_info.get("title", ""))

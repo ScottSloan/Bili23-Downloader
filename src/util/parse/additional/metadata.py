@@ -1,7 +1,7 @@
 from ...common.translator import Translator
 from ...common.enum import MetadataType
 from ...common._json import json_dumps
-from ...common.config import config
+from ...download.task.options import resolve
 
 from ...network.request import SyncNetWorkRequest, ResponseType
 from ...download.task.info import TaskInfo
@@ -19,7 +19,7 @@ class MetadataParser(AdditionalParserBase):
         super().__init__(task_info)
 
     def parse(self):
-        match config.get(config.metadata_type):
+        match resolve(self.task_info, "metadata_type"):
             case MetadataType.NFO:
                 if self.task_info.Episode.attribute & Attribute.VIDEO_BIT != 0:
                     # 投稿视频需要额外获取 tag 和 category 信息

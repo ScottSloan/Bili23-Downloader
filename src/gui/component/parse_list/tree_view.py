@@ -646,7 +646,7 @@ class ParseTreeView(TreeView):
 
         item.set_attribute(Attribute.DOWNLOAD_AS_SINGLE_VIDEO_BIT)
 
-        signal_bus.download.create_task.emit([item.to_dict()], True)
+        signal_bus.download.create_task.emit([item.to_dict()], True, None)
 
     def search_keywords(self, keywords: str = None):
         if not keywords:

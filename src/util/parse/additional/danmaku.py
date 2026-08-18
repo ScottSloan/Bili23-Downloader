@@ -3,7 +3,7 @@ from ...download.task.info import TaskInfo
 from ...common.translator import Translator
 from ...common._json import json_dumps
 from ...common.enum import DanmakuType
-from ...common.config import config
+from ...download.task.options import resolve
 
 from .base import AdditionalParserBase
 from .file.danmaku_ass import DanmakuASS
@@ -21,7 +21,7 @@ class DanmakuParser(AdditionalParserBase):
     def parse(self):
         dict_list = self._get_all_protobuf_parts()
 
-        danmaku_type = config.get(config.danmaku_type)
+        danmaku_type = resolve(self.task_info, "danmaku_type")
 
         match danmaku_type:
             case DanmakuType.XML:
@@ -42,7 +42,7 @@ class DanmakuParser(AdditionalParserBase):
         if danmaku_type != DanmakuType.ASS:
             return
 
-        if not config.get(config.embed_danmaku) or not self.is_embed_available(self.task_info):
+        if not resolve(self.task_info, "embed_danmaku") or not self.is_embed_available(self.task_info):
             return
 
         self._add_subtitle_track(

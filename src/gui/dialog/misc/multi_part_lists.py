@@ -141,6 +141,6 @@ class MultiPartListsDialog(DialogBase):
         config.current_starting_number = 1
 
         # 添加到下载队列
-        signal_bus.download.create_task.emit(checked_episodes_list, True)
+        signal_bus.download.create_task.emit(checked_episodes_list, True, None)
 
         return super().accept()
