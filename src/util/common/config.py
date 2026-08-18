@@ -415,7 +415,6 @@ class APPConfig(QConfig):
     mcp_enabled = ConfigItem("MCP", "mcp_enabled", False, BoolValidator())
     mcp_port = RangeConfigItem("MCP", "mcp_port", 23330, RangeValidator(1024, 65535))
     mcp_token = ConfigItem("MCP", "mcp_token", "")
-    mcp_allow_download = ConfigItem("MCP", "mcp_allow_download", True, BoolValidator())
 
     # Update
     include_prerelease = ConfigItem("Update", "include_prerelease", False, BoolValidator())

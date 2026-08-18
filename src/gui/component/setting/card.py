@@ -722,8 +722,6 @@ class MCPSettingCard(ExpandGroupSettingCard):
         self.port_box.setValue(config.get(config.mcp_port))
         self.port_box.setMinimumWidth(150)
 
-        self.allow_download_switch = SettingSwitchButton(config.mcp_allow_download, parent = self)
-
         self.copy_token_btn = PushButton(self.tr("Copy"), self)
         self.regenerate_token_btn = PushButton(self.tr("Regenerate"), self)
 
@@ -753,7 +751,6 @@ class MCPSettingCard(ExpandGroupSettingCard):
         self.addGroup("", self.tr("Enable MCP Server"), self.tr("Listen on the local loopback address only. Disabled by default."), self.enable_switch)
         self.status_group = self.addGroup("", self.tr("Status"), "", self.status_label)
         self.port_group = self.addGroup("", self.tr("Port"), self.tr("Takes effect after the server restarts"), self.port_box)
-        self.addGroup("", self.tr("Allow Download Operations"), self.tr("Let AI clients create, pause and cancel download tasks. Turn off to expose read-only tools."), self.allow_download_switch)
         self.addGroup("", self.tr("Access Token"), self.tr("Required by every request. Treat it like a password."), token_widget)
         self.addGroup("", self.tr("Client Configuration"), self.tr("Copy a ready-to-use MCP client configuration"), self.copy_config_btn)
 

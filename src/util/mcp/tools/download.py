@@ -702,7 +702,6 @@ def register(registry):
             "additionalProperties": False,
         },
         handler = tool_create_download,
-        requires_download = True,
     )
 
     for action, title, description in (
@@ -716,5 +715,4 @@ def register(registry):
             description = description,
             input_schema = _TASK_ID_SCHEMA,
             handler = _make_control_handler(action),
-            requires_download = True,
         )

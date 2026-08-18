@@ -1,5 +1,3 @@
-from ...common.config import config
-
 from ..invoke import MainThreadTimeout
 
 from typing import Callable
@@ -42,17 +40,15 @@ def error_result(message: str) -> dict:
     return text_result(message, is_error = True)
 
 class Tool:
-    __slots__ = ("name", "title", "description", "input_schema", "handler", "requires_download")
+    __slots__ = ("name", "title", "description", "input_schema", "handler")
 
-    def __init__(self, name, title, description, input_schema, handler, requires_download = False):
+    def __init__(self, name, title, description, input_schema, handler):
         self.name = name
         self.title = title
         self.description = description
         self.input_schema = input_schema
         self.handler = handler
 
-        # 该工具是否属于"会真实写入磁盘"的一类，受 mcp_allow_download 开关控制
-        self.requires_download = requires_download
 
     def to_schema(self) -> dict:
         return {
@@ -67,23 +63,15 @@ class ToolRegistry:
         self._tools: dict[str, Tool] = {}
 
     def register(self, name: str, title: str, description: str, input_schema: dict,
-                 handler: Callable, requires_download: bool = False):
-        self._tools[name] = Tool(name, title, description, input_schema, handler, requires_download)
-
-    def _available(self, tool: Tool) -> bool:
-        if tool.requires_download and not config.get(config.mcp_allow_download):
-            return False
-
-        return True
+                 handler: Callable):
+        self._tools[name] = Tool(name, title, description, input_schema, handler)
 
     def has(self, name: str) -> bool:
-        tool = self._tools.get(name)
-
-        return tool is not None and self._available(tool)
+        return name in self._tools
 
     def list_schemas(self) -> list:
         # 顺序固定：规范建议保持确定性排序，客户端才能缓存工具列表
-        return [tool.to_schema() for tool in self._tools.values() if self._available(tool)]
+        return [tool.to_schema() for tool in self._tools.values()]
 
     def call(self, name: str, arguments: dict) -> dict:
         tool = self._tools[name]
