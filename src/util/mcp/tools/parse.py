@@ -74,6 +74,32 @@ def _media_info_error():
 
     return None
 
+def _available_media_options():
+    """
+    本次解析的内容实际提供哪些清晰度、音质与编码
+
+    模型要在 create_download 里指定画质，但它无从知道这个视频有没有 4K。
+    不告诉它的话，它只能凭标题猜，猜错了会被静默降级到最接近的档位 ——
+    它以为下到了 4K，实际是 1080P，而且没有任何迹象可循。
+
+    这几个 choice_data 由 Previewer 填充，解析开始时会被重置成空，
+    因此只有在媒体信息就绪后取到的值才有意义。
+    """
+    from ...parse.preview.info import PreviewerInfo
+
+    options = {}
+
+    for key, data in (
+        ("video_quality", PreviewerInfo.video_quality_choice_data),
+        ("audio_quality", PreviewerInfo.audio_quality_choice_data),
+        ("video_codec", PreviewerInfo.video_codec_choice_data),
+    ):
+        # 重置时置成的是空列表，解析后才是 {名称: id} 的字典，两种都能取键
+        if names := list(data):
+            options[key] = names
+
+    return options
+
 def _collect_episodes(limit: int):
     interface = get_parse_interface()
 
@@ -302,6 +328,11 @@ def _parse_url_locked(url: str, arguments: dict) -> dict:
         structured["media_info_available"] = False
         structured["media_info_error"] = media_error
 
+    else:
+        # 供 create_download 的 options 使用：只有这里列出的档位是真实可选的
+        if available := call_in_main_thread(_available_media_options, timeout = 5.0):
+            structured["available"] = available
+
     summary = f"Parsed {total} item(s) from {url}."
 
     if media_error:
@@ -327,11 +358,16 @@ def tool_get_episodes(arguments: dict) -> dict:
             "episodes": [],
         })
 
-    return text_result(f"{total} item(s) in the parse list.", {
+    structured = {
         "total": total,
         "returned": len(episodes),
         "episodes": episodes,
-    })
+    }
+
+    if available := call_in_main_thread(_available_media_options, timeout = 5.0):
+        structured["available"] = available
+
+    return text_result(f"{total} item(s) in the parse list.", structured)
 
 def _clamp_limit(value) -> int:
     if not isinstance(value, int) or isinstance(value, bool):
@@ -354,7 +390,9 @@ def register(registry):
             "Parse a Bilibili link and load its episodes into the application's parse list. "
             "Accepts a full URL, a b23.tv short link, or a bare av / BV / ep / ss / md id. "
             "This replaces whatever is currently in the parse list, and is refused while the "
-            "user has items selected there. Call this before create_download."
+            "user has items selected there. Call this before create_download. The result's "
+            "'available' field lists the qualities and codecs this content actually offers, "
+            "which are the valid values for create_download's options."
         ),
         input_schema = {
             "type": "object",
