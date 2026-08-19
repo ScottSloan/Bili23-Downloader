@@ -30,6 +30,8 @@ class Merger(QObject):
         self._ffmpeg_runner = None
 
         self._output_audio_file = None
+        # 转换成功后才写回 File.audio_file_ext 的目标扩展名，None 表示本次不改扩展名
+        self._converted_audio_file_ext = None
         self._embedded_cover_file_name = None
         self._delete_cover_after_embedding = False
         self._embedded_subtitle_list = []
@@ -198,7 +200,12 @@ class Merger(QObject):
             return
 
         try:
-            safe_remove(self.get_cwd(), getattr(self, "_temp_m4a_audio_name", self.temp_audio_file_name))
+            # 必须赶在改扩展名之前删源文件，此刻 temp_audio_file_name 指的还是输入的那个 m4a
+            safe_remove(self.get_cwd(), self.temp_audio_file_name)
+
+            if self._converted_audio_file_ext:
+                self.task_info.File.audio_file_ext = self._converted_audio_file_ext
+
             self.rename_output_file()
 
         except Exception as e:
@@ -279,14 +286,16 @@ class Merger(QObject):
 
         self.set_error_message(Translator.ERROR_MESSAGES("DOWNLOAD_FAILED"), long_message)
 
-        signal_bus.download.auto_manage_concurrent_downloads.emit()
-
     def set_error_message(self, short_message: str, description: str):
         self._has_error = True
         self.task_info.Download.status = DownloadStatus.FFMPEG_FAILED
 
         signal_bus.download.update_downloading_item.emit(self.task_info)
-        
+
+        # 失败同样要唤醒调度器。FFmpeg 全局只允许跑一个，而这个额度完全靠该信号释放，
+        # 这里不发的话，队列里其余等待合并的任务就再没有下一次被调度的机会，会一直干等
+        signal_bus.download.auto_manage_concurrent_downloads.emit()
+
         signal_bus.toast.show_long_message.emit(
             ToastNotificationCategory.ERROR,
             short_message,
@@ -315,14 +324,17 @@ class Merger(QObject):
             self.task_info.Download.status = DownloadStatus.CONVERTING
             signal_bus.download.update_downloading_item.emit(self.task_info)
 
-            self._temp_m4a_audio_name = self.temp_audio_file_name
-            self.task_info.File.audio_file_ext = "mp3"
+            # 转换期间不能就地把 audio_file_ext 改成 mp3：一旦中途失败或程序退出，
+            # 重试时 start() 里的 m4a 判断就不再成立，会跑去重命名一个根本不存在的 mp3。
+            # 因此先输出到独立的临时名，等转换真正完成再改扩展名
+            temp_output_audio_file_name = "output_{task_id}.mp3".format(task_id = self.task_info.Basic.task_id)
 
-            self._output_audio_file = self.temp_audio_file_name
+            self._output_audio_file = temp_output_audio_file_name
+            self._converted_audio_file_ext = "mp3"
 
             convert_cmd = FFmpegCommand.convert_m4a_to_mp3(
-                input_path = self._temp_m4a_audio_name,
-                output_path = self.temp_audio_file_name
+                input_path = self.temp_audio_file_name,
+                output_path = temp_output_audio_file_name
             )
 
             self._ffmpeg_runner = FFmpegRunner.from_command(convert_cmd, parent=self)
