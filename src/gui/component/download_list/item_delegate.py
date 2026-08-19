@@ -257,13 +257,13 @@ class UIData(QObject):
                 return Translator.TIP_MESSAGES("FFMPEG_QUEUED")
             
             case DownloadStatus.MERGING:
-                return Translator.TIP_MESSAGES("MERGING")
+                return self.getFFmpegStatusText(task_info, "MERGING")
             
             case DownloadStatus.ADDITIONAL_PROCESSING:
                 return task_info.Download.status_label
             
             case DownloadStatus.CONVERTING:
-                return Translator.TIP_MESSAGES("CONVERTING")
+                return self.getFFmpegStatusText(task_info, "CONVERTING")
             
             case DownloadStatus.COMPLETED:
                 return Translator.TIP_MESSAGES("COMPLETED")
@@ -274,6 +274,14 @@ class UIData(QObject):
             case DownloadStatus.FFMPEG_FAILED:
                 return Translator.ERROR_MESSAGES("FFMPEG_PROCESSING_FAILED")
             
+    def getFFmpegStatusText(self, task_info: TaskInfo, key: str):
+        # FFmpeg 要吐出第一条进度才有百分比可显示，之前（以及 copy 合并这类瞬间完成的场景）
+        # 只给文案，免得挂着一个始终停在 0% 的数字
+        if task_info.Download.progress > 0:
+            return Translator.TIP_MESSAGES(f"{key}_WITH_PROGRESS").format(progress = task_info.Download.progress)
+
+        return Translator.TIP_MESSAGES(key)
+
     def getSpeedText(self, task_info: TaskInfo):
         return Units.format_speed(task_info.Download.speed)
     

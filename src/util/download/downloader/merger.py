@@ -130,11 +130,29 @@ class Merger(QObject):
         self._run_merge_command(merge_cmd, cwd)
 
     def _run_merge_command(self, command: FFmpegCommand, cwd: Path):
+        self._start_ffmpeg(command, cwd, self.on_merge_completed)
+
+    def _start_ffmpeg(self, command: FFmpegCommand, cwd: Path, on_finished):
+        # 下载阶段结束时进度停在 100，这里必须归零，否则进度条会从满格开始重走
+        self.task_info.Download.progress = 0
+
         self._ffmpeg_runner = FFmpegRunner.from_command(command, parent = self)
         self._ffmpeg_runner.set_cwd(cwd)
-        self._ffmpeg_runner.finished_signal.connect(self.on_merge_completed)
+        # FFmpeg 自己报的时长更准，这里给的只是它打印出 Duration 之前的兜底
+        self._ffmpeg_runner.set_duration(self.task_info.Episode.duration)
+        self._ffmpeg_runner.progress_signal.connect(self.on_progress_updated)
+        self._ffmpeg_runner.finished_signal.connect(on_finished)
         self._ffmpeg_runner.error_signal.connect(self.on_merge_error)
         self._ffmpeg_runner.start()
+
+    def on_progress_updated(self, progress: int):
+        if self._has_error or self._stopped:
+            return
+
+        # 合并进度只用于界面反馈，不落库：它变化频繁，而任务重启后本就要从头合并
+        self.task_info.Download.progress = progress
+
+        signal_bus.download.update_downloading_item.emit(self.task_info)
 
     def rename_output_file(self):
         if self._has_error:
@@ -337,11 +355,7 @@ class Merger(QObject):
                 output_path = temp_output_audio_file_name
             )
 
-            self._ffmpeg_runner = FFmpegRunner.from_command(convert_cmd, parent=self)
-            self._ffmpeg_runner.set_cwd(cwd)
-            self._ffmpeg_runner.finished_signal.connect(self.on_convert_completed)
-            self._ffmpeg_runner.error_signal.connect(self.on_merge_error)
-            self._ffmpeg_runner.start()
+            self._start_ffmpeg(convert_cmd, cwd, self.on_convert_completed)
         else:
             self.set_error_message(
                 Translator.ERROR_MESSAGES("DOWNLOAD_FAILED"),
@@ -453,11 +467,7 @@ class Merger(QObject):
                 output_path = temp_output_audio_file_name
             )
 
-            self._ffmpeg_runner = FFmpegRunner.from_command(fix_command, parent = self)
-            self._ffmpeg_runner.set_cwd(cwd)
-            self._ffmpeg_runner.finished_signal.connect(self.on_convert_completed)
-            self._ffmpeg_runner.error_signal.connect(self.on_merge_error)
-            self._ffmpeg_runner.start()
+            self._start_ffmpeg(fix_command, cwd, self.on_convert_completed)
         else:
             self.set_error_message(
                 Translator.ERROR_MESSAGES("DOWNLOAD_FAILED"),

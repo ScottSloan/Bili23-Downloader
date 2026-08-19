@@ -4342,6 +4342,11 @@ Under no circumstances shall the developer be liable for any direct, indirect, i
         <translation>轉換中...</translation>
     </message>
     <message>
+        <location filename="../../util/common/translator.py" line="312"/>
+        <source>Converting... {progress}%</source>
+        <translation>轉換中... {progress}%</translation>
+    </message>
+    <message>
         <location filename="../../util/common/translator.py" line="311"/>
         <source>You are already using the latest version</source>
         <translation>目前已是最新版本</translation>
@@ -4425,6 +4430,11 @@ Under no circumstances shall the developer be liable for any direct, indirect, i
         <location filename="../../util/common/translator.py" line="308"/>
         <source>Merging...</source>
         <translation>合併中...</translation>
+    </message>
+    <message>
+        <location filename="../../util/common/translator.py" line="309"/>
+        <source>Merging... {progress}%</source>
+        <translation>合併中... {progress}%</translation>
     </message>
     <message>
         <location filename="../../util/common/translator.py" line="309"/>
