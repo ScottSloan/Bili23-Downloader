@@ -95,6 +95,12 @@ class EpisodeInfo(InfoBase):
     space_owner: str = ""
     space_owner_id: int = 0
 
+    # 会员购商城课程
+    course_id: int = 0
+    lesson_id: int = 0
+    item_id: int = 0
+    section_id: int = 0
+
     # 其他
     video_quality: str = ""
     audio_quality: str = ""
@@ -132,11 +138,49 @@ class DownloadInfo(InfoBase):
     status_label: str = ""
 
 @dataclass
+class OptionsInfo(InfoBase):
+    """
+    下载选项快照
+
+    这些选项原先要到下载过程中才去读全局设置，于是任务在队列里排队期间，
+    用户改了设置就会波及还没开始的旧任务 —— 与 download_path「建任务时即
+    固定」的设计意图相矛盾。改为在生成 TaskInfo 时一并固化。
+
+    全部默认为 None，表示这条记录没有固化过该项：旧版本创建的任务反序列化
+    后就是这个状态，读取时回落到全局设置，行为与升级前一致。**不要改成具体
+    的默认值** —— 那会让旧任务用上硬编码的值，而不是用户自己的设置。
+
+    枚举一律存 value（字符串）以保证 JSON 可序列化，读取时再转回枚举，
+    取值与转换统一收敛在 options.py 的 resolve() 里。
+    """
+    video_container: str = None
+
+    danmaku_type: str = None
+    embed_danmaku: bool = None
+    delete_danmaku_after_embed: bool = None
+
+    subtitle_type: str = None
+    embed_subtitle: bool = None
+    delete_subtitle_after_embed: bool = None
+    subtitle_language: dict = None
+
+    cover_type: str = None
+    attach_cover: bool = None
+    delete_cover_after_attach: bool = None
+
+    metadata_type: str = None
+
+    m4a_to_mp3: bool = None
+
+    keep_original_files_type: int = None
+
+@dataclass
 class TaskInfo:
     Basic: BasicInfo = field(default_factory = BasicInfo)
     File: FileInfo = field(default_factory = FileInfo)
     Episode: EpisodeInfo = field(default_factory = EpisodeInfo)
     Download: DownloadInfo = field(default_factory = DownloadInfo)
+    Options: OptionsInfo = field(default_factory = OptionsInfo)
 
     def to_dict(self):
         return asdict(self)
@@ -146,8 +190,11 @@ class TaskInfo:
         file_data = data.get("File", {})
         episode_data = data.get("Episode", {})
         download_data = data.get("Download", {})
+        # 旧版本的记录里没有 Options，取到空 dict，各项保持 None 即回落全局设置
+        options_data = data.get("Options", {})
 
         self.Basic.from_dict(basic_data)
         self.File.from_dict(file_data)
         self.Episode.from_dict(episode_data)
         self.Download.from_dict(download_data)
+        self.Options.from_dict(options_data)

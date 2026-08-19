@@ -1,7 +1,5 @@
 from ...common.signal_bus import signal_bus
 from ...common.translator import Translator
-from ...common.enum import AutoSelectMode
-from ...common.config import config
 from ...format.units import Units
 
 from .tree import TreeItem, EpisodeData, Attribute
@@ -58,9 +56,8 @@ class EpisodeParserBase:
             if child.has_attribute(Attribute.HISTORY_BIT) or child.has_attribute(Attribute.WATCH_LATER_BIT):
                 title = node.number
 
-        if config.get(config.auto_select_mode) == AutoSelectMode.MANUAL:
-            current_episode_data = None
-
+        # 定位信息一律传给解析列表：手动勾选模式下由列表自行决定不勾选，
+        # 但媒体信息预览仍需据此找到链接指向的那个视频
         signal_bus.parse.update_parse_list.emit(title, self.category_name, root_node, current_episode_data)
 
     def get_episode_duration(self, episode_data: dict):

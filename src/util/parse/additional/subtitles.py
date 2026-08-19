@@ -1,10 +1,10 @@
 from ...common.translator import Translator
 from ...common.enum import SubtitleType
-from ...common.config import config
 from ...common._json import json_dumps
 
 from ...network.request import SyncNetWorkRequest
 from ...download.task.info import TaskInfo
+from ...download.task.options import resolve
 from ...format.time import Time
 
 from .base import AdditionalParserBase
@@ -53,7 +53,7 @@ class SubtitlesParser(AdditionalParserBase):
     def parse(self, player_data: dict):
         subtitles_data_list = self._get_subtitles_data_list(player_data)
 
-        subtitle_type = config.get(config.subtitle_type)
+        subtitle_type = resolve(self.task_info, "subtitle_type")
 
         for entry in subtitles_data_list:
             language = entry["language"]
@@ -84,7 +84,7 @@ class SubtitlesParser(AdditionalParserBase):
         if subtitle_type != SubtitleType.ASS:
             return
 
-        if not config.get(config.embed_subtitle) or not self.is_embed_available(self.task_info):
+        if not resolve(self.task_info, "embed_subtitle") or not self.is_embed_available(self.task_info):
             return
 
         self._add_subtitle_track(
@@ -167,7 +167,7 @@ class SubtitlesParser(AdditionalParserBase):
         subtitles_data_list = []
 
         subtitles_url_list = player_data.get("subtitle", {}).get("subtitles", [])
-        language_config = config.get(config.subtitle_language)
+        language_config = resolve(self.task_info, "subtitle_language")
 
         for entry in subtitles_url_list:
             language = entry["lan"]

@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  AppStream 元数据，deb、rpm、AppImage 三种包共用。
+  组件 id 与 macOS 的 CFBundleIdentifier 保持一致，文件名必须等于 id 加 .metainfo.xml。
+  releases 段的版本号与发布日期由 .github/workflows/publish.yml 在构建时替换。
+-->
+<component type="desktop-application">
+  <id>com.scottsloan.bili23</id>
+
+  <name>Bili23 Downloader</name>
+  <summary>A cross-platform video downloader for Bilibili</summary>
+
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-3.0-or-later</project_license>
+
+  <!-- 用 developer_name 而非 AppStream 1.0 的 developer 元素：前者新旧版本都能解析，
+       后者在 0.15.x 的发行版上会被当作未知标签直接忽略，开发者名字会丢失 -->
+  <developer_name>Scott Sloan</developer_name>
+
+  <description>
+    <p>
+      Bili23 Downloader is a cross-platform desktop application for downloading videos
+      from Bilibili. It parses a shared link or ID and lets you pick exactly which
+      episodes, quality and extra content to save.
+    </p>
+    <p>Features:</p>
+    <ul>
+      <li>Downloads videos, bangumi, courses, favourites, user spaces and audio</li>
+      <li>Supports up to 8K resolution, HDR, Dolby Vision and Hi-Res audio</li>
+      <li>Saves danmaku, subtitles, cover art, chapters and NFO metadata alongside the video</li>
+      <li>Multi-threaded downloading with resume support and configurable speed limits</li>
+      <li>Customisable file naming rules</li>
+    </ul>
+  </description>
+
+  <launchable type="desktop-id">bili23-downloader.desktop</launchable>
+
+  <categories>
+    <category>Utility</category>
+  </categories>
+
+  <url type="homepage">https://bili23.scott-sloan.cn</url>
+  <url type="bugtracker">https://github.com/ScottSloan/Bili23-Downloader/issues</url>
+  <url type="help">https://bili23.scott-sloan.cn/doc/faq.html</url>
+
+  <provides>
+    <binary>bili23-downloader</binary>
+  </provides>
+
+  <screenshots>
+    <screenshot type="default">
+      <image>https://bili23.scott-sloan.cn/main_interface_cn.png</image>
+      <caption>Main window</caption>
+    </screenshot>
+  </screenshots>
+
+  <content_rating type="oars-1.1"/>
+
+  <releases>
+    <release version="__VERSION__" date="__DATE__"/>
+  </releases>
+</component>

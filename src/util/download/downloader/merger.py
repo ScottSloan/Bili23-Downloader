@@ -5,7 +5,7 @@ from ...common.io.file import safe_remove, safe_rename
 from ...common.timestamp import get_timestamp
 from ...common.signal_bus import signal_bus
 from ...common.translator import Translator
-from ...common.config import config
+from ..task.options import resolve
 
 from ...parse.additional.chapter import ChapterParser
 
@@ -30,6 +30,8 @@ class Merger(QObject):
         self._ffmpeg_runner = None
 
         self._output_audio_file = None
+        # 转换成功后才写回 File.audio_file_ext 的目标扩展名，None 表示本次不改扩展名
+        self._converted_audio_file_ext = None
         self._embedded_cover_file_name = None
         self._delete_cover_after_embedding = False
         self._embedded_subtitle_list = []
@@ -69,7 +71,7 @@ class Merger(QObject):
             self.merge_video_parts()
 
         elif self.task_info.File.audio_file_ext == "m4a":
-            if config.get(config.m4a_to_mp3):
+            if resolve(self.task_info, "m4a_to_mp3"):
                 # 将 m4a 转换为 mp3
                 self.m4a_to_mp3()
                 return
@@ -128,11 +130,29 @@ class Merger(QObject):
         self._run_merge_command(merge_cmd, cwd)
 
     def _run_merge_command(self, command: FFmpegCommand, cwd: Path):
+        self._start_ffmpeg(command, cwd, self.on_merge_completed)
+
+    def _start_ffmpeg(self, command: FFmpegCommand, cwd: Path, on_finished):
+        # 下载阶段结束时进度停在 100，这里必须归零，否则进度条会从满格开始重走
+        self.task_info.Download.progress = 0
+
         self._ffmpeg_runner = FFmpegRunner.from_command(command, parent = self)
         self._ffmpeg_runner.set_cwd(cwd)
-        self._ffmpeg_runner.finished_signal.connect(self.on_merge_completed)
+        # FFmpeg 自己报的时长更准，这里给的只是它打印出 Duration 之前的兜底
+        self._ffmpeg_runner.set_duration(self.task_info.Episode.duration)
+        self._ffmpeg_runner.progress_signal.connect(self.on_progress_updated)
+        self._ffmpeg_runner.finished_signal.connect(on_finished)
         self._ffmpeg_runner.error_signal.connect(self.on_merge_error)
         self._ffmpeg_runner.start()
+
+    def on_progress_updated(self, progress: int):
+        if self._has_error or self._stopped:
+            return
+
+        # 合并进度只用于界面反馈，不落库：它变化频繁，而任务重启后本就要从头合并
+        self.task_info.Download.progress = progress
+
+        signal_bus.download.update_downloading_item.emit(self.task_info)
 
     def rename_output_file(self):
         if self._has_error:
@@ -198,7 +218,12 @@ class Merger(QObject):
             return
 
         try:
-            safe_remove(self.get_cwd(), getattr(self, "_temp_m4a_audio_name", self.temp_audio_file_name))
+            # 必须赶在改扩展名之前删源文件，此刻 temp_audio_file_name 指的还是输入的那个 m4a
+            safe_remove(self.get_cwd(), self.temp_audio_file_name)
+
+            if self._converted_audio_file_ext:
+                self.task_info.File.audio_file_ext = self._converted_audio_file_ext
+
             self.rename_output_file()
 
         except Exception as e:
@@ -222,7 +247,7 @@ class Merger(QObject):
             cwd = self.get_cwd()
 
             try:
-                original_file_type = OriginalFileType(config.keep_original_files_type)
+                original_file_type = OriginalFileType(resolve(self.task_info, "keep_original_files_type"))
             except ValueError:
                 original_file_type = OriginalFileType.BOTH
 
@@ -279,14 +304,16 @@ class Merger(QObject):
 
         self.set_error_message(Translator.ERROR_MESSAGES("DOWNLOAD_FAILED"), long_message)
 
-        signal_bus.download.auto_manage_concurrent_downloads.emit()
-
     def set_error_message(self, short_message: str, description: str):
         self._has_error = True
         self.task_info.Download.status = DownloadStatus.FFMPEG_FAILED
 
         signal_bus.download.update_downloading_item.emit(self.task_info)
-        
+
+        # 失败同样要唤醒调度器。FFmpeg 全局只允许跑一个，而这个额度完全靠该信号释放，
+        # 这里不发的话，队列里其余等待合并的任务就再没有下一次被调度的机会，会一直干等
+        signal_bus.download.auto_manage_concurrent_downloads.emit()
+
         signal_bus.toast.show_long_message.emit(
             ToastNotificationCategory.ERROR,
             short_message,
@@ -315,21 +342,20 @@ class Merger(QObject):
             self.task_info.Download.status = DownloadStatus.CONVERTING
             signal_bus.download.update_downloading_item.emit(self.task_info)
 
-            self._temp_m4a_audio_name = self.temp_audio_file_name
-            self.task_info.File.audio_file_ext = "mp3"
+            # 转换期间不能就地把 audio_file_ext 改成 mp3：一旦中途失败或程序退出，
+            # 重试时 start() 里的 m4a 判断就不再成立，会跑去重命名一个根本不存在的 mp3。
+            # 因此先输出到独立的临时名，等转换真正完成再改扩展名
+            temp_output_audio_file_name = "output_{task_id}.mp3".format(task_id = self.task_info.Basic.task_id)
 
-            self._output_audio_file = self.temp_audio_file_name
+            self._output_audio_file = temp_output_audio_file_name
+            self._converted_audio_file_ext = "mp3"
 
             convert_cmd = FFmpegCommand.convert_m4a_to_mp3(
-                input_path = self._temp_m4a_audio_name,
-                output_path = self.temp_audio_file_name
+                input_path = self.temp_audio_file_name,
+                output_path = temp_output_audio_file_name
             )
 
-            self._ffmpeg_runner = FFmpegRunner.from_command(convert_cmd, parent=self)
-            self._ffmpeg_runner.set_cwd(cwd)
-            self._ffmpeg_runner.finished_signal.connect(self.on_convert_completed)
-            self._ffmpeg_runner.error_signal.connect(self.on_merge_error)
-            self._ffmpeg_runner.start()
+            self._start_ffmpeg(convert_cmd, cwd, self.on_convert_completed)
         else:
             self.set_error_message(
                 Translator.ERROR_MESSAGES("DOWNLOAD_FAILED"),
@@ -337,11 +363,11 @@ class Merger(QObject):
             )
 
     def check_attach_cover(self):
-        if config.get(config.attach_cover):
+        if resolve(self.task_info, "attach_cover"):
             cover_path = Path(self.get_cwd(), self.cover_file_name)
             if cover_path.exists():
                 self._embedded_cover_file_name = self.cover_file_name
-                self._delete_cover_after_embedding = config.get(config.delete_cover_after_attach)
+                self._delete_cover_after_embedding = resolve(self.task_info, "delete_cover_after_attach")
                 return self.cover_file_name
             else:
                 logger.warning(f"封面文件 {cover_path} 不存在，无法嵌入封面")
@@ -385,8 +411,8 @@ class Merger(QObject):
         if not self._embedded_subtitle_list:
             return
 
-        delete_danmaku = config.get(config.delete_danmaku_after_embed)
-        delete_subtitle = config.get(config.delete_subtitle_after_embed)
+        delete_danmaku = resolve(self.task_info, "delete_danmaku_after_embed")
+        delete_subtitle = resolve(self.task_info, "delete_subtitle_after_embed")
 
         file_list = [
             entry["file"] for entry in self._embedded_subtitle_list
@@ -441,11 +467,7 @@ class Merger(QObject):
                 output_path = temp_output_audio_file_name
             )
 
-            self._ffmpeg_runner = FFmpegRunner.from_command(fix_command, parent = self)
-            self._ffmpeg_runner.set_cwd(cwd)
-            self._ffmpeg_runner.finished_signal.connect(self.on_convert_completed)
-            self._ffmpeg_runner.error_signal.connect(self.on_merge_error)
-            self._ffmpeg_runner.start()
+            self._start_ffmpeg(fix_command, cwd, self.on_convert_completed)
         else:
             self.set_error_message(
                 Translator.ERROR_MESSAGES("DOWNLOAD_FAILED"),
@@ -477,7 +499,7 @@ class Merger(QObject):
     def temp_cover_file_name(self):
         return "cover_{task_id}.{file_ext}".format(
             task_id = self.task_info.Basic.task_id,
-            file_ext = config.get(config.cover_type).value
+            file_ext = resolve(self.task_info, "cover_type").value
         )
 
     @property
@@ -498,4 +520,4 @@ class Merger(QObject):
 
     @property
     def cover_file_name(self):
-        return f"{self.task_info.File.name}.{config.get(config.cover_type).value}"
+        return f"{self.task_info.File.name}.{resolve(self.task_info, 'cover_type').value}"

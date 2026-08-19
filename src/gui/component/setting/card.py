@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QHBoxLayout, QVBoxLayout, QLabel, QFileDialog
+from PySide6.QtWidgets import QHBoxLayout, QVBoxLayout, QLabel, QFileDialog, QApplication, QWidget
 from PySide6.QtCore import QTimer, Signal, Qt
 from PySide6.QtGui import QColor
 
@@ -10,14 +10,16 @@ from qfluentwidgets import (
 from qfluentwidgets.components.settings.expand_setting_card import GroupWidget as _GroupWidget
 
 from .widget import SettingSwitchButton, SettingComboBox, SettingSlider
+from ..widget.button import TransparentToolButton
+from ..widget.spinbox import SpinBox
 
-
+from util.common.enum import VideoContainer, ToastNotificationCategory
 from util.common.config import config, isWin11, APPConfig
 from util.thread.pool import GlobalThreadPoolTask
 from util.common.icon import ExtendedFluentIcon
 from util.common.io.directory import Directory
 from util.common.translator import Translator
-from util.common.enum import VideoContainer
+from util.common.signal_bus import signal_bus
 
 from pathlib import Path
 import logging
@@ -701,3 +703,160 @@ class OtherAdvancedSettingCard(ExpandGroupSettingCard):
 
     def on_open_config_directory(self):
         Directory.open_directory_in_explorer(str(config.file.parent))
+
+class MCPSettingCard(ExpandGroupSettingCard):
+    # 开关、端口、令牌任一变化都需要重启服务器才能生效
+    restartRequested = Signal()
+
+    def __init__(self, parent_window, parent = None):
+        super().__init__(ExtendedFluentIcon.SERVER, self.tr("MCP Server"), self.tr("Let AI clients parse links and manage downloads through the Model Context Protocol"), parent)
+
+        self.parent_window = parent_window
+
+        self.enable_switch = SettingSwitchButton(config.mcp_enabled, parent = self)
+
+        self.status_label = QLabel(self)
+
+        self.port_box = SpinBox(self)
+        self.port_box.setRange(*config.mcp_port.range)
+        self.port_box.setValue(config.get(config.mcp_port))
+        self.port_box.setMinimumWidth(150)
+
+        self.copy_token_btn = PushButton(self.tr("Copy"), self)
+        self.regenerate_token_btn = PushButton(self.tr("Regenerate"), self)
+
+        # 客户端分两种：一种支持 HTTP 直连（Claude Code 等），一种只认 stdio
+        # 传输（Claude Desktop 等，配置里填 url 会被当作非法条目跳过）。
+        # 让用户自己去分辨哪个客户端支持什么不现实，两种配置都给
+        self.copy_config_btn = DropDownPushButton(text = self.tr("Copy"), parent = self)
+
+        config_menu = RoundMenu(parent = self.copy_config_btn)
+        config_menu.addAction(Action(
+            FluentIcon.GLOBE, self.tr("HTTP (Claude Code, etc.)"), triggered = self.on_copy_http_config
+        ))
+        config_menu.addAction(Action(
+            FluentIcon.COMMAND_PROMPT, self.tr("stdio (Claude Desktop, etc.)"), triggered = self.on_copy_stdio_config
+        ))
+
+        self.copy_config_btn.setMenu(config_menu)
+
+        token_layout = QHBoxLayout()
+        token_layout.setContentsMargins(0, 0, 0, 0)
+        token_layout.addWidget(self.copy_token_btn)
+        token_layout.addWidget(self.regenerate_token_btn)
+
+        token_widget = QWidget(self)
+        token_widget.setLayout(token_layout)
+
+        self.addGroup("", self.tr("Enable MCP Server"), self.tr("Listen on the local loopback address only. Disabled by default."), self.enable_switch)
+        self.status_group = self.addGroup("", self.tr("Status"), "", self.status_label)
+        self.port_group = self.addGroup("", self.tr("Port"), self.tr("Takes effect after the server restarts"), self.port_box)
+        self.addGroup("", self.tr("Access Token"), self.tr("Required by every request. Treat it like a password."), token_widget)
+        self.addGroup("", self.tr("Client Configuration"), self.tr("Copy a ready-to-use MCP client configuration"), self.copy_config_btn)
+
+        # 这里跳转到在线文档而不是弹说明对话框：配置 AI 客户端要贴 JSON、
+        # 分辨客户端差异，篇幅远超一个对话框能承载的量
+        self.showHyperLinkLabel(self.tr("View Documentation"))
+
+        self.hyper_label.clicked.connect(self.on_open_documentation)
+
+        self.copy_token_btn.clicked.connect(self.on_copy_token)
+        self.regenerate_token_btn.clicked.connect(self.on_regenerate_token)
+
+        self.enable_switch.checkedChanged.connect(self.on_toggle_enabled)
+        self.port_box.valueChanged.connect(self.on_port_changed)
+
+        self.update_status()
+
+    def on_open_documentation(self):
+        import webbrowser
+
+        webbrowser.open("https://bili23.scott-sloan.cn/doc/mcp-server.html")
+
+    def update_status(self):
+        if not config.get(config.mcp_enabled):
+            text = self.tr("Disabled")
+
+        elif config.mcp_running:
+            text = self.tr("Listening on 127.0.0.1:{port}").format(port = config.get(config.mcp_port))
+
+        elif config.mcp_last_error:
+            text = self.tr("Failed to start: {error}").format(error = config.mcp_last_error)
+
+        else:
+            text = self.tr("Not running")
+
+        self.status_label.setText(text)
+
+    def on_toggle_enabled(self, checked: bool):
+        self.restartRequested.emit()
+
+    def on_port_changed(self, value: int):
+        config.set(config.mcp_port, value)
+
+        self.restartRequested.emit()
+
+    def _ensure_token(self) -> str:
+        token = config.get(config.mcp_token)
+
+        if not token:
+            from util.mcp.server import generate_token
+
+            token = generate_token()
+
+            config.set(config.mcp_token, token)
+
+        return token
+
+    def on_copy_token(self):
+        QApplication.clipboard().setText(self._ensure_token())
+
+        signal_bus.toast.show.emit(ToastNotificationCategory.SUCCESS, "", self.tr("Access token copied"))
+
+    def on_regenerate_token(self):
+        dialog = MessageBox(
+            self.tr("Regenerate Access Token"),
+            self.tr("Existing AI clients will stop working until they are reconfigured with the new token. Continue?"),
+            self.parent_window
+        )
+
+        if not dialog.exec():
+            return
+
+        from util.mcp.server import generate_token
+
+        config.set(config.mcp_token, generate_token())
+
+        self.restartRequested.emit()
+
+        signal_bus.toast.show.emit(ToastNotificationCategory.SUCCESS, "", self.tr("Access token regenerated"))
+
+    def _copy_config(self, entry: dict):
+        import json
+
+        QApplication.clipboard().setText(
+            json.dumps({"mcpServers": {"bili23-downloader": entry}}, indent = 2)
+        )
+
+        signal_bus.toast.show.emit(ToastNotificationCategory.SUCCESS, "", self.tr("Client configuration copied"))
+
+    def on_copy_http_config(self):
+        self._copy_config({
+            "type": "http",
+            "url": f"http://127.0.0.1:{config.get(config.mcp_port)}/mcp",
+            "headers": {"Authorization": f"Bearer {self._ensure_token()}"},
+        })
+
+    def on_copy_stdio_config(self):
+        from util.mcp.stdio_bridge import stdio_launch_command
+
+        command = stdio_launch_command()
+
+        # 令牌不写进配置：桥接会自己从 config.json 读，用户重新生成令牌后
+        # 不必再改一遍客户端配置
+        self._ensure_token()
+
+        self._copy_config({
+            "command": command[0],
+            "args": command[1:],
+        })

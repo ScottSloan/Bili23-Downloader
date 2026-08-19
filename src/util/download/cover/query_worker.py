@@ -7,7 +7,10 @@ from ...network.request import SyncNetWorkRequest, ResponseType
 
 from urllib.parse import urlencode
 import base64
+import logging
 import httpx
+
+logger = logging.getLogger(__name__)
 
 class CoverQueryWorker(QRunnable):
     def __init__(self, model, query_id: str, cover_id: str, cover_url: str, cover_size: QSize, query_param: dict = None):
@@ -23,6 +26,13 @@ class CoverQueryWorker(QRunnable):
         self.query_param = query_param
 
     def run(self):
+        try:
+            self._run()
+
+        except Exception:
+            logger.exception("加载封面失败：%s", self.cover_url)
+
+    def _run(self):
         from ..cover.manager import cover_manager
 
         if self.query_param:
@@ -32,6 +42,10 @@ class CoverQueryWorker(QRunnable):
             except Exception:
                 # 查询封面 URL 失败，无法继续后续流程
                 return
+
+        if not self.cover_url:
+            # 会员购商城课程等条目的接口不返回封面，无需请求
+            return
 
         result = cover_manager.query(self.cover_id)
 

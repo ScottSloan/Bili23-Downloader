@@ -7,7 +7,7 @@
 <h1 align="center">Bili23-Downloader</h1>
 
 <p align="center">
-    🌐&nbsp;&nbsp;<a href="README.md"><kbd>简体中文</kbd></a>&nbsp;&nbsp;<kbd><b>English</b></kbd>
+    🌐&nbsp;&nbsp;<a href="README.md"><span>简体中文</span></a>&nbsp;&nbsp;<span><b>English</b></span>
 </p>
 
 <p align="center">

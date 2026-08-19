@@ -147,6 +147,11 @@ class FileNameFormatter:
             "ep_id": task_info.Episode.ep_id,
             "season_id": task_info.Episode.season_id,
 
+            "course_id": task_info.Episode.course_id,
+            "lesson_id": task_info.Episode.lesson_id,
+            "item_id": task_info.Episode.item_id,
+            "section_id": task_info.Episode.section_id,
+
             "leaf_title": task_info.Episode.leaf_title,
             "parent_title": task_info.Episode.parent_title,
             "section_title": task_info.Episode.section_title,
@@ -187,6 +192,7 @@ class FileNameFormatter:
             Attribute.INTERACTIVE_BIT: ConventionType.INTERACTIVE_VIDEO,
             Attribute.BANGUMI_BIT: ConventionType.BANGUMI,
             Attribute.CHEESE_BIT: ConventionType.CHEESE,
+            Attribute.LESSON_BIT: ConventionType.LESSON,
         }
 
         for attr, type_id in type_map.items():

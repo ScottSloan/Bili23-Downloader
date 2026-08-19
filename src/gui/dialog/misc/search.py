@@ -52,7 +52,7 @@ class SearchDialog(DialogBase):
         scope_lab = BodyLabel(self.tr("Search scope"), self)
 
         self.filter_page_radio = RadioButton(self.tr("Filter the current page only"), self)
-        self.search_all_radio = RadioButton(self.tr("Search all pages, results are provided by Bilibili"), self)
+        self.search_all_radio = RadioButton(self.tr("Search all pages"), self)
 
         # 已经处于搜索状态时，默认继续使用服务端搜索，便于直接修改关键词
         if self.current_keyword:

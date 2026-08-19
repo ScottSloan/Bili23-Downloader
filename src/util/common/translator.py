@@ -36,6 +36,7 @@ class Translator:
             "8K": translate("VIDEO_QUALITY", "8K UHD"),
             "DOLBY_VISION": translate("VIDEO_QUALITY", "Dolby Vision"),
             "HDR": translate("VIDEO_QUALITY", "HDR True Color"),
+            "4K_SDR": translate("VIDEO_QUALITY", "4K SDR Enhanced"),
             "4K": translate("VIDEO_QUALITY", "4K UHD"),
             "1080P60": translate("VIDEO_QUALITY", "1080P 60fps"),
             "1080P+": translate("VIDEO_QUALITY", "1080P High Bitrate"),
@@ -81,6 +82,7 @@ class Translator:
             "TV": translate("EPISODE_TYPE", "TV Dramas"),
             "VARIETY": translate("EPISODE_TYPE", "Variety Shows"),
             "COURSE": translate("EPISODE_TYPE", "Courses"),
+            "MALL_COURSE": translate("EPISODE_TYPE", "Mall Courses"),
             "WEEKLY": translate("EPISODE_TYPE", "Weekly Picks"),
             "COLLECTION_LIST": translate("EPISODE_TYPE", "Collection"),
             "FAVORITES": translate("EPISODE_TYPE", "Favorites"),
@@ -135,6 +137,7 @@ class Translator:
             "DEFAULT_FOR_INTERACTIVE_VIDEO": translate("DEFAULT_RULE_NAMES", "Preset: Interactive Video"),
             "DEFAULT_FOR_BANGUMI": translate("DEFAULT_RULE_NAMES", "Preset: Film & TV"),
             "DEFAULT_FOR_CHEESE": translate("DEFAULT_RULE_NAMES", "Preset: Courses"),
+            "DEFAULT_FOR_LESSON": translate("DEFAULT_RULE_NAMES", "Preset: Mall Courses"),
             "DEFAULT_FOR_FAVORITE": translate("DEFAULT_RULE_NAMES", "Preset: Favorites"),
             "DEFAULT_FOR_SPACE": translate("DEFAULT_RULE_NAMES", "Preset: Profile"),
             "DEFAULT_FOR_AUDIO": translate("DEFAULT_RULE_NAMES", "Preset: Music"),
@@ -153,6 +156,7 @@ class Translator:
             "INTERACTIVE_VIDEO": translate("CONVENTION_TYPE", "Interactive Video"),
             "BANGUMI": translate("CONVENTION_TYPE", "Film & TV"),
             "CHEESE": translate("CONVENTION_TYPE", "Courses"),
+            "LESSON": translate("CONVENTION_TYPE", "Mall Courses"),
             "FAVORITE": translate("CONVENTION_TYPE", "Favorites"),
             "SPACE": translate("CONVENTION_TYPE", "Profile"),
             "HISTORY": translate("CONVENTION_TYPE", "History"),
@@ -212,6 +216,13 @@ class Translator:
 
             "SERIES_TITLE_FOR_BANGUMI": translate("VARIABLE_DESCRIPTION", "Series title"),
             "SERIES_TITLE_FOR_CHEESE": translate("VARIABLE_DESCRIPTION", "Courses title"),
+            "SERIES_TITLE_FOR_LESSON": translate("VARIABLE_DESCRIPTION", "Mall courses title"),
+            "SECTION_TITLE_FOR_LESSON": translate("VARIABLE_DESCRIPTION", "Chapter title (courses title if not divided into chapters)"),
+            "EPISODE_TITLE_FOR_LESSON": translate("VARIABLE_DESCRIPTION", "Lesson title"),
+            "COURSE_ID": translate("VARIABLE_DESCRIPTION", "Mall courses id"),
+            "LESSON_ID": translate("VARIABLE_DESCRIPTION", "Mall lesson id"),
+            "ITEM_ID": translate("VARIABLE_DESCRIPTION", "Mall item id"),
+            "SECTION_ID": translate("VARIABLE_DESCRIPTION", "Mall section id"),
             "SEASON_TITLE": translate("VARIABLE_DESCRIPTION", "Season title"),
             "EPISODE_TITLE": translate("VARIABLE_DESCRIPTION", "Episode title"),
             "SEASON_NUMBER": translate("VARIABLE_DESCRIPTION", "Season number"),
@@ -295,8 +306,10 @@ class Translator:
             "PAUSED": translate("TIP_MESSAGES", "Paused"),
             "FFMPEG_QUEUED": translate("TIP_MESSAGES", "Queued for FFmpeg..."),
             "MERGING": translate("TIP_MESSAGES", "Merging..."),
+            "MERGING_WITH_PROGRESS": translate("TIP_MESSAGES", "Merging... {progress}%"),
             "COMPLETED": translate("TIP_MESSAGES", "Completed"),
             "CONVERTING": translate("TIP_MESSAGES", "Converting..."),
+            "CONVERTING_WITH_PROGRESS": translate("TIP_MESSAGES", "Converting... {progress}%"),
             "ALREADY_LATEST_VERSION": translate("TIP_MESSAGES", "You are already using the latest version"),
             "DOWNLOAD_COMPLETED": translate("TIP_MESSAGES", "Download completed"),
             "DOWNLOAD_COMPLETED_DETAIL": translate("TIP_MESSAGES", "All download tasks have been completed."),
@@ -335,7 +348,9 @@ class Translator:
 
     @staticmethod
     def MEDIA_INFO_GUIDE():
-        return translate("MEDIA_INFO_GUIDE", """The media info shown here defaults to the first video in the parsed results. If multiple videos are available, this information may not exactly match the one you download—use it for reference only.
+        return translate("MEDIA_INFO_GUIDE", """The media info shown here comes from a single video in the parsed results: the one the link points to, or the first one when the link doesn't point to a specific video. If that video's media info cannot be retrieved—charge-exclusive or paid content, for example—another video is used instead. "Source Video" above shows which one it came from.
+
+If multiple videos are available, this information may not exactly match the one you download—use it for reference only.
 
 To view detailed media info for a specific video, right-click its entry in the parse list and select "Update Media Info".
 

@@ -5,10 +5,11 @@ from ...common.signal_bus import signal_bus
 from ...common.translator import Translator
 from ...common.config import config
 
-from ...network.request import NetworkRequestWorker
+from ...network.request import NetworkRequestWorker, RequestType
 from ...thread.async_ import AsyncTask
 
 from ..parser.base import ParserBase
+from ..parser.lesson import LESSON_PLAY_DETAIL_URL, build_lesson_media_info, build_lesson_play_payload
 from ..episode.tree import Attribute
 
 from .audio_info import AudioInfoParser
@@ -34,6 +35,7 @@ class Previewer(ParserBase, QObject):
         QObject.__init__(self)
 
         self.show_toast = False
+        self.candidates = []
 
         self.video_info_parser = VideoInfoParser()
         self.audio_info_parser = AudioInfoParser()
@@ -43,13 +45,27 @@ class Previewer(ParserBase, QObject):
 
         signal_bus.parse.preview_init.connect(self.on_init)
 
-    def on_init(self, episode_data: dict, show_toast: bool):
-        if episode_data is None:
+    def on_init(self, episode_data_list: list, show_toast: bool):
+        # 候选项按顺序尝试，取不到媒体信息就换下一个。
+        # 用户手动指定某一项时只会传来这一项，失败即失败，不会擅自换成别的视频
+        self.candidates = [episode_data for episode_data in episode_data_list if episode_data]
+
+        if not self.candidates:
             return
 
         self.show_toast = show_toast
 
+        self.start_next_candidate(from_fallback = False)
+
+    def start_next_candidate(self, from_fallback: bool):
+        episode_data = self.candidates.pop(0)
+
         self.clear_cache()
+
+        # 记录媒体信息取自哪个视频，供下载选项对话框显示
+        PreviewerInfo.episode_title = episode_data.get("title", "")
+        PreviewerInfo.episode_number = episode_data.get("number", "")
+        PreviewerInfo.from_fallback = from_fallback
 
         # clear_cache 已递增代号，此后到达的旧请求结果都会被丢弃
         token = PreviewerInfo.generation
@@ -70,6 +86,9 @@ class Previewer(ParserBase, QObject):
 
         elif ep_attr & Attribute.CHEESE_BIT:
             self.get_cheese_info(episode_data, token)
+
+        elif ep_attr & Attribute.LESSON_BIT:
+            self.get_lesson_info(episode_data, token)
 
         elif ep_attr & Attribute.AUDIO_BIT:
             self.get_audio_info(episode_data, token)
@@ -106,14 +125,23 @@ class Previewer(ParserBase, QObject):
 
         self.parse_info()
 
-    def on_init_error(self, error: str):
+    def on_init_error(self, error: str, allow_fallback: bool = True):
         # 标记出错 flag
         PreviewerInfo.error_occurred = True
         PreviewerInfo.error_message = error
 
-        signal_bus.toast.show.emit(ToastNotificationCategory.ERROR, "获取媒体信息失败", error)
-
         logger.exception("获取媒体信息失败: %s", error)
+
+        if allow_fallback and self.candidates:
+            # 充电专属、付费等内容取不到媒体信息，整个解析结果就都会被判定为不可下载，
+            # 用户只能自己右键换一项重新获取。此处自动换下一个候选，
+            # 全部失败时才提示，避免中途弹出会被重试消解掉的错误
+            logger.info("尝试使用下一个视频重新获取媒体信息")
+
+            self.start_next_candidate(from_fallback = True)
+            return
+
+        signal_bus.toast.show.emit(ToastNotificationCategory.ERROR, "获取媒体信息失败", error)
 
     def parse_info(self):
         try:
@@ -150,7 +178,7 @@ class Previewer(ParserBase, QObject):
             "cid": episode_data["cid"],
             "qn": 80,
             "fnver": 0,
-            "fnval": 12240,
+            "fnval": 143312,
             "fourk": 1
         }
 
@@ -173,6 +201,16 @@ class Previewer(ParserBase, QObject):
 
         self._request_media_info(url, "cheese", token)
 
+    def get_lesson_info(self, episode_data: dict, token: int):
+        payload = build_lesson_play_payload(
+            episode_data.get("course_id", 0),
+            episode_data.get("lesson_id", 0),
+            episode_data.get("item_id", 0),
+            episode_data.get("section_id", 0)
+        )
+
+        self._request_media_info(LESSON_PLAY_DETAIL_URL, "lesson", token, request_type = RequestType.POST, json_data = payload)
+
     def get_audio_info(self, episode_data: dict, token: int):
         params = {
             "sid": episode_data["sid"],
@@ -184,7 +222,7 @@ class Previewer(ParserBase, QObject):
 
         self._request_media_info(url, "audio", token)
 
-    def _request_media_info(self, url: str, parser_type: str, token: int):
+    def _request_media_info(self, url: str, parser_type: str, token: int, request_type: RequestType = RequestType.GET, json_data: dict = None):
         # 两个闭包都跑在请求线程里，只负责把结果连同发起时的代号转发出去，不碰任何共享状态
         def on_success(response: dict):
             self._media_info_ready.emit(response, parser_type, url, token)
@@ -192,7 +230,7 @@ class Previewer(ParserBase, QObject):
         def on_error(error: str):
             self._media_info_failed.emit(error, token)
 
-        worker = NetworkRequestWorker(url)
+        worker = NetworkRequestWorker(url, request_type, json_data = json_data)
         worker.success.connect(on_success)
         worker.error.connect(on_error)
 
@@ -214,8 +252,19 @@ class Previewer(ParserBase, QObject):
         if parser_type == "audio":
             response["data"]["format"] = "m4a"
 
-        # 剧集接口的数据在 result 下，其余都在 data 下
-        PreviewerInfo.info_data = response.copy()["result" if parser_type == "bangumi" else "data"]
+        try:
+            if parser_type == "lesson":
+                # 商城课程拿到的是一条 mp4 直链，先包装成 playurl 的 mp4 格式
+                info_data = build_lesson_media_info(response.copy()["data"])
+            else:
+                # 剧集接口的数据在 result 下，其余都在 data 下
+                info_data = response.copy()["result" if parser_type == "bangumi" else "data"]
+
+        except Exception as e:
+            self.on_init_error(str(e))
+            return
+
+        PreviewerInfo.info_data = info_data
         PreviewerInfo.info_data["parser_type"] = parser_type
         PreviewerInfo.info_data["query_url"] = url
 
@@ -226,7 +275,8 @@ class Previewer(ParserBase, QObject):
         if token != PreviewerInfo.generation:
             return
 
-        self.on_init_error(error)
+        # 网络层就失败了，换一个视频同样请求不到，直接把错误报给用户
+        self.on_init_error(error, allow_fallback = False)
 
     def check_need_parse(self, ep_attr: int):
         attr_list = [
@@ -263,6 +313,8 @@ class Previewer(ParserBase, QObject):
         PreviewerInfo.info_data = {}
         PreviewerInfo.media_type = MediaType.UNKNOWN
         PreviewerInfo.attribute = 0
+        PreviewerInfo.episode_title = ""
+        PreviewerInfo.from_fallback = False
         PreviewerInfo.cache = {
             "video": defaultdict(lambda: defaultdict(dict)),
             "audio": defaultdict(dict)

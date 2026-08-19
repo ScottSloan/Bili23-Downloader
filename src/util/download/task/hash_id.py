@@ -18,7 +18,7 @@ def _to_int(value) -> int:
 def _to_str(value) -> str:
     return str(value) if value else ""
 
-def calc_hash_id(attribute: int, aid = None, bvid = None, cid = None, ep_id = None, sid = None, task_id = None):
+def calc_hash_id(attribute: int, aid = None, bvid = None, cid = None, ep_id = None, sid = None, task_id = None, course_id = None, lesson_id = None, item_id = None, section_id = None):
     """
     根据媒体的唯一标识计算 hash_id，用于重复下载判定
 
@@ -33,6 +33,11 @@ def calc_hash_id(attribute: int, aid = None, bvid = None, cid = None, ep_id = No
     sid = _to_int(sid)
     bvid = _to_str(bvid)
     task_id = _to_str(task_id)
+
+    course_id = _to_int(course_id)
+    lesson_id = _to_int(lesson_id)
+    item_id = _to_int(item_id)
+    section_id = _to_int(section_id)
 
     if attribute & Attribute.VIDEO_BIT:
         # 投稿视频
@@ -49,6 +54,14 @@ def calc_hash_id(attribute: int, aid = None, bvid = None, cid = None, ep_id = No
             "cid": cid,
             "aid": aid,
             "ep_id": ep_id
+        }
+
+    elif attribute & Attribute.LESSON_BIT:
+        metadata = {
+            "course_id": course_id,
+            "lesson_id": lesson_id,
+            "item_id": item_id,
+            "section_id": section_id
         }
 
     elif attribute & Attribute.CHEESE_BIT:

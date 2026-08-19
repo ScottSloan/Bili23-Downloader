@@ -119,8 +119,8 @@ class ParseBase(QFrame):
 
                         # == 0 时无需处理
 
-                    case ParserType.CHEESE.value:
-                        # 课程
+                    case ParserType.CHEESE.value | ParserType.LESSON.value:
+                        # 课程、会员购商城课程
 
                         # 同理，默认行为是选中对应剧集，所以只需处理选中正片的情况
                         if conditions.get("bangumi") == 1:
@@ -152,9 +152,10 @@ class ParseBase(QFrame):
         self.parse_list.check_items(items)
 
     def update_previewer_info(self: "ParseInterface"):
-        if first_episode_info := self.parse_list.get_first_item_info():
-            # 获取解析结果中第一个视频的信息，作为预览的媒体信息
-            signal_bus.parse.preview_init.emit(first_episode_info, False)
+        # 首选链接指向的那个视频，链接未指向具体视频时取解析结果中的第一个视频，
+        # 其余为备选，供首选项取不到媒体信息时依次重试
+        if candidates := self.parse_list.get_preview_candidates():
+            signal_bus.parse.preview_init.emit(candidates, False)
 
     def check_preview_info(self: "ParseInterface"):
         if PreviewerInfo.error_occurred:
@@ -541,7 +542,7 @@ class ParseInterface(ParseBase):
         config.current_starting_number = 1
 
         # 添加到下载队列
-        signal_bus.download.create_task.emit(checked_episodes_list, True)
+        signal_bus.download.create_task.emit(checked_episodes_list, True, None)
 
         QTimer.singleShot(0, self.parse_list.update_check_state)
 

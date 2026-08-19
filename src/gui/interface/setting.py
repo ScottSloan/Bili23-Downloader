@@ -10,7 +10,8 @@ from gui.component.widget.scroll import ScrollArea
 from gui.component.setting import (
     PrioritySettingCard, DanmakuSettingCard, SubtitleSettingCard, CoverSettingCard, ChapterSettingCard, MetadataSettingCard, CDNSettingCard, ProxySettingCard,
     FFmpegSettingCard, NumberSettingCard, DownloadFormatCard, DownloadPathSettingCard, ParsingSettingCard, WindowBehaviorSettingCard,
-    DownloadHandlingSettingCard, DownloadConcurrencySettingCard, PersonalizationCard, CheckUpdateSettingCard, OtherAdvancedSettingCard
+    DownloadHandlingSettingCard, DownloadConcurrencySettingCard, PersonalizationCard, CheckUpdateSettingCard, OtherAdvancedSettingCard,
+    MCPSettingCard
 )
 
 from util.common.data import video_quality_map, audio_quality_map, video_codec_map
@@ -19,6 +20,10 @@ from util.common.style_sheet import StyleSheet
 from util.common.signal_bus import signal_bus
 from util.common.translator import Translator
 from util.common.config import config
+
+import logging
+
+logger = logging.getLogger(__name__)
 
 class SettingInterface(ScrollArea):
     def __init__(self, parent = None):
@@ -79,6 +84,7 @@ class SettingInterface(ScrollArea):
         self.cdn_card = CDNSettingCard(self.main_window, self)
         self.ffmpeg_card = FFmpegSettingCard(self.main_window, self)
         self.proxy_card = ProxySettingCard(self)
+        self.mcp_card = MCPSettingCard(self.main_window, self)
         self.other_card = OtherAdvancedSettingCard(self.main_window, self)
         self.log_card = PushSettingCard(self.tr("View Logs"), FluentIcon.BOOK_SHELF, self.tr("Logs"), self.tr("View application logs"), self)
 
@@ -118,6 +124,7 @@ class SettingInterface(ScrollArea):
         self.advanced_group.addSettingCard(self.cdn_card)
         self.advanced_group.addSettingCard(self.ffmpeg_card)
         self.advanced_group.addSettingCard(self.proxy_card)
+        self.advanced_group.addSettingCard(self.mcp_card)
         self.advanced_group.addSettingCard(self.other_card)
         self.advanced_group.addSettingCard(self.log_card)
 
@@ -176,6 +183,7 @@ class SettingInterface(ScrollArea):
         self.ffmpeg_card.custom_btn.clicked.connect(self.on_change_ffmpeg_path)
         self.proxy_card.proxy_mode_choice.currentIndexChanged.connect(self.on_change_proxy_mode)
         self.proxy_card.custom_btn.clicked.connect(self.on_custom_proxy)
+        self.mcp_card.restartRequested.connect(self.on_restart_mcp_server)
         self.log_card.clicked.connect(self.on_view_logs)
 
         # Update
@@ -308,6 +316,26 @@ class SettingInterface(ScrollArea):
 
         dialog = ProxyDialog(self.main_window)
         dialog.exec()
+
+    def on_restart_mcp_server(self):
+        from util.mcp import restart_mcp_server
+
+        try:
+            restart_mcp_server()
+
+        except Exception:
+            # 端口占用等失败已记入 config.mcp_last_error，由状态行呈现给用户，
+            # 不能让它把设置界面一起带崩
+            logger.exception("重启 MCP 服务器失败")
+
+        self.mcp_card.update_status()
+
+        if config.mcp_last_error:
+            signal_bus.toast.show.emit(
+                ToastNotificationCategory.ERROR,
+                self.tr("MCP server failed to start"),
+                config.mcp_last_error
+            )
 
     def on_view_logs(self):
         from ..dialog.log import LogViewerDialog

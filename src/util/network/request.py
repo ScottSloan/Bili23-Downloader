@@ -17,6 +17,34 @@ logging.getLogger("httpx").setLevel(logging.WARNING)
 
 logger = logging.getLogger(__name__)
 
+# 建立连接（含 TLS 握手）与收发数据的超时必须分开设置。
+# httpcore 把 start_tls 也算在 connect 超时里，而 TLS 握手要等服务端返回完整证书链，
+# 在虚拟机、弱网或代理链路下 5 秒经常不够，实测会抛 "_ssl.c:1015: The handshake operation timed out"。
+# 读写超时则不宜放宽：请求已经发出还迟迟没有响应时，尽快失败重试比干等更划算。
+CONNECT_TIMEOUT = 15.0
+READ_WRITE_TIMEOUT = 5.0
+# 等待空闲连接单独放宽，避免高并发下把排队时间算成请求超时
+POOL_TIMEOUT = 30.0
+
+# 封面加载线程池上限就有 16，叠加解析线程后并发请求数远超 10。
+# 连接数不够时后来的请求要排队等空闲连接，而排队时间同样计入超时，
+# 批量解析边下载时很容易把解析请求本身拖成 PoolTimeout。
+MAX_CONNECTIONS = 48
+MAX_KEEPALIVE_CONNECTIONS = 24
+
+def get_limits():
+    # limits 必须交给 HTTPTransport，不能传给 Client：
+    # httpx.Client._init_transport 遇到显式传入的 transport 会直接返回它，limits 参数被完全忽略
+    # （原先写在 Client 上的 32 / 16 从未生效，实际用的是 httpx 默认的 100 / 20）
+    import httpx
+
+    return httpx.Limits(max_connections = MAX_CONNECTIONS, max_keepalive_connections = MAX_KEEPALIVE_CONNECTIONS)
+
+def get_timeout():
+    import httpx
+
+    return httpx.Timeout(READ_WRITE_TIMEOUT, connect = CONNECT_TIMEOUT, pool = POOL_TIMEOUT)
+
 _client = None
 _client_lock = Lock()
 
@@ -41,22 +69,41 @@ def get_ssl_context():
     return _ssl_context
 
 def _create_ssl_context():
-    # 与 httpx 默认行为保持一致：优先使用环境变量指定的证书，否则回退到 certifi 提供的证书列表
+    # 证书来源的优先级与 httpx 默认行为保持一致：优先使用环境变量指定的证书，否则回退到 certifi 提供的证书列表
     try:
         if cert_file := os.environ.get("SSL_CERT_FILE"):
-            return ssl.create_default_context(cafile = cert_file)
+            context = ssl.create_default_context(cafile = cert_file)
 
-        if cert_dir := os.environ.get("SSL_CERT_DIR"):
-            return ssl.create_default_context(capath = cert_dir)
+        elif cert_dir := os.environ.get("SSL_CERT_DIR"):
+            context = ssl.create_default_context(capath = cert_dir)
 
-        import certifi
+        else:
+            import certifi
 
-        return ssl.create_default_context(cafile = certifi.where())
+            context = ssl.create_default_context(cafile = certifi.where())
 
     except Exception:
         logger.exception("构建 SSL 上下文失败，已回退到系统默认证书")
 
+        # 不带 cafile / capath 调用时，create_default_context 内部就会加载系统证书，无需再叠加
         return ssl.create_default_context()
+
+    _load_system_certs(context)
+
+    return context
+
+def _load_system_certs(context: ssl.SSLContext):
+    # certifi 只收录公共 CA。杀毒软件的 HTTPS 扫描、代理软件的 MITM、企业与校园的准入网关都会用自签根证书
+    # 重签所有站点的证书，而这类根证书只装进系统证书存储。此时浏览器一切正常，只信任 certifi 的本程序却会对
+    # 所有请求抛 CERTIFICATE_VERIFY_FAILED（unable to get local issuer certificate）。
+    # 因此在 certifi 之上再叠加一份系统根证书，两者并存互补，重复的证书由 OpenSSL 自行忽略。
+    # 注意：传入 cafile / capath 时 create_default_context 不会加载系统证书，必须像这样显式调用。
+    try:
+        context.load_default_certs()
+
+    except Exception:
+        # 叠加失败不影响上面已经加载好的证书，保持原有行为继续可用即可，不必让整个上下文构建失败
+        logger.warning("加载系统根证书失败，仅使用已加载的证书列表", exc_info = True)
 
 def get_mounts(proxies = None):
     import httpx
@@ -65,8 +112,8 @@ def get_mounts(proxies = None):
         proxy_url = proxies.get("http") or proxies.get("https")
 
         return {
-            "http://": httpx.HTTPTransport(proxy = proxy_url, retries = 5, verify = get_ssl_context()),
-            "https://": httpx.HTTPTransport(proxy = proxy_url, retries = 5, verify = get_ssl_context())
+            "http://": httpx.HTTPTransport(proxy = proxy_url, retries = 5, limits = get_limits(), verify = get_ssl_context()),
+            "https://": httpx.HTTPTransport(proxy = proxy_url, retries = 5, limits = get_limits(), verify = get_ssl_context())
         }
     else:
         return None
@@ -101,7 +148,7 @@ def get_env_mounts():
         else:
             try:
                 # httpx 对 http(s) 代理不使用 retries，此处与 get_mounts 一样只依赖代理本身的连接行为
-                mounts[pattern] = httpx.HTTPTransport(proxy = proxy_url, verify = get_ssl_context())
+                mounts[pattern] = httpx.HTTPTransport(proxy = proxy_url, limits = get_limits(), verify = get_ssl_context())
 
             except Exception as e:
                 # httpx 不认识的代理协议（如 socks4）会抛 ValueError，socks5 缺少 socksio 依赖时会抛 ImportError。
@@ -128,11 +175,7 @@ def get_proxy_mounts():
 def _create_client():
     import httpx
 
-    # 封面加载线程池上限就有 16，叠加解析线程后并发请求数远超 10。
-    # 连接数不够时后来的请求要排队等空闲连接，而排队时间同样计入超时，
-    # 批量解析边下载时很容易把解析请求本身拖成 PoolTimeout。
-    limits = httpx.Limits(max_connections = 32, max_keepalive_connections = 16)
-    transport = httpx.HTTPTransport(retries = 3, verify = get_ssl_context())
+    transport = httpx.HTTPTransport(retries = 3, limits = get_limits(), verify = get_ssl_context())
 
     mounts = get_proxy_mounts()
 
@@ -145,9 +188,7 @@ def _create_client():
             logger.info("已启用系统代理，挂载数量：%s", len(mounts) if mounts else 0)
 
     return httpx.Client(
-        limits = limits,
-        # 连接、读写仍为 5s；等待空闲连接单独放宽，避免高并发下把排队算成请求超时
-        timeout = httpx.Timeout(5.0, pool = 30.0),
+        timeout = get_timeout(),
         mounts = mounts,
         transport = transport,
         follow_redirects = True,
@@ -254,7 +295,7 @@ class SyncNetWorkRequest:
 
         if self.proxies:
             # 临时 client 没有全局 client 的 cookiejar，需要带一份快照过去
-            with httpx.Client(mounts = get_mounts(self.proxies), follow_redirects = True, verify = get_ssl_context()) as temp_client:
+            with httpx.Client(timeout = get_timeout(), mounts = get_mounts(self.proxies), follow_redirects = True, verify = get_ssl_context()) as temp_client:
                 response = temp_client.request(
                     method = self.request_type.name,
                     url = self.url,

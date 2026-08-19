@@ -27,7 +27,15 @@ class ProfileCard(FlyoutViewBase):
         self.init_UI()
 
     def init_UI(self):
-        self.avatar = AvatarWidget(image = config.user_avatar_pixmap, parent = self)
+        # 头像请求失败时 user_avatar_pixmap 会保持默认的 None，而 AvatarWidget 的构造函数是
+        # singledispatchmethod，None 匹配不到任何重载，会落到只接受 parent 的基础实现上并抛
+        # TypeError。异常在 Qt 槽里被吞掉，表现为点击头像毫无反应，因此这里必须兜底
+        avatar_pixmap = config.user_avatar_pixmap
+
+        if avatar_pixmap is None or avatar_pixmap.isNull():
+            avatar_pixmap = QPixmap(":/bili23/image/noface.jpg")
+
+        self.avatar = AvatarWidget(image = avatar_pixmap, parent = self)
         self.avatar.setRadius(24)
 
         self.uname_lab = BodyLabel(config.user_uname, parent = self)

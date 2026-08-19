@@ -12,6 +12,18 @@ on:
         description: "Release tag or version name, for example v2.00.3 or v2.00.3-rc1"
         required: true
         type: string
+      build_windows:
+        description: "Build Windows packages"
+        type: boolean
+        default: true
+      build_linux:
+        description: "Build Linux packages"
+        type: boolean
+        default: true
+      build_macos:
+        description: "Build macOS packages"
+        type: boolean
+        default: true
 
 jobs:
   get-version:
@@ -20,6 +32,10 @@ jobs:
       VERSION: ${{ steps.set-version.outputs.VERSION }}
       VERSION_NAME: ${{ steps.set-version.outputs.VERSION_NAME }}
       IS_PRERELEASE: ${{ steps.set-version.outputs.IS_PRERELEASE }}
+      RPM_RELEASE: ${{ steps.set-version.outputs.RPM_RELEASE }}
+      BUILD_WINDOWS: ${{ steps.set-targets.outputs.BUILD_WINDOWS }}
+      BUILD_LINUX: ${{ steps.set-targets.outputs.BUILD_LINUX }}
+      BUILD_MACOS: ${{ steps.set-targets.outputs.BUILD_MACOS }}
     steps:
       - name: Set version
         id: set-version
@@ -37,14 +53,37 @@ jobs:
 
           if echo "$TAG_NAME" | grep -q -- '-rc'; then
             echo "IS_PRERELEASE=true" >> $GITHUB_OUTPUT
+
+            # rpm 的 Release 字段不允许出现连字符，因此把 2.00.5-rc1 拆成
+            # Version: 2.00.5 + Release: 0.rc1，前缀 0 保证预发布版排序低于正式版的 1
+            echo "RPM_RELEASE=0.$(echo "${TAG_NAME#*-}" | tr '-' '.')" >> $GITHUB_OUTPUT
           else
             echo "IS_PRERELEASE=false" >> $GITHUB_OUTPUT
+            echo "RPM_RELEASE=1" >> $GITHUB_OUTPUT
           fi
 
-          # echo "VERSION=2.00.5" >> $GITHUB_OUTPUT
-          # echo "VERSION_NAME=2.00.5" >> $GITHUB_OUTPUT
+          #echo "VERSION=2.15.0" >> $GITHUB_OUTPUT
+          #echo "VERSION_NAME=2.15.0" >> $GITHUB_OUTPUT
+
+      - name: Set build targets
+        id: set-targets
+        env:
+          DEFAULT_BUILD_WINDOWS: "true"
+          DEFAULT_BUILD_LINUX: "true"
+          DEFAULT_BUILD_MACOS: "true"
+        run: |
+          if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
+            echo "BUILD_WINDOWS=${{ inputs.build_windows }}" >> $GITHUB_OUTPUT
+            echo "BUILD_LINUX=${{ inputs.build_linux }}" >> $GITHUB_OUTPUT
+            echo "BUILD_MACOS=${{ inputs.build_macos }}" >> $GITHUB_OUTPUT
+          else
+            echo "BUILD_WINDOWS=$DEFAULT_BUILD_WINDOWS" >> $GITHUB_OUTPUT
+            echo "BUILD_LINUX=$DEFAULT_BUILD_LINUX" >> $GITHUB_OUTPUT
+            echo "BUILD_MACOS=$DEFAULT_BUILD_MACOS" >> $GITHUB_OUTPUT
+          fi
 
   windows-build:
+    if: needs.get-version.outputs.BUILD_WINDOWS == 'true'
     needs: get-version
     env:
       VERSION: ${{ needs.get-version.outputs.VERSION }}
@@ -125,7 +164,7 @@ jobs:
       - name: Prepare Windows 10/11 runtime
         run: |
           # 下载 Python 静态运行时环境
-          Invoke-WebRequest -Uri "https://github.com/ScottSloan/Python-Static/releases/download/v0.1.5/windows_x64_runtime.zip" -OutFile windows_x64_runtime.zip
+          Invoke-WebRequest -Uri "https://github.com/ScottSloan/Python-Static/releases/download/v0.1.7/windows_x64_runtime.zip" -OutFile windows_x64_runtime.zip
           
           Expand-Archive windows_x64_runtime.zip -DestinationPath Bili23-Downloader
 
@@ -166,7 +205,7 @@ jobs:
       - name: Prepare Windows 7 runtime
         run: |
           # 下载 Python 静态运行时环境
-          Invoke-WebRequest -Uri "https://github.com/ScottSloan/Python-Static/releases/download/v0.1.5/windows_x64_runtime_for_win7.zip" -OutFile windows_x64_runtime_for_win7.zip
+          Invoke-WebRequest -Uri "https://github.com/ScottSloan/Python-Static/releases/download/v0.1.7/windows_x64_runtime_for_win7.zip" -OutFile windows_x64_runtime_for_win7.zip
           
           Expand-Archive windows_x64_runtime_for_win7.zip -DestinationPath Bili23-Downloader
 
@@ -196,10 +235,12 @@ jobs:
             Bili23-Downloader_${{ env.VERSION_NAME }}_windows_x64_for_win7.exe
   
   linux-build:
+    if: needs.get-version.outputs.BUILD_LINUX == 'true'
     needs: get-version
     env:
       VERSION: ${{ needs.get-version.outputs.VERSION }}
       VERSION_NAME: ${{ needs.get-version.outputs.VERSION_NAME }}
+      RPM_RELEASE: ${{ needs.get-version.outputs.RPM_RELEASE }}
     outputs:
       VERSION: ${{ env.VERSION }}
       VERSION_NAME: ${{ env.VERSION_NAME }}
@@ -209,10 +250,12 @@ jobs:
           - arch: amd64
             os: ubuntu-latest
             python_arch: x64
+            gnu_arch: x86_64
 
           - arch: arm64
             os: ubuntu-24.04-arm
             python_arch: arm64
+            gnu_arch: aarch64
 
     runs-on: ${{ matrix.os }}
     steps:
@@ -221,10 +264,10 @@ jobs:
       - name: Clean up files
         run: |
           # 清理不需要的资源文件以减小安装包体积
-          rm -rf src\res\icon
-          rm -rf src\res\image
-          rm -rf src\res\i18n\bili23.zh_CN.ts
-          rm -rf src\res\i18n\bili23.zh_TW.ts
+          rm -rf src/res/icon
+          rm -rf src/res/image
+          rm -rf src/res/i18n/bili23.zh_CN.ts
+          rm -rf src/res/i18n/bili23.zh_TW.ts
 
       - name: Setup Python
         uses: actions/setup-python@v6
@@ -239,7 +282,7 @@ jobs:
       - name: Prepare Linux runtime
         run: |
           # 下载 Python 静态运行时环境
-          wget https://github.com/ScottSloan/Python-Static/releases/download/v0.1.5/linux_${{ matrix.arch }}_runtime.zip
+          wget https://github.com/ScottSloan/Python-Static/releases/download/v0.1.7/linux_${{ matrix.arch }}_runtime.zip
 
           unzip linux_${{ matrix.arch }}_runtime.zip -d Bili23-Downloader
 
@@ -252,6 +295,28 @@ jobs:
 
           python -m compileall Bili23-Downloader
 
+      - name: Install packaging tools
+        run: |
+          sudo apt-get update
+          # rpm: 构建 rpm 包
+          # librsvg2-bin: 把 svg 图标转成 AppImage 用的 png 缩略图
+          # appstream: 校验 AppStream 元数据
+          sudo apt-get install -y rpm librsvg2-bin appstream
+
+      - name: Prepare AppStream metadata
+        run: |
+          # deb、rpm、AppImage 三种包共用同一份元数据，版本与发布日期在此注入
+          mkdir -p metainfo
+
+          # 连引号一起匹配，避免替换到注释等正文中出现的同名字样
+          sed -e "s/version=\"__VERSION__\"/version=\"${{ env.VERSION_NAME }}\"/" \
+              -e "s/date=\"__DATE__\"/date=\"$(date -u +%F)\"/" \
+              assets/com.scottsloan.bili23.metainfo.xml > metainfo/com.scottsloan.bili23.metainfo.xml
+
+          # --no-net：只做本地规范校验，不去请求 screenshot 的远程图片，
+          # 否则构建结果会取决于官网当时是否可达
+          appstreamcli validate --no-net metainfo/com.scottsloan.bili23.metainfo.xml
+
       - name: Package Linux version
         run: |
           # 便携版：直接打包为 tar.gz
@@ -262,10 +327,12 @@ jobs:
           mkdir -p buildroot/usr/local/bin
           mkdir -p buildroot/usr/share/applications
           mkdir -p buildroot/usr/share/icons/hicolor/scalable/apps
+          mkdir -p buildroot/usr/share/metainfo
           mkdir -p buildroot/opt/Bili23-Downloader
 
           cp -r Bili23-Downloader buildroot/opt/
-          cp src/res/icon/app.svg buildroot/usr/share/icons/hicolor/scalable/apps/bili23-downloader.svg
+          cp assets/app.svg buildroot/usr/share/icons/hicolor/scalable/apps/bili23-downloader.svg
+          cp metainfo/com.scottsloan.bili23.metainfo.xml buildroot/usr/share/metainfo/
 
           export GLIBC_VERSION=${{ matrix.arch == 'amd64' && '2.31' || '2.39' }}
 
@@ -324,6 +391,177 @@ jobs:
 
           dpkg-deb --build buildroot Bili23-Downloader_${{ env.VERSION_NAME }}_linux_${{ matrix.arch }}.deb
 
+      - name: Package Linux rpm version
+        run: |
+          RPM_TOP="$PWD/rpmbuild"
+          RPM_ROOT="$RPM_TOP/SOURCES/rpmroot"
+
+          mkdir -p "$RPM_TOP"/{BUILD,BUILDROOT,RPMS,SOURCES,SPECS,SRPMS}
+
+          # 目录结构与 deb 基本一致，区别是入口脚本放在 /usr/bin
+          # （/usr/local 由 filesystem 包管理，rpm 包不应往里写文件）
+          mkdir -p "$RPM_ROOT"/opt
+          mkdir -p "$RPM_ROOT"/usr/bin
+          mkdir -p "$RPM_ROOT"/usr/share/applications
+          mkdir -p "$RPM_ROOT"/usr/share/icons/hicolor/scalable/apps
+          mkdir -p "$RPM_ROOT"/usr/share/metainfo
+
+          cp -r Bili23-Downloader "$RPM_ROOT"/opt/
+
+          cp assets/app.svg "$RPM_ROOT"/usr/share/icons/hicolor/scalable/apps/bili23-downloader.svg
+          cp metainfo/com.scottsloan.bili23.metainfo.xml "$RPM_ROOT"/usr/share/metainfo/
+
+          # desktop 文件
+          cat << 'EOF' > "$RPM_ROOT"/usr/share/applications/bili23-downloader.desktop
+          [Desktop Entry]
+          Type=Application
+          Name=Bili23 Downloader
+          Exec=/usr/bin/bili23-downloader
+          Icon=bili23-downloader
+          Categories=Utility;
+          Terminal=false
+          Comment=A cross-platform video downloader for Bilibili
+          StartupWMClass=bili23-downloader
+          EOF
+
+          # 入口文件
+          cat << 'EOF' > "$RPM_ROOT"/usr/bin/bili23-downloader
+          #!/bin/bash
+          cd /opt/Bili23-Downloader
+          exec ./bili23-downloader "$@"
+          EOF
+
+          chmod +x "$RPM_ROOT"/usr/bin/bili23-downloader
+
+          # spec 文件
+          cat << 'EOF' > "$RPM_TOP"/SPECS/bili23-downloader.spec
+          # 打包的是预编译产物，rpm 的几项默认后处理必须全部关掉：
+          # debug_package         —— 没有源码和符号，生成 debuginfo 子包会直接构建失败
+          # __os_install_post     —— 其中的 brp-strip 会 strip 静态链接的 loader 与 ffmpeg
+          # __brp_python_bytecompile —— 会用系统 Python 重新编译 script/ 下的代码，版本不符即失败
+          %global debug_package %{nil}
+          %global __os_install_post %{nil}
+          %global __brp_python_bytecompile %{nil}
+
+          Name:           bili23-downloader
+          Version:        ${{ env.VERSION }}
+          Release:        ${{ env.RPM_RELEASE }}
+          Summary:        A cross-platform video downloader for Bilibili
+          License:        GPL-3.0-or-later
+          URL:            https://bili23.scott-sloan.cn
+
+          # 运行时自带全部依赖。若开启自动扫描，捆绑的 Qt 库会被登记成系统级 Provides，
+          # 同时生成大量无法满足的 Requires；且 libxcb-cursor 在各发行版中包名不一致，
+          # 写死任何一个都会导致另一些发行版装不上，因此不声明 Requires
+          AutoReqProv:    no
+
+          %description
+          Bili23 Downloader is a cross-platform video downloader for Bilibili.
+
+          %install
+          mkdir -p %{buildroot}
+          cp -a %{_sourcedir}/rpmroot/. %{buildroot}/
+          # 打进包里的权限会随构建机的 umask 变化（可能是 775/664），
+          # 用 _fixperms 归一为目录 755、文件 644，同时保留已有的可执行位
+          %{_fixperms} %{buildroot}
+
+          %files
+          %defattr(-,root,root,-)
+          /opt/Bili23-Downloader
+          /usr/bin/bili23-downloader
+          /usr/share/applications/bili23-downloader.desktop
+          /usr/share/icons/hicolor/scalable/apps/bili23-downloader.svg
+          /usr/share/metainfo/com.scottsloan.bili23.metainfo.xml
+
+          %postun
+          # 参数为 0 表示卸载，为 1 表示升级。rpm 升级的顺序是
+          # 「安装新版本文件 → 执行旧版本的卸载脚本」，无条件删除会把刚装好的新版本一并删掉
+          # 注意：spec 的注释行中不要出现百分号，rpm 会在注释里照样做宏展开
+          if [ $1 -eq 0 ]; then
+              rm -rf /opt/Bili23-Downloader
+          fi
+          EOF
+
+          rpmbuild -bb \
+            --target ${{ matrix.gnu_arch }} \
+            --define "_topdir $RPM_TOP" \
+            "$RPM_TOP"/SPECS/bili23-downloader.spec
+
+          mv "$RPM_TOP"/RPMS/${{ matrix.gnu_arch }}/*.rpm \
+            Bili23-Downloader_${{ env.VERSION_NAME }}_linux_${{ matrix.gnu_arch }}.rpm
+
+          # 输出包信息便于在构建日志中核对
+          rpm -qip Bili23-Downloader_${{ env.VERSION_NAME }}_linux_${{ matrix.gnu_arch }}.rpm
+          rpm -qp --requires Bili23-Downloader_${{ env.VERSION_NAME }}_linux_${{ matrix.gnu_arch }}.rpm
+
+      - name: Package Linux AppImage version
+        run: |
+          APPDIR="$PWD/Bili23-Downloader.AppDir"
+
+          mkdir -p "$APPDIR"/usr/lib
+          mkdir -p "$APPDIR"/usr/share/applications
+          mkdir -p "$APPDIR"/usr/share/icons/hicolor/scalable/apps
+          mkdir -p "$APPDIR"/usr/share/metainfo
+
+          cp -r Bili23-Downloader "$APPDIR"/usr/lib/
+
+          # desktop 文件：Exec 必须是不带路径的命令名、Icon 不带扩展名，
+          # 否则 appimagetool 的 desktop-file-validate 会拒绝
+          cat << 'EOF' > "$APPDIR"/bili23-downloader.desktop
+          [Desktop Entry]
+          Type=Application
+          Name=Bili23 Downloader
+          Exec=bili23-downloader
+          Icon=bili23-downloader
+          Categories=Utility;
+          Terminal=false
+          Comment=A cross-platform video downloader for Bilibili
+          StartupWMClass=bili23-downloader
+          EOF
+
+          cp "$APPDIR"/bili23-downloader.desktop "$APPDIR"/usr/share/applications/
+          cp metainfo/com.scottsloan.bili23.metainfo.xml "$APPDIR"/usr/share/metainfo/
+
+          # 图标：AppDir 根目录一份供 appimagetool 使用，标准路径一份供桌面集成使用
+          cp assets/app.svg "$APPDIR"/bili23-downloader.svg
+          cp assets/app.svg "$APPDIR"/usr/share/icons/hicolor/scalable/apps/bili23-downloader.svg
+
+          # .DirIcon 用 png，文件管理器普遍不渲染 svg 缩略图
+          rsvg-convert -w 256 -h 256 assets/app.svg -o "$APPDIR"/.DirIcon
+
+          # AppRun：AppImage 每次运行的挂载点都不同（/tmp/.mount_XXXXXX），
+          # loader 依赖 PYSTAND_HOME 与工作目录定位 bundle/ffmpeg，必须在启动时动态解析
+          cat << 'EOF' > "$APPDIR"/AppRun
+          #!/bin/bash
+          HERE="$(dirname "$(readlink -f "${0}")")"
+          export PYSTAND_HOME="$HERE/usr/lib/Bili23-Downloader"
+          cd "$PYSTAND_HOME"
+          exec ./bili23-downloader "$@"
+          EOF
+
+          chmod +x "$APPDIR"/AppRun
+
+          wget -q https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-${{ matrix.gnu_arch }}.AppImage
+
+          # runtime 单独取 type2-runtime 的构建，它是静态链接且支持 fuse3。
+          # appimagetool 自带的旧 runtime 依赖 libfuse2，而 Ubuntu 22.04+ 与 Debian 12+
+          # 默认只装 fuse3，用户会直接遇到 dlopen libfuse.so.2 失败
+          wget -q https://github.com/AppImage/type2-runtime/releases/download/continuous/runtime-${{ matrix.gnu_arch }}
+
+          chmod +x appimagetool-${{ matrix.gnu_arch }}.AppImage
+
+          # appimagetool 自身也是 AppImage，runner 上同样没有 libfuse2，需要解包后运行
+          export APPIMAGE_EXTRACT_AND_RUN=1
+          export ARCH=${{ matrix.gnu_arch }}
+
+          # --no-appstream：元数据已在前面用 appstreamcli --no-net 校验过。
+          # appimagetool 自己那次校验会联网拉取 screenshot，构建成败将取决于官网可达性
+          ./appimagetool-${{ matrix.gnu_arch }}.AppImage \
+            --no-appstream \
+            --runtime-file runtime-${{ matrix.gnu_arch }} \
+            "$APPDIR" \
+            Bili23-Downloader_${{ env.VERSION_NAME }}_linux_${{ matrix.gnu_arch }}.AppImage
+
       - name: Upload Linux artifacts
         uses: actions/upload-artifact@v6
         with:
@@ -331,8 +569,11 @@ jobs:
           path: |
             Bili23-Downloader_${{ env.VERSION_NAME }}_linux_${{ matrix.arch }}_portable.tar.gz
             Bili23-Downloader_${{ env.VERSION_NAME }}_linux_${{ matrix.arch }}.deb
+            Bili23-Downloader_${{ env.VERSION_NAME }}_linux_${{ matrix.gnu_arch }}.rpm
+            Bili23-Downloader_${{ env.VERSION_NAME }}_linux_${{ matrix.gnu_arch }}.AppImage
 
   macos-build:
+    if: needs.get-version.outputs.BUILD_MACOS == 'true'
     needs: get-version
     env:
       VERSION: ${{ needs.get-version.outputs.VERSION }}
@@ -358,10 +599,10 @@ jobs:
       - name: Clean up files
         run: |
           # 清理不需要的资源文件以减小安装包体积
-          rm -rf src\res\icon
-          rm -rf src\res\image
-          rm -rf src\res\i18n\bili23.zh_CN.ts
-          rm -rf src\res\i18n\bili23.zh_TW.ts
+          rm -rf src/res/icon
+          rm -rf src/res/image
+          rm -rf src/res/i18n/bili23.zh_CN.ts
+          rm -rf src/res/i18n/bili23.zh_TW.ts
 
       - name: Setup Python
         uses: actions/setup-python@v6
@@ -377,7 +618,7 @@ jobs:
       - name: Prepare macOS runtime
         run: |
           # 下载 Python 静态运行时环境
-          wget https://github.com/ScottSloan/Python-Static/releases/download/v0.1.5/macos_${{ matrix.arch }}_runtime.zip
+          wget https://github.com/ScottSloan/Python-Static/releases/download/v0.1.7/macos_${{ matrix.arch }}_runtime.zip
 
           unzip macos_${{ matrix.arch }}_runtime.zip -d Bili23-Downloader
 
@@ -459,10 +700,10 @@ jobs:
   
   publish:
     if: github.event_name != 'workflow_dispatch'
-    needs: [windows-build, linux-build, macos-build]
+    needs: [get-version, windows-build, linux-build, macos-build]
     env:
-      VERSION_NAME: ${{ needs.windows-build.outputs.VERSION_NAME }}
-      IS_PRERELEASE: ${{ needs.windows-build.outputs.IS_PRERELEASE }}
+      VERSION_NAME: ${{ needs.get-version.outputs.VERSION_NAME }}
+      IS_PRERELEASE: ${{ needs.get-version.outputs.IS_PRERELEASE }}
     runs-on: ubuntu-latest
     permissions:
       contents: write

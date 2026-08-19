@@ -23,6 +23,16 @@ class FFmpegCommand:
 
         return self
 
+    def allow_unofficial(self):
+        # 杜比视界的配置记录在 MP4 中以 dvcC / dvvC box 承载，这两个 box 属于杜比自家规范而非
+        # ISO 标准，FFmpeg 在默认合规级别下会直接跳过并给出
+        # "Not writing 'dvcC'/'dvvC' box. Requires -strict unofficial." 的提示，
+        # 导致封装后的文件虽然仍带 RPU，却因缺少配置记录而不再被识别为杜比视界
+        #
+        # MKV 走的是 BlockAdditionMapping，本就不受此限制，加上该参数也没有副作用，
+        # 因此所有封装流程统一带上，避免按容器分支
+        return self.add_param("-strict", "unofficial")
+
     def add_cover(self, cover_path: str, *maps: str):
         # 将封面作为附加视频流嵌入，maps 为各路流的映射关系
         self.add_input(cover_path)
@@ -92,6 +102,7 @@ class FFmpegCommand:
             .add_input(audio_path)
             .add_param("-c:v", "copy")
             .add_param("-c:a", "copy")
+            .allow_unofficial()
         )
 
         if cover_path:
@@ -119,6 +130,7 @@ class FFmpegCommand:
             .add_input(lists_path, "-f", "concat", "-safe", "0")
             .add_param("-c:v", "copy")
             .add_param("-c:a", "copy")
+            .allow_unofficial()
         )
 
         if cover_path:
@@ -155,5 +167,6 @@ class FFmpegCommand:
             .add_input(input_path)
             .add_param("-c", "copy")
             .add_param("-movflags", "+faststart")
+            .allow_unofficial()
             .add_output(output_path)
         )

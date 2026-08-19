@@ -25,7 +25,11 @@ class WorkerBase:
             case "cheese":
                 from .parser.cheese import CheeseParser
                 return CheeseParser()
-            
+
+            case "lesson":
+                from .parser.lesson import LessonParser
+                return LessonParser()
+
             case "space":
                 from .parser.space import SpaceParser
                 return SpaceParser()

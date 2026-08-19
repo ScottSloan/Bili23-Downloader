@@ -1,17 +1,18 @@
 from PySide6.QtCore import QRunnable, QMetaObject, Qt, Q_ARG
 
-from ...network.request import SyncNetWorkRequest
+from ...network.request import SyncNetWorkRequest, RequestType
 from ...parse.episode.tree import Attribute
 from ...parse.parser.base import ParserBase
+from ...parse.parser.lesson import LESSON_PLAY_DETAIL_URL, build_lesson_media_info, build_lesson_play_payload
 
 from ...common.enum import DownloadType, MediaType
 from ...common.translator import Translator
 from ...common._json import json_dumps
-from ...common.config import config
 
 from ..parse.video_info import VideoInfoParser
 from ..parse.audio_info import AudioInfoParser
 from ..task.info import TaskInfo
+from ..task.options import resolve
 
 from urllib.parse import urlencode
 import logging
@@ -144,6 +145,9 @@ class ParseWorker(QRunnable, ParserBase):
         elif attr & Attribute.CHEESE_BIT:
             self.get_cheese_info()
 
+        elif attr & Attribute.LESSON_BIT:
+            self.get_lesson_info()
+
         elif attr & Attribute.AUDIO_BIT:
             self.get_audio_info()
 
@@ -184,7 +188,7 @@ class ParseWorker(QRunnable, ParserBase):
             "cid": self.task_info.Episode.cid,
             "qn": self.task_info.Download.video_quality_id,
             "fnver": 0,
-            "fnval": 12240,
+            "fnval": 143312,
             "fourk": 1
         }
 
@@ -216,6 +220,21 @@ class ParseWorker(QRunnable, ParserBase):
         self.check_response(response)
 
         self.info_data = response.copy()["data"]
+
+    def get_lesson_info(self):
+        payload = build_lesson_play_payload(
+            self.task_info.Episode.course_id,
+            self.task_info.Episode.lesson_id,
+            self.task_info.Episode.item_id,
+            self.task_info.Episode.section_id
+        )
+
+        request = SyncNetWorkRequest(LESSON_PLAY_DETAIL_URL, RequestType.POST, json_data = payload)
+        response = request.run()
+
+        self.check_response(response)
+
+        self.info_data = build_lesson_media_info(response.copy()["data"])
 
     def get_audio_info(self):
         params = {
@@ -297,7 +316,7 @@ class ParseWorker(QRunnable, ParserBase):
             self.task_info.Download.keep_original_files = False
 
         if self.task_info.Download.merge_video_audio or self.task_info.Download.video_parts_count > 0:
-            self.task_info.File.merge_file_ext = config.get(config.video_container).value
+            self.task_info.File.merge_file_ext = resolve(self.task_info, "video_container").value
     
     def filter_download_list(self, download_list: dict):
         # 根据 task_info 中已有的 queue 过滤下载列表，去掉不需要下载的条目
