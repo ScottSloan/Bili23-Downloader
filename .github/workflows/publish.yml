@@ -2,8 +2,8 @@ name: Publish release
 
 on:
   push:
-    # branches:
-    #   - dev
+    branches:
+      - dev
     tags:
       - "v*"
   workflow_dispatch:
@@ -62,15 +62,15 @@ jobs:
             echo "RPM_RELEASE=1" >> $GITHUB_OUTPUT
           fi
 
-          #echo "VERSION=2.15.0" >> $GITHUB_OUTPUT
-          #echo "VERSION_NAME=2.15.0" >> $GITHUB_OUTPUT
+          echo "VERSION=2.15.0" >> $GITHUB_OUTPUT
+          echo "VERSION_NAME=2.15.0" >> $GITHUB_OUTPUT
 
       - name: Set build targets
         id: set-targets
         env:
-          DEFAULT_BUILD_WINDOWS: "true"
+          DEFAULT_BUILD_WINDOWS: "false"
           DEFAULT_BUILD_LINUX: "true"
-          DEFAULT_BUILD_MACOS: "true"
+          DEFAULT_BUILD_MACOS: "false"
         run: |
           if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
             echo "BUILD_WINDOWS=${{ inputs.build_windows }}" >> $GITHUB_OUTPUT
@@ -164,7 +164,7 @@ jobs:
       - name: Prepare Windows 10/11 runtime
         run: |
           # 下载 Python 静态运行时环境
-          Invoke-WebRequest -Uri "https://github.com/ScottSloan/Python-Static/releases/download/v0.1.6/windows_x64_runtime.zip" -OutFile windows_x64_runtime.zip
+          Invoke-WebRequest -Uri "https://github.com/ScottSloan/Python-Static/releases/download/v0.1.7/windows_x64_runtime.zip" -OutFile windows_x64_runtime.zip
           
           Expand-Archive windows_x64_runtime.zip -DestinationPath Bili23-Downloader
 
@@ -205,7 +205,7 @@ jobs:
       - name: Prepare Windows 7 runtime
         run: |
           # 下载 Python 静态运行时环境
-          Invoke-WebRequest -Uri "https://github.com/ScottSloan/Python-Static/releases/download/v0.1.6/windows_x64_runtime_for_win7.zip" -OutFile windows_x64_runtime_for_win7.zip
+          Invoke-WebRequest -Uri "https://github.com/ScottSloan/Python-Static/releases/download/v0.1.7/windows_x64_runtime_for_win7.zip" -OutFile windows_x64_runtime_for_win7.zip
           
           Expand-Archive windows_x64_runtime_for_win7.zip -DestinationPath Bili23-Downloader
 
@@ -282,7 +282,7 @@ jobs:
       - name: Prepare Linux runtime
         run: |
           # 下载 Python 静态运行时环境
-          wget https://github.com/ScottSloan/Python-Static/releases/download/v0.1.6/linux_${{ matrix.arch }}_runtime.zip
+          wget https://github.com/ScottSloan/Python-Static/releases/download/v0.1.7/linux_${{ matrix.arch }}_runtime.zip
 
           unzip linux_${{ matrix.arch }}_runtime.zip -d Bili23-Downloader
 
@@ -618,7 +618,7 @@ jobs:
       - name: Prepare macOS runtime
         run: |
           # 下载 Python 静态运行时环境
-          wget https://github.com/ScottSloan/Python-Static/releases/download/v0.1.6/macos_${{ matrix.arch }}_runtime.zip
+          wget https://github.com/ScottSloan/Python-Static/releases/download/v0.1.7/macos_${{ matrix.arch }}_runtime.zip
 
           unzip macos_${{ matrix.arch }}_runtime.zip -d Bili23-Downloader
 
