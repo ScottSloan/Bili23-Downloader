@@ -1,0 +1,49 @@
+name: Validate Issue Title
+
+on:
+  issues:
+    types:
+      - opened
+      - edited
+      - reopened
+
+permissions:
+  issues: write
+
+jobs:
+  close-invalid-title-issues:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Close issues with placeholder title
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issue = context.payload.issue;
+            if (issue?.state === "closed") {
+              core.info("Issue already closed. Skipping.");
+              return;
+            }
+
+            const title = issue?.title || "";
+            const invalidKeywords = ["简要描述你的建议或请求", "描述问题的标题"];
+            const hasInvalidKeyword = invalidKeywords.some((keyword) => title.includes(keyword));
+
+            if (!hasInvalidKeyword) {
+              core.info("Issue title is valid.");
+              return;
+            }
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issue.number,
+              body: "该 Issue 标题仍包含模板占位文案，未按规范修改，已自动关闭。请按规范修改标题后重新提交。"
+            });
+
+            await github.rest.issues.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issue.number,
+              state: "closed",
+              state_reason: "not_planned"
+            });
