@@ -19,6 +19,11 @@ jobs:
         with:
           script: |
             const issue = context.payload.issue;
+            if (issue?.state === "closed") {
+              core.info("Issue already closed. Skipping.");
+              return;
+            }
+
             const title = issue?.title || "";
             const invalidKeywords = ["简要描述你的建议或请求", "描述问题的标题"];
             const hasInvalidKeyword = invalidKeywords.some((keyword) => title.includes(keyword));
