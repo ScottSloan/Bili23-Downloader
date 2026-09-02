@@ -418,6 +418,8 @@ class NumberSettingCard(ExpandGroupSettingCard):
         )
         self.custom_global_starting_number_btn = PushButton(self.tr("Customize…"), self)
 
+        self.number_date_prefix_switch = SettingSwitchButton(config.auto_number_date_prefix, parent = self)
+
         self.addGroup(
             "",
             self.tr("Numbering Mode"),
@@ -430,6 +432,13 @@ class NumberSettingCard(ExpandGroupSettingCard):
             self.tr("Global Sequential Starting Number"),
             self.get_global_starting_number_content(config.global_starting_number),
             self.custom_global_starting_number_btn
+        )
+
+        self.addGroup(
+            "",
+            self.tr("Add Number and Date Prefix"),
+            self.tr("Automatically prepend number and publish date to the file name, e.g. 001. 20260831-Video Title"),
+            self.number_date_prefix_switch
         )
 
         self.showHyperLinkLabel(self.tr("About Numbering Settings"))

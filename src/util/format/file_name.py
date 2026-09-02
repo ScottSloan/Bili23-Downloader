@@ -7,6 +7,7 @@ from ..common.config import config
 from .time import Time
 
 from pathlib import Path
+from datetime import datetime
 from typing import List
 import re
 import logging
@@ -56,12 +57,46 @@ class FileNameFormatter:
                 for name, value in self.variable_data.items()
             }
 
-            return self.__normalize_path(self.rule.format(**safe_variable_data))
+            result = self.__normalize_path(self.rule.format(**safe_variable_data))
+
+            if result and config.get(config.auto_number_date_prefix):
+                result = self.__add_number_date_prefix(result)
+
+            return result
         
         except Exception as e:
             logger.exception(f"格式化文件名时发生错误")
 
             return None
+
+    def __add_number_date_prefix(self, path_str: str):
+        # 在文件名的最后一级前添加 "编号. 日期-" 前缀，例如：001. 20260831-视频标题
+        path = Path(path_str)
+        leaf = path.name
+
+        number = self.variable_data.get("number")
+
+        try:
+            number_str = f"{int(number):03d}"
+        except (TypeError, ValueError):
+            # 某些分类的序号是文本标签，无法转为整数时按原样输出
+            number_str = str(number).strip() if number not in (None, "") else ""
+
+        pub_time = self.variable_data.get("pub_time")
+        pub_ts = self.variable_data.get("pub_ts")
+
+        if isinstance(pub_time, datetime) and pub_ts:
+            date_str = pub_time.strftime("%Y%m%d")
+        else:
+            # 发布时间缺失时退化为下载当天日期
+            date_str = datetime.now().strftime("%Y%m%d")
+
+        if number_str:
+            prefix = f"{number_str}. {date_str}-"
+        else:
+            prefix = f"{date_str}-"
+
+        return str(path.with_name(prefix + leaf))
 
     @staticmethod
     def __sanitize_component(value):

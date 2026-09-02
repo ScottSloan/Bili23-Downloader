@@ -3046,6 +3046,16 @@ The meaning of each &quot;Numbering Mode&quot; option is as follows:
         <source>Customize…</source>
         <translation>自定义…</translation>
     </message>
+    <message>
+        <location filename="../../gui/component/setting/card.py" line="437"/>
+        <source>Add Number and Date Prefix</source>
+        <translation>添加编号和日期前缀</translation>
+    </message>
+    <message>
+        <location filename="../../gui/component/setting/card.py" line="438"/>
+        <source>Automatically prepend number and publish date to the file name, e.g. 001. 20260831-Video Title</source>
+        <translation>自动在文件名前添加编号和发布日期，例如：001. 20260831-视频标题</translation>
+    </message>
 </context>
 <context>
     <name>OtherAdvancedSettingCard</name>
