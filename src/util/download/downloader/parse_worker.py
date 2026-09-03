@@ -164,21 +164,19 @@ class ParseWorker(QRunnable, ParserBase):
             self.task_info.Download.media_type = MediaType.M4A
 
     def get_video_info(self):
-        params = {
-            "bvid": self.task_info.Episode.bvid,
-            "cid": self.task_info.Episode.cid,
-            "qn": self.task_info.Download.video_quality_id,
-            "fnver": 0,
-            "fnval": 4048,
-            "fourk": 1,
-        }
-
-        url = f"https://api.bilibili.com/x/player/wbi/playurl?{self.enc_wbi(params)}"
+        bvid = self.task_info.Episode.bvid
+        cid = self.task_info.Episode.cid
+        quality_id = self.task_info.Download.video_quality_id
+        auto_select = quality_id == 200
+        url = self._build_video_info_url(bvid, cid, 127 if auto_select else quality_id)
 
         request = SyncNetWorkRequest(url)
         response = request.run()
 
         self.check_response(response)
+
+        if auto_select:
+            response = self._supplement_video_info(response, bvid, cid)
 
         self.info_data = response.copy()["data"]
 
