@@ -24,8 +24,9 @@ import logging
 logger = logging.getLogger(__name__)
 
 class Previewer(ParserBase, QObject):
-    # 媒体信息请求及其补充处理跑在子线程里，而 PreviewerInfo 是全局状态，下载选项对话框会直接读它。
-    # 子线程处理完响应后通过这两个信号转发结果，由 Qt 排队回 GUI 线程后再落盘到 PreviewerInfo
+    # 媒体信息请求跑在子线程里，而 PreviewerInfo 是全局状态，下载选项对话框会直接读它。
+    # 连到闭包的回调会就地在子线程改写这些状态，因此子线程只负责把结果原样转发给这两个信号，
+    # 由 Qt 排队回 GUI 线程后再落盘到 PreviewerInfo
     _media_info_ready = Signal(object, str, str, int)
     _media_info_failed = Signal(str, int)
 
@@ -158,19 +159,14 @@ class Previewer(ParserBase, QObject):
             self.on_init_error(str(e))
 
     def get_video_info(self, episode_data: dict, token: int):
-        # 先请求最高支持档，才能拿到账号实际可用的最高画质。
-        bvid = episode_data["bvid"]
-        cid = episode_data["cid"]
-        url = self._build_video_info_url(bvid, cid, 127)
+        # 请求最高支持档，才能拿到账号实际可用的最高画质。
+        # 少数稿件的响应只包含这一档，缺失的档位由 VideoInfoParser 在用户选中时按需补取
+        PreviewerInfo.bvid = episode_data["bvid"]
+        PreviewerInfo.cid = episode_data["cid"]
 
-        self._request_media_info(
-            url,
-            "video",
-            token,
-            response_processor = lambda response: self._supplement_video_info(response, bvid, cid),
-            # 渐进式流的文件大小查询仍从 qn=80 地址派生，保持原有行为。
-            query_url = self._build_video_info_url(bvid, cid, 80)
-        )
+        url = self._build_video_info_url(PreviewerInfo.bvid, PreviewerInfo.cid, 127)
+
+        self._request_media_info(url, "video", token)
 
     def get_bangumi_info(self, episode_data: dict, token: int):
         params = {
@@ -222,13 +218,10 @@ class Previewer(ParserBase, QObject):
 
         self._request_media_info(url, "audio", token)
 
-    def _request_media_info(self, url: str, parser_type: str, token: int, request_type: RequestType = RequestType.GET, json_data: dict = None, response_processor = None, query_url = None):
-        # 两个闭包都跑在请求线程里；响应处理器只加工局部响应，不碰 PreviewerInfo
+    def _request_media_info(self, url: str, parser_type: str, token: int, request_type: RequestType = RequestType.GET, json_data: dict = None):
+        # 两个闭包都跑在请求线程里，只负责把结果连同发起时的代号转发出去，不碰任何共享状态
         def on_success(response: dict):
-            if response_processor:
-                response = response_processor(response)
-
-            self._media_info_ready.emit(response, parser_type, query_url or url, token)
+            self._media_info_ready.emit(response, parser_type, url, token)
 
         def on_error(error: str):
             self._media_info_failed.emit(error, token)
@@ -318,6 +311,8 @@ class Previewer(ParserBase, QObject):
         PreviewerInfo.attribute = 0
         PreviewerInfo.episode_title = ""
         PreviewerInfo.from_fallback = False
+        PreviewerInfo.bvid = ""
+        PreviewerInfo.cid = 0
         PreviewerInfo.cache = {
             "video": defaultdict(lambda: defaultdict(dict)),
             "audio": defaultdict(dict)

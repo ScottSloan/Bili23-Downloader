@@ -164,19 +164,20 @@ class ParseWorker(QRunnable, ParserBase):
             self.task_info.Download.media_type = MediaType.M4A
 
     def get_video_info(self):
-        bvid = self.task_info.Episode.bvid
-        cid = self.task_info.Episode.cid
         quality_id = self.task_info.Download.video_quality_id
-        auto_select = quality_id == 200
-        url = self._build_video_info_url(bvid, cid, 127 if auto_select else quality_id)
+
+        # 自动选择时先请求最高支持档，才能拿到账号实际可用的最高画质。
+        # 少数稿件的响应只包含这一档，缺失的档位由 VideoInfoParser 在选定后按需补取
+        url = self._build_video_info_url(
+            self.task_info.Episode.bvid,
+            self.task_info.Episode.cid,
+            127 if quality_id == 200 else quality_id
+        )
 
         request = SyncNetWorkRequest(url)
         response = request.run()
 
         self.check_response(response)
-
-        if auto_select:
-            response = self._supplement_video_info(response, bvid, cid)
 
         self.info_data = response.copy()["data"]
 

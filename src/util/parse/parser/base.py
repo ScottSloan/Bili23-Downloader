@@ -22,6 +22,43 @@ mixinKeyEncTab = [
     36, 20, 34, 44, 52
 ]
 
+VIDEO_PLAYURL_API = "https://api.bilibili.com/x/player/wbi/playurl"
+
+def enc_wbi(params: dict):
+    def getMixinKey(orig: str):
+        return reduce(lambda s, i: s + orig[i], mixinKeyEncTab, "")[:32]
+
+    mixin_key = getMixinKey(config.get(config.img_key) + config.get(config.sub_key))
+    curr_time = round(time.time())
+
+    params["wts"] = curr_time
+    params = dict(sorted(params.items()))
+    params = {
+        k : "".join(filter(lambda chr: chr not in "!'()*", str(v)))
+        for k, v
+        in params.items()
+    }
+
+    query = urllib.parse.urlencode(params)
+    wbi_sign = md5((query + mixin_key).encode()).hexdigest()
+    params["w_rid"] = wbi_sign
+
+    return urllib.parse.urlencode(params)
+
+def build_video_info_url(bvid: str, cid: int, quality_id: int):
+    # 做成模块级函数是因为按需补取视频流的两处调用方（预览、下载的 VideoInfoParser）
+    # 都不是 ParserBase 的子类，却同样需要构造带 wbi 签名的 playurl 地址
+    params = {
+        "bvid": bvid,
+        "cid": cid,
+        "qn": quality_id,
+        "fnver": 0,
+        "fnval": 4048,
+        "fourk": 1,
+    }
+
+    return f"{VIDEO_PLAYURL_API}?{enc_wbi(params)}"
+
 class ParserBase:
     def __init__(self):
         self.url = ""
@@ -60,102 +97,10 @@ class ParserBase:
             raise ValueError("无效的链接")
 
     def enc_wbi(self, params: dict):
-        def getMixinKey(orig: str):
-            return reduce(lambda s, i: s + orig[i], mixinKeyEncTab, "")[:32]
-                
-        mixin_key = getMixinKey(config.get(config.img_key) + config.get(config.sub_key))
-        curr_time = round(time.time())
-
-        params["wts"] = curr_time
-        params = dict(sorted(params.items()))
-        params = {
-            k : "".join(filter(lambda chr: chr not in "!'()*", str(v)))
-            for k, v 
-            in params.items()
-        }
-        
-        query = urllib.parse.urlencode(params)
-        wbi_sign = md5((query + mixin_key).encode()).hexdigest()
-        params["w_rid"] = wbi_sign
-
-        return urllib.parse.urlencode(params)
+        return enc_wbi(params)
 
     def _build_video_info_url(self, bvid: str, cid: int, quality_id: int):
-        params = {
-            "bvid": bvid,
-            "cid": cid,
-            "qn": quality_id,
-            "fnver": 0,
-            "fnval": 4048,
-            "fourk": 1,
-        }
-
-        return f"https://api.bilibili.com/x/player/wbi/playurl?{self.enc_wbi(params)}"
-
-    def _supplement_video_info(self, response: dict, bvid: str, cid: int):
-        # 部分稿件的高画质响应只包含最高画质，需要再请求缺失的较低画质并合并。
-        try:
-            if response.get("code") != 0:
-                return response
-
-            data = response.get("data") or {}
-            video_list = (data.get("dash") or {}).get("video") or []
-
-            if not video_list:
-                return response
-
-            video_keys = {
-                (item.get("id"), item.get("codecid"), item.get("codecs"))
-                for item in video_list
-            }
-            available_quality_ids = {
-                quality_id
-                for quality_id, _, _ in video_keys
-                if isinstance(quality_id, int)
-            }
-
-            if not available_quality_ids:
-                return response
-
-            highest_quality_id = max(available_quality_ids)
-            advertised_quality_ids = {
-                item.get("quality")
-                for item in data.get("support_formats") or []
-                if isinstance(item, dict)
-            }
-            advertised_quality_ids.update(data.get("accept_quality") or [])
-            missing_quality_id = max(
-                (
-                    quality_id
-                    for quality_id in advertised_quality_ids - available_quality_ids
-                    if isinstance(quality_id, int) and quality_id < highest_quality_id
-                ),
-                default = None
-            )
-
-            if missing_quality_id is None:
-                return response
-
-            from ...network.request import SyncNetWorkRequest
-
-            supplement_url = self._build_video_info_url(bvid, cid, missing_quality_id)
-            supplement_response = SyncNetWorkRequest(supplement_url).run()
-
-            if supplement_response.get("code") != 0:
-                return response
-
-            for item in supplement_response["data"]["dash"]["video"]:
-                key = (item.get("id"), item.get("codecid"), item.get("codecs"))
-
-                if key not in video_keys:
-                    video_list.append(item)
-                    video_keys.add(key)
-
-        except Exception:
-            # 补充请求失败不应影响初始响应中已经可用的画质。
-            logger.warning("补充获取较低画质视频流失败，将使用初始响应", exc_info = True)
-
-        return response
+        return build_video_info_url(bvid, cid, quality_id)
 
     def on_error(self, message: str):
         self.error_message = message
