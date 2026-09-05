@@ -21,6 +21,11 @@ export default {
     tagNeedsReparse: '需二次解析',
   },
 
+  titleBar: {
+    signedOut: '未登入',
+    avatarAlt: '使用者頭像',
+  },
+
   settings: {
     title: '設定',
     theme: {

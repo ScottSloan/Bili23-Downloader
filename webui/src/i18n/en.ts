@@ -24,6 +24,11 @@ export default {
     tagNeedsReparse: 'Needs re-parsing',
   },
 
+  titleBar: {
+    signedOut: 'Not signed in',
+    avatarAlt: 'User avatar',
+  },
+
   settings: {
     title: 'Settings',
     theme: {

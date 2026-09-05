@@ -59,6 +59,8 @@ export interface StatusPayload {
   logged_in: boolean
   uname: string
   uid: string | number
+  /** B 站图床地址；页面已设 referrer=no-referrer，浏览器可直接加载 */
+  face_url: string
   parse_ready: boolean
   columns: ParseColumn[]
 }

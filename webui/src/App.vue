@@ -2,22 +2,16 @@
 import { onMounted } from 'vue'
 import MainWindow from '@/MainWindow.vue'
 import { useThemeStore } from '@/stores/themeStore'
-import { api } from '@/api/client'
-import { setLocale } from '@/i18n'
+import { useAppStore } from '@/stores/appStore'
 
 const themeStore = useThemeStore()
+const appStore = useAppStore()
 
 // 主题在 index.html 的首屏脚本里已经写过一次，这里补齐主题色色阶并开始监听系统主题
 themeStore.initialize()
 
-// 界面语言跟随桌面版的设置（两边共用 config.json）。取不到就保持按浏览器语言渲染
-onMounted(async () => {
-  try {
-    setLocale((await api.getStatus()).language)
-  } catch {
-    // 后端没起来不该拦住界面渲染
-  }
-})
+// 版本、登录态、界面语言一次拉齐。取不到不拦渲染，界面按未登录 + 浏览器语言显示
+onMounted(() => appStore.fetchStatus())
 </script>
 
 <template>

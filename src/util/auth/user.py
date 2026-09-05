@@ -31,8 +31,9 @@ class UserManager(AuthBase):
             if data.get("isLogin"):
                 config.user_uname = data.get("uname", "")
                 config.user_uid = data.get("mid")
+                config.user_face_url = data.get("face", "")
 
-                self.get_user_avatar(data.get("face", ""))
+                self.get_user_avatar(config.user_face_url)
 
                 signal_bus.emit_signal(signal_bus.parse.update_preview_info)
 

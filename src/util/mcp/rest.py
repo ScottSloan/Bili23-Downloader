@@ -137,11 +137,12 @@ def _collect_status() -> dict:
         # 界面语言与 GUI 共用同一个配置项（D5）。只给取值，翻译表两边各自维护（D12）：
         # "Auto" / "zh_CN" / "zh_TW" / "en_US"
         "language": LanguageSerializer().serialize(config.get(config.language)),
-        # 头像只有 QPixmap 形式（config.user_avatar_pixmap），没法直接给前端，
-        # S3 再补一个单独的头像端点
         "logged_in": bool(config.get(config.is_login)),
         "uname": config.user_uname or "",
         "uid": config.user_uid or "",
+        # 给地址而不是图片本身：GUI 侧存的是下载好的 QPixmap，没法直接交给浏览器。
+        # 页面已设 referrer=no-referrer，B 站图床不会因缺 Referer 而拒绝
+        "face_url": config.user_face_url or "",
         "parse_ready": interface is not None,
     }
 

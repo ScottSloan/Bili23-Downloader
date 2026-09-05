@@ -450,6 +450,10 @@ class APPConfig(QConfig):
     user_uid: str = ""
     user_avatar_pixmap: QPixmap = None
 
+    # 头像的原始地址。GUI 用的是下载好的 QPixmap，WebUI 那边没法用，
+    # 直接把地址给前端让浏览器自己加载（页面已设 referrer=no-referrer）
+    user_face_url: str = ""
+
     # FFmpeg
     ffmpeg_executable = ""
     bundle_ffmpeg_exist = False
