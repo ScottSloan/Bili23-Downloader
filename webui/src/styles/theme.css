@@ -1,3 +1,9 @@
+@import './tokens.css';
+
+/*
+  主题色的默认值。运行时 themeStore 会按用户配置重新生成并写到根节点上，
+  这里的值只在首屏 JS 尚未执行时兜底
+*/
 :root {
   --primary-color: #009faa;
   --primary-color-dark-1: #007f8a;
@@ -6,9 +12,6 @@
   --primary-color-light-1: #1bc0cc;
   --primary-color-light-2: #56d2db;
   --primary-color-light-3: #7de1e8;
-  --theme-surface: #f0f4f9;
-  --theme-surface-hover: #f9f9f9;
-  --theme-text-color: #000000;
   color-scheme: light;
 }
 
@@ -28,4 +31,6 @@ body,
 #app {
   font-family: 'Segoe UI', 'Microsoft YaHei', 'PingFang SC';
   font-size: 11pt;
+  color: var(--text-primary);
+  background-color: var(--solid-bg-base);
 }

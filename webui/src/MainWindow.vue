@@ -6,10 +6,8 @@ import navigationBarButton from './components/Fluent/components/navigation/Navig
 import navigationBarStretch from '@/components/Fluent/components/navigation/NavigationBarStretch.vue'
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
-import { useThemeStore } from '@/stores/themeStore'
 import { t } from '@/i18n'
 
-const themeStore = useThemeStore()
 const route = useRoute()
 
 const activeNavIndex = computed(() => {
@@ -24,7 +22,7 @@ const activeNavIndex = computed(() => {
 </script>
 
 <template>
-  <div class="main-interface" :class="themeStore.theme">
+  <div class="main-interface">
     <titleBar />
     <div class="main-content">
       <navigationBar :active-index="activeNavIndex">
@@ -65,16 +63,9 @@ const activeNavIndex = computed(() => {
   min-height: 0;
   overflow: hidden;
   transition: background-color 0.2s ease;
+  background-color: var(--solid-bg-base);
   display: flex;
   flex-direction: column;
-}
-
-.main-interface.light {
-  background-color: rgb(240, 244, 249);
-}
-
-.main-interface.dark {
-  background-color: rgb(32, 32, 32);
 }
 
 .main-content {

@@ -77,10 +77,10 @@ function submit() {
 }
 
 .status {
-  color: var(--tree-muted);
+  color: var(--text-tertiary);
 }
 
 .status.error {
-  color: #d9534f;
+  color: var(--text-danger);
 }
 </style>

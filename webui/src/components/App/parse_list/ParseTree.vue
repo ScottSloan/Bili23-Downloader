@@ -99,8 +99,8 @@ function onToggle(node: ParseNode, event: Event) {
 .tree-header {
   padding: 6px 4px;
   font-size: 10pt;
-  border-bottom: 1px solid var(--tree-line);
-  color: var(--tree-muted);
+  border-bottom: 1px solid var(--divider-stroke);
+  color: var(--text-tertiary);
   user-select: none;
 }
 
@@ -117,7 +117,7 @@ function onToggle(node: ParseNode, event: Event) {
 }
 
 .tree-row:hover {
-  background-color: var(--tree-hover);
+  background-color: var(--subtle-fill-secondary);
 }
 
 .tree-row.is-node {
@@ -125,7 +125,7 @@ function onToggle(node: ParseNode, event: Event) {
 }
 
 .tree-row.is-reparse .cell-text {
-  color: var(--tree-muted);
+  color: var(--text-tertiary);
 }
 
 .header-cell,
@@ -148,7 +148,7 @@ function onToggle(node: ParseNode, event: Event) {
   text-align: center;
   cursor: pointer;
   transition: transform 0.15s ease;
-  color: var(--tree-muted);
+  color: var(--text-tertiary);
 }
 
 .chevron.open {
@@ -171,28 +171,12 @@ function onToggle(node: ParseNode, event: Event) {
   font-size: 8pt;
   padding: 1px 5px;
   border-radius: 3px;
-  color: var(--tree-muted);
-  border: 1px solid var(--tree-line);
+  color: var(--text-tertiary);
+  border: 1px solid var(--divider-stroke);
 }
 
 .empty {
-  color: var(--tree-muted);
+  color: var(--text-tertiary);
   padding: 12px 4px;
-}
-
-/*
-  S0 的临时取色。S1-2 建好 design token 层之后，这几个变量并入全局，
-  组件里不再自带主题分支
-*/
-:global(:root) {
-  --tree-line: rgba(0, 0, 0, 0.09);
-  --tree-hover: rgba(0, 0, 0, 0.04);
-  --tree-muted: rgba(0, 0, 0, 0.55);
-}
-
-:global(:root[data-theme='dark']) {
-  --tree-line: rgba(255, 255, 255, 0.09);
-  --tree-hover: rgba(255, 255, 255, 0.05);
-  --tree-muted: rgba(255, 255, 255, 0.55);
 }
 </style>

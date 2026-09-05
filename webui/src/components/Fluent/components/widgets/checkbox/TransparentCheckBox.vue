@@ -1,7 +1,4 @@
 <script setup lang="ts">
-import { useThemeStore } from '@/stores/themeStore'
-
-const themeStore = useThemeStore()
 const checkboxId = `transparent-checkbox-${Math.random().toString(36).slice(2, 10)}`
 
 defineProps({
@@ -19,7 +16,7 @@ function handleChange(event: Event) {
 </script>
 
 <template>
-  <div class="transparent-checkbox" :class="themeStore.theme">
+  <div class="transparent-checkbox">
     <input :id="checkboxId" type="checkbox" :checked="checked" @change="handleChange" />
     <label :for="checkboxId"></label>
   </div>
@@ -27,11 +24,10 @@ function handleChange(event: Event) {
 
 <style scoped>
 .transparent-checkbox {
-  position: absolute;
+  position: relative;
+  flex: 0 0 auto;
   width: 24px;
   height: 24px;
-  top: 20px;
-  left: 20px;
 }
 
 .transparent-checkbox input[type='checkbox'] {
@@ -42,6 +38,10 @@ function handleChange(event: Event) {
   cursor: pointer;
 }
 
+/*
+  下面几处 rgba 是有意保留的：它们描述的是「毛玻璃材质」本身（透光、高光、投影），
+  用于浮在封面图之上时保证可见性，与深浅主题无关，因此不走 design token
+*/
 .transparent-checkbox input[type='checkbox'] + label {
   display: block;
   width: 100%;
@@ -79,11 +79,11 @@ function handleChange(event: Event) {
     0 4px 10px rgba(0, 0, 0, 0.12);
 }
 
-.transparent-checkbox.light input[type='checkbox']:checked + label {
+.transparent-checkbox input[type='checkbox']:checked + label {
   border-color: var(--primary-color-dark-1);
 }
 
-.transparent-checkbox.dark input[type='checkbox']:checked + label {
+:root[data-theme='dark'] .transparent-checkbox input[type='checkbox']:checked + label {
   border-color: var(--primary-color-dark-3);
 }
 
@@ -101,14 +101,9 @@ function handleChange(event: Event) {
   transform: rotate(45deg);
 }
 
-.transparent-checkbox.light input[type='checkbox']:checked + label::after {
-  border-right: 2px solid #ffffff;
-  border-bottom: 2px solid #ffffff;
-}
-
-.transparent-checkbox.dark input[type='checkbox']:checked + label::after {
-  border-right: 2px solid #000000;
-  border-bottom: 2px solid #000000;
+.transparent-checkbox input[type='checkbox']:checked + label::after {
+  border-right: 2px solid var(--text-on-accent);
+  border-bottom: 2px solid var(--text-on-accent);
 }
 
 .transparent-checkbox input[type='checkbox']:focus-visible + label {

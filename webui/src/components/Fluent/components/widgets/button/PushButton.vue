@@ -1,8 +1,4 @@
 <script setup lang="ts">
-import { useThemeStore } from '@/stores/themeStore'
-
-const themeStore = useThemeStore()
-
 defineProps({
   title: {
     type: String,
@@ -16,7 +12,7 @@ defineProps({
 </script>
 
 <template>
-  <div class="fluent-button" :class="[themeStore.theme, `is-${variant}`]">
+  <div class="fluent-button" :class="`is-${variant}`">
     <span>{{ title }}</span>
   </div>
 </template>
@@ -35,39 +31,66 @@ defineProps({
     background-color 0.2s ease,
     color 0.2s ease,
     border-color 0.2s ease;
+
+  color: var(--text-primary);
+  background-color: var(--control-fill-default);
+  border: 1px solid var(--control-stroke-default);
+  /* Fluent 的立体感来自与其余三边不同的那一条：浅色在底边，深色在顶边 */
+  border-bottom-color: var(--control-stroke-accent);
 }
 
-.fluent-button.light {
-  background-color: rgba(255, 255, 255, 0.7);
-  border: 1px solid rgba(0, 0, 0, 0.073);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.183);
-  color: black;
+:root[data-theme='dark'] .fluent-button {
+  border-bottom-color: var(--control-stroke-default);
+  border-top-color: var(--control-stroke-accent);
 }
 
-.fluent-button.light:hover {
-  background-color: rgba(249, 249, 249, 0.5);
+.fluent-button:hover {
+  background-color: var(--control-fill-secondary);
 }
 
-.fluent-button.light:active {
-  color: rgba(0, 0, 0, 0.63);
-  background-color: rgba(249, 249, 249, 0.3);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.073);
+.fluent-button:active {
+  color: var(--text-pressed);
+  background-color: var(--control-fill-tertiary);
+  border-bottom-color: var(--control-stroke-default);
 }
 
-.fluent-button.dark {
-  background-color: rgba(255, 255, 255, 0.0605);
-  border: 1px solid rgba(255, 255, 255, 0.053);
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  color: white;
+:root[data-theme='dark'] .fluent-button:active {
+  border-top-color: var(--control-stroke-default);
 }
 
-.fluent-button.dark:hover {
-  background-color: rgba(255, 255, 255, 0.0837);
+/* ---- primary ---- */
+.fluent-button.is-primary {
+  color: var(--text-on-accent);
+  background-color: var(--primary-color);
+  border-color: var(--primary-color-light-1);
+  border-bottom-color: var(--primary-color-dark-1);
 }
 
-.fluent-button.dark:active {
-  color: rgba(255, 255, 255, 0.786);
-  background-color: rgba(255, 255, 255, 0.0326);
-  border-top: 1px solid rgba(255, 255, 255, 0.053);
+:root[data-theme='dark'] .fluent-button.is-primary {
+  border-bottom-color: var(--primary-color-light-2);
+  border-top-color: var(--primary-color-light-1);
+}
+
+.fluent-button.is-primary:hover {
+  background-color: var(--primary-color-light-1);
+  border-color: var(--primary-color-light-2);
+  border-bottom-color: var(--primary-color-dark-1);
+}
+
+:root[data-theme='dark'] .fluent-button.is-primary:hover {
+  background-color: var(--primary-color-dark-1);
+  border-color: var(--primary-color-light-1);
+  border-bottom-color: var(--primary-color-light-2);
+}
+
+.fluent-button.is-primary:active {
+  color: color-mix(in srgb, var(--text-on-accent) 63%, transparent);
+  background-color: var(--primary-color-light-3);
+  border-color: var(--primary-color-light-3);
+}
+
+:root[data-theme='dark'] .fluent-button.is-primary:active {
+  background-color: var(--primary-color-dark-2);
+  border-color: var(--primary-color-dark-2);
 }
 </style>

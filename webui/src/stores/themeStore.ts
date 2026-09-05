@@ -18,11 +18,7 @@ type Tone = 'primary' | 'dark1' | 'dark2' | 'dark3' | 'light1' | 'light2' | 'lig
 
 type ThemeName = 'light' | 'dark'
 
-type Palette = Record<Tone, string> & {
-  surface: string
-  surfaceHover: string
-  text: string
-}
+type Palette = Record<Tone, string>
 
 function clamp01(value: number): number {
   return Math.max(0, Math.min(1, value))
@@ -136,6 +132,12 @@ function hsvToRgb(h: number, s: number, v: number): Rgb {
   }
 }
 
+/**
+ * 由用户配置的主色推导出整套色阶
+ *
+ * 只产出主题色，界面的背景 / 文字 / 描边一律走 styles/tokens.css 里的 design token，
+ * 不在这里注入 —— 那些值是固定的，没必要每次切主题都用 JS 写一遍
+ */
 function generateThemePalette(primaryColor: string, isDark: boolean): Palette {
   const { r, g, b } = hexToRgb(primaryColor)
   const { h, s, v } = rgbToHsv(r, g, b)
@@ -197,14 +199,7 @@ function generateThemePalette(primaryColor: string, isDark: boolean): Palette {
     light3: createTone('light3'),
   }
 
-  const palette: Palette = {
-    ...tones,
-    surface: isDark ? '#1f1f1f' : '#f0f4f9',
-    surfaceHover: isDark ? '#2a2a2a' : '#f9f9f9',
-    text: isDark ? '#ffffff' : '#000000',
-  }
-
-  return palette
+  return tones
 }
 
 function applyThemeVariables(theme: ThemeName, primaryColor: string) {
@@ -225,9 +220,6 @@ function applyThemeVariables(theme: ThemeName, primaryColor: string) {
   root.style.setProperty('--primary-color-light-1', palette.light1)
   root.style.setProperty('--primary-color-light-2', palette.light2)
   root.style.setProperty('--primary-color-light-3', palette.light3)
-  root.style.setProperty('--theme-surface', palette.surface)
-  root.style.setProperty('--theme-surface-hover', palette.surfaceHover)
-  root.style.setProperty('--theme-text-color', palette.text)
 }
 
 export const useThemeStore = defineStore('theme', {

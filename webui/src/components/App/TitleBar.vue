@@ -1,5 +1,3 @@
-<script setup lang="ts"></script>
-
 <template>
   <div class="title-bar">
     <img src="/src/assets/app.svg" alt="App Icon" />
@@ -13,6 +11,7 @@
   display: flex;
   flex-direction: row;
   align-items: center;
+  color: var(--text-primary);
 }
 
 .title-bar img {

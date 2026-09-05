@@ -1,0 +1,83 @@
+/*
+  Design token
+  ============
+
+  组件只准用这里的变量，不准再写死 rgba。深浅两套主题由根节点的 data-theme 切换，
+  组件 CSS 因此只有一份，不需要 .light / .dark 双写，也不需要每个组件都去订阅 themeStore。
+
+  命名沿用 WinUI 的语义分层，取值对着桌面版的 src/res/qss/{light,dark}/ 抄，
+  这样两边改色时能一一对应（见 docs/webui/PLAN.md 红线第 5 条：UI 以 GUI 为准）。
+
+  主题色（--primary-color 系列）不在这里，它由用户配置动态生成，
+  运行时由 themeStore 写到根节点上。
+*/
+
+:root {
+  /* ---- 底层背景 ---- */
+  /* 窗口底色 */
+  --solid-bg-base: rgb(240, 244, 249);
+  /* 浮在底色之上的内容层（导航面板） */
+  --layer-fill-default: rgba(255, 255, 255, 0.5);
+
+  /* ---- 控件填充：按钮、输入框 ---- */
+  --control-fill-default: rgba(255, 255, 255, 0.7);
+  --control-fill-secondary: rgba(249, 249, 249, 0.5);
+  --control-fill-tertiary: rgba(249, 249, 249, 0.3);
+  /* 输入框获得焦点时不再半透明 */
+  --control-fill-input-active: rgb(255, 255, 255);
+
+  /* ---- 无边框控件的悬停 / 按下（导航项、列表行）---- */
+  --subtle-fill-secondary: rgba(0, 0, 0, 0.035);
+  --subtle-fill-tertiary: rgba(0, 0, 0, 0.05);
+  /* 导航栏当前项 */
+  --subtle-fill-selected: rgb(255, 255, 255);
+
+  /* ---- 描边 ---- */
+  --control-stroke-default: rgba(0, 0, 0, 0.073);
+  /* Fluent 的控件底边比其余三边深一档，这是它的立体感来源 */
+  --control-stroke-accent: rgba(0, 0, 0, 0.183);
+  /* 输入框底边更深，用于强调可输入 */
+  --control-stroke-input: rgba(0, 0, 0, 0.39);
+  --card-stroke-default: rgba(0, 0, 0, 0.068);
+  --divider-stroke: rgba(0, 0, 0, 0.09);
+
+  /* ---- 文字 ---- */
+  --text-primary: rgb(0, 0, 0);
+  --text-secondary: rgba(0, 0, 0, 0.6);
+  --text-tertiary: rgba(0, 0, 0, 0.55);
+  /* 按下控件时文字变淡 */
+  --text-pressed: rgba(0, 0, 0, 0.63);
+  --text-placeholder: rgb(141, 141, 142);
+  /* 主色按钮上的文字 */
+  --text-on-accent: rgb(255, 255, 255);
+  --text-danger: rgb(196, 43, 28);
+}
+
+:root[data-theme='dark'] {
+  --solid-bg-base: rgb(32, 32, 32);
+  --layer-fill-default: rgba(255, 255, 255, 0.0314);
+
+  --control-fill-default: rgba(255, 255, 255, 0.0605);
+  --control-fill-secondary: rgba(255, 255, 255, 0.0837);
+  --control-fill-tertiary: rgba(255, 255, 255, 0.0326);
+  --control-fill-input-active: rgba(30, 30, 30, 0.7);
+
+  --subtle-fill-secondary: rgba(255, 255, 255, 0.035);
+  --subtle-fill-tertiary: rgba(255, 255, 255, 0.05);
+  --subtle-fill-selected: rgba(255, 255, 255, 0.164);
+
+  --control-stroke-default: rgba(255, 255, 255, 0.053);
+  /* 深色下立体感来自顶边而非底边 —— 光源方向反了 */
+  --control-stroke-accent: rgba(255, 255, 255, 0.08);
+  --control-stroke-input: rgba(255, 255, 255, 0.5442);
+  --card-stroke-default: rgba(0, 0, 0, 0.18);
+  --divider-stroke: rgba(255, 255, 255, 0.09);
+
+  --text-primary: rgb(255, 255, 255);
+  --text-secondary: rgba(255, 255, 255, 0.6);
+  --text-tertiary: rgba(255, 255, 255, 0.55);
+  --text-pressed: rgba(255, 255, 255, 0.786);
+  --text-placeholder: rgb(154, 154, 154);
+  --text-on-accent: rgb(0, 0, 0);
+  --text-danger: rgb(255, 153, 164);
+}
