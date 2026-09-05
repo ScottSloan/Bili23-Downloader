@@ -25,8 +25,9 @@ uv.toml
 /.VSCodeCounter
 /bundle
 
-# webui
-/src/webui/
+# webui（源码纳入版本控制，只忽略依赖与构建产物）
+/webui/node_modules
+/webui/dist
 
 # claude
 .claude
