@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import fluentLabel from '@/components/Fluent/components/widgets/label/FluentLabel.vue'
 </script>
 

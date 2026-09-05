@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { useThemeStore } from '@/stores/themeStore'
 
 const themeStore = useThemeStore()

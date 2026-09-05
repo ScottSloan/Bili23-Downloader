@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { useThemeStore } from '@/stores/themeStore'
 
 const themeStore = useThemeStore()
@@ -13,8 +13,8 @@ defineProps({
 
 const emit = defineEmits(['update:checked'])
 
-function handleChange(event) {
-  emit('update:checked', event.target.checked)
+function handleChange(event: Event) {
+  emit('update:checked', (event.target as HTMLInputElement).checked)
 }
 </script>
 

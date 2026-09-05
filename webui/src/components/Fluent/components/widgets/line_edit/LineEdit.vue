@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { useThemeStore } from '@/stores/themeStore'
 
 const themeStore = useThemeStore()
@@ -23,7 +23,7 @@ const emit = defineEmits(['update:modelValue', 'submit'])
     :class="themeStore.theme"
     :placeholder="placeholder"
     :value="modelValue"
-    @input="emit('update:modelValue', $event.target.value)"
+    @input="emit('update:modelValue', ($event.target as HTMLInputElement).value)"
     @keyup.enter="emit('submit')"
   />
 </template>

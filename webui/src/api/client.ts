@@ -1,12 +1,15 @@
 // 后端请求的统一入口
 //
-// 鉴权由 vite 代理注入（见 vite.config.js），前端不持有令牌。
+// 鉴权由 vite 代理注入（见 vite.config.ts），前端不持有令牌。
 // S3 换成 FastAPI + 密码鉴权后，这里改成带 credentials 的同源请求即可。
 
 import { t } from '@/i18n'
+import type { ParseTreePayload, StatusPayload } from './types'
 
 export class ApiError extends Error {
-  constructor(message, status) {
+  status: number
+
+  constructor(message: string, status: number) {
     super(message)
 
     this.name = 'ApiError'
@@ -14,8 +17,8 @@ export class ApiError extends Error {
   }
 }
 
-async function request(method, path, body) {
-  let response
+async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
+  let response: Response
 
   try {
     response = await fetch(`/api${path}`, {
@@ -28,7 +31,7 @@ async function request(method, path, body) {
     throw new ApiError(t('error.backendUnreachable'), 0)
   }
 
-  let payload = null
+  let payload: { error?: string } | null = null
 
   try {
     payload = await response.json()
@@ -43,11 +46,11 @@ async function request(method, path, body) {
     )
   }
 
-  return payload
+  return payload as T
 }
 
 export const api = {
-  getStatus: () => request('GET', '/status'),
-  getParseTree: () => request('GET', '/parse/tree'),
-  parseUrl: (url) => request('POST', '/parse', { url }),
+  getStatus: () => request<StatusPayload>('GET', '/status'),
+  getParseTree: () => request<ParseTreePayload>('GET', '/parse/tree'),
+  parseUrl: (url: string) => request<ParseTreePayload>('POST', '/parse', { url }),
 }

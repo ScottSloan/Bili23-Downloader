@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { onMounted } from 'vue'
 import MainWindow from '@/MainWindow.vue'
 import { useThemeStore } from '@/stores/themeStore'

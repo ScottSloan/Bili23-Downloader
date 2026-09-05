@@ -2,11 +2,33 @@ import { defineStore } from 'pinia'
 
 const DEFAULT_PRIMARY_COLOR = '#009faa'
 
-function clamp01(value) {
+interface Rgb {
+  r: number
+  g: number
+  b: number
+}
+
+interface Hsv {
+  h: number
+  s: number
+  v: number
+}
+
+type Tone = 'primary' | 'dark1' | 'dark2' | 'dark3' | 'light1' | 'light2' | 'light3'
+
+type ThemeName = 'light' | 'dark'
+
+type Palette = Record<Tone, string> & {
+  surface: string
+  surfaceHover: string
+  text: string
+}
+
+function clamp01(value: number): number {
   return Math.max(0, Math.min(1, value))
 }
 
-function normalizeHexColor(color) {
+function normalizeHexColor(color: unknown): string {
   if (typeof color !== 'string') {
     return DEFAULT_PRIMARY_COLOR
   }
@@ -31,7 +53,7 @@ function normalizeHexColor(color) {
   return DEFAULT_PRIMARY_COLOR
 }
 
-function hexToRgb(hex) {
+function hexToRgb(hex: string): Rgb {
   const value = normalizeHexColor(hex).slice(1)
   const number = Number.parseInt(value, 16)
 
@@ -42,12 +64,12 @@ function hexToRgb(hex) {
   }
 }
 
-function rgbToHex(r, g, b) {
-  const toHex = (value) => Math.round(value).toString(16).padStart(2, '0')
+function rgbToHex(r: number, g: number, b: number): string {
+  const toHex = (value: number) => Math.round(value).toString(16).padStart(2, '0')
   return `#${toHex(r)}${toHex(g)}${toHex(b)}`
 }
 
-function rgbToHsv(r, g, b) {
+function rgbToHsv(r: number, g: number, b: number): Hsv {
   const red = r / 255
   const green = g / 255
   const blue = b / 255
@@ -78,7 +100,7 @@ function rgbToHsv(r, g, b) {
   return { h: hue, s: saturation, v: value }
 }
 
-function hsvToRgb(h, s, v) {
+function hsvToRgb(h: number, s: number, v: number): Rgb {
   const chroma = v * s
   const x = chroma * (1 - Math.abs(((h / 60) % 2) - 1))
   const match = v - chroma
@@ -114,11 +136,11 @@ function hsvToRgb(h, s, v) {
   }
 }
 
-function generateThemePalette(primaryColor, isDark) {
+function generateThemePalette(primaryColor: string, isDark: boolean): Palette {
   const { r, g, b } = hexToRgb(primaryColor)
   const { h, s, v } = rgbToHsv(r, g, b)
 
-  const createTone = (tone) => {
+  const createTone = (tone: Tone): string => {
     let saturation = s
     let value = v
 
@@ -165,7 +187,7 @@ function generateThemePalette(primaryColor, isDark) {
     return rgbToHex(rgb.r, rgb.g, rgb.b)
   }
 
-  const palette = {
+  const tones = {
     primary: createTone('primary'),
     dark1: createTone('dark1'),
     dark2: createTone('dark2'),
@@ -175,14 +197,17 @@ function generateThemePalette(primaryColor, isDark) {
     light3: createTone('light3'),
   }
 
-  palette.surface = isDark ? '#1f1f1f' : '#f0f4f9'
-  palette.surfaceHover = isDark ? '#2a2a2a' : '#f9f9f9'
-  palette.text = isDark ? '#ffffff' : '#000000'
+  const palette: Palette = {
+    ...tones,
+    surface: isDark ? '#1f1f1f' : '#f0f4f9',
+    surfaceHover: isDark ? '#2a2a2a' : '#f9f9f9',
+    text: isDark ? '#ffffff' : '#000000',
+  }
 
   return palette
 }
 
-function applyThemeVariables(theme, primaryColor) {
+function applyThemeVariables(theme: ThemeName, primaryColor: string) {
   if (typeof document === 'undefined') {
     return
   }
@@ -206,7 +231,7 @@ function applyThemeVariables(theme, primaryColor) {
 }
 
 export const useThemeStore = defineStore('theme', {
-  state: () => ({
+  state: (): { theme: ThemeName; isDark: boolean; primaryColor: string } => ({
     theme: 'light',
     isDark: false,
     primaryColor: DEFAULT_PRIMARY_COLOR,
@@ -217,13 +242,13 @@ export const useThemeStore = defineStore('theme', {
       this.setTheme(this.isDark ? 'light' : 'dark')
     },
 
-    setTheme(theme) {
+    setTheme(theme: string) {
       this.theme = theme === 'dark' ? 'dark' : 'light'
       this.isDark = this.theme === 'dark'
       applyThemeVariables(this.theme, this.primaryColor)
     },
 
-    setPrimaryColor(color) {
+    setPrimaryColor(color: string) {
       this.primaryColor = normalizeHexColor(color)
       applyThemeVariables(this.theme, this.primaryColor)
     },

@@ -1,7 +1,8 @@
-<script setup>
+<script setup lang="ts">
 import { computed } from 'vue'
 import { useParseStore, CHECKED, PARTIAL } from '@/stores/parseStore'
 import { cellText } from './formatters'
+import type { CheckState, ParseNode } from '@/api/types'
 import { t, columnName } from '@/i18n'
 
 const store = useParseStore()
@@ -13,12 +14,12 @@ const gridTemplate = computed(() =>
     .join(' '),
 )
 
-function stateOf(id) {
+function stateOf(id: string): CheckState {
   return store.checkState.get(id) ?? 0
 }
 
-function onToggle(node, event) {
-  store.setChecked(node.id, event.target.checked)
+function onToggle(node: ParseNode, event: Event) {
+  store.setChecked(node.id, (event.target as HTMLInputElement).checked)
 }
 </script>
 

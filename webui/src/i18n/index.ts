@@ -14,22 +14,30 @@
 // 实现保持在最小规模，调用形态 t('a.b', { name }) 与 vue-i18n 一致，
 // 将来真要换库，调用方不用改。
 
+import { reactive } from 'vue'
 import en from './en'
 import zhCN from './zh-CN'
 import zhTW from './zh-TW'
-import { reactive } from 'vue'
+
+/** 以英文文件的结构为准 */
+export type Messages = typeof en
+
+/** 译文允许不完整，缺的键回落到英文 */
+type Translations = {
+  [K in keyof Messages]?: Partial<Messages[K]>
+}
 
 // 源语言，同时也是回落语言
 const SOURCE_LOCALE = 'en'
 
-const messages = {
+const messages: Record<string, Messages | Translations> = {
   en,
   'zh-CN': zhCN,
   'zh-TW': zhTW,
 }
 
 // 桌面版 config.json 里 language 的取值（见 util/common/serializer.py 的 LanguageSerializer）
-const CONFIG_LOCALE_MAP = {
+const CONFIG_LOCALE_MAP: Record<string, string> = {
   en_US: 'en',
   zh_CN: 'zh-CN',
   zh_TW: 'zh-TW',
@@ -38,7 +46,7 @@ const CONFIG_LOCALE_MAP = {
 // 用 reactive 而非普通变量：切换语言后模板里的 t(...) 要重新求值
 const state = reactive({ locale: SOURCE_LOCALE })
 
-function matchBrowserLocale() {
+function matchBrowserLocale(): string {
   for (const tag of navigator.languages || [navigator.language || '']) {
     if (messages[tag]) {
       return tag
@@ -61,11 +69,11 @@ function matchBrowserLocale() {
   return SOURCE_LOCALE
 }
 
-export function currentLocale() {
+export function currentLocale(): string {
   return state.locale
 }
 
-export function availableLocales() {
+export function availableLocales(): string[] {
   return Object.keys(messages)
 }
 
@@ -75,29 +83,34 @@ export function availableLocales() {
  * 传桌面版配置里的值（'Auto' / 'zh_CN' / 'zh_TW' / 'en_US'）或前端的 locale 标签均可，
  * 'Auto' 与无法识别的值都跟随浏览器语言
  */
-export function setLocale(value) {
+export function setLocale(value?: string | null): string {
   if (!value || value === 'Auto') {
     state.locale = matchBrowserLocale()
 
     return state.locale
   }
 
-  state.locale = messages[CONFIG_LOCALE_MAP[value] ?? value]
-    ? (CONFIG_LOCALE_MAP[value] ?? value)
-    : matchBrowserLocale()
+  const tag = CONFIG_LOCALE_MAP[value] ?? value
+
+  state.locale = messages[tag] ? tag : matchBrowserLocale()
 
   return state.locale
 }
 
-function lookup(bundle, path) {
-  return path.split('.').reduce((node, key) => (node == null ? undefined : node[key]), bundle)
+function lookup(bundle: object | undefined, path: string): unknown {
+  return path
+    .split('.')
+    .reduce<unknown>(
+      (node, key) => (node == null ? undefined : (node as Record<string, unknown>)[key]),
+      bundle,
+    )
 }
 
 /**
  * 取一条翻译。当前语言缺失时回落到英文源串，仍取不到则原样返回 key，
  * 好让界面上一眼看出漏了哪条
  */
-export function t(path, params) {
+export function t(path: string, params?: Record<string, string | number>): string {
   const text = lookup(messages[state.locale], path) ?? lookup(messages[SOURCE_LOCALE], path)
 
   if (typeof text !== 'string') {
@@ -108,7 +121,7 @@ export function t(path, params) {
     return text
   }
 
-  return text.replace(/\{(\w+)\}/g, (match, name) =>
+  return text.replace(/\{(\w+)\}/g, (match, name: string) =>
     params[name] === undefined ? match : String(params[name]),
   )
 }
@@ -116,7 +129,7 @@ export function t(path, params) {
 /**
  * 解析列表的列名。后端只给 attr_key，列名在前端维护
  */
-export function columnName(key) {
+export function columnName(key: string): string {
   return t(`column.${key}`)
 }
 

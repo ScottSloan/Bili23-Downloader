@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 
 const props = defineProps({
@@ -8,10 +8,10 @@ const props = defineProps({
   },
 })
 
-const rootRef = ref(null)
+const rootRef = ref<HTMLElement | null>(null)
 const indicatorStyle = reactive({ top: '15px' })
 
-let resizeObserver = null
+let resizeObserver: ResizeObserver | null = null
 
 const updateIndicatorPosition = () => {
   const rootElement = rootRef.value
@@ -20,7 +20,7 @@ const updateIndicatorPosition = () => {
     return
   }
 
-  const buttons = rootElement.querySelectorAll('.navigation-bar-button')
+  const buttons = rootElement.querySelectorAll<HTMLElement>('.navigation-bar-button')
   const activeButton = buttons[props.activeIndex]
 
   if (!activeButton) {

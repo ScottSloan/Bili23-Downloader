@@ -1,18 +1,24 @@
 import { defineStore } from 'pinia'
 import { api } from '@/api/client'
+import { CHECKED, PARTIAL, UNCHECKED } from '@/api/types'
+import type { CheckState, ParseColumn, ParseNode, ParseTreePayload } from '@/api/types'
 
-// 勾选态与 Qt.CheckState 对齐，后端直接透传这三个值
-export const UNCHECKED = 0
-export const PARTIAL = 1
-export const CHECKED = 2
+export { CHECKED, PARTIAL, UNCHECKED }
+export type { CheckState }
+
+/** 摊平后待渲染的一行 */
+interface Row {
+  node: ParseNode
+  depth: number
+}
 
 // 把树摊平成 id → 节点 / 父节点 的索引。
 // 勾选要向下传递、向上回算，每次都递归整棵树在千级条目下会很吃力
-function indexTree(tree) {
-  const nodes = new Map()
-  const parents = new Map()
+function indexTree(tree: ParseNode[]) {
+  const nodes = new Map<string, ParseNode>()
+  const parents = new Map<string, string | null>()
 
-  const walk = (list, parentId) => {
+  const walk = (list: ParseNode[], parentId: string | null) => {
     for (const node of list) {
       nodes.set(node.id, node)
       parents.set(node.id, parentId)
@@ -28,8 +34,22 @@ function indexTree(tree) {
   return { nodes, parents }
 }
 
+interface ParseState {
+  tree: ParseNode[]
+  columns: ParseColumn[]
+  category: string
+  total: number
+  loading: boolean
+  error: string
+  mediaError: string
+  expanded: Set<string>
+  checkState: Map<string, CheckState>
+  _nodes: Map<string, ParseNode>
+  _parents: Map<string, string | null>
+}
+
 export const useParseStore = defineStore('parse', {
-  state: () => ({
+  state: (): ParseState => ({
     tree: [],
     columns: [],
     category: '',
@@ -50,13 +70,13 @@ export const useParseStore = defineStore('parse', {
   }),
 
   getters: {
-    visibleColumns: (state) => state.columns.filter((column) => column.show),
+    visibleColumns: (state): ParseColumn[] => state.columns.filter((column) => column.show),
 
     // 按展开状态摊平出实际要渲染的行，附带层级用于缩进
-    rows: (state) => {
-      const result = []
+    rows: (state): Row[] => {
+      const result: Row[] = []
 
-      const walk = (list, depth) => {
+      const walk = (list: ParseNode[], depth: number) => {
         for (const node of list) {
           result.push({ node, depth })
 
@@ -71,7 +91,7 @@ export const useParseStore = defineStore('parse', {
       return result
     },
 
-    checkedCount: (state) => {
+    checkedCount: (state): number => {
       let count = 0
 
       for (const [id, value] of state.checkState) {
@@ -88,14 +108,16 @@ export const useParseStore = defineStore('parse', {
   },
 
   actions: {
-    _load(payload) {
+    _load(payload: ParseTreePayload) {
       this.tree = payload.tree || []
       this.columns = payload.columns || []
       this.category = payload.category || ''
       this.total = payload.total || 0
 
       this.mediaError =
-        payload.media_info_available === false ? payload.media_info_error || '媒体信息不可用' : ''
+        payload.media_info_available === false
+          ? payload.media_info_error || 'media information is unavailable'
+          : ''
 
       const { nodes, parents } = indexTree(this.tree)
 
@@ -108,39 +130,47 @@ export const useParseStore = defineStore('parse', {
       this.expanded = new Set(this.tree.filter((node) => node.children).map((node) => node.id))
     },
 
-    toggleExpanded(id) {
+    toggleExpanded(id: string) {
       // Set 不是深响应的，替换成新实例才能触发重新渲染
       const next = new Set(this.expanded)
 
-      next.has(id) ? next.delete(id) : next.add(id)
+      if (next.has(id)) {
+        next.delete(id)
+      } else {
+        next.add(id)
+      }
 
       this.expanded = next
     },
 
-    setChecked(id, checked) {
-      const next = new Map(this.checkState)
-
-      const applyDown = (node, value) => {
-        next.set(node.id, value)
-
-        for (const child of node.children || []) {
-          applyDown(child, value)
-        }
-      }
-
+    setChecked(id: string, checked: boolean) {
       const node = this._nodes.get(id)
 
       if (!node) {
         return
       }
 
+      const next = new Map(this.checkState)
+
+      const applyDown = (target: ParseNode, value: CheckState) => {
+        next.set(target.id, value)
+
+        for (const child of target.children || []) {
+          applyDown(child, value)
+        }
+      }
+
       applyDown(node, checked ? CHECKED : UNCHECKED)
 
       // 自底向上回算祖先：全选 → 选中，全不选 → 未选，否则半选
-      let parentId = this._parents.get(id)
+      let parentId = this._parents.get(id) ?? null
 
       while (parentId != null) {
         const parent = this._nodes.get(parentId)
+
+        if (!parent) {
+          break
+        }
 
         const states = (parent.children || []).map((child) => next.get(child.id) ?? UNCHECKED)
 
@@ -152,13 +182,13 @@ export const useParseStore = defineStore('parse', {
           next.set(parentId, PARTIAL)
         }
 
-        parentId = this._parents.get(parentId)
+        parentId = this._parents.get(parentId) ?? null
       }
 
       this.checkState = next
     },
 
-    async parse(url) {
+    async parse(url: string) {
       if (!url.trim()) {
         return
       }
@@ -169,7 +199,7 @@ export const useParseStore = defineStore('parse', {
       try {
         this._load(await api.parseUrl(url.trim()))
       } catch (e) {
-        this.error = e.message
+        this.error = e instanceof Error ? e.message : String(e)
       } finally {
         this.loading = false
       }
@@ -186,7 +216,7 @@ export const useParseStore = defineStore('parse', {
           this.columns = payload.columns || []
         }
       } catch (e) {
-        this.error = e.message
+        this.error = e instanceof Error ? e.message : String(e)
       }
     },
   },

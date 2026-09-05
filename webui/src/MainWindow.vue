@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import titleBar from '@/components/App/TitleBar.vue'
 import navigationBar from '@/components/Fluent/components/navigation/NavigationBar.vue'
 import navigationPanel from './components/Fluent/components/navigation/NavigationPanel.vue'
@@ -13,7 +13,7 @@ const themeStore = useThemeStore()
 const route = useRoute()
 
 const activeNavIndex = computed(() => {
-  const map = {
+  const map: Record<string, number> = {
     '/parse': 0,
     '/download': 1,
     '/settings': 2,

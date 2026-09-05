@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import fluentLabel from '@/components/Fluent/components/widgets/label/FluentLabel.vue'
 import pushButton from '@/components/Fluent/components/widgets/button/PushButton.vue'
 import { useThemeStore } from '@/stores/themeStore'
