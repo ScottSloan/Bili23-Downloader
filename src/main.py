@@ -601,7 +601,14 @@ def _main():
 
     app = Application(app_args)
     app.setup_app()
-    
+
+    # 把 core 的回调调度器换成「投递回 GUI 线程」的实现。必须赶在业务模块导入之前 ——
+    # 订阅是在那些模块里建立的，晚一步建立的订阅就会带着错误的调度器。
+    # 见 util/thread/dispatch.py 开头的说明
+    from util.thread.dispatcher import install_qt_dispatcher
+
+    install_qt_dispatcher()
+
     from gui.interface.main_window import MainWindow
 
     app.window = MainWindow()

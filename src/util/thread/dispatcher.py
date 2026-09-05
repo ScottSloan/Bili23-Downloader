@@ -74,3 +74,23 @@ def run_in_main_thread(func):
         post_to_main_thread(func, *args, **kwargs)
 
     return wrapper
+
+class QtMainThreadDispatcher:
+    """
+    把回调投递回 GUI 线程，复刻 Qt 对 QObject 接收者的 AutoConnection 语义
+
+    发射方本就在 GUI 线程时退化为同步直调（见 _MainThreadDispatcher 的说明），
+    因此不会改变原有的同步调用顺序
+    """
+    def dispatch(self, func, args, kwargs):
+        post_to_main_thread(func, *args, **kwargs)
+
+def install_qt_dispatcher():
+    """
+    桌面侧在启动早期调用一次，把 core 的默认调度器换成投递回 GUI 线程的实现
+
+    必须赶在任何订阅建立之前 —— 换句话说，赶在业务模块被导入之前
+    """
+    from .dispatch import set_default_dispatcher
+
+    set_default_dispatcher(QtMainThreadDispatcher())
