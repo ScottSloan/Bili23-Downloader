@@ -17,6 +17,9 @@ logger = logging.getLogger(__name__)
 
 ENDPOINT_PATH = "/mcp"
 
+# WebUI 验证垫片的路径前缀，见 rest.py。S3 落地 FastAPI 后一并移除
+API_PREFIX = "/api/"
+
 # 请求体上限。工具参数都很小，超出这个量级的只可能是异常或恶意请求
 MAX_BODY_SIZE = 1024 * 1024
 
@@ -99,6 +102,11 @@ class MCPRequestHandler(BaseHTTPRequestHandler):
         logger.debug("MCP %s", format % args)
 
     def do_GET(self):
+        if path := self._rest_path():
+            self._handle_rest("GET", path)
+
+            return
+
         # 2026-07-28 起不再有 GET 流端点；旧客户端的 GET 按规范回 405
         self._send_plain(405, "Method Not Allowed")
 
@@ -107,6 +115,11 @@ class MCPRequestHandler(BaseHTTPRequestHandler):
         self._send_plain(405, "Method Not Allowed")
 
     def do_POST(self):
+        if path := self._rest_path():
+            self._handle_rest("POST", path)
+
+            return
+
         if not is_origin_allowed(self.headers.get("Origin", "")):
             logger.warning("拒绝来源不合法的 MCP 请求：%s", self.headers.get("Origin"))
 
@@ -156,6 +169,66 @@ class MCPRequestHandler(BaseHTTPRequestHandler):
             return
 
         self._send_json(status, response)
+
+    def _rest_path(self):
+        """
+        WebUI 的 REST 垫片路径，非该前缀返回 None 交回 MCP 流程
+
+        S3 落地 FastAPI 后连同 rest.py 一起删除
+        """
+        path = self.path.split("?")[0]
+
+        return path if path.startswith(API_PREFIX) else None
+
+    def _handle_rest(self, method: str, path: str):
+        from .rest import handle_rest
+
+        if not is_origin_allowed(self.headers.get("Origin", "")):
+            logger.warning("拒绝来源不合法的 REST 请求：%s", self.headers.get("Origin"))
+
+            self._drain_body()
+            self._send_plain(403, "Forbidden")
+
+            return
+
+        if not self._check_auth():
+            return
+
+        payload = {}
+
+        if method == "POST":
+            try:
+                length = int(self.headers.get("Content-Length", 0))
+
+            except ValueError:
+                self._send_json(400, {"error": "Invalid Content-Length"})
+
+                return
+
+            if length > MAX_BODY_SIZE:
+                self._send_plain(413, "Payload Too Large")
+
+                return
+
+            raw = self.rfile.read(length) if length > 0 else b""
+
+            if raw:
+                try:
+                    payload = json.loads(raw)
+
+                except (json.JSONDecodeError, UnicodeDecodeError):
+                    self._send_json(400, {"error": "Invalid JSON"})
+
+                    return
+
+            if not isinstance(payload, dict):
+                self._send_json(400, {"error": "Expected a JSON object"})
+
+                return
+
+        status, body = handle_rest(method, path, payload)
+
+        self._send_json(status, body)
 
     def _check_auth(self) -> bool:
         expected = config.get(config.mcp_token)

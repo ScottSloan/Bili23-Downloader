@@ -31,6 +31,9 @@ uv.toml
 # claude
 .claude
 
+# 本地开发文档，不纳入版本控制
+/docs
+
 # mutagen
 mutagen.yml
 mutagen.yml.lock
