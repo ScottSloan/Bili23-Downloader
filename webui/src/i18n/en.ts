@@ -24,7 +24,7 @@ export default {
     tagNeedsReparse: 'Needs re-parsing',
   },
 
-  titleBar: {
+  user: {
     signedOut: 'Not signed in',
     avatarAlt: 'User avatar',
   },

@@ -4,6 +4,7 @@ import navigationBar from '@/components/Fluent/components/navigation/NavigationB
 import navigationPanel from './components/Fluent/components/navigation/NavigationPanel.vue'
 import navigationBarButton from './components/Fluent/components/navigation/NavigationBarButton.vue'
 import navigationBarStretch from '@/components/Fluent/components/navigation/NavigationBarStretch.vue'
+import navigationBarAvatar from '@/components/Fluent/components/navigation/NavigationBarAvatar.vue'
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { t } from '@/i18n'
@@ -30,6 +31,8 @@ const activeNavIndex = computed(() => {
         <navigationBarButton :title="t('nav.parse')" :icon="IconSearch" to="/parse" />
         <navigationBarButton :title="t('nav.download')" :icon="IconDownload" to="/download" />
         <navigationBarStretch />
+        <!-- 头像在设置项之上，与 GUI 的导航栏顺序一致 -->
+        <navigationBarAvatar />
         <navigationBarButton :title="t('nav.settings')" :icon="IconSettings" to="/settings" />
       </navigationBar>
       <navigationPanel>

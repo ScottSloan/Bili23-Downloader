@@ -21,7 +21,7 @@ export default {
     tagNeedsReparse: '需二次解析',
   },
 
-  titleBar: {
+  user: {
     signedOut: '未登录',
     avatarAlt: '用户头像',
   },
