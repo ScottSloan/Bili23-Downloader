@@ -1,30 +1,31 @@
 :root {
-    --primary-color: #009faa;
-    --primary-color-dark-1: #007f8a;
-    --primary-color-dark-2: #00626a;
-    --primary-color-dark-3: #00454b;
-    --primary-color-light-1: #1bc0cc;
-    --primary-color-light-2: #56d2db;
-    --primary-color-light-3: #7de1e8;
-    --theme-surface: #f0f4f9;
-    --theme-surface-hover: #f9f9f9;
-    --theme-text-color: #000000;
-    color-scheme: light;
+  --primary-color: #009faa;
+  --primary-color-dark-1: #007f8a;
+  --primary-color-dark-2: #00626a;
+  --primary-color-dark-3: #00454b;
+  --primary-color-light-1: #1bc0cc;
+  --primary-color-light-2: #56d2db;
+  --primary-color-light-3: #7de1e8;
+  --theme-surface: #f0f4f9;
+  --theme-surface-hover: #f9f9f9;
+  --theme-text-color: #000000;
+  color-scheme: light;
 }
 
-:root[data-theme="dark"] {
-    color-scheme: dark;
+:root[data-theme='dark'] {
+  color-scheme: dark;
 }
 
-
-html, body, #app {
-    width: 100%;
-    height: 100%;
-    margin: 0;
-    overflow: hidden;
+html,
+body,
+#app {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
 }
 
 #app {
-    font-family: 'Segoe UI', 'Microsoft YaHei', 'PingFang SC';
-    font-size: 11pt;
+  font-family: 'Segoe UI', 'Microsoft YaHei', 'PingFang SC';
+  font-size: 11pt;
 }

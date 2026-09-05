@@ -66,8 +66,12 @@ function onToggle(node, event) {
             {{ cellText(node, column.key) }}
           </span>
 
-          <span v-if="index === 1 && node.already_downloaded" class="tag">{{ t('parse.tagDownloaded') }}</span>
-          <span v-if="index === 1 && node.needs_reparse" class="tag">{{ t('parse.tagNeedsReparse') }}</span>
+          <span v-if="index === 1 && node.already_downloaded" class="tag">{{
+            t('parse.tagDownloaded')
+          }}</span>
+          <span v-if="index === 1 && node.needs_reparse" class="tag">{{
+            t('parse.tagNeedsReparse')
+          }}</span>
         </div>
       </div>
 

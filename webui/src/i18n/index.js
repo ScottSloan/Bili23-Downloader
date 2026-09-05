@@ -82,7 +82,9 @@ export function setLocale(value) {
     return state.locale
   }
 
-  state.locale = messages[CONFIG_LOCALE_MAP[value] ?? value] ? (CONFIG_LOCALE_MAP[value] ?? value) : matchBrowserLocale()
+  state.locale = messages[CONFIG_LOCALE_MAP[value] ?? value]
+    ? (CONFIG_LOCALE_MAP[value] ?? value)
+    : matchBrowserLocale()
 
   return state.locale
 }

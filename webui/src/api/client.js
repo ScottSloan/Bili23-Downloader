@@ -37,7 +37,10 @@ async function request(method, path, body) {
   }
 
   if (!response.ok) {
-    throw new ApiError(payload?.error || t('error.requestFailed', { status: response.status }), response.status)
+    throw new ApiError(
+      payload?.error || t('error.requestFailed', { status: response.status }),
+      response.status,
+    )
   }
 
   return payload

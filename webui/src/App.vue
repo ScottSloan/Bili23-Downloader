@@ -1,6 +1,6 @@
 <script setup>
 import { onMounted } from 'vue'
-import Interface from '@/Interface.vue'
+import MainWindow from '@/MainWindow.vue'
 import { useThemeStore } from '@/stores/themeStore'
 import { api } from '@/api/client'
 import { setLocale } from '@/i18n'
@@ -19,15 +19,15 @@ onMounted(async () => {
 </script>
 
 <template>
-  <Interface />
+  <MainWindow />
 </template>
 
 <style>
 .flex-stretch {
-    flex-grow: 1;
+  flex-grow: 1;
 }
 
 .rounded {
-    border-radius: 8px;
+  border-radius: 8px;
 }
 </style>

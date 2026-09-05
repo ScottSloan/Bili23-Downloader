@@ -18,7 +18,8 @@ export default {
     empty: 'Parsed results will appear here.',
     // GUI 的原串是 "{category_name} ({total_count} total)"，Web 端多显示一个已选数
     summary: '{category} ({total} total, {checked} selected)',
-    mediaUnavailable: 'Media information is unavailable ({reason}), downloads cannot be created yet.',
+    mediaUnavailable:
+      'Media information is unavailable ({reason}), downloads cannot be created yet.',
     tagDownloaded: 'Downloaded',
     tagNeedsReparse: 'Needs re-parsing',
   },

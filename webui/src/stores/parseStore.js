@@ -95,9 +95,7 @@ export const useParseStore = defineStore('parse', {
       this.total = payload.total || 0
 
       this.mediaError =
-        payload.media_info_available === false
-          ? payload.media_info_error || '媒体信息不可用'
-          : ''
+        payload.media_info_available === false ? payload.media_info_error || '媒体信息不可用' : ''
 
       const { nodes, parents } = indexTree(this.tree)
 
