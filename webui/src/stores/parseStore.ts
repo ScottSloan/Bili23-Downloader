@@ -126,7 +126,9 @@ export const useParseStore = defineStore('parse', {
 
       this.checkState = new Map([...nodes].map(([id, node]) => [id, node.checked ?? UNCHECKED]))
 
-      // 默认只展开第一层，千级条目全展开会明显卡顿（虚拟滚动在 S1-8 才做）
+      // 默认只展开第一层。这是 Web 端有意偏离 GUI（GUI 默认全展开）的一处，见 D13。
+      // 列表本身已经虚拟滚动，全展开不再是渲染压力，但千级条目一次铺开在网页上
+      // 依然难以浏览，所以这条决策保留
       this.expanded = new Set(this.tree.filter((node) => node.children).map((node) => node.id))
     },
 

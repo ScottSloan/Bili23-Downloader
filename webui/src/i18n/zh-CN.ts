@@ -21,6 +21,16 @@ export default {
     tagNeedsReparse: '需二次解析',
   },
 
+  settings: {
+    title: '设置',
+    theme: {
+      label: '主题',
+      light: '浅色',
+      dark: '深色',
+      system: '系统默认',
+    },
+  },
+
   column: {
     number: '序号',
     title: '标题名称',

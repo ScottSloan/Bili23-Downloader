@@ -1,11 +1,58 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="">
   <head>
-    <meta charset="UTF-8">
-    <link rel="icon" href="/favicon.ico">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="referrer" content="no-referrer">
+    <meta charset="UTF-8" />
+    <link rel="icon" href="/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="referrer" content="no-referrer" />
     <title>Bili23 Downloader WebUI</title>
+    <script>
+      /*
+        首屏主题引导
+
+        必须在样式表加载前**同步**执行：data-theme 晚一步写上去，页面就会先按浅色画一帧
+        再被改成深色，也就是刷新时看到的那下闪白（FOUC）。
+
+        这段脚本刻意不依赖任何模块（不能等 main.ts 加载），只用 localStorage + matchMedia。
+        键名与取值规则必须与 src/stores/themeStore.ts 保持一致，改一边就要改另一边。
+      */
+      ;(function () {
+        try {
+          var root = document.documentElement
+          var mode = localStorage.getItem('bili23.theme.mode')
+
+          if (mode !== 'light' && mode !== 'dark' && mode !== 'auto') {
+            // 默认跟随系统，与 GUI 的 Theme.AUTO 一致
+            mode = 'auto'
+          }
+
+          var theme = mode
+
+          if (mode === 'auto') {
+            var query = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)')
+            theme = query && query.matches ? 'dark' : 'light'
+          }
+
+          root.dataset.theme = theme
+
+          // 主题色的色阶由 themeStore 算好后缓存在这里，首屏只做回填，不重复实现 HSV 推导。
+          // 缓存缺失时退回 theme.css 里的默认主题色，store 起来后会立刻覆盖
+          var palette = JSON.parse(localStorage.getItem('bili23.theme.palette') || '{}')[theme]
+
+          for (var name in palette) {
+            // 只认自己写进去的那几个变量名与十六进制值，避免被篡改的 localStorage 往根节点上注入别的东西
+            if (
+              /^--primary-color(-(dark|light)-[123])?$/.test(name) &&
+              /^#[0-9a-f]{6}$/i.test(palette[name])
+            ) {
+              root.style.setProperty(name, palette[name])
+            }
+          }
+        } catch (e) {
+          // localStorage 被禁用、或缓存内容损坏，都只是回到默认主题，不能拦住页面加载
+        }
+      })()
+    </script>
   </head>
   <body>
     <div id="app"></div>

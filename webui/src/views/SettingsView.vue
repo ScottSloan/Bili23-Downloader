@@ -2,17 +2,20 @@
 import fluentLabel from '@/components/Fluent/components/widgets/label/FluentLabel.vue'
 import pushButton from '@/components/Fluent/components/widgets/button/PushButton.vue'
 import { useThemeStore } from '@/stores/themeStore'
+import { t } from '@/i18n'
 
 const themeStore = useThemeStore()
 </script>
 
 <template>
   <div class="page-view">
-    <fluentLabel text="设置页面" />
+    <fluentLabel :text="t('settings.theme.label')" />
+
     <div class="actions">
-      <pushButton title="Light Mode" @click="themeStore.setTheme('light')" />
-      <pushButton title="Dark Mode" @click="themeStore.setTheme('dark')" />
-      <pushButton title="Toggle Theme" @click="themeStore.toggleTheme" />
+      <!-- 三档与 GUI 的主题设置一致（Light / Dark / System default），当前档位记在 themeStore.mode -->
+      <pushButton :title="t('settings.theme.light')" @click="themeStore.setMode('light')" />
+      <pushButton :title="t('settings.theme.dark')" @click="themeStore.setMode('dark')" />
+      <pushButton :title="t('settings.theme.system')" @click="themeStore.setMode('auto')" />
     </div>
   </div>
 </template>

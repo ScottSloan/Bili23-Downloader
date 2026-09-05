@@ -26,9 +26,12 @@ function submit() {
         class="flex-stretch"
         @submit="submit"
       />
+      <!-- 81px = 原先 content-box 下的 55px 内容宽 + 24px 内边距 + 2px 边框，
+           PushButton 改用 border-box 后的等价值，渲染宽度与改动前一致 -->
       <primaryPushButton
         :title="store.loading ? t('parse.submitting') : t('parse.submit')"
-        style="min-width: 55px"
+        :disabled="store.loading"
+        style="min-width: 81px"
         @click="submit"
       />
     </div>

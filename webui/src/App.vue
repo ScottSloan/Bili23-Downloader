@@ -6,7 +6,9 @@ import { api } from '@/api/client'
 import { setLocale } from '@/i18n'
 
 const themeStore = useThemeStore()
-themeStore.syncThemeVariables()
+
+// 主题在 index.html 的首屏脚本里已经写过一次，这里补齐主题色色阶并开始监听系统主题
+themeStore.initialize()
 
 // 界面语言跟随桌面版的设置（两边共用 config.json）。取不到就保持按浏览器语言渲染
 onMounted(async () => {

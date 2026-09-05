@@ -7,6 +7,7 @@ import navigationBarStretch from '@/components/Fluent/components/navigation/Navi
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { t } from '@/i18n'
+import { IconDownload, IconSearch, IconSettings } from '@/components/Fluent/icons'
 
 const route = useRoute()
 
@@ -26,22 +27,10 @@ const activeNavIndex = computed(() => {
     <titleBar />
     <div class="main-content">
       <navigationBar :active-index="activeNavIndex">
-        <navigationBarButton
-          :title="t('nav.parse')"
-          icon="/src/assets/icon/search.svg"
-          to="/parse"
-        />
-        <navigationBarButton
-          :title="t('nav.download')"
-          icon="/src/assets/icon/download.svg"
-          to="/download"
-        />
+        <navigationBarButton :title="t('nav.parse')" :icon="IconSearch" to="/parse" />
+        <navigationBarButton :title="t('nav.download')" :icon="IconDownload" to="/download" />
         <navigationBarStretch />
-        <navigationBarButton
-          :title="t('nav.settings')"
-          icon="/src/assets/icon/settings.svg"
-          to="/settings"
-        />
+        <navigationBarButton :title="t('nav.settings')" :icon="IconSettings" to="/settings" />
       </navigationBar>
       <navigationPanel>
         <router-view v-slot="{ Component }">

@@ -1,6 +1,10 @@
+<script setup lang="ts">
+import { IconApp } from '@/components/Fluent/icons'
+</script>
+
 <template>
   <div class="title-bar">
-    <img src="/src/assets/app.svg" alt="App Icon" />
+    <IconApp />
     <span>Bili23 Downloader</span>
   </div>
 </template>
@@ -14,7 +18,7 @@
   color: var(--text-primary);
 }
 
-.title-bar img {
+.title-bar svg {
   width: 18px;
   height: 18px;
   margin-left: 16px;

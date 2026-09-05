@@ -21,6 +21,16 @@ export default {
     tagNeedsReparse: '需二次解析',
   },
 
+  settings: {
+    title: '設定',
+    theme: {
+      label: '主題',
+      light: '淺色',
+      dark: '深色',
+      system: '系統預設',
+    },
+  },
+
   column: {
     number: '序號',
     title: '標題名稱',

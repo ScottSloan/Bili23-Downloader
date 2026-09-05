@@ -51,6 +51,19 @@
   /* 主色按钮上的文字 */
   --text-on-accent: rgb(255, 255, 255);
   --text-danger: rgb(196, 43, 28);
+  --text-disabled: rgba(0, 0, 0, 0.3614);
+
+  /* ---- 焦点环 ---- */
+  /* Fluent 的键盘焦点是双环：外层深色 2px + 内层浅色 1px，
+     深浅主题下两层对调，保证在任何背景上都有一层是可见的 */
+  --focus-stroke-outer: rgba(0, 0, 0, 0.8956);
+  --focus-stroke-inner: rgba(255, 255, 255, 0.7);
+
+  /* ---- 禁用态 ---- */
+  /* 控件的禁用填充复用 --control-fill-tertiary：
+     WinUI 里 ControlFillColorTertiary 与 ControlFillColorDisabled 本就是同一个值 */
+  --accent-fill-disabled: rgba(0, 0, 0, 0.2169);
+  --text-on-accent-disabled: rgb(255, 255, 255);
 }
 
 :root[data-theme='dark'] {
@@ -80,4 +93,11 @@
   --text-placeholder: rgb(154, 154, 154);
   --text-on-accent: rgb(0, 0, 0);
   --text-danger: rgb(255, 153, 164);
+  --text-disabled: rgba(255, 255, 255, 0.3628);
+
+  --focus-stroke-outer: rgb(255, 255, 255);
+  --focus-stroke-inner: rgba(0, 0, 0, 0.7);
+
+  --accent-fill-disabled: rgba(255, 255, 255, 0.1581);
+  --text-on-accent-disabled: rgba(255, 255, 255, 0.5302);
 }

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import type { Component, PropType } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 
 const route = useRoute()
@@ -10,9 +11,11 @@ const props = defineProps({
     default: '',
   },
 
+  // 图标传的是组件本身（见 @/components/Fluent/icons），不是 svg 路径字符串。
+  // 函数式组件也是合法取值，故运行期类型写成 [Object, Function]
   icon: {
-    type: String,
-    default: '',
+    type: [Object, Function] as PropType<Component | null>,
+    default: null,
   },
 
   active: {
@@ -32,18 +35,14 @@ const isActive = computed(() => props.active || (props.to ? route.path === props
 <template>
   <RouterLink v-if="to" :to="to" custom v-slot="{ navigate, href }">
     <a class="navigation-bar-button" :class="{ active: isActive }" :href="href" @click="navigate">
-      <svg v-if="icon" alt="Button Icon">
-        <use :href="icon" width="20" height="20" />
-      </svg>
+      <component :is="icon" v-if="icon" />
 
       <span>{{ title }}</span>
     </a>
   </RouterLink>
 
   <div v-else class="navigation-bar-button" :class="{ active: isActive }">
-    <svg v-if="icon" alt="Button Icon">
-      <use :href="icon" width="20" height="20" />
-    </svg>
+    <component :is="icon" v-if="icon" />
 
     <span>{{ title }}</span>
   </div>

@@ -24,6 +24,16 @@ export default {
     tagNeedsReparse: 'Needs re-parsing',
   },
 
+  settings: {
+    title: 'Settings',
+    theme: {
+      label: 'Theme',
+      light: 'Light',
+      dark: 'Dark',
+      system: 'System default',
+    },
+  },
+
   // 键与后端 parse_list_column 的 attr_key 一一对应
   column: {
     number: 'No.',
