@@ -19,6 +19,8 @@ from fastapi.responses import JSONResponse
 from util.common.config import config
 
 from .aria2 import Aria2Client, Aria2Process
+from .dispatch import install as install_dispatcher
+from .download import MergeCoordinator, StreamMonitor, StreamRegistry
 from .security import SessionStore, SESSION_COOKIE, generate_password, hash_password
 from .routes import aria2 as aria2_routes
 from .routes import auth as auth_routes
@@ -57,22 +59,42 @@ def ensure_password_configured() -> Optional[str]:
 @asynccontextmanager
 async def _lifespan(app: FastAPI):
     """
-    拉起 aria2 并连上它的 RPC
+    拉起 aria2、连上它的 RPC，并把「下载完成 → 合并」这条链路接起来
 
     **aria2 起不来不阻止服务启动**：那样用户连登录页都打不开，只能看着一个起不来的进程干瞪眼。
     改成照常提供服务，由 `/api/aria2/status` 报告它不可用 —— 至少能登进来看到原因
     """
+    # 必须在任何回调发生之前装好：不装的话，工作线程发出的事件会就地执行，
+    # 而其中一部分（WebSocket 推送）只能在事件循环线程上做，且失败时不报错
+    install_dispatcher()
+
     process = Aria2Process()
 
     client = Aria2Client(process.rpc_url, secret = process.secret)
 
+    registry = StreamRegistry()
+    monitor = StreamMonitor(client, registry)
+    merges = MergeCoordinator()
+
+    # aria2 报完最后一路流之后，剩下的（附加内容、合并、重命名）全在业务层
+    monitor.on_task_changed = merges.on_stream_snapshot
+
+    merges.attach()
+
     app.state.aria2_process = process
     app.state.aria2 = client
     app.state.aria2_error = None
+    app.state.streams = registry
+    app.state.monitor = monitor
+    app.state.merges = merges
 
     if process.start():
         try:
             await client.connect(timeout = 15)
+
+            monitor.attach()
+
+            await monitor.start()
 
         except Exception as e:
             app.state.aria2_error = str(e)
@@ -88,6 +110,12 @@ async def _lifespan(app: FastAPI):
         yield
 
     finally:
+        # 顺序有讲究：先停合并（里面的 FFmpeg 子进程不停掉会变成孤儿继续写输出文件），
+        # 再停进度轮询，最后才断 aria2 与它的进程
+        merges.shutdown()
+
+        await monitor.stop()
+
         await client.close()
 
         process.stop()

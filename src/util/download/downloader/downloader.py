@@ -11,7 +11,7 @@ from ...common.config import config
 from ...common.io.file import File
 
 from ...parse.additional.worker import AdditionalParseWorker
-from ...parse.additional.chapter import ChapterParser
+from ...parse.additional.runner import AdditionalRunner
 from ...thread.pool import GlobalThreadPoolTask
 from ...network.request import get_cookies, get_proxy_mounts, get_ssl_context
 from ...thread.async_ import AsyncTask
@@ -1097,13 +1097,8 @@ class Downloader(QObject):
         self.task_info.Download.speed = 0
         self.task_info.Download.progress = 100
 
-        danmaku = self.task_info.Download.type & DownloadType.DANMAKU != 0
-        subtitles = self.task_info.Download.type & DownloadType.SUBTITLE != 0
-        cover = self.task_info.Download.type & DownloadType.COVER != 0
-        metadata = self.task_info.Download.type & DownloadType.METADATA != 0
-        chapter = ChapterParser.is_available(self.task_info)
-
-        if any([danmaku, subtitles, cover, metadata, chapter]):
+        # 判定收敛在 AdditionalRunner 里，与 WebUI 共用一份 —— 这里原先是展开写的五个条件
+        if AdditionalRunner.has_work(self.task_info):
             self.task_info.Download.status = DownloadStatus.ADDITIONAL_PROCESSING
 
             # 附加内容解析同样跑在独立线程上，并且回调本对象，

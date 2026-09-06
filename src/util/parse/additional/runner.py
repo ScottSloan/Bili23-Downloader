@@ -44,6 +44,20 @@ class AdditionalRunner:
     def __init__(self, task_info: TaskInfo):
         self.task_info = task_info
 
+    @staticmethod
+    def has_work(task_info: TaskInfo) -> bool:
+        """
+        这个任务有没有附加内容要处理
+
+        调用方据此决定要不要把状态切到 ADDITIONAL_PROCESSING。两端共用同一个判断，
+        章节那一条尤其容易漏 —— 它不看 CHAPTER 位就够了，还要求存在合并步骤
+        """
+        attr = task_info.Download.type
+
+        flags = DownloadType.DANMAKU | DownloadType.SUBTITLE | DownloadType.COVER | DownloadType.METADATA
+
+        return attr & flags != 0 or ChapterParser.is_available(task_info)
+
     def run(self):
         # 读取 Download Type 标志位，决定下载哪种类型的附加文件
         attr = self.task_info.Download.type
