@@ -306,15 +306,16 @@ qInstallMessageHandler(qt_message_handler)
 
 # --------- Imports ---------
 
-from PySide6.QtCore import Qt, QLocale, QTranslator, QLockFile, QTimer, Signal, QCoreApplication
+from PySide6.QtCore import Qt, QLocale, QTranslator, QTimer, Signal, QCoreApplication
 from PySide6.QtNetwork import QLocalServer, QLocalSocket
-from PySide6.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication, QMessageBox
 from PySide6.QtGui import QFont
 
 from qfluentwidgets import FluentTranslator
 
 from util.common.config import config
 from util.common.enum import Language
+from util.common.single_instance import InstanceLock, INSTANCE_LOCK_NAME, MODE_GUI
 from util.common.translator import set_translate_function
 from gui.config_bridge import install as install_config_bridge
 import res.resources_rc
@@ -327,8 +328,6 @@ install_config_bridge()
 # 桌面版在这里换上 Qt 的实现。必须早于任何 Translator.XXX() 取值
 set_translate_function(QCoreApplication.translate)
 
-INSTANCE_LOCK_NAME = "instance.lock"
-INSTANCE_LOCK_TIMEOUT_MS = 10_000
 INSTANCE_SERVER_NAME = "bili23_downloader_single_instance"
 APP_MUTEX_NAME = "B096F0C1-D105-4EF9-86E1-5E87DA884EA4"
 
@@ -365,29 +364,68 @@ class Application(QApplication):
             self.app_mutex_handle = self._msw_create_mutex(APP_MUTEX_NAME)
 
     def init_single_instance(self):
-        lock_path = appdata_path / "locks" / INSTANCE_LOCK_NAME
+        # 与 WebUI 抢同一把锁（见 util/common/single_instance.py）。
+        # 锁由内核持有，进程一死立即释放，不再需要 QLockFile 那套 10 秒 stale 判定 ——
+        # 崩溃后可以立刻重开，也不会因为 PID 被复用而误判
+        self.instance_lock = InstanceLock(appdata_path / "locks" / INSTANCE_LOCK_NAME, MODE_GUI)
 
-        lock_path.parent.mkdir(parents = True, exist_ok = True)
-
-        self.instance_lock = QLockFile(str(lock_path))
-        self.instance_lock.setStaleLockTime(INSTANCE_LOCK_TIMEOUT_MS)
-
-        if self.instance_lock.tryLock(0):
+        if self.instance_lock.acquire():
             self.init_instance_server()
+
             return
 
-        self.instance_lock.removeStaleLockFile()
+        command = INSTANCE_COMMAND_ENSURE_RUNNING if self.ensure_running_mode else INSTANCE_COMMAND_ACTIVATE
 
-        if not self.instance_lock.tryLock(0):
-            command = INSTANCE_COMMAND_ENSURE_RUNNING if self.ensure_running_mode else INSTANCE_COMMAND_ACTIVATE
-
-            if self.wake_existing_instance(command):
-                sys.exit(0)
-
-            logger.warning("无法获取实例锁，程序已在运行中")
+        if self.wake_existing_instance(command):
             sys.exit(0)
 
-        self.init_instance_server()
+        # 唤醒失败：锁被占着但对方没在监听。最常见的情形是 WebUI 正占着锁 ——
+        # 那边没有窗口可以唤醒，如果只写日志，用户双击程序会毫无反应
+        description = self.instance_lock.describe_holder()
+
+        logger.warning("无法获取实例锁，%s", description)
+
+        if not self.ensure_running_mode:
+            self._show_instance_conflict(description)
+
+        sys.exit(0)
+
+    def _show_instance_conflict(self, description: str):
+        """
+        提示锁被另一边占着
+
+        此时翻译器还没装（`setup_app` 才装），所以按用户配置的语言手工选一份文案 ——
+        与上方 Windows 版本检查的做法一致
+        """
+        from util.common.enum import Language
+
+        language = config.get(config.language)
+
+        if language == Language.AUTO:
+            language = Language.ENGLISH if not QLocale.system().name().startswith("zh") else (
+                Language.CHINESE_TRADITIONAL
+                if QLocale.system().name() in ("zh_TW", "zh_HK", "zh_MO")
+                else Language.CHINESE_SIMPLIFIED
+            )
+
+        title, hint = {
+            Language.CHINESE_SIMPLIFIED: (
+                "无法启动",
+                "{}。\n\n桌面版与 WebUI 共用配置与任务数据，同一时间只能运行一个。"),
+            Language.CHINESE_TRADITIONAL: (
+                "無法啟動",
+                "{}。\n\n桌面版與 WebUI 共用設定與任務資料，同一時間只能執行一個。"),
+        }.get(language, (
+            "Cannot Start",
+            "{}.\n\nThe desktop app and the WebUI share the same config and task data, "
+            "so only one can run at a time."))
+
+        try:
+            QMessageBox.warning(None, title, hint.format(description))
+
+        except Exception:
+            # 弹窗失败不该拦住退出流程
+            logger.exception("显示实例冲突提示失败")
 
     def init_instance_server(self):
         if self.instance_server is not None:
@@ -464,7 +502,7 @@ class Application(QApplication):
         self.stop_mcp_server()
 
         if hasattr(self, "instance_lock"):
-            self.instance_lock.unlock()
+            self.instance_lock.release()
 
         if sys.platform == "win32" and hasattr(self, "app_mutex_handle") and self.app_mutex_handle:
             ctypes.windll.kernel32.CloseHandle(self.app_mutex_handle)
