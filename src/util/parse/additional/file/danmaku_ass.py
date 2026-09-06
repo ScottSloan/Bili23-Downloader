@@ -1,5 +1,18 @@
-from PySide6.QtWidgets import QApplication
-from PySide6.QtGui import QFontMetrics
+"""
+弹幕 → ASS
+
+**这个文件是 core 里唯一保留 Qt 的地方**（D16）。弹幕轨道排布要知道每条弹幕的像素宽度，
+`QFontMetrics` 是目前唯一现成的字体度量来源，没有便宜的替代品。
+
+用 QtGui 的 `QGuiApplication` 而不是 QtWidgets 的 `QApplication`：字体数据库只需要前者，
+而 QtWidgets 是整个 Qt 里最重的一块，WebUI 的容器里没必要带上它。
+注意 **`QCoreApplication` 不够** —— 那样构造 QFontMetrics 会让进程直接崩溃，连异常都没有。
+
+WebUI 侧要用这条链路，进程启动时必须先建好一个 offscreen 的 QGuiApplication 实例
+（不需要跑它的事件循环，见 D16）；容器里还得装 CJK 字体，否则度量会落到 fallback 字体上。
+"""
+
+from PySide6.QtGui import QGuiApplication, QFontMetrics
 
 from ....common.config import config
 from ....format.time import Time
@@ -82,7 +95,7 @@ class DanmakuLayoutEngine:
     def _load_config(self):
         style = config.get(config.danmaku_style)
         
-        font = QApplication.font()
+        font = QGuiApplication.font()
 
         font.setFamily(style["font"]["name"])
         font.setPixelSize(style["font"]["size"])
