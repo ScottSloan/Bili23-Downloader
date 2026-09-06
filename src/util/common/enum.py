@@ -1,5 +1,3 @@
-from PySide6.QtCore import QLocale
-
 from enum import Enum, IntEnum, IntFlag
 
 class ToastNotificationCategory(Enum):
@@ -23,11 +21,19 @@ class Scaling(Enum):
     AUTO = "Auto"
 
 class Language(Enum):
-    CHINESE_SIMPLIFIED = QLocale("zh_CN")
-    CHINESE_TRADITIONAL = QLocale("zh_TW")
-    ENGLISH = QLocale("en_US")
+    """
+    界面语言。取值是 BCP-47 语言标签，与 config.json 里存的字面量一致。
 
-    AUTO = QLocale()
+    这里曾经直接把 QLocale 对象当枚举值用，导致 enum.py 这个被全仓库引用的基础模块
+    绑死在 Qt 上，WebUI 进程连 import 都做不到。改成字符串后，需要 QLocale 的地方
+    （只有 main.py 装载翻译文件那一处）自行构造：AUTO 对应默认构造的 QLocale，即跟随系统。
+    """
+
+    CHINESE_SIMPLIFIED = "zh_CN"
+    CHINESE_TRADITIONAL = "zh_TW"
+    ENGLISH = "en_US"
+
+    AUTO = "Auto"
 
 class WhenClose(Enum):
     EXIT = 1

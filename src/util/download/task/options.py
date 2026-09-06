@@ -1,7 +1,5 @@
 from ...common.enum import DanmakuType, SubtitleType, CoverType, MetadataType, VideoContainer
-from ...common.config import config
-
-from qfluentwidgets import ConfigItem
+from ...common.config import config, Item
 
 from copy import deepcopy
 from enum import Enum
@@ -11,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 # 可固化的下载选项 → 对应的枚举类型，None 表示取值原样存取（布尔、字典）。
 #
-# 键名与 APPConfig 中同名的 ConfigItem 一一对应，回落时据此取全局设置，
+# 键名与 config 中同名的配置项一一对应，回落时据此取全局设置，
 # 因此增删选项时两边的名字必须保持一致。
 _OPTION_SPEC = {
     "video_container": VideoContainer,
@@ -54,8 +52,11 @@ def _global_value(key: str):
     item = getattr(config, key)
 
     # config 里混着两类状态：持久化项要经 get() 取值，纯运行时状态
-    # （keep_original_files_type 等）本身就是普通类属性，直接用
-    return config.get(item) if isinstance(item, ConfigItem) else item
+    # （keep_original_files_type 等）本身就是普通类属性，直接用。
+    #
+    # 这里的键是从 _OPTION_SPEC 动态取的，grep 字段名搜不到这些读取点 ——
+    # 换掉配置项的实现类型时**必须同步改这一行**，否则所有下载选项会静默走错分支
+    return config.get(item) if isinstance(item, Item) else item
 
 def snapshot(overrides: dict = None) -> dict:
     """

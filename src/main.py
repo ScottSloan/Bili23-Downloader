@@ -309,7 +309,13 @@ from PySide6.QtGui import QFont
 from qfluentwidgets import FluentTranslator
 
 from util.common.config import config
+from util.common.enum import Language
+from gui.config_bridge import install as install_config_bridge
 import res.resources_rc
+
+# 主题、强调色、字体仍由 qfluentwidgets 的全局 qconfig 提供（图标与样式表都从它读），
+# 必须在任何界面代码取用主题之前接好这座桥，详见 gui/config_bridge.py
+install_config_bridge()
 
 INSTANCE_LOCK_NAME = "instance.lock"
 INSTANCE_LOCK_TIMEOUT_MS = 10_000
@@ -488,8 +494,11 @@ class Application(QApplication):
 
         self.setFont(self.default_font)
 
-        # 加载翻译文件
-        locale: QLocale = config.get(config.language).value
+        # 加载翻译文件。Language 的取值是 BCP-47 语言标签，AUTO 对应默认构造的
+        # QLocale（跟随系统）—— 枚举值本身不再是 QLocale 对象，见 util/common/enum.py
+        language = config.get(config.language)
+
+        locale = QLocale() if language == Language.AUTO else QLocale(language.value)
 
         self.fluent_translator = FluentTranslator(locale)
         self.bili23_translator = QTranslator()

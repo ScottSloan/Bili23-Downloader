@@ -14,14 +14,13 @@ from ..widget.button import TransparentToolButton
 from ..widget.spinbox import SpinBox
 
 from util.common.enum import VideoContainer, ToastNotificationCategory
-from util.common.config import config, isWin11, APPConfig
+from util.common.config import config, isWin11
 from util.thread.pool import GlobalThreadPoolTask
 from util.common.icon import ExtendedFluentIcon
 from util.common.io.directory import Directory
 from util.common.translator import Translator
 from util.common.signal_bus import signal_bus
 
-from pathlib import Path
 import logging
 
 logger = logging.getLogger(__name__)
@@ -656,12 +655,7 @@ class OtherAdvancedSettingCard(ExpandGroupSettingCard):
         if not file_path:
             return
         
-        original_file = config.file
-        
-        config.load(file_path)
-        config.file = original_file  # 恢复原来的配置文件路径，避免误覆盖
-        
-        config.save()
+        config.import_from(file_path)
 
         config.appRestartSig.emit()
 
@@ -678,13 +672,10 @@ class OtherAdvancedSettingCard(ExpandGroupSettingCard):
         if not file_path:
             return
         
-        temp_config = APPConfig()
-        temp_config.load(config.file)
-        temp_config.file = Path(file_path)
-
-        temp_config.save()
-
-        logger.info("配置导出成功，路径：%s", file_path)
+        if config.export_to(file_path):
+            logger.info("配置导出成功，路径：%s", file_path)
+        else:
+            logger.error("配置导出失败，路径：%s", file_path)
 
     def on_reset_config(self):
         dialog = MessageBox(

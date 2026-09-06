@@ -128,7 +128,6 @@ def _collect_columns() -> list:
     ]
 
 def _collect_status() -> dict:
-    from ..common.serializer import LanguageSerializer
 
     interface = _get_parse_interface()
 
@@ -136,7 +135,7 @@ def _collect_status() -> dict:
         "version": config.app_version,
         # 界面语言与 GUI 共用同一个配置项（D5）。只给取值，翻译表两边各自维护（D12）：
         # "Auto" / "zh_CN" / "zh_TW" / "en_US"
-        "language": LanguageSerializer().serialize(config.get(config.language)),
+        "language": config.language.serialize(),
         "logged_in": bool(config.get(config.is_login)),
         "uname": config.user_uname or "",
         "uid": config.user_uid or "",
