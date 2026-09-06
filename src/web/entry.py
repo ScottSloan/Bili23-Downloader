@@ -86,9 +86,76 @@ def _serve(argv: List[str]) -> int:
 
         return 1
 
-    # TODO(S3-1)：起 FastAPI + uvicorn。届时 host / port 也在这里解析
-    logger.error("WebUI 后端尚未实现（S3-1）")
+    import uvicorn
 
-    print("WebUI 后端尚未实现，敬请期待。", file = sys.stderr)
+    from util.common.config import config
 
-    return 1
+    from .app import create_app, ensure_password_configured
+
+    host, port = _resolve_bind(argv)
+
+    # 首次启动生成随机口令。**必须在服务起来之前**打印，否则用户看不到
+    password = ensure_password_configured()
+
+    if password:
+        print("")
+        print("=" * 60)
+        print("  首次启动，已生成登录口令。这行只显示一次，请立即保存：")
+        print("")
+        print(f"    用户名：{config.get(config.webui_username)}")
+        print(f"    密码：  {password}")
+        print("")
+        print("  忘记了可以删除 config.json 里的 webui_password_hash 重新生成。")
+        print("=" * 60)
+        print("")
+
+    logger.info("WebUI 监听 http://%s:%d", host, port)
+
+    if host == "0.0.0.0":
+        logger.warning("正在监听所有网卡，请确认该端口不会被暴露到公网")
+
+    uvicorn.run(
+        create_app(),
+        host = host,
+        port = port,
+        # 日志已由 setup_logging 统一配置，让 uvicorn 沿用而不是自己再装一套
+        log_config = None,
+        access_log = False,
+    )
+
+    return 0
+
+def _resolve_bind(argv: List[str]):
+    """
+    解析监听地址。命令行 > 配置文件
+
+    命令行参数是给 Docker 用的：镜像里必须绑 0.0.0.0（否则端口映射不通），
+    而配置文件默认只听环回地址，从源码跑时不该无声无息地暴露到局域网
+    """
+    from util.common.config import config
+
+    host = config.get(config.webui_host)
+    port = config.get(config.webui_port)
+
+    for index, arg in enumerate(argv):
+        if arg == "--host" and index + 1 < len(argv):
+            host = argv[index + 1]
+
+        elif arg.startswith("--host="):
+            host = arg.split("=", 1)[1]
+
+        elif arg == "--port" and index + 1 < len(argv):
+            port = argv[index + 1]
+
+        elif arg.startswith("--port="):
+            port = arg.split("=", 1)[1]
+
+    try:
+        port = int(port)
+
+    except (TypeError, ValueError):
+        logger.warning("端口 %r 无法解析，回落到配置值", port)
+
+        port = config.get(config.webui_port)
+
+    return host, port

@@ -492,6 +492,21 @@ ITEMS = [
     _item("mcp_port", "MCP", 23330, ValueType.INT, range = (1024, 65535)),
     _item("mcp_token", "MCP", "", ValueType.STR),
 
+    # ---------------- WebUI ----------------
+    # 只有 --web-ui 那条路径会用到，桌面版不读。放在共享的 config.json 里是因为
+    # 两边本来就共用这一个文件（D5），单独再开一份配置只会多一处要同步的地方。
+    #
+    # host 默认只听环回地址：从源码跑时不该无声无息地暴露到局域网。
+    # Docker 里必须改成 0.0.0.0（否则端口映射不通），由镜像的启动参数负责
+    _item("webui_host", "WebUI", "127.0.0.1", ValueType.STR),
+    # 与 MCP 的 23330 相邻，避开 8080 之类的常见占用
+    _item("webui_port", "WebUI", 23331, ValueType.INT, range = (1024, 65535)),
+    _item("webui_username", "WebUI", "admin", ValueType.STR),
+    # 空值表示还没设过密码，首次启动会随机生成一个并打印到控制台
+    _item("webui_password_hash", "WebUI", "", ValueType.STR),
+    # 会话有效期（小时）。默认 7 天，与 qBittorrent 的量级接近
+    _item("webui_session_hours", "WebUI", 168, ValueType.INT, range = (1, 8760)),
+
     # ---------------- Update ----------------
     _item("include_prerelease", "Update", False, ValueType.BOOL),
 
