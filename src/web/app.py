@@ -9,6 +9,7 @@ FastAPI 应用
 QtWidgets 或 qfluentwidgets（`test/web_entry.py` 守着这一条）。
 """
 
+from contextlib import asynccontextmanager
 from typing import Optional
 import logging
 
@@ -17,7 +18,9 @@ from fastapi.responses import JSONResponse
 
 from util.common.config import config
 
+from .aria2 import Aria2Client, Aria2Process
 from .security import SessionStore, SESSION_COOKIE, generate_password, hash_password
+from .routes import aria2 as aria2_routes
 from .routes import auth as auth_routes
 from .routes import system as system_routes
 
@@ -51,7 +54,49 @@ def ensure_password_configured() -> Optional[str]:
 
     return password
 
-def create_app() -> FastAPI:
+@asynccontextmanager
+async def _lifespan(app: FastAPI):
+    """
+    拉起 aria2 并连上它的 RPC
+
+    **aria2 起不来不阻止服务启动**：那样用户连登录页都打不开，只能看着一个起不来的进程干瞪眼。
+    改成照常提供服务，由 `/api/aria2/status` 报告它不可用 —— 至少能登进来看到原因
+    """
+    process = Aria2Process()
+
+    client = Aria2Client(process.rpc_url, secret = process.secret)
+
+    app.state.aria2_process = process
+    app.state.aria2 = client
+    app.state.aria2_error = None
+
+    if process.start():
+        try:
+            await client.connect(timeout = 15)
+
+        except Exception as e:
+            app.state.aria2_error = str(e)
+
+            logger.error("连接 aria2 失败：%s", e)
+
+    else:
+        app.state.aria2_error = "aria2c 未能启动，请确认已安装并在 PATH 中，或在配置里指定 aria2_path"
+
+        logger.error(app.state.aria2_error)
+
+    try:
+        yield
+
+    finally:
+        await client.close()
+
+        process.stop()
+
+def create_app(with_aria2: bool = True) -> FastAPI:
+    """
+    with_aria2 = False 时不接管 aria2 的生命周期，供只关心 HTTP 层的测试使用 ——
+    不加这个开关，跑一次鉴权测试就得连带拉起一个 aria2 进程
+    """
     session_hours = config.get(config.webui_session_hours)
 
     sessions = SessionStore(ttl_seconds = session_hours * 3600)
@@ -62,6 +107,7 @@ def create_app() -> FastAPI:
         # 文档页也在鉴权之后 —— 未登录时不该泄漏接口清单
         docs_url = "/api/docs",
         openapi_url = "/api/openapi.json",
+        lifespan = _lifespan if with_aria2 else None,
     )
 
     app.state.sessions = sessions
@@ -82,5 +128,6 @@ def create_app() -> FastAPI:
 
     app.include_router(system_routes.router, prefix = "/api")
     app.include_router(auth_routes.router, prefix = "/api/auth")
+    app.include_router(aria2_routes.router, prefix = "/api/aria2")
 
     return app

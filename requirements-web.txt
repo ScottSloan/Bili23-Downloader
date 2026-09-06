@@ -5,3 +5,6 @@
 
 fastapi==0.141.1
 uvicorn[standard]==0.52.4
+# aria2 的 JSON-RPC 走 WebSocket（D4）。uvicorn[standard] 会顺带装上它，
+# 但我们是直接用的，显式声明以免上游哪天把它挪出 standard extra
+websockets==17.1

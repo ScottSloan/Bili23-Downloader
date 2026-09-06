@@ -507,6 +507,20 @@ ITEMS = [
     # 会话有效期（小时）。默认 7 天，与 qBittorrent 的量级接近
     _item("webui_session_hours", "WebUI", 168, ValueType.INT, range = (1, 8760)),
 
+    # ---------------- Aria2 ----------------
+    # WebUI 用 aria2 接管字节搬运（D4）。桌面版暂不使用，跑稳之后再决定是否跟进
+    #
+    # 留空则从 PATH 里找 aria2c；Docker 镜像里会显式指定
+    _item("aria2_path", "Aria2", "", ValueType.STR),
+    # 由本程序拉起并管理 aria2c 的生命周期。设为 False 时连接一个已经在跑的实例
+    # （Docker 里把 aria2 拆成 sidecar 时会用到）
+    _item("aria2_managed", "Aria2", True, ValueType.BOOL),
+    _item("aria2_rpc_host", "Aria2", "127.0.0.1", ValueType.STR),
+    _item("aria2_rpc_port", "Aria2", 23332, ValueType.INT, range = (1024, 65535)),
+    # 空值表示还没生成过，首次启动会随机生成一个。
+    # **aria2 的 RPC 没有令牌就是裸奔的**，本机任何进程都能往里塞下载任务
+    _item("aria2_rpc_secret", "Aria2", "", ValueType.STR),
+
     # ---------------- Update ----------------
     _item("include_prerelease", "Update", False, ValueType.BOOL),
 
