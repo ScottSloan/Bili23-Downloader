@@ -3,7 +3,8 @@ from PySide6.QtGui import QImage
 
 from shiboken6 import isValid
 
-from ...network.request import SyncNetWorkRequest, ResponseType
+from util.network.request import SyncNetWorkRequest, ResponseType
+from util.download.cover.manager import cover_manager
 
 from urllib.parse import urlencode
 import base64
@@ -13,6 +14,13 @@ import httpx
 logger = logging.getLogger(__name__)
 
 class CoverQueryWorker(QRunnable):
+    """
+    异步取封面：先查本地库，没有再下载，转成 QImage 后投回 GUI 线程
+
+    **属于界面渲染，不属于 core**。它整个是 Qt 的（QImage / QBuffer / QMetaObject），
+    而 WebUI 那边把封面地址直接交给浏览器，用不着这条链路
+    """
+
     def __init__(self, model, query_id: str, cover_id: str, cover_url: str, cover_size: QSize, query_param: dict = None):
         super().__init__()
     

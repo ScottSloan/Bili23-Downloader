@@ -1,12 +1,18 @@
-from PySide6.QtCore import Qt, QAbstractListModel, QSize, QThreadPool
-from PySide6.QtGui import QPixmap
+"""
+封面的标识与持久化
 
-from .query_worker import CoverQueryWorker
-from .db import CoverDatabase
-from .cache import CoverCache
+**只留不依赖 Qt 的部分。** 封面的异步加载与 QPixmap 缓存属于界面渲染，
+已移到 `gui/component/view_model/cover_loader.py` ——
+这个模块被 `task/manager.py` 与 `parser/favorite.py` 引用，而它们在 WebUI 侧也要用（D16）。
+
+WebUI 那边不需要 QPixmap：封面地址直接交给浏览器加载即可，
+它要的只是 `arrange_cover_id` 算出来的那个标识。
+"""
 
 from functools import lru_cache
 from hashlib import md5
+
+from .db import CoverDatabase
 
 @lru_cache(maxsize = 8192)
 def _calc_cover_id(cover_url: str):
@@ -17,12 +23,6 @@ class CoverManager:
     def __init__(self):
         self.db_manager = CoverDatabase()
 
-        # 为封面加载专门创建一个独立的线程池
-        self.thread_pool = QThreadPool()
-
-        # 作为典型的网络/数据库 I/O 密集型任务，可适当增加最大线程数并发处理
-        self.thread_pool.setMaxThreadCount(16)
-
     def arrange_cover_id(self, cover_url: str):
         # 缓存放在模块级函数上：装饰实例方法会把 self 一并作为缓存键持有，且原先没有上限
         return _calc_cover_id(cover_url)
@@ -32,24 +32,5 @@ class CoverManager:
 
     def query(self, cover_id: str):
         return self.db_manager.query_cover(cover_id)
-    
-    def request(self, model: QAbstractListModel, query_id: str, cover_id: str, cover_url: str, cover_size: QSize, query_param: dict = None):
-        worker = CoverQueryWorker(model, query_id, cover_id, cover_url, cover_size, query_param)
-
-        self.thread_pool.start(worker)
-
-    def placeholder(self, cover_size: QSize):
-        placeholder_pixmap = QPixmap(":/bili23/image/placeholder.png")
-        placeholder_pixmap = placeholder_pixmap.scaled(cover_size, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
-
-        return placeholder_pixmap
-    
-    def updateCache(self, cover_id: str, cover_data: bytes):
-        if cover_id not in CoverCache.cache:
-            CoverCache.cache[cover_id] = cover_data
-
-    def getCache(self, cover_id: str):
-        return CoverCache.cache.get(cover_id, None)
 
 cover_manager = CoverManager()
-    

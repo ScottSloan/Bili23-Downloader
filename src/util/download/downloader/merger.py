@@ -26,8 +26,6 @@ class Merger:
     挂上 parent 链；换成 `FFmpegTask`（普通线程 + 调度层回调）之后这层继承就没有意义了。
     进度与结果的回调由 `thread/dispatch.py` 投递：桌面侧回到 GUI 线程，服务端侧进事件队列。
 
-    注意：**目前它还不能在无 Qt 环境里导入** —— `task/manager.py` 用了 `thread/pool.py` 的
-    `GlobalThreadPoolTask`（QThreadPool），这条传递依赖尚未处理，见 PROGRESS 的待解决。
     """
 
     def __init__(self, task_info: TaskInfo):

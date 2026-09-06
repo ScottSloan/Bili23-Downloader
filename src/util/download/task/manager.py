@@ -9,7 +9,7 @@ from ...common.config import config
 
 from ...parse.episode.tree import EpisodeData, Attribute
 from ...format.file_name import FileNameFormatter
-from ...thread.pool import GlobalThreadPoolTask
+from ...thread import background
 
 from ..cover.manager import cover_manager
 from .reparse_worker import ReparseWorker
@@ -48,7 +48,7 @@ class TaskManager:
         signal_bus.download.create_task.connect(self._create_async)
 
     def _create_async(self, episode_info_list: List[dict], show_toast: bool = False, options: dict = None):
-        GlobalThreadPoolTask.run_func(self.create, episode_info_list, show_toast, options)
+        background.run(self.create, episode_info_list, show_toast, options)
 
     def _show_add_to_queue_toast(self):
         with self._add_to_queue_toast_lock:
@@ -176,7 +176,8 @@ class TaskManager:
             # 二次解析出的条目最终还是要走回 create()，本次指定的下载选项
             # 必须一并带过去，否则收藏夹、个人空间里的视频会悄悄退回全局设置
             worker = ReparseWorker(episode_info, show_toast, options)
-            GlobalThreadPoolTask.run(worker)
+
+            background.run(worker.run)
 
             return True
 

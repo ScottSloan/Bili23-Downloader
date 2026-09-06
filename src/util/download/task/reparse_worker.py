@@ -1,5 +1,3 @@
-from PySide6.QtCore import QRunnable
-
 from ...parse.episode.bangumi import BangumiEpisodeParser
 from ...parse.episode.tree import EpisodeData, Attribute
 from ...parse.episode.cheese import CheeseEpisodeParser
@@ -18,7 +16,14 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-class ReparseWorker(QRunnable, ParserBase):
+class ReparseWorker(ParserBase):
+    """
+    二次解析：收藏夹、个人空间里的条目只有摘要，下载前要补齐完整信息
+
+    原先继承 QRunnable 只是为了能塞进 `QThreadPool.start()`。`run()` 本身是纯 Python，
+    而本模块在 WebUI 侧也要用（D16），所以改由 `thread/background.py` 调度
+    """
+
     def __init__(self, episode_info: dict, show_toast: bool = False, options: dict = None):
         super().__init__()
 

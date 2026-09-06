@@ -4,7 +4,7 @@ from ...common.enum import ParserType
 from ...common.config import config
 
 from ...download.task.manager import task_manager
-from ...thread.pool import GlobalThreadPoolTask
+from ...thread import background
 
 from .tree import TreeItem, Attribute
 from .base import EpisodeParserBase
@@ -105,7 +105,7 @@ class DynamicEpisodeParser(EpisodeParserBase):
 
         # 根据设置决定是否自动添加到下载列表
         if config.get(config.auto_add_to_download_list):
-            GlobalThreadPoolTask.run_func(task_manager.create, node.get_all_children(to_dict = True), False)
+            background.run(task_manager.create, node.get_all_children(to_dict = True), False)
 
         # 去除 raw_node 最外层的根节点，只把其子节点交给 GUI 线程挂载
         self.append_nodes(node.children)
