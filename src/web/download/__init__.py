@@ -10,12 +10,16 @@ WebUI 的下载编排
 - `additional.py` —— 附加内容走 httpx，不进 aria2；编排与桌面版同一份
 - `merge.py`     —— 下载完成 → 附加内容 → FFmpeg 合并，合并并发固定为 1
 - `reconcile.py` —— 重启对账，以 task.db 为唯一权威
+- `view.py`      —— TaskInfo → 前端形状；快照与增量共用同一份序列化
+- `publisher.py` —— signal_bus 的任务事件 → WebSocket 增量事件
 """
 
 from . import additional
 from .merge import MergeCoordinator, MAX_CONCURRENT_MERGES
 from .monitor import StreamMonitor, POLL_INTERVAL
+from .publisher import TaskPublisher
 from .reconcile import Reconciler
+from .view import task_view, task_views, status_name
 from .resolver import (
     extract_urls, format_cookie, build_headers, build_options, build_global_options,
     remember_stream, stream_record, stream_keys,
@@ -32,7 +36,8 @@ __all__ = [
     "additional",
     "MergeCoordinator", "MAX_CONCURRENT_MERGES",
     "StreamMonitor", "POLL_INTERVAL",
-    "Reconciler",
+    "Reconciler", "TaskPublisher",
+    "task_view", "task_views", "status_name",
     "StreamRegistry", "TaskStreams", "StreamState",
     "TASK_PREPARING", "TASK_ACTIVE", "TASK_WAITING", "TASK_PAUSED",
     "TASK_ERROR", "TASK_COMPLETE", "TASK_REMOVED",

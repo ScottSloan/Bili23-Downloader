@@ -20,9 +20,11 @@ from util.common.config import config
 
 from .aria2 import Aria2Client, Aria2Process
 from .dispatch import install as install_dispatcher
-from .download import MergeCoordinator, Reconciler, StreamMonitor, StreamRegistry
+from .download import MergeCoordinator, Reconciler, StreamMonitor, StreamRegistry, TaskPublisher
+from .events import EventHub
 from .security import SessionStore, SESSION_COOKIE, generate_password, hash_password
 from .routes import aria2 as aria2_routes
+from .routes import events as events_routes
 from .routes import auth as auth_routes
 from .routes import system as system_routes
 
@@ -57,7 +59,31 @@ def ensure_password_configured() -> Optional[str]:
     return password
 
 @asynccontextmanager
-async def _lifespan(app: FastAPI):
+async def _base_lifespan(app: FastAPI):
+    """
+    与 aria2 无关的那部分：事件总线
+
+    **不能只在带 aria2 的形态下建。** 快照与 WebSocket 属于 HTTP 层，
+    aria2 起不起得来都要能用 —— 否则「aria2 未连接」这件事本身就推不到前端
+    """
+    hub = EventHub()
+    publisher = TaskPublisher(hub)
+
+    publisher.attach()
+
+    app.state.events = hub
+    app.state.publisher = publisher
+
+    try:
+        yield
+
+    finally:
+        # 订阅一定要解开：signal_bus 持的是强引用，不解开的话这个 hub 会一直收事件，
+        # 往一个再也没人读的队列里塞，直到进程结束
+        publisher.detach()
+
+@asynccontextmanager
+async def _aria2_lifespan(app: FastAPI):
     """
     拉起 aria2、连上它的 RPC，并把「下载完成 → 合并」这条链路接起来
 
@@ -77,8 +103,14 @@ async def _lifespan(app: FastAPI):
     merges = MergeCoordinator()
     reconciler = Reconciler(client, registry, merges)
 
-    # aria2 报完最后一路流之后，剩下的（附加内容、合并、重命名）全在业务层
-    monitor.on_task_changed = merges.on_stream_snapshot
+    # aria2 报完最后一路流之后，剩下的（附加内容、合并、重命名）全在业务层。
+    # 进度快照同时要往前端推 —— 一个回调两个去处，这里做扇出
+    def _on_stream_changed(snapshot: dict):
+        merges.on_stream_snapshot(snapshot)
+
+        app.state.events.publish("stream.progress", snapshot)
+
+    monitor.on_task_changed = _on_stream_changed
 
     merges.attach()
 
@@ -94,6 +126,8 @@ async def _lifespan(app: FastAPI):
     # 最后一次的进度上 —— 后端还在正常响应 HTTP，这种「假活」最难查
     async def _on_reconnect():
         logger.info("aria2 已重连，重新对账")
+
+        app.state.publisher.publish_aria2(True)
 
         await reconciler.run()
 
@@ -121,6 +155,8 @@ async def _lifespan(app: FastAPI):
 
         logger.error(app.state.aria2_error)
 
+        app.state.publisher.publish_aria2(False, app.state.aria2_error)
+
     try:
         yield
 
@@ -144,6 +180,19 @@ async def _lifespan(app: FastAPI):
 
         process.stop()
 
+def _lifespan_for(with_aria2: bool):
+    """事件总线永远要，aria2 那段按需叠加"""
+    if not with_aria2:
+        return _base_lifespan
+
+    @asynccontextmanager
+    async def _combined(app: FastAPI):
+        async with _base_lifespan(app):
+            async with _aria2_lifespan(app):
+                yield
+
+    return _combined
+
 def create_app(with_aria2: bool = True) -> FastAPI:
     """
     with_aria2 = False 时不接管 aria2 的生命周期，供只关心 HTTP 层的测试使用 ——
@@ -159,7 +208,7 @@ def create_app(with_aria2: bool = True) -> FastAPI:
         # 文档页也在鉴权之后 —— 未登录时不该泄漏接口清单
         docs_url = "/api/docs",
         openapi_url = "/api/openapi.json",
-        lifespan = _lifespan if with_aria2 else None,
+        lifespan = _lifespan_for(with_aria2),
     )
 
     app.state.sessions = sessions
@@ -181,5 +230,6 @@ def create_app(with_aria2: bool = True) -> FastAPI:
     app.include_router(system_routes.router, prefix = "/api")
     app.include_router(auth_routes.router, prefix = "/api/auth")
     app.include_router(aria2_routes.router, prefix = "/api/aria2")
+    app.include_router(events_routes.router, prefix = "/api")
 
     return app
