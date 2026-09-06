@@ -16,6 +16,23 @@ if "--mcp-stdio" in sys.argv:
 
     sys.exit(run_stdio_bridge())
 
+# --------- WebUI 分流 ---------
+
+# `--web-ui` 走完全不同的一条路：起 FastAPI 服务，不创建任何窗口。
+#
+# 位置同样要排在界面代码之前 —— 这个进程里**不该出现 QtWidgets 与 qfluentwidgets**，
+# 那是 PLAN 对 S2-8 的验收标准。QtCore / QtGui 按 D16 是允许的（弹幕转 ASS 要 QFontMetrics），
+# 但绝不能依赖 Qt 事件循环，因为那边跑的是 uvicorn 的 asyncio 循环。
+#
+# 也刻意排在下面的 Windows 版本检查之前：那条检查针对的是 Qt 6 的界面，
+# 而 WebUI 不开窗口。**代价**是 Win7 上跑 --web-ui 直到用到 QtGui（弹幕转 ASS）
+# 才会失败，而不是启动时就给提示 —— 这类系统上本就该用 Docker 镜像。
+
+if "--web-ui" in sys.argv:
+    from web.entry import run_web_ui
+
+    sys.exit(run_web_ui(sys.argv))
+
 # --------- System Version Check ---------
 
 # 低于 Windows 10 1809 的系统不支持 QT 6
@@ -77,7 +94,6 @@ if sys.platform == "win32":
 
         sys.exit(1)
 
-from logging.handlers import TimedRotatingFileHandler
 from datetime import datetime
 from pathlib import Path
 import logging
@@ -91,40 +107,11 @@ import os
 # 于是这段代码的正确性依赖「它排在 QApplication 构造之前」这个隐式时序。
 # 该模块只依赖 platformdirs，不牵扯 Qt，也就没有这个时序问题
 from util.common._config.paths import get_data_dir
+from util.common.logging_setup import setup_logging
 
 appdata_path = get_data_dir()
 
-log_path = appdata_path / "logs" / "app.log"
-log_path.parent.mkdir(parents = True, exist_ok = True)
-
-class CompactLogFormatter(logging.Formatter):
-    def format(self, record):
-        record.callsite = f"{record.filename}:{record.lineno} in {record.funcName}"
-        return super().format(record)
-
-    def formatTime(self, record, datefmt = None):
-        dt = datetime.fromtimestamp(record.created)
-
-        if datefmt:
-            return dt.strftime(datefmt)
-        
-        return dt.isoformat(sep = " ", timespec = "microseconds")
-
-log_formatter = CompactLogFormatter(
-    "[%(asctime)s] - %(name)s - %(levelname)s - at %(callsite)s: %(message)s",
-    datefmt = "%Y-%m-%d %H:%M:%S.%f",
-)
-
-stream_handler = logging.StreamHandler(sys.stdout)
-stream_handler.setFormatter(log_formatter)
-
-file_handler = TimedRotatingFileHandler(log_path, when = "midnight", interval = 1, backupCount = 15, encoding = "utf-8")
-file_handler.setFormatter(log_formatter)
-
-logging.basicConfig(
-    level = logging.INFO,
-    handlers = [stream_handler, file_handler]
-)
+log_path = setup_logging("app.log")
 
 # --------- Crash Handler ---------
 
