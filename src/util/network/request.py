@@ -1,4 +1,19 @@
-from PySide6.QtCore import Signal, QObject, Slot
+"""
+HTTP 客户端与请求封装
+
+本模块**不依赖 Qt**，两端共用：
+
+- `SyncNetWorkRequest` —— 阻塞式请求，全仓库 62 处调用（几乎整条解析链）。
+  桌面侧在工作线程里直接调 `run()`；服务端侧用 `await asyncio.to_thread(req.run)`，
+  或按需另起 httpx 的 AsyncClient。
+- Qt 信号版的 worker 在 `worker.py`，**只属于桌面侧**（D16）。
+
+不要把 worker 挪回来：那样这 62 处调用会连带无法在 WebUI 进程里使用。
+
+httpx 客户端是全局单例且惰性创建（`_ensure_client`），cookie 存在 config.json 里，
+随数据目录一起走 —— Docker 挂卷时用 `BILI23_DATA_DIR` 覆盖数据目录即可，
+不需要为 cookie 单独准备一条路径。
+"""
 
 from ..common._json import json_loads
 from ..common.config import config
@@ -360,33 +375,6 @@ class SyncNetWorkRequest:
             headers.update(self.extra_headers)
 
         return headers
-
-class NetworkRequestWorker(SyncNetWorkRequest, QObject):
-    success = Signal(object)
-    error = Signal(str)
-    finished = Signal()
-
-    def __init__(self, url: str, request_type: RequestType = RequestType.GET, params: dict = None, response_type: ResponseType = ResponseType.JSON, raise_for_status: bool = True, json_data: dict = None, data: dict = None, content_type: str = None, extra_headers: dict = None):
-        SyncNetWorkRequest.__init__(self, url, request_type, params, response_type, raise_for_status, json_data, data, content_type, extra_headers)
-        QObject.__init__(self)
-
-    @Slot()
-    def run(self):
-        try:
-            resp = super().run()
-
-            self.success.emit(resp)
-
-        except Exception as e:
-            self.error.emit(str(e))
-
-        finally:
-            self.proxies = None
-
-            self.finished.emit()
-
-    def set_proxies(self, proxies: dict):
-        self.proxies = proxies
 
 def get_cookies():
     cookies = {

@@ -2,7 +2,8 @@ from ..common.timestamp import get_timestamp, get_timestamp_next_day
 from ..common.data import get_exclimbwuzhi_payload
 from ..common.config import config
 
-from ..network.request import NetworkRequestWorker, RequestType, update_cookies
+from ..network.request import RequestType, update_cookies
+from ..network.worker import NetworkRequestWorker
 from ..thread.async_ import AsyncTask
 from .base import AuthBase
 

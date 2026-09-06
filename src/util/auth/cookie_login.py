@@ -2,7 +2,8 @@ from PySide6.QtCore import QObject, Signal, Slot
 
 from ..common.translator import Translator
 
-from ..network.request import NetworkRequestWorker, set_client_cookies, delete_client_cookies, update_cookies as sync_cookies_from_config
+from ..network.request import set_client_cookies, delete_client_cookies, update_cookies as sync_cookies_from_config
+from ..network.worker import NetworkRequestWorker
 from ..thread.async_ import AsyncTask
 from .base import AuthBase
 

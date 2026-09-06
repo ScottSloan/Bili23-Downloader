@@ -5,7 +5,8 @@ from ...common.signal_bus import signal_bus
 from ...common.translator import Translator
 from ...common.config import config
 
-from ...network.request import NetworkRequestWorker, RequestType
+from ...network.request import RequestType
+from ...network.worker import NetworkRequestWorker
 from ...thread.async_ import AsyncTask
 
 from ..parser.base import ParserBase

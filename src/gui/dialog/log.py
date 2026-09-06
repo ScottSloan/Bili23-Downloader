@@ -9,7 +9,7 @@ from gui.component.dialog import FluentWidget
 
 from gui.icon import ExtendedFluentIcon
 from util.common.io.directory import Directory
-from util.common.config import appdata_path
+from util.common.config import data_dir
 
 from pathlib import Path
 import re
@@ -88,7 +88,7 @@ class LogViewerDialog(FluentWidget):
         self.refresh_btn.clicked.connect(self.refresh_logs)
 
     def init_data(self):
-        self.log_path = Path(appdata_path) / "Bili23 Downloader" / "logs" / "app.log"
+        self.log_path = data_dir / "logs" / "app.log"
 
         log_records = self.parse_log_file(self.log_path)
 

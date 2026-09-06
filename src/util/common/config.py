@@ -35,9 +35,10 @@ def isWin11():
 
 config_path = get_config_path()
 
-# 兼容旧写法：调用方普遍写成 `Path(appdata_path) / "Bili23 Downloader" / "task.db"`，
-# 因此这里给的是**数据目录的上一层**。新代码请直接用 get_data_dir()
-appdata_path = str(get_data_dir().parent)
+# 用户数据目录：config.json / task.db / thumbnail.db / history.db / logs / locks 都在这里。
+# 可用环境变量 BILI23_DATA_DIR 覆盖（Docker 把卷挂到那里），因此**不要**再假设它一定是
+# `<AppData>/Bili23 Downloader` 并自行拼路径 —— 那样覆盖之后数据会散到两个目录去
+data_dir = get_data_dir()
 
 config = Config(config_path)
 
@@ -54,4 +55,4 @@ if need_patch:
 
     patch_config(config, config_version)
 
-__all__ = ["config", "config_path", "appdata_path", "isWin11", "DefaultValue", "Config", "Item"]
+__all__ = ["config", "config_path", "data_dir", "isWin11", "DefaultValue", "Config", "Item"]

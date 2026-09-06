@@ -2,7 +2,8 @@ from ..common.signal_bus import signal_bus
 from ..common.translator import Translator
 from ..common.config import config
 
-from ..network.request import NetworkRequestWorker, RequestType, ResponseType
+from ..network.request import RequestType, ResponseType
+from ..network.worker import NetworkRequestWorker
 from ..thread.async_ import AsyncTask
 from .base import AuthBase
 

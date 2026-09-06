@@ -1,6 +1,7 @@
 from PySide6.QtCore import QObject, Signal, Slot
 
-from ..network.request import NetworkRequestWorker, RequestType
+from ..network.request import RequestType
+from ..network.worker import NetworkRequestWorker
 from ..common.signal_bus import signal_bus
 from ..thread.async_ import AsyncTask
 

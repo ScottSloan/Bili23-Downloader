@@ -1,5 +1,5 @@
 from ..common.timestamp import get_timestamp
-from ..common.config import appdata_path
+from ..common.config import data_dir
 from ..common.database import Database
 
 from pathlib import Path
@@ -9,7 +9,7 @@ class HistoryDatabase(Database):
     def __init__(self):
         super().__init__()
 
-        self.path = Path(appdata_path) / "Bili23 Downloader" / "history.db"
+        self.path = data_dir / "history.db"
 
         self.max_length = 100
 

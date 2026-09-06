@@ -1,7 +1,7 @@
 from PySide6.QtCore import QObject, Signal, Slot, QSize, Qt, QTimer
 from PySide6.QtGui import QImage, QPainter, QPixmap
 
-from ..network.request import NetworkRequestWorker
+from ..network.worker import NetworkRequestWorker
 from ..common.enum import QRCodeScanStatus
 from ..thread.async_ import AsyncTask
 from .base import AuthBase

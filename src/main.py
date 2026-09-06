@@ -77,8 +77,6 @@ if sys.platform == "win32":
 
         sys.exit(1)
 
-from PySide6.QtCore import QStandardPaths
-
 from logging.handlers import TimedRotatingFileHandler
 from datetime import datetime
 from pathlib import Path
@@ -87,9 +85,16 @@ import os
 
 # --------- Logging Configuration ---------
 
-appdata_path = QStandardPaths.writableLocation(QStandardPaths.StandardLocation.AppDataLocation)
+# 数据目录统一由 util/common/_config/paths.py 决定（可用 BILI23_DATA_DIR 覆盖），
+# 不要在这里另算一份 —— 原先用的是 QStandardPaths.AppDataLocation，
+# 它**在没有 QApplication 实例时**返回裸目录、有实例时会自动拼上 applicationName，
+# 于是这段代码的正确性依赖「它排在 QApplication 构造之前」这个隐式时序。
+# 该模块只依赖 platformdirs，不牵扯 Qt，也就没有这个时序问题
+from util.common._config.paths import get_data_dir
 
-log_path = Path(appdata_path) / "Bili23 Downloader" / "logs" / "app.log"
+appdata_path = get_data_dir()
+
+log_path = appdata_path / "logs" / "app.log"
 log_path.parent.mkdir(parents = True, exist_ok = True)
 
 class CompactLogFormatter(logging.Formatter):
@@ -360,7 +365,7 @@ class Application(QApplication):
             self.app_mutex_handle = self._msw_create_mutex(APP_MUTEX_NAME)
 
     def init_single_instance(self):
-        lock_path = Path(appdata_path) / "Bili23 Downloader" / "locks" / INSTANCE_LOCK_NAME
+        lock_path = appdata_path / "locks" / INSTANCE_LOCK_NAME
 
         lock_path.parent.mkdir(parents = True, exist_ok = True)
 
@@ -485,9 +490,9 @@ class Application(QApplication):
         # 桌面环境据此无法把窗口与 bili23-downloader.desktop 关联，任务栏里的图标和名称都不对。
         # desktop_file_name 同时决定 Wayland 下的 app_id。
         #
-        # 注意：AppDataLocation 会拼接 application_name，这里必须晚于模块导入期
-        # （main.py 与 util/common/config.py 中的 appdata_path 均在导入期取值），
-        # 否则用户数据目录会平移一层。
+        # 注意：Qt 的 AppDataLocation 会拼接 application_name。本程序的数据目录已改由
+        # platformdirs 决定（见 util/common/_config/paths.py），不再受这里的调用时机影响，
+        # 但 qfluentwidgets 等第三方库仍可能读 QStandardPaths，顺序照旧不要提前。
         self.setApplicationName("Bili23 Downloader")
         self.setApplicationDisplayName("Bili23 Downloader")
         self.setDesktopFileName("bili23-downloader")

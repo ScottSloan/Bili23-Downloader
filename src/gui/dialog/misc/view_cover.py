@@ -7,7 +7,8 @@ from qfluentwidgets import PushButton, FluentIcon
 from gui.component.widget.label import ImageLabel
 from gui.component.dialog import FluentWidget
 
-from util.network.request import NetworkRequestWorker, ResponseType
+from util.network.request import ResponseType
+from util.network.worker import NetworkRequestWorker
 from util.thread.async_ import AsyncTask
 
 class ViewCoverDialog(FluentWidget):

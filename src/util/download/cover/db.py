@@ -1,5 +1,5 @@
 from ...common.timestamp import get_timestamp
-from ...common.config import appdata_path
+from ...common.config import data_dir
 from ...common.database import Database
 
 from pathlib import Path
@@ -12,7 +12,7 @@ class CoverDatabase(Database):
     def __init__(self):
         super().__init__()
 
-        self.path = Path(appdata_path) / "Bili23 Downloader" / "thumbnail.db"
+        self.path = data_dir / "thumbnail.db"
         self.path.parent.mkdir(parents = True, exist_ok = True)
 
         self.check_and_create_table()

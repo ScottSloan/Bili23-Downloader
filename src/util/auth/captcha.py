@@ -1,4 +1,4 @@
-from ..network.request import NetworkRequestWorker
+from ..network.worker import NetworkRequestWorker
 from ..common.signal_bus import signal_bus
 from ..thread.async_ import AsyncTask
 from ..misc.web import WebPage

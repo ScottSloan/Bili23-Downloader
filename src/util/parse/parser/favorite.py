@@ -1,4 +1,4 @@
-from ...network.request import NetworkRequestWorker
+from ...network.worker import NetworkRequestWorker
 from ...download.cover.manager import cover_manager
 from ...thread.dispatcher import post_to_main_thread
 from ...thread.async_ import AsyncTask

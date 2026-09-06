@@ -6,7 +6,7 @@ from qfluentwidgets import SubtitleLabel, BodyLabel, LineEdit, PushButton, Messa
 from gui.component.setting import SettingComboBox
 from gui.component.dialog import DialogBase
 
-from util.network.request import NetworkRequestWorker
+from util.network.worker import NetworkRequestWorker
 from util.thread.async_ import AsyncTask
 from util.common.config import config
 

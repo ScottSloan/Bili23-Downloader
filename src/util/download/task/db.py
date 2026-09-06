@@ -1,5 +1,5 @@
 from ...common._json import json_loads, json_dumps
-from ...common.config import appdata_path, config
+from ...common.config import data_dir, config
 from ...common.timestamp import get_timestamp
 from ...common.database import Database
 from .hash_id import calc_hash_id, HASH_ID_VERSION
@@ -15,7 +15,7 @@ class TaskDatabase(Database):
     def __init__(self):
         super().__init__()
 
-        self.path = Path(appdata_path) / "Bili23 Downloader" / "task.db"
+        self.path = data_dir / "task.db"
         self.path.parent.mkdir(parents = True, exist_ok = True)
 
         self.check_and_create_table()
