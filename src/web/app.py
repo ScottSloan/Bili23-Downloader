@@ -20,7 +20,7 @@ from util.common.config import config
 
 from .aria2 import Aria2Client, Aria2Process
 from .dispatch import install as install_dispatcher
-from .download import MergeCoordinator, StreamMonitor, StreamRegistry
+from .download import MergeCoordinator, Reconciler, StreamMonitor, StreamRegistry
 from .security import SessionStore, SESSION_COOKIE, generate_password, hash_password
 from .routes import aria2 as aria2_routes
 from .routes import auth as auth_routes
@@ -75,6 +75,7 @@ async def _lifespan(app: FastAPI):
     registry = StreamRegistry()
     monitor = StreamMonitor(client, registry)
     merges = MergeCoordinator()
+    reconciler = Reconciler(client, registry, merges)
 
     # aria2 报完最后一路流之后，剩下的（附加内容、合并、重命名）全在业务层
     monitor.on_task_changed = merges.on_stream_snapshot
@@ -87,12 +88,26 @@ async def _lifespan(app: FastAPI):
     app.state.streams = registry
     app.state.monitor = monitor
     app.state.merges = merges
+    app.state.reconciler = reconciler
+
+    # aria2 崩溃重启后 gid 全部作废，必须重新对一次账，否则界面上的任务会永远停在
+    # 最后一次的进度上 —— 后端还在正常响应 HTTP，这种「假活」最难查
+    async def _on_reconnect():
+        logger.info("aria2 已重连，重新对账")
+
+        await reconciler.run()
+
+    client.on_reconnect = _on_reconnect
 
     if process.start():
         try:
             await client.connect(timeout = 15)
 
             monitor.attach()
+
+            # 先对账再开轮询：轮询会按 registry 里的 gid 去问进度，
+            # 而 registry 是内存里的，重启后要靠对账重新填起来
+            await reconciler.run()
 
             await monitor.start()
 
@@ -115,6 +130,15 @@ async def _lifespan(app: FastAPI):
         merges.shutdown()
 
         await monitor.stop()
+
+        # 让 aria2 自己干净退出：它会把 .aria2 控制文件刷完整，下次续传才准。
+        # terminate 在 Windows 上是硬杀（实测），没有这个机会
+        if process.is_running_owned():
+            try:
+                await client.shutdown(force = True)
+
+            except Exception as e:
+                logger.debug("请求 aria2 退出失败，改由进程管理收尾：%s", e)
 
         await client.close()
 

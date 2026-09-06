@@ -354,6 +354,14 @@ class Aria2Client:
     async def tell_active(self, keys: List[str] = None) -> List[dict]:
         return await self.call("tellActive", *( [keys] if keys else [] ))
 
+    async def tell_waiting(self, offset: int = 0, num: int = 1000, keys: List[str] = None) -> List[dict]:
+        """等待中与暂停的下载。对账要看它 —— tellActive 只给正在跑的"""
+        return await self.call("tellWaiting", offset, num, *( [keys] if keys else [] ))
+
+    async def tell_stopped(self, offset: int = 0, num: int = 1000, keys: List[str] = None) -> List[dict]:
+        """已结束的下载（完成、出错、被删）。重启对账时要靠它认出「我们不在时已经下完了」"""
+        return await self.call("tellStopped", offset, num, *( [keys] if keys else [] ))
+
     async def get_global_stat(self) -> dict:
         return await self.call("getGlobalStat")
 

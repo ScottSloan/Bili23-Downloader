@@ -87,10 +87,13 @@ class Aria2Process:
             "--max-tries=3",
             "--retry-wait=2",
 
-            # 会话持久化：进程重启后能把未完成的任务捞回来（S3-8 对账的基础）
+            # 会话文件只用于人工排查，**不作为对账依据**（S3-8）。
+            #
+            # 实测（Windows）：`Popen.terminate()` 就是 TerminateProcess，aria2 没有机会
+            # 跑退出处理，session 根本不会落盘 —— 更别说被强杀或断电的情况。
+            # 所以恢复只能以 task.db 为准，见 web/download/reconcile.py
             f"--save-session={session_path}",
             "--auto-save-interval=30",
-            # 强制保存包括已完成/出错的任务，否则重启后对不上账
             "--force-save=false",
 
             # 控制台不需要进度刷屏，日志由业务层统一记
@@ -99,9 +102,9 @@ class Aria2Process:
             "--quiet=false",
         ]
 
-        # 只有存在时才带 --input-file，否则 aria2 会直接报错退出
-        if session_path.exists():
-            args.append(f"--input-file={session_path}")
+        # **刻意不带 --input-file。** 让 aria2 自己从 session 里把任务捞回来，会与对账时
+        # 重新投递的那一份撞在一起：两个下载写同一个文件，且 aria2 不认为这是错误。
+        # 恢复统一由 reconcile.py 按 task.db 驱动，aria2 这边保持「只做被交代的事」
 
         return args
 
@@ -198,8 +201,9 @@ class Aria2Process:
         """
         停掉 aria2c
 
-        先 terminate 让它有机会把 session 落盘 —— 直接 kill 会丢掉未保存的任务状态，
-        重启后对不上账
+        **terminate 在 Windows 上是硬杀**（TerminateProcess），aria2 没有机会做任何收尾。
+        想让它干净退出得先走 RPC 的 forceShutdown，那是调用方的事（见 app.py 的 lifespan）；
+        这里只负责收尾，进程还在就 terminate，再不走就 kill
         """
         proc = self._proc
         self._proc = None

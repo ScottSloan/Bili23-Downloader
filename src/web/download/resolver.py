@@ -42,6 +42,7 @@ import logging
 
 from util.common.config import config
 from util.download.parse.query_worker import QueryWorker
+from util.download.task.info import TaskInfo
 from util.network.request import get_cookies
 from util.thread import background
 
@@ -175,12 +176,46 @@ def build_global_options() -> dict:
 
     return {"max-overall-download-limit": str(int(rate * 1024 * 1024))}
 
+# ---------------- 落库的 gid 映射 ----------------
+
+# gid ↔ 任务的映射**必须落库**，否则后端一重启就全丢了：aria2 可能还在好好地下着，
+# 而我们已经认不出哪个 gid 属于哪个任务。放在 `Download.files[file_key]` 下的独立子键里，
+# 与桌面版自建下载器的分片记账（chunks_list / chunk_offsets 等）互不干扰
+ARIA2_KEY = "aria2"
+
+def remember_stream(task_info: TaskInfo, file_key: str, **fields) -> dict:
+    """把一路流的 aria2 信息记进 TaskInfo（调用方负责落库）"""
+    entry = task_info.Download.files.setdefault(file_key, {})
+
+    record = entry.setdefault(ARIA2_KEY, {})
+
+    for key, value in fields.items():
+        if value is not None:
+            record[key] = value
+
+    return record
+
+def stream_record(task_info: TaskInfo, file_key: str) -> dict:
+    entry = task_info.Download.files.get(file_key)
+
+    if not isinstance(entry, dict):
+        return {}
+
+    record = entry.get(ARIA2_KEY)
+
+    return record if isinstance(record, dict) else {}
+
+def stream_keys(task_info: TaskInfo) -> List[str]:
+    """这个任务有哪几路流。以 files 的键为准 —— Download.queue 会随下载完成被消费掉"""
+    return [key for key, entry in task_info.Download.files.items()
+            if isinstance(entry, dict) and isinstance(entry.get(ARIA2_KEY), dict)]
+
 # ---------------- 交给 aria2 ----------------
 
 async def submit_stream(client, registry, task_id: str, file_key: str, url: str,
                         directory: Union[str, Path], file_name: str,
                         referer: str = None, with_cookie: bool = True,
-                        extra: dict = None) -> str:
+                        extra: dict = None, task_info: TaskInfo = None) -> str:
     """
     把一条已经择优过的链接交给 aria2，并登记到 StreamRegistry
 
@@ -188,6 +223,8 @@ async def submit_stream(client, registry, task_id: str, file_key: str, url: str,
     而 aria2 的 onDownloadStart 可能在 addUri 返回前就推过来了 ——
     那时 registry 里查不到这个 gid，事件被当成「别人的任务」丢掉，
     界面上表现为任务一直停在等待中
+
+    传了 task_info 就顺带把 gid / url / 落盘位置记进去，供重启对账用（S3-8）
     """
     options = build_options(directory, file_name, referer = referer,
                             with_cookie = with_cookie, extra = extra)
@@ -195,6 +232,10 @@ async def submit_stream(client, registry, task_id: str, file_key: str, url: str,
     gid = await client.add_uri([url], options)
 
     registry.register(task_id, file_key, gid)
+
+    if task_info is not None:
+        remember_stream(task_info, file_key, gid = gid, url = url,
+                        dir = str(directory), out = file_name, referer = referer)
 
     logger.info("任务 %s 的 %s 流已交给 aria2：gid=%s，文件=%s", task_id, file_key, gid, file_name)
 
