@@ -8,7 +8,7 @@ from gui.component.widget.spinbox import SpinBox, DoubleSpinBox
 
 from util.common.data import subtitles_alignment_map
 from util.common.translator import Translator
-from util.common.color import Color
+from util.common.color import ass_alpha_to_rgba, rgba_to_ass_alpha
 
 class FontGroup(QWidget):
     def __init__(self, parent = None):
@@ -136,19 +136,26 @@ class ColorGroup(QWidget):
         color_layout.addWidget(self.shadow_color_btn, 3, 1, alignment = Qt.AlignmentFlag.AlignLeft)
     
     def init_data(self, data: dict):
-        self.primary_color_btn.setColor(Color.ass_alpha_to_qcolor(data.get("primary")))
-        self.secondary_color_btn.setColor(Color.ass_alpha_to_qcolor(data.get("secondary")))
-        self.border_color_btn.setColor(Color.ass_alpha_to_qcolor(data.get("border")))
-        self.shadow_color_btn.setColor(Color.ass_alpha_to_qcolor(data.get("shadow")))
+        self.primary_color_btn.setColor(_ass_to_qcolor(data.get("primary")))
+        self.secondary_color_btn.setColor(_ass_to_qcolor(data.get("secondary")))
+        self.border_color_btn.setColor(_ass_to_qcolor(data.get("border")))
+        self.shadow_color_btn.setColor(_ass_to_qcolor(data.get("shadow")))
 
     def get_data(self):
         return {
-            "primary": Color.qcolor_to_ass_alpha(self.primary_color_btn.color),
-            "secondary": Color.qcolor_to_ass_alpha(self.secondary_color_btn.color),
-            "border": Color.qcolor_to_ass_alpha(self.border_color_btn.color),
-            "shadow": Color.qcolor_to_ass_alpha(self.shadow_color_btn.color),
+            "primary": _qcolor_to_ass(self.primary_color_btn.color),
+            "secondary": _qcolor_to_ass(self.secondary_color_btn.color),
+            "border": _qcolor_to_ass(self.border_color_btn.color),
+            "shadow": _qcolor_to_ass(self.shadow_color_btn.color),
         }
     
+def _ass_to_qcolor(ass_str: str) -> QColor:
+    """ASS 颜色 → QColor。字节序与 alpha 语义的转换在 util/common/color.py 里，这里只做类型适配"""
+    return QColor(*ass_alpha_to_rgba(ass_str))
+
+def _qcolor_to_ass(color: QColor) -> str:
+    return rgba_to_ass_alpha(color.red(), color.green(), color.blue(), color.alpha())
+
 class MarginGroup(QWidget):
     def __init__(self, parent = None):
         super().__init__(parent)

@@ -6,7 +6,7 @@ from gui.component.setting import DownloadPathSettingCard, NumberSettingCard, Do
 from gui.component.widget.scroll import ScrollArea
 from .card import NamingConventionCard
 
-from util.common.icon import ExtendedFluentIcon
+from gui.icon import ExtendedFluentIcon
 from util.common.config import config
 
 class DownloadSettingsPage(ScrollArea):

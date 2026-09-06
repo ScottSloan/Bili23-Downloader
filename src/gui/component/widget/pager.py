@@ -6,7 +6,7 @@ from qfluentwidgets import FluentIcon, BodyLabel, Action
 from .button import PagerNumberButton, TransparentToolButton
 
 from util.common.enum import ToastNotificationCategory
-from util.common.icon import ExtendedFluentIcon
+from gui.icon import ExtendedFluentIcon
 from util.common.signal_bus import signal_bus
 
 from typing import List

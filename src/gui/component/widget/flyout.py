@@ -12,7 +12,7 @@ from .navigation import NavigationPanel
 from .pager import Pager
 
 from util.parse.parser.favorite import FavoriteParser
-from util.common.icon import ExtendedFluentIcon
+from gui.icon import ExtendedFluentIcon
 from util.common.signal_bus import signal_bus
 from util.common.config import config
 

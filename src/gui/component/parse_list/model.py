@@ -8,6 +8,7 @@ from .header import StrFormatter, DurationFormatter, DateFormatter
 from util.common.translator import Translator
 from util.common.signal_bus import signal_bus
 from util.common.config import config
+from util.common.enum import CheckState
 
 from util.parse.episode.tree import TreeItem
 
@@ -15,6 +16,13 @@ from util.parse.episode.tree import TreeItem
 DISPLAY_ROLE = Qt.ItemDataRole.DisplayRole
 CHECK_STATE_ROLE = Qt.ItemDataRole.CheckStateRole
 FOREGROUND_ROLE = Qt.ItemDataRole.ForegroundRole
+
+# core 的 CheckState → Qt 的 CheckState。data() 是绘制热路径，查表比每次构造枚举便宜
+QT_CHECK_STATE = {
+    CheckState.UNCHECKED: Qt.CheckState.Unchecked,
+    CheckState.PARTIALLY_CHECKED: Qt.CheckState.PartiallyChecked,
+    CheckState.CHECKED: Qt.CheckState.Checked,
+}
 
 class ParseModel(QAbstractItemModel):
     check_state_changed = Signal(QModelIndex)
@@ -127,7 +135,10 @@ class ParseModel(QAbstractItemModel):
             if index.column() != 0 or not index.isValid():
                 return None
 
-            return index.internalPointer().checked
+            # 转成 Qt 的枚举再交出去。TreeItem 存的是自己的 CheckState（core 里没有 Qt），
+            # 而 PySide6 的 Qt.CheckState 是普通 Enum，两者互相比较恒为 False，
+            # 视图会一律画成未勾选且不报错
+            return QT_CHECK_STATE[index.internalPointer().checked]
 
         if role == FOREGROUND_ROLE:
             if not index.isValid():
@@ -281,7 +292,8 @@ class ParseModel(QAbstractItemModel):
             return False
 
         if index.column() == 0 and role == Qt.ItemDataRole.CheckStateRole:
-            state = Qt.CheckState(value) if isinstance(value, int) else value
+            # Qt 传进来的是 Qt.CheckState（或历史上的 int），统一转成 core 的枚举
+            state = CheckState(getattr(value, "value", value))
 
             item: TreeItem = index.internalPointer()
             item.set_checked_state(state)

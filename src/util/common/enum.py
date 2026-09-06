@@ -12,6 +12,23 @@ class QRCodeScanStatus(IntEnum):
     SUCCESS = 0                          # 登录成功
     EXPIRED = 86038                      # 二维码过期
 
+class CheckState(IntEnum):
+    """
+    树节点的勾选状态
+
+    **取值必须与 Qt.CheckState 一致**，界面侧在 QAbstractItemModel 的边界上直接
+    `Qt.CheckState(item.checked)` 转过去。
+
+    这里没有直接用 Qt.CheckState，是因为 `parse/episode/tree.py` 属于解析链路的核心，
+    WebUI 进程里没有 Qt。另外注意 **PySide6 的 Qt.CheckState 是普通 Enum 而非 IntEnum**：
+    它与 int、与其他枚举比较一律返回 False 且不报错，所以两种枚举**绝不能混着比较** ——
+    转换只在界面边界上做一次。
+    """
+
+    UNCHECKED = 0
+    PARTIALLY_CHECKED = 1
+    CHECKED = 2
+
 class Scaling(Enum):
     SCALE_100 = "1"
     SCALE_125 = "1.25"

@@ -9,7 +9,7 @@ from qfluentwidgets import (
 
 from gui.component.widget.button import ToolButton
 
-from util.common.icon import ExtendedFluentIcon
+from gui.icon import ExtendedFluentIcon
 from util.common.io.directory import Directory
 from util.common.signal_bus import signal_bus
 from util.common.config import config

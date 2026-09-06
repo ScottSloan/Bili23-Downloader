@@ -5,8 +5,8 @@ S2-2 把配置系统从 qfluentwidgets 的 QConfig 上摘了下来（WebUI 进�
 但**桌面版仍然需要那座桥**：qfluentwidgets 的全局单例 qconfig 是它内部读取主题、
 强调色、字体的唯一入口，本项目也有三处直接依赖它 ——
 
-    util/common/icon.py:43        qconfig.theme      决定图标取 light 还是 dark 资源
-    util/common/style_sheet.py:12 qconfig.theme      决定样式表取哪一套
+    gui/icon.py                   qconfig.theme      决定图标取 light 还是 dark 资源
+    gui/style_sheet.py            qconfig.theme      决定样式表取哪一套
     gui/component/view_model/delegate_base.py:25     qconfig.fontFamilies
 
 旧实现靠 `qconfig.load(config_path, config)` 把 qconfig 与本项目的 config 变成同一个对象

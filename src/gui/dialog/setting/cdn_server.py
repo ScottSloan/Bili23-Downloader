@@ -7,7 +7,7 @@ from gui.component.widget.tree_widget import DragTreeWidget
 from gui.component.dialog import DialogBase
 from .edit_host import EditHostDialog
 
-from util.common.icon import ExtendedFluentIcon
+from gui.icon import ExtendedFluentIcon
 from util.common.translator import Translator
 from util.network.cdn import CDN
 

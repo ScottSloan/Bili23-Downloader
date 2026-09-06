@@ -16,8 +16,9 @@ from ..widget.spinbox import SpinBox
 from util.common.enum import VideoContainer, ToastNotificationCategory
 from util.common.config import config, isWin11
 from util.thread.pool import GlobalThreadPoolTask
-from util.common.icon import ExtendedFluentIcon
+from gui.icon import ExtendedFluentIcon
 from util.common.io.directory import Directory
+from gui.component.dialog_helper import browse_directory
 from util.common.translator import Translator
 from util.common.signal_bus import signal_bus
 
@@ -194,7 +195,7 @@ class DownloadPathSettingCard(PushSettingCard):
             dialog.show()
         
     def on_change_download_path(self):
-        path = Directory.browse_directory(self.parent_window, self.tr("Choose folder"), config.get(config.download_path))
+        path = browse_directory(self.parent_window, self.tr("Choose folder"), config.get(config.download_path))
 
         if path:
             if self.save:

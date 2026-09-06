@@ -1,5 +1,3 @@
-from PySide6.QtWidgets import QFileDialog, QWidget
-
 from ...format.units import Units
 
 from shutil import disk_usage
@@ -79,18 +77,6 @@ class Directory:
             logger.error("检查路径 %s 可用空间时出错", path)
             return False
         
-    @staticmethod
-    def browse_directory(parent: QWidget, title: str, default_path: str = ""):
-        dir_path = QFileDialog.getExistingDirectory(parent, title, default_path, QFileDialog.Option.ShowDirsOnly | QFileDialog.Option.DontResolveSymlinks)
-
-        if dir_path:
-            if Directory.ensure_directory_accessible(dir_path):
-                return dir_path
-
-            return None
-        else:
-            return default_path
-
     @staticmethod
     def open_directory_in_explorer(directory: str):
         if sys.platform == "win32":

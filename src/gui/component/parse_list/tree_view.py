@@ -8,7 +8,8 @@ from .model import ParseModel
 
 from gui.component.widget.smooth_scroll import applySmoothScroll
 
-from util.common.icon import ExtendedFluentIcon
+from gui.icon import ExtendedFluentIcon
+from util.common.enum import CheckState
 from util.common.signal_bus import signal_bus
 from util.common.enum import AutoSelectMode
 from util.common.config import config
@@ -43,7 +44,7 @@ class ParseTreeView(TreeView):
         # Shift 范围勾选：锚点为上一次手动点击复选框的项，按对象保存以免排序后失效
         self._check_anchor: TreeItem = None
         # 本次 Shift 会话中被改动过的叶子节点及其原始状态，用于回拖缩小范围时还原
-        self._shift_snapshot: dict[TreeItem, Qt.CheckState] = {}
+        self._shift_snapshot: dict[TreeItem, CheckState] = {}
 
         self._hover_item = None
         self._hover_index = QPersistentModelIndex()
@@ -132,7 +133,7 @@ class ParseTreeView(TreeView):
             return False
 
         # 范围统一采用锚点的状态；锚点为半选时按勾选处理
-        state = Qt.CheckState.Checked if anchor.checked == Qt.CheckState.PartiallyChecked else anchor.checked
+        state = CheckState.CHECKED if anchor.checked == CheckState.PARTIALLY_CHECKED else anchor.checked
 
         indexes = self._visible_range(anchor_index, target_index)
 
@@ -549,7 +550,7 @@ class ParseTreeView(TreeView):
 
     def check_all_items(self, uncheck = False):
         # 只需要改变根节点的状态，子节点会自动跟随
-        self._model.root_node.set_checked_state(Qt.CheckState.Unchecked if uncheck else Qt.CheckState.Checked)
+        self._model.root_node.set_checked_state(CheckState.UNCHECKED if uncheck else CheckState.CHECKED)
 
         # 更新视图
         self.update_check_state()
@@ -558,7 +559,7 @@ class ParseTreeView(TreeView):
         all_items = self.get_all_items()
 
         for item in all_items:
-            item.set_checked_state(Qt.CheckState.Checked if item.checked == Qt.CheckState.Unchecked else Qt.CheckState.Unchecked)
+            item.set_checked_state(CheckState.CHECKED if item.checked == CheckState.UNCHECKED else CheckState.UNCHECKED)
 
         self.update_check_state()
 
@@ -580,13 +581,13 @@ class ParseTreeView(TreeView):
         menu = RoundMenu(parent=self)
 
         # 全局选择操作
-        check_all_text = self.tr("Check All") if self._model.root_node.checked == Qt.CheckState.Unchecked else self.tr("Uncheck All")
+        check_all_text = self.tr("Check All") if self._model.root_node.checked == CheckState.UNCHECKED else self.tr("Uncheck All")
         menu.addAction(self._create_action(ExtendedFluentIcon.SELECT_ALL, check_all_text, self.on_toggle_check_all_items))
         menu.addAction(self._create_action(ExtendedFluentIcon.RETRY, self.tr("Reverse"), self.reverse_check_state))
         menu.addSeparator()
 
         # 当前项操作
-        check_item_text = self.tr("Check Item") if item.checked == Qt.CheckState.Unchecked else self.tr("Uncheck Item")
+        check_item_text = self.tr("Check Item") if item.checked == CheckState.UNCHECKED else self.tr("Uncheck Item")
         menu.addAction(self._create_action(ExtendedFluentIcon.SELECT, check_item_text, lambda: self.on_toggle_check_state(item)))
 
         # 叶子节点操作 (无子节点的项)
@@ -606,10 +607,10 @@ class ParseTreeView(TreeView):
         menu.exec(global_pos)
 
     def on_toggle_check_all_items(self):
-        self.check_all_items(uncheck = self._model.root_node.checked != Qt.CheckState.Unchecked)
+        self.check_all_items(uncheck = self._model.root_node.checked != CheckState.UNCHECKED)
 
     def on_toggle_check_state(self, item: TreeItem):
-        item.set_checked_state(Qt.CheckState.Checked if item.checked == Qt.CheckState.Unchecked else Qt.CheckState.Unchecked)
+        item.set_checked_state(CheckState.CHECKED if item.checked == CheckState.UNCHECKED else CheckState.UNCHECKED)
 
         self.update_check_state()
 
@@ -697,7 +698,7 @@ class ParseTreeView(TreeView):
             if getattr(item, key, None) == value:
                 if check:
                     # 不仅滚动到该项，还要自动选中
-                    item.set_checked_state(Qt.CheckState.Checked)
+                    item.set_checked_state(CheckState.CHECKED)
 
                     self.viewport().update()
                     self.update_check_state()
@@ -711,7 +712,7 @@ class ParseTreeView(TreeView):
 
     def check_items(self, items: List[TreeItem]):
         for item in items:
-            item.set_checked_state(Qt.CheckState.Checked)
+            item.set_checked_state(CheckState.CHECKED)
 
         self.update_check_state()
 
@@ -723,7 +724,7 @@ class ParseTreeView(TreeView):
 
         for item in all_items:
             if item.number in number_list:
-                item.set_checked_state(Qt.CheckState.Checked)
+                item.set_checked_state(CheckState.CHECKED)
 
         self.update_check_state()
 
@@ -738,7 +739,7 @@ class ParseTreeView(TreeView):
     def _check_main_episodes_node(self):
         # 选中剧集类正片部分
         try:
-            self._model.root_node.children[0].children[0].set_checked_state(Qt.CheckState.Checked)
+            self._model.root_node.children[0].children[0].set_checked_state(CheckState.CHECKED)
             
         except IndexError:
             pass

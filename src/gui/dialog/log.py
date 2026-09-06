@@ -7,7 +7,7 @@ from gui.component.widget.button import ToolButton
 from gui.component.widget.label import TipCaptionLabel
 from gui.component.dialog import FluentWidget
 
-from util.common.icon import ExtendedFluentIcon
+from gui.icon import ExtendedFluentIcon
 from util.common.io.directory import Directory
 from util.common.config import appdata_path
 

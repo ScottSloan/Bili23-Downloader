@@ -1,9 +1,53 @@
-from PySide6.QtCore import QCoreApplication
+"""
+跨模块共用的可翻译字符串
+
+控件内部用 `self.tr(...)`，这里放的是**非控件、跨模块共用**的那些
+（错误提示、画质名、CDN 厂商名等），取法是 `Translator.ERROR_MESSAGES("KEY")`，
+不传 key 则返回整张表。
+
+## 为什么不直接用 QCoreApplication.translate
+
+`util/` 下有 85 处引用这里的字符串（解析、下载链路的错误提示都在其中），
+而 WebUI 后端是**没有 Qt 的独立进程**。在模块顶层 `from PySide6.QtCore import QCoreApplication`
+会让整条核心链路都无法在那个进程里导入。
+
+所以改成：默认实现返回英文原文，桌面版启动时用 `set_translate_function()` 换成 Qt 的实现。
+判断依据必须是「谁在跑」而不是「Qt 装没装」—— 从源码跑 WebUI 时 PySide6 就在环境里，
+用 try/except ImportError 来探测会当场把 Qt 拉进来。
+
+## 改动这个文件时的硬约束
+
+`scripts/translate.py` 会把本文件交给 lupdate 提取待翻译字符串，而 lupdate 是**扫源码文本**
+认 `translate("上下文", "文案")` 这个调用形态的。因此：
+
+- 调用点必须保持 `translate("CTX", "text")` 的字面形态，两个参数都得是字符串字面量
+- 模块级的名字必须仍叫 `translate`
+- 改完跑一次 `scripts/translate.py`，对比 .ts 里 `<source>` 的条数有没有变少
+
+WebUI 前端的文案自建一份，不与这里共用（D12）。
+"""
 
 from functools import wraps
 
-# alias
-translate = QCoreApplication.translate
+def _source_text(context: str, source_text: str, *args, **kwargs) -> str:
+    """默认实现：原样返回英文原文。源语言就是英文，没装翻译器时本来也是这个结果"""
+    return source_text
+
+_translate_impl = _source_text
+
+def set_translate_function(func) -> None:
+    """
+    换上真正的翻译实现。桌面版在 main.py 里传 `QCoreApplication.translate`
+
+    必须在任何 `Translator.XXX()` 被调用之前装好 —— 各个映射表都是**调用时**才构造的
+    （这样切换语言后取到的是新翻译），所以只要装得比第一次取值早就行
+    """
+    global _translate_impl
+
+    _translate_impl = func
+
+def translate(context: str, source_text: str, *args, **kwargs) -> str:
+    return _translate_impl(context, source_text, *args, **kwargs)
 
 def get_map_method(func):
     @wraps(func)

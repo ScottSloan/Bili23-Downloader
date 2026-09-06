@@ -6,6 +6,7 @@ from qfluentwidgets import themeColor, isDarkTheme
 from .header import StrFormatter, DurationFormatter, DateFormatter
 
 from util.common.translator import Translator
+from util.common.enum import CheckState
 from util.common.signal_bus import signal_bus
 from util.common.config import config
 
@@ -193,7 +194,7 @@ class ParseModel(QAbstractItemModel):
             return False
 
         if index.column() == 0 and role == Qt.ItemDataRole.CheckStateRole:
-            state = Qt.CheckState(value) if isinstance(value, int) else value
+            state = CheckState(value) if isinstance(value, int) else value
 
             item: TreeItem = index.internalPointer()
             item.set_checked_state(state)

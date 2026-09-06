@@ -16,7 +16,7 @@ from gui.component.setting import (
 
 from util.common.data import video_quality_map, audio_quality_map, video_codec_map
 from util.common.enum import ToastNotificationCategory
-from util.common.style_sheet import StyleSheet
+from gui.style_sheet import StyleSheet
 from util.common.signal_bus import signal_bus
 from util.common.translator import Translator
 from util.common.config import config

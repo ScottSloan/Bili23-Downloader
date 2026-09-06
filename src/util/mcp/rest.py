@@ -35,16 +35,12 @@ def _get_parse_interface():
 
 def _check_state(item) -> int:
     """
-    Qt.CheckState → 0 / 1 / 2
+    勾选状态 → 0 / 1 / 2
 
-    TreeItemBase 初始化时存的是枚举，但 set_checked_state 允许传 int，
-    历史数据两种都可能出现，统一成数字交给前端
+    CheckState 是 IntEnum，取值与 Qt.CheckState 对齐（0 未勾选 / 1 半选 / 2 已勾选）。
+    仍然容忍裸 int：set_checked_state 允许传数字，历史数据两种都可能出现
     """
-    state = item.checked
-
-    value = state.value if hasattr(state, "value") else state
-
-    return int(value or 0)
+    return int(getattr(item.checked, "value", item.checked) or 0)
 
 def _node_to_dict(item, node_id: str, Attribute) -> dict:
     """

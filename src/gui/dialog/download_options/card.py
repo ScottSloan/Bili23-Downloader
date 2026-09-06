@@ -13,7 +13,7 @@ from gui.component.widget.combobox import DictComboBox
 from util.common.data import (
     reversed_video_quality_map, reversed_audio_quality_map, reversed_video_codec_map, reversed_audio_codec_map
 )
-from util.common.icon import ExtendedFluentIcon
+from gui.icon import ExtendedFluentIcon
 from util.common.translator import Translator
 from util.common.enum import MediaType
 from util.common.config import config

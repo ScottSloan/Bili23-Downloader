@@ -5,7 +5,7 @@ from qfluentwidgets import ScrollArea as _ScrollArea
 
 from gui.component.widget.smooth_scroll import applySmoothScroll, getScrollDelegate
 
-from util.common.style_sheet import StyleSheet
+from gui.style_sheet import StyleSheet
 
 class ScrollArea(_ScrollArea):
     def __init__(self, parent = None):

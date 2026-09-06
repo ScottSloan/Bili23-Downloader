@@ -10,7 +10,7 @@ from .widget.pivot import PivotItem, Pivot
 from .widget.scroll import ScrollArea
 
 from util.common.enum import ToastNotificationCategory
-from util.common.style_sheet import StyleSheet
+from gui.style_sheet import StyleSheet
 from util.common.config import config
 
 class Base:

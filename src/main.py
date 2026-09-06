@@ -301,7 +301,7 @@ qInstallMessageHandler(qt_message_handler)
 
 # --------- Imports ---------
 
-from PySide6.QtCore import Qt, QLocale, QTranslator, QLockFile, QTimer, Signal
+from PySide6.QtCore import Qt, QLocale, QTranslator, QLockFile, QTimer, Signal, QCoreApplication
 from PySide6.QtNetwork import QLocalServer, QLocalSocket
 from PySide6.QtWidgets import QApplication
 from PySide6.QtGui import QFont
@@ -310,12 +310,17 @@ from qfluentwidgets import FluentTranslator
 
 from util.common.config import config
 from util.common.enum import Language
+from util.common.translator import set_translate_function
 from gui.config_bridge import install as install_config_bridge
 import res.resources_rc
 
 # 主题、强调色、字体仍由 qfluentwidgets 的全局 qconfig 提供（图标与样式表都从它读），
 # 必须在任何界面代码取用主题之前接好这座桥，详见 gui/config_bridge.py
 install_config_bridge()
+
+# util/common/translator.py 默认返回英文原文（它被解析、下载链路引用，而 WebUI 进程里没有 Qt），
+# 桌面版在这里换上 Qt 的实现。必须早于任何 Translator.XXX() 取值
+set_translate_function(QCoreApplication.translate)
 
 INSTANCE_LOCK_NAME = "instance.lock"
 INSTANCE_LOCK_TIMEOUT_MS = 10_000
