@@ -808,19 +808,21 @@ class Downloader(QObject):
             file_info["chunk_offsets"] = {}
 
     def start_merge(self):
-        # 合并失败后可以重试，上一次的 Merger 不再需要。它挂在本对象的 parent 链上，
-        # 不主动释放就会一直累积到任务结束
+        # 合并失败后可以重试，上一次的 Merger 不再需要。里面的 FFmpeg 线程必须先停掉，
+        # 否则两次合并会同时往同一个输出文件写
         self._release_merger()
 
         self.task_info.Download.status = DownloadStatus.MERGING
 
-        self.merger = Merger(self.task_info, parent = self)
+        self.merger = Merger(self.task_info)
         self.merger.start()
 
     def _release_merger(self):
-        # 先停掉 FFmpeg 线程再释放对象：Merger 与其中的 FFmpegRunner 都挂在
-        # 本对象的 parent 链上，销毁 Downloader 会连带析构它们，
-        # 而销毁一个仍在运行的 QThread 会让 Qt 直接 qFatal 中止进程
+        # 先停掉 FFmpeg 线程再丢引用：线程里持有子进程句柄，不终止它的话进程退出后
+        # FFmpeg 会变成孤儿继续写输出文件。
+        #
+        # Merger 已经不是 QObject 了（S2-6），因此不再需要 deleteLater —— 停掉线程之后
+        # 丢引用即可，由 Python 回收
         merger = self.merger
         self.merger = None
 
@@ -829,11 +831,9 @@ class Downloader(QObject):
 
         try:
             merger.stop()
-            merger.deleteLater()
 
-        except RuntimeError:
-            # C++ 侧已经析构，无需再处理
-            pass
+        except Exception:
+            logger.exception("停止合并任务失败：%s", getattr(self, "task_info", None))
 
     def pause(self):
         with self.start_worker_lock:
@@ -1258,8 +1258,7 @@ class Downloader(QObject):
 
         self.speed_timer.stop()
 
-        # 必须赶在 deleteLater 之前停掉 FFmpeg，否则销毁 parent 链时
-        # 会析构仍在运行的 FFmpegRunner
+        # 必须赶在销毁本对象之前停掉 FFmpeg，否则子进程会变成孤儿继续写文件
         self._release_merger()
 
         with self._ref_lock:

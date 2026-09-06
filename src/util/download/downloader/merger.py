@@ -1,5 +1,3 @@
-from PySide6.QtCore import QObject
-
 from ...common.enum import DownloadStatus, DownloadType, OriginalFileType, ToastNotificationCategory
 from ...common.io.file import safe_remove, safe_rename
 from ...common.timestamp import get_timestamp
@@ -10,7 +8,7 @@ from ..task.options import resolve
 from ...parse.additional.chapter import ChapterParser
 
 from ...ffmpeg.command import FFmpegCommand
-from ...ffmpeg.runner import FFmpegRunner
+from ...ffmpeg.task import FFmpegTask
 
 from ..task.manager import task_manager
 from ..task.info import TaskInfo
@@ -20,14 +18,23 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-class Merger(QObject):
-    def __init__(self, task_info: TaskInfo, parent = None):
-        super().__init__(parent)
+class Merger:
+    """
+    把下载好的分离流合成最终文件，并处理重命名、冲突、附加内容的嵌入
 
+    **本文件自身不再引用 Qt。** 它原本继承 QObject，唯一用途是让 FFmpegRunner（QThread）
+    挂上 parent 链；换成 `FFmpegTask`（普通线程 + 调度层回调）之后这层继承就没有意义了。
+    进度与结果的回调由 `thread/dispatch.py` 投递：桌面侧回到 GUI 线程，服务端侧进事件队列。
+
+    注意：**目前它还不能在无 Qt 环境里导入** —— `task/manager.py` 用了 `thread/pool.py` 的
+    `GlobalThreadPoolTask`（QThreadPool），这条传递依赖尚未处理，见 PROGRESS 的待解决。
+    """
+
+    def __init__(self, task_info: TaskInfo):
         self.task_info = task_info
         self._has_error = False
         self._stopped = False
-        self._ffmpeg_runner = None
+        self._ffmpeg_task = None
 
         self._output_audio_file = None
         # 转换成功后才写回 File.audio_file_ext 的目标扩展名，None 表示本次不改扩展名
@@ -36,30 +43,21 @@ class Merger(QObject):
         self._delete_cover_after_embedding = False
         self._embedded_subtitle_list = []
 
-    def stop(self, timeout: int = 3000):
+    def stop(self, timeout: float = 3.0):
         """
         终止正在进行的 FFmpeg 任务，返回其线程是否已退出
 
-        FFmpegRunner 是 QThread，且挂在本对象的 parent 链上。若在它仍然运行时
-        销毁 Downloader，整条链会被连带析构，Qt 随即 qFatal 中止进程。
-        因此销毁本对象之前必须先在这里把线程收干净。
+        退出流程会先走到这里再释放 Downloader，务必保持：FFmpeg 子进程不停掉的话，
+        进程退出后它会变成孤儿，继续占着输出文件写下去
         """
         self._stopped = True
 
-        runner = self._ffmpeg_runner
+        task = self._ffmpeg_task
 
-        if runner is None:
+        if task is None or not task.is_running():
             return True
 
-        try:
-            if not runner.isRunning():
-                return True
-
-            return runner.stop(timeout)
-
-        except RuntimeError:
-            # C++ 侧已经析构，无需再处理
-            return True
+        return task.stop(timeout)
 
     def start(self):
         if self.task_info.Download.merge_video_audio:
@@ -136,14 +134,18 @@ class Merger(QObject):
         # 下载阶段结束时进度停在 100，这里必须归零，否则进度条会从满格开始重走
         self.task_info.Download.progress = 0
 
-        self._ffmpeg_runner = FFmpegRunner.from_command(command, parent = self)
-        self._ffmpeg_runner.set_cwd(cwd)
+        self._ffmpeg_task = FFmpegTask.from_command(
+            command,
+            on_progress = self.on_progress_updated,
+            on_finished = on_finished,
+            on_error = self.on_merge_error,
+        )
+
+        self._ffmpeg_task.set_cwd(cwd)
         # FFmpeg 自己报的时长更准，这里给的只是它打印出 Duration 之前的兜底
-        self._ffmpeg_runner.set_duration(self.task_info.Episode.duration)
-        self._ffmpeg_runner.progress_signal.connect(self.on_progress_updated)
-        self._ffmpeg_runner.finished_signal.connect(on_finished)
-        self._ffmpeg_runner.error_signal.connect(self.on_merge_error)
-        self._ffmpeg_runner.start()
+        self._ffmpeg_task.set_duration(self.task_info.Episode.duration)
+
+        self._ffmpeg_task.start()
 
     def on_progress_updated(self, progress: int):
         if self._has_error or self._stopped:
