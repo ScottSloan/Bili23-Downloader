@@ -6,7 +6,6 @@ from ...common.enum import DanmakuType
 from ...download.task.options import resolve
 
 from .base import AdditionalParserBase
-from .file.danmaku_ass import DanmakuASS
 from .file.danmaku_xml import DanmakuXML
 
 import util.misc.dm_pb2 as dm_pb2
@@ -57,6 +56,11 @@ class DanmakuParser(AdditionalParserBase):
         return xml, "xml"
 
     def _to_ass(self, dict_list: List[dict]) -> tuple:
+        # 就地导入：DanmakuASS 要用 QFontMetrics 量弹幕宽度来排轨道，会把 QtGui 拖进来，
+        # 而 QtGui 需要进程里先有一个 QGuiApplication（详见 file/danmaku_ass.py）。
+        # 放在模块顶层会让「只下 XML 弹幕」的 WebUI 场景也被迫背上 Qt
+        from .file.danmaku_ass import DanmakuASS
+
         ass = DanmakuASS(dict_list, self.task_info.Basic.show_title).generate()
 
         return ass, "ass"
