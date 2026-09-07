@@ -7,55 +7,39 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import vueDevTools from 'vite-plugin-vue-devtools'
 
-// S0 阶段后端借用桌面版内置的 MCP HTTP 服务，鉴权沿用它的 Bearer 令牌。
-// 令牌就在本机的 config.json 里，直接读出来省得每个人手动配一遍环境变量。
-// S3 换成 FastAPI + 密码鉴权之后，这一整段删掉。
-function appDataDir() {
-  if (process.platform === 'win32') {
-    return process.env.APPDATA || path.join(homedir(), 'AppData', 'Roaming')
+// 开发时 /api 与 /api/ws 都转发给后端（`python src/main.py --web-ui`）。
+//
+// S0 阶段这里连的是桌面版内置的 MCP 服务，还要从 config.json 里读一个 Bearer 令牌塞进去。
+// S3 换成 FastAPI 之后那一整套没有了：**鉴权是 session cookie**，浏览器自己会带，
+// 代理不需要也不应该插手。
+//
+// 走代理而不是让浏览器直连，是为了绕开 CORS —— 后端默认只听环回地址。
+function backendPort(): number {
+  if (process.env.BILI23_PORT) {
+    return Number(process.env.BILI23_PORT)
   }
 
-  if (process.platform === 'darwin') {
-    return path.join(homedir(), 'Library', 'Application Support')
-  }
-
-  return process.env.XDG_DATA_HOME || path.join(homedir(), '.local', 'share')
-}
-
-function readBackend() {
-  // 显式指定的环境变量优先，方便连别的机器上的实例
-  if (process.env.BILI23_TOKEN) {
-    return {
-      token: process.env.BILI23_TOKEN,
-      target: process.env.BILI23_API || 'http://127.0.0.1:23330',
-    }
-  }
-
+  // 端口存在共用的 config.json 里，读出来省得每个人手动配一遍。
+  // 读不到就用默认值，不像 S0 那样直接把代理关掉 —— 那时是因为没有令牌就一定连不上，
+  // 现在只是端口可能不对，试一下的代价很低
   try {
-    const file = path.join(appDataDir(), 'Bili23 Downloader', 'config.json')
-    const mcp = JSON.parse(readFileSync(file, 'utf-8')).MCP || {}
+    const dir =
+      process.platform === 'win32'
+        ? process.env.APPDATA || path.join(homedir(), 'AppData', 'Roaming')
+        : process.platform === 'darwin'
+          ? path.join(homedir(), 'Library', 'Application Support')
+          : process.env.XDG_DATA_HOME || path.join(homedir(), '.local', 'share')
 
-    if (!mcp.mcp_token) {
-      return null
-    }
+    const file = path.join(dir, 'Bili23 Downloader', 'config.json')
+    const webui = JSON.parse(readFileSync(file, 'utf-8')).WebUI || {}
 
-    return {
-      token: mcp.mcp_token,
-      target: `http://127.0.0.1:${mcp.mcp_port || 23330}`,
-    }
+    return Number(webui.webui_port) || 23331
   } catch {
-    return null
+    return 23331
   }
 }
 
-const backend = readBackend()
-
-if (!backend) {
-  console.warn(
-    '\n[bili23] 未能读到 MCP 令牌，/api 代理不可用。\n' +
-      '         请先在桌面版的「设置 → MCP」里启用服务并启动程序，或设置 BILI23_TOKEN 环境变量。\n',
-  )
-}
+const target = process.env.BILI23_API || `http://127.0.0.1:${backendPort()}`
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -68,22 +52,13 @@ export default defineConfig({
   },
 
   server: {
-    proxy: backend
-      ? {
-          // 走代理而不是让浏览器直连：既绕开 CORS，也不必把令牌暴露到前端代码里。
-          // MCP 服务器只绑 127.0.0.1，且会校验 Origin，浏览器本来也直连不上
-          '/api': {
-            target: backend.target,
-            changeOrigin: true,
-            configure(proxy) {
-              proxy.on('proxyReq', (proxyReq) => {
-                proxyReq.setHeader('Authorization', `Bearer ${backend.token}`)
-                // 代理转发时不要带上浏览器的 Origin，否则会被服务端的来源校验拦下
-                proxyReq.removeHeader('origin')
-              })
-            },
-          },
-        }
-      : undefined,
+    proxy: {
+      '/api': {
+        target,
+        changeOrigin: true,
+        // 事件推送走 /api/ws，不开这个的话 WebSocket 升级请求会被代理当成普通请求
+        ws: true,
+      },
+    },
   },
 })

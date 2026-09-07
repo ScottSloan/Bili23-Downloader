@@ -1,0 +1,1428 @@
+{
+  "components": {
+    "schemas": {
+      "CookieLoginRequest": {
+        "properties": {
+          "text": {
+            "maxLength": 8192,
+            "minLength": 1,
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "title": "CookieLoginRequest",
+        "type": "object"
+      },
+      "CreateTasksRequest": {
+        "properties": {
+          "episodes": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "maxItems": 2000,
+            "minItems": 1,
+            "title": "Episodes",
+            "type": "array"
+          },
+          "options": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Options"
+          }
+        },
+        "required": [
+          "episodes"
+        ],
+        "title": "CreateTasksRequest",
+        "type": "object"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "title": "Detail",
+            "type": "array"
+          }
+        },
+        "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "LoginRequest": {
+        "properties": {
+          "password": {
+            "maxLength": 1024,
+            "minLength": 1,
+            "title": "Password",
+            "type": "string"
+          },
+          "username": {
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Username",
+            "type": "string"
+          }
+        },
+        "required": [
+          "username",
+          "password"
+        ],
+        "title": "LoginRequest",
+        "type": "object"
+      },
+      "MkdirRequest": {
+        "properties": {
+          "name": {
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "path": {
+            "maxLength": 4096,
+            "minLength": 1,
+            "title": "Path",
+            "type": "string"
+          }
+        },
+        "required": [
+          "path",
+          "name"
+        ],
+        "title": "MkdirRequest",
+        "type": "object"
+      },
+      "ParseRequest": {
+        "properties": {
+          "pn": {
+            "default": 1,
+            "maximum": 10000.0,
+            "minimum": 1.0,
+            "title": "Pn",
+            "type": "integer"
+          },
+          "url": {
+            "maxLength": 2048,
+            "minLength": 1,
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "url"
+        ],
+        "title": "ParseRequest",
+        "type": "object"
+      },
+      "PreviewRequest": {
+        "properties": {
+          "candidates": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "maxItems": 20,
+            "minItems": 1,
+            "title": "Candidates",
+            "type": "array"
+          }
+        },
+        "required": [
+          "candidates"
+        ],
+        "title": "PreviewRequest",
+        "type": "object"
+      },
+      "SMSSendRequest": {
+        "properties": {
+          "challenge": {
+            "maxLength": 256,
+            "minLength": 1,
+            "title": "Challenge",
+            "type": "string"
+          },
+          "cid": {
+            "maxLength": 8,
+            "minLength": 1,
+            "title": "Cid",
+            "type": "string"
+          },
+          "seccode": {
+            "maxLength": 512,
+            "minLength": 1,
+            "title": "Seccode",
+            "type": "string"
+          },
+          "tel": {
+            "maxLength": 32,
+            "minLength": 1,
+            "title": "Tel",
+            "type": "string"
+          },
+          "token": {
+            "maxLength": 256,
+            "minLength": 1,
+            "title": "Token",
+            "type": "string"
+          },
+          "validate": {
+            "maxLength": 512,
+            "minLength": 1,
+            "title": "Validate",
+            "type": "string"
+          }
+        },
+        "required": [
+          "cid",
+          "tel",
+          "token",
+          "challenge",
+          "validate",
+          "seccode"
+        ],
+        "title": "SMSSendRequest",
+        "type": "object"
+      },
+      "SMSVerifyRequest": {
+        "properties": {
+          "captcha_key": {
+            "maxLength": 512,
+            "minLength": 1,
+            "title": "Captcha Key",
+            "type": "string"
+          },
+          "cid": {
+            "maxLength": 8,
+            "minLength": 1,
+            "title": "Cid",
+            "type": "string"
+          },
+          "code": {
+            "maxLength": 16,
+            "minLength": 1,
+            "title": "Code",
+            "type": "string"
+          },
+          "tel": {
+            "maxLength": 32,
+            "minLength": 1,
+            "title": "Tel",
+            "type": "string"
+          }
+        },
+        "required": [
+          "cid",
+          "tel",
+          "code",
+          "captcha_key"
+        ],
+        "title": "SMSVerifyRequest",
+        "type": "object"
+      },
+      "TaskIdsRequest": {
+        "properties": {
+          "task_ids": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 2000,
+            "minItems": 1,
+            "title": "Task Ids",
+            "type": "array"
+          }
+        },
+        "required": [
+          "task_ids"
+        ],
+        "title": "TaskIdsRequest",
+        "type": "object"
+      },
+      "UpdateSettingsRequest": {
+        "properties": {
+          "values": {
+            "additionalProperties": true,
+            "minProperties": 1,
+            "title": "Values",
+            "type": "object"
+          }
+        },
+        "required": [
+          "values"
+        ],
+        "title": "UpdateSettingsRequest",
+        "type": "object"
+      },
+      "ValidationError": {
+        "properties": {
+          "ctx": {
+            "title": "Context",
+            "type": "object"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "title": "Location",
+            "type": "array"
+          },
+          "msg": {
+            "title": "Message",
+            "type": "string"
+          },
+          "type": {
+            "title": "Error Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError",
+        "type": "object"
+      }
+    }
+  },
+  "info": {
+    "title": "Bili23 Downloader WebUI",
+    "version": "2.15.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/api/aria2/status": {
+      "get": {
+        "description": "aria2 是否可用\n\n**不可用不算错误**：服务本身照常跑，这里如实报告状态即可 ——\n前端据此显示「aria2 未连接」并给出原因，比整个后端起不来强",
+        "operationId": "aria2_status_api_aria2_status_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Aria2 Status",
+        "tags": [
+          "aria2"
+        ]
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "operationId": "login_api_auth_login_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Login",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/auth/logout": {
+      "post": {
+        "operationId": "logout_api_auth_logout_post",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Logout",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/auth/session": {
+      "get": {
+        "description": "查询当前是否已登录。**不需要鉴权** —— 前端要靠它决定跳不跳登录页，\n因此只回答「是 / 否」，不带任何其他信息",
+        "operationId": "session_state_api_auth_session_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Session State",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/files/list": {
+      "get": {
+        "description": "列出一个目录。`path` 为空时给第一个根目录",
+        "operationId": "list_directory_api_files_list_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "path",
+            "required": false,
+            "schema": {
+              "default": "",
+              "title": "Path",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "dirs_only",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Dirs Only",
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Directory",
+        "tags": [
+          "files"
+        ]
+      }
+    },
+    "/api/files/mkdir": {
+      "post": {
+        "description": "在允许的目录下新建一个子目录\n\n`name` 只能是单个名字，不能是路径：允许它带分隔符的话，`../../x` 就又回来了。\n这里既拦名字本身，也仍然让结果过一遍 `resolve_within_roots`",
+        "operationId": "make_directory_api_files_mkdir_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MkdirRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Make Directory",
+        "tags": [
+          "files"
+        ]
+      }
+    },
+    "/api/files/roots": {
+      "get": {
+        "description": "可浏览的根目录。前端据此显示入口，不给用户输入任意路径的机会",
+        "operationId": "list_roots_api_files_roots_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Roots",
+        "tags": [
+          "files"
+        ]
+      }
+    },
+    "/api/health": {
+      "get": {
+        "description": "健康检查。**不需要登录** —— 反向代理与容器编排要靠它判断存活，\n因此这里也不能泄漏任何有意义的信息",
+        "operationId": "health_api_health_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Health",
+        "tags": [
+          "system"
+        ]
+      }
+    },
+    "/api/login/cookie": {
+      "post": {
+        "description": "用粘贴的 Cookie 登录。验证不通过会回滚，不会把无效 Cookie 留在 client 上",
+        "operationId": "login_with_cookie_api_login_cookie_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CookieLoginRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Login With Cookie",
+        "tags": [
+          "login"
+        ]
+      }
+    },
+    "/api/login/logout": {
+      "post": {
+        "description": "退出 B 站账号。**不影响 WebUI 自身的会话**",
+        "operationId": "logout_api_login_logout_post",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Logout",
+        "tags": [
+          "login"
+        ]
+      }
+    },
+    "/api/login/qrcode": {
+      "post": {
+        "description": "申请一个登录二维码\n\n返回的 `url` 由前端渲染成二维码，`key` 用于后续轮询",
+        "operationId": "create_qrcode_api_login_qrcode_post",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Create Qrcode",
+        "tags": [
+          "login"
+        ]
+      }
+    },
+    "/api/login/qrcode/poll": {
+      "get": {
+        "description": "查一次扫码状态\n\n状态为 `success` 时 Cookie 已经写进配置了（在 `parse_poll` 里就地完成），\n前端接着调 `/api/login/status?refresh=true` 取用户信息即可",
+        "operationId": "poll_qrcode_api_login_qrcode_poll_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "key",
+            "required": true,
+            "schema": {
+              "maxLength": 256,
+              "minLength": 1,
+              "title": "Key",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Poll Qrcode",
+        "tags": [
+          "login"
+        ]
+      }
+    },
+    "/api/login/sms/captcha": {
+      "post": {
+        "description": "申请极验参数\n\n前端拿 `gt` 与 `challenge` 调 `initGeetest`（写法见 `src/res/html/captcha.html`），\n`token` 原样留着，发短信时要带回去",
+        "operationId": "sms_captcha_api_login_sms_captcha_post",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Sms Captcha",
+        "tags": [
+          "login"
+        ]
+      }
+    },
+    "/api/login/sms/regions": {
+      "get": {
+        "description": "国家/地区区号。与桌面版下拉框用的是同一份数据",
+        "operationId": "sms_regions_api_login_sms_regions_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Sms Regions",
+        "tags": [
+          "login"
+        ]
+      }
+    },
+    "/api/login/sms/send": {
+      "post": {
+        "description": "发送验证码短信。返回的 captcha_key 登录时要用",
+        "operationId": "sms_send_api_login_sms_send_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SMSSendRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Sms Send",
+        "tags": [
+          "login"
+        ]
+      }
+    },
+    "/api/login/sms/verify": {
+      "post": {
+        "description": "用收到的验证码完成登录",
+        "operationId": "sms_verify_api_login_sms_verify_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SMSVerifyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Sms Verify",
+        "tags": [
+          "login"
+        ]
+      }
+    },
+    "/api/login/status": {
+      "get": {
+        "description": "当前的 B 站登录态\n\n`refresh = True` 时去问一次 nav 接口（顺带刷新 wbi 签名用的 key）；\n否则只报配置里存的状态，不发请求 —— 前端轮询这个接口时不该每次都打一次 B 站",
+        "operationId": "login_status_api_login_status_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "refresh",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Refresh",
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Login Status",
+        "tags": [
+          "login"
+        ]
+      }
+    },
+    "/api/parse": {
+      "post": {
+        "description": "解析一个链接，返回剧集树\n\n树的叶子节点带 `episode` 字段 —— 那正是创建下载任务时要交回来的东西，\n前端原样回传即可，不必自己拼",
+        "operationId": "parse_url_api_parse_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ParseRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Parse Url",
+        "tags": [
+          "parse"
+        ]
+      }
+    },
+    "/api/parse/episodes": {
+      "post": {
+        "description": "从解析树里把叶子摘出来\n\n前端完全可以自己遍历，这里提供一份是为了**让摘取规则只有一处**：\n树节点（`is_node`）不算下载项，这条规则改了两边就会对不上",
+        "operationId": "extract_episodes_api_parse_episodes_post",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "only_checked",
+            "required": false,
+            "schema": {
+              "default": true,
+              "title": "Only Checked",
+              "type": "boolean"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": true,
+                "title": "Tree",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Extract Episodes",
+        "tags": [
+          "parse"
+        ]
+      }
+    },
+    "/api/preview": {
+      "post": {
+        "description": "取一次媒体信息，返回可选的画质 / 编码 / 音质",
+        "operationId": "preview_api_preview_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PreviewRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Preview",
+        "tags": [
+          "preview"
+        ]
+      }
+    },
+    "/api/settings": {
+      "get": {
+        "description": "读配置\n\n附带每一项的类型、默认值、取值范围与可选值 —— 前端据此把设置界面画出来，\n不必自己维护一份与 schema 平行的表（那份表迟早对不上）",
+        "operationId": "read_settings_api_settings_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Read Settings",
+        "tags": [
+          "settings"
+        ]
+      },
+      "post": {
+        "description": "改配置\n\n一次可以改多项。认不出的 attr 与敏感项**直接拒绝整个请求**，不做「部分成功」——\n改配置是用户在设置界面点保存，半对半错的结果比明确报错更难收拾",
+        "operationId": "update_settings_api_settings_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSettingsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update Settings",
+        "tags": [
+          "settings"
+        ]
+      }
+    },
+    "/api/status": {
+      "get": {
+        "description": "登录后可见的运行状态",
+        "operationId": "status_api_status_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Status",
+        "tags": [
+          "system"
+        ]
+      }
+    },
+    "/api/tasks": {
+      "get": {
+        "description": "全量快照\n\n带上 `cursor`：前端拿它去连 WebSocket（`?since=cursor`），服务端会把这之后的\n增量补发出来。没有这个游标的话，快照与增量之间会漏掉一段",
+        "operationId": "task_snapshot_api_tasks_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "maximum": 5000,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Task Snapshot",
+        "tags": [
+          "events"
+        ]
+      },
+      "post": {
+        "description": "创建下载任务\n\n`task_manager.create()` 内部会做**重复下载判定**与**是否需要二次解析**的判断，\n所以实际建出来的可能比传进来的少 —— 返回里如实给出两个数字，\n不然前端会以为「点了没反应」",
+        "operationId": "create_tasks_api_tasks_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTasksRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Tasks",
+        "tags": [
+          "tasks"
+        ]
+      }
+    },
+    "/api/tasks/count": {
+      "get": {
+        "operationId": "count_tasks_api_tasks_count_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Count Tasks",
+        "tags": [
+          "tasks"
+        ]
+      }
+    },
+    "/api/tasks/delete": {
+      "post": {
+        "description": "删除任务\n\n**同时删掉临时文件**（`cancel_many_async` 负责）。只删记录的话，\n下载目录里会留下一堆 `video_<task_id>.m4s`，而且再也没人认得它们属于谁",
+        "operationId": "delete_tasks_api_tasks_delete_post",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "completed",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Completed",
+              "type": "boolean"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TaskIdsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Tasks",
+        "tags": [
+          "tasks"
+        ]
+      }
+    },
+    "/api/tasks/list": {
+      "get": {
+        "description": "列出任务，可排序\n\n与 `GET /api/tasks` 的区别：那个是给「刷新页面恢复现场」用的全量快照（带事件游标），\n这个是给列表视图用的，可以排序与限量",
+        "operationId": "list_tasks_api_tasks_list_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "completed",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Completed",
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
+            "name": "sort_by",
+            "required": false,
+            "schema": {
+              "default": "created_time",
+              "title": "Sort By",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "ascending",
+            "required": false,
+            "schema": {
+              "default": true,
+              "title": "Ascending",
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "maximum": 5000,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Tasks",
+        "tags": [
+          "tasks"
+        ]
+      }
+    },
+    "/api/tasks/pause": {
+      "post": {
+        "description": "暂停：让 aria2 停下来，并把任务状态置为已暂停",
+        "operationId": "pause_tasks_api_tasks_pause_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TaskIdsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Pause Tasks",
+        "tags": [
+          "tasks"
+        ]
+      }
+    },
+    "/api/tasks/resume": {
+      "post": {
+        "description": "恢复",
+        "operationId": "resume_tasks_api_tasks_resume_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TaskIdsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Resume Tasks",
+        "tags": [
+          "tasks"
+        ]
+      }
+    },
+    "/api/tasks/retry": {
+      "post": {
+        "description": "重新下载\n\n先 `reset` 把进度与分片记录清干净再 `recreate` —— 只改状态不清记录的话，\n续传会接着上一次那份已经作废的分片表走",
+        "operationId": "retry_tasks_api_tasks_retry_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TaskIdsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Retry Tasks",
+        "tags": [
+          "tasks"
+        ]
+      }
+    },
+    "/api/tasks/{task_id}": {
+      "get": {
+        "operationId": "get_task_api_tasks__task_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "task_id",
+            "required": true,
+            "schema": {
+              "title": "Task Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Task",
+        "tags": [
+          "tasks"
+        ]
+      }
+    }
+  }
+}
