@@ -1,5 +1,11 @@
 <script setup lang="ts">
-/** 一组设置项。对应 qfluentwidgets 的 SettingCardGroup：组标题 + 若干张卡片 */
+/**
+ * 一组设置项。对应 qfluentwidgets 的 `SettingCardGroup`
+ *
+ * 度量抄自 `setting_card_group.py`：组标题 20px 常规字重，标题与卡片之间 12，
+ * 卡片之间 2。卡片之间只留 2px 是有意的 —— 一组卡片看起来是连成一段的，
+ * 与组之间的 28px 形成层级。
+ */
 defineProps<{
   title: string
 }>()
@@ -19,20 +25,20 @@ defineProps<{
 .setting-card-group {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 12px;
 }
 
 h2 {
   margin: 0;
-  font-size: 12pt;
-  font-weight: 600;
+  font-size: 20px;
+  /* 常规字重，不是 600 —— 桌面版的 setFont(label, 20) 用的是 QFont.Normal */
+  font-weight: 400;
   color: var(--text-primary);
 }
 
 .cards {
   display: flex;
   flex-direction: column;
-  /* 卡片之间只留 2px，看起来是连成一体的一段，与桌面版一致 */
   gap: 2px;
 }
 </style>

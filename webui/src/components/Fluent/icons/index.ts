@@ -10,6 +10,11 @@
 //
 // 新增图标：把 svg 内容抄进一个新的 IconXxx.vue，根节点写 fill="currentColor"
 // （描边类图标则写 stroke="currentColor"），再在此处补一行导出。
+// 设置页那批图标不走这条路：数量多、路径数据大，集中放在 settingIcons.ts 里，
+// 由 FluentIcon.vue 按名字取用（见 scripts/gen_webui_icons.py）
+export { default as FluentIcon } from './FluentIcon.vue'
+export { SETTING_ICONS } from './settingIcons'
+
 export { default as IconApp } from './IconApp.vue'
 export { default as IconDownload } from './IconDownload.vue'
 export { default as IconSearch } from './IconSearch.vue'

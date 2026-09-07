@@ -12,11 +12,22 @@ withDefaults(
     disabled?: boolean
     /** 无障碍名称。设置项里开关旁边的标题不在同一个 label 里，必须显式给 */
     label?: string
+    /**
+     * 开关左侧那两个字（开 / 关）
+     *
+     * 桌面版的 SwitchSettingCard 一律带着它（`SwitchButton(tr('Off'), ...)`，
+     * IndicatorPosition.RIGHT 表示文字在左）。两个都留空就不显示 ——
+     * 对话框里那些紧凑的开关不需要它
+     */
+    onText?: string
+    offText?: string
   }>(),
   {
     modelValue: false,
     disabled: false,
     label: '',
+    onText: '',
+    offText: '',
   },
 )
 
@@ -39,6 +50,7 @@ function handleChange(event: Event) {
       :aria-label="label || undefined"
       @change="handleChange"
     />
+    <span v-if="onText || offText" class="state">{{ modelValue ? onText : offText }}</span>
     <span class="track"><span class="thumb"></span></span>
   </label>
 </template>
@@ -64,6 +76,18 @@ function handleChange(event: Event) {
   margin: 0;
   opacity: 0;
   cursor: inherit;
+}
+
+/* 文字与滑轨之间 12 —— 对应 switch_button.qss 里的 qproperty-spacing: 12 */
+.state {
+  font-size: 14px;
+  margin-right: 12px;
+  color: var(--text-primary);
+  user-select: none;
+}
+
+.fluent-switch.is-disabled .state {
+  color: var(--text-disabled);
 }
 
 .track {

@@ -211,13 +211,12 @@ function describe(e: unknown): string {
         :disabled="!path"
         @click="creating = true"
       />
-      <span class="spacer"></span>
-      <pushButton :title="t('settings.picker.cancel')" @click="emit('close')" />
       <primaryPushButton
         :title="t('settings.picker.choose')"
         :disabled="!path"
         @click="emit('select', path)"
       />
+      <pushButton :title="t('settings.picker.cancel')" @click="emit('close')" />
     </template>
   </fluentDialog>
 </template>
@@ -351,10 +350,6 @@ function describe(e: unknown): string {
 }
 
 .new-folder :deep(.fluent-line-edit) {
-  flex: 1 1 auto;
-}
-
-.spacer {
   flex: 1 1 auto;
 }
 </style>

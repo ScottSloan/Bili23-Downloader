@@ -7,3 +7,8 @@ src/api/openapi.json
 src/api/schema.d.ts
 
 dist
+
+# scripts/gen_webui_icons.py 从 Qt 资源生成的图标数据。
+# 与上面同理：prettier 一改，gen_webui_icons.py --check 就会报「已过期」，
+# 而实际上图标一个字节都没变
+src/components/Fluent/icons/settingIcons.ts

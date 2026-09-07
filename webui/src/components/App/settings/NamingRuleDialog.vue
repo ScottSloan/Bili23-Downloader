@@ -312,12 +312,12 @@ async function commitEdit() {
 
     <template #actions>
       <template v-if="editing">
-        <pushButton :title="t('settings.dialog.cancel')" @click="editing = null" />
         <primaryPushButton :title="t('settings.namingRule.done')" @click="commitEdit" />
+        <pushButton :title="t('settings.dialog.cancel')" @click="editing = null" />
       </template>
       <template v-else>
-        <pushButton :title="t('settings.dialog.cancel')" @click="emit('close')" />
         <primaryPushButton :title="t('settings.dialog.save')" @click="emit('save', rules)" />
+        <pushButton :title="t('settings.dialog.cancel')" @click="emit('close')" />
       </template>
     </template>
   </fluentDialog>

@@ -116,8 +116,8 @@ function move(index: number, delta: number) {
     </ul>
 
     <template #actions>
-      <pushButton :title="t('settings.dialog.cancel')" @click="emit('close')" />
       <primaryPushButton :title="t('settings.dialog.save')" @click="emit('save', order)" />
+      <pushButton :title="t('settings.dialog.cancel')" @click="emit('close')" />
     </template>
   </fluentDialog>
 </template>

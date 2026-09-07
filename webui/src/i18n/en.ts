@@ -91,15 +91,40 @@ export default {
       reset: 'Reset',
     },
 
+    // 开关左边那两个字。桌面版的 SwitchSettingCard 一律带着它，
+    // 译文取自 qfluentwidgets 自带的翻译（不是本项目的 .ts）
+    switch: {
+      on: 'On',
+      off: 'Off',
+    },
+
     group: {
       interface: 'Interface',
       download: 'Download',
       behavior: 'Behavior',
       additional: 'Danmaku, Subtitles, Cover, Chapters, and Metadata',
       advanced: 'Advanced',
-      aria2: 'aria2',
       naming: 'File naming',
-      webui: 'WebUI',
+    },
+
+    // 折叠卡片的标题与说明。文案抄自桌面版 gui/component/setting/card.py 的 self.tr(...)，
+    // 好让两端说的是同一件事；aria2 与 WebUI 两张卡片桌面版没有，是这边自己写的
+    card: {
+      personalization: { title: 'Personalization', desc: 'Customize the app theme, colors, and visual effects' },
+      concurrency: { title: 'Download Concurrency', desc: 'Adjust per-task threads, concurrent downloads, and speed limits' },
+      priority: { title: 'Video, Audio, and Codec Priority', desc: 'Customize download priority settings' },
+      downloadFormat: { title: 'Download Format', desc: 'Configure output format settings for downloaded files' },
+      downloadHandling: { title: 'Download Handling', desc: 'Configure download prompts, duplicate handling, and file conflicts' },
+      danmaku: { title: 'Danmaku Download Settings', desc: 'Adjust danmaku download settings' },
+      subtitle: { title: 'Subtitle Download Settings', desc: 'Adjust subtitle download settings' },
+      cover: { title: 'Cover Download Settings', desc: 'Adjust cover download settings' },
+      chapter: { title: 'Chapter Settings', desc: 'Adjust chapter settings' },
+      metadata: { title: 'Metadata Download Settings', desc: 'Adjust metadata download settings' },
+      cdn: { title: 'CDN Settings', desc: 'Adjust CDN settings used for downloading' },
+      ffmpeg: { title: 'FFmpeg Settings', desc: 'Configure FFmpeg used for merging and converting videos' },
+      proxy: { title: 'Proxy Settings', desc: 'Adjust proxy server settings used for parsing and downloading' },
+      aria2: { title: 'aria2 Settings', desc: 'Configure the aria2 downloader used by the WebUI' },
+      webui: { title: 'WebUI Settings', desc: 'Configure the service address, sign-in, and browsable directories' },
     },
 
     label: {

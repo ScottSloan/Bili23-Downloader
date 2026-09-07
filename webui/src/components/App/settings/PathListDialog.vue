@@ -95,8 +95,8 @@ function remove(index: number) {
     </ul>
 
     <template #actions>
-      <pushButton :title="t('settings.dialog.cancel')" @click="emit('close')" />
       <primaryPushButton :title="t('settings.dialog.save')" @click="emit('save', paths)" />
+      <pushButton :title="t('settings.dialog.cancel')" @click="emit('close')" />
     </template>
   </fluentDialog>
 </template>

@@ -206,12 +206,12 @@ async function confirm() {
     </template>
 
     <template #actions>
-      <pushButton :title="t('download.cancel')" @click="emit('close')" />
       <primaryPushButton
         :title="submitting ? t('download.submitting') : t('download.confirm')"
         :disabled="loading || submitting || !info"
         @click="confirm"
       />
+      <pushButton :title="t('download.cancel')" @click="emit('close')" />
     </template>
   </fluentDialog>
 </template>

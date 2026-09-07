@@ -88,15 +88,40 @@ export default {
       reset: '恢復預設',
     },
 
+    // 开关左边那两个字。桌面版的 SwitchSettingCard 一律带着它，
+    // 译文取自 qfluentwidgets 自带的翻译（不是本项目的 .ts）
+    switch: {
+      on: '開',
+      off: '關',
+    },
+
     group: {
       interface: '介面',
       download: '下載',
       behavior: '行為',
       additional: '彈幕、字幕、封面、章節與元數據',
       advanced: '進階',
-      aria2: 'aria2',
       naming: '檔案命名',
-      webui: 'WebUI',
+    },
+
+    // 折叠卡片的标题与说明。文案抄自桌面版 gui/component/setting/card.py 的 self.tr(...)，
+    // 好让两端说的是同一件事；aria2 与 WebUI 两张卡片桌面版没有，是这边自己写的
+    card: {
+      personalization: { title: '個人化', desc: '自訂應用程式佈景主題、色彩與視覺效果' },
+      concurrency: { title: '下載並行', desc: '調整每個任務的執行緒數、同時下載數與速度限制' },
+      priority: { title: '畫質、音質與編碼優先順序', desc: '自訂下載的優先順序' },
+      downloadFormat: { title: '下載格式', desc: '設定下載檔案的輸出格式選項' },
+      downloadHandling: { title: '下載處理', desc: '配置下載提示、重複下載與檔案衝突的處理方式' },
+      danmaku: { title: '彈幕下載設定', desc: '調整彈幕下載設定' },
+      subtitle: { title: '字幕下載設定', desc: '調整字幕下載設定' },
+      cover: { title: '封面下載設定', desc: '調整封面下載設定' },
+      chapter: { title: '章節設定', desc: '調整章節相關設定' },
+      metadata: { title: '元數據下載設定', desc: '調整元數據下載設定' },
+      cdn: { title: 'CDN 設定', desc: '調整下載所用的 CDN 設定' },
+      ffmpeg: { title: 'FFmpeg 設定', desc: '設定用於合併與轉換影片的 FFmpeg' },
+      proxy: { title: '代理設定', desc: '調整用於解析與下載的代理伺服器設定' },
+      aria2: { title: 'aria2 設定', desc: '設定 WebUI 使用的 aria2 下載器' },
+      webui: { title: 'WebUI 設定', desc: '設定服務位址、登入與可瀏覽目錄' },
     },
 
     label: {

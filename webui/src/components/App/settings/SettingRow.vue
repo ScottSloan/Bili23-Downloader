@@ -10,6 +10,7 @@ import { useSettingsStore } from '@/stores/settingsStore'
 import { t } from '@/i18n'
 import { SPEC_BY_ATTR, type SettingSpec } from './spec'
 import settingCard from '@/components/Fluent/components/settings/SettingCard.vue'
+import settingGroupRow from '@/components/Fluent/components/settings/SettingGroupRow.vue'
 import switchButton from '@/components/Fluent/components/widgets/switch_button/SwitchButton.vue'
 import comboBox from '@/components/Fluent/components/widgets/combo_box/ComboBox.vue'
 import spinBox from '@/components/Fluent/components/widgets/spin_box/SpinBox.vue'
@@ -21,6 +22,13 @@ const props = defineProps<{
   spec: SettingSpec
   /** 结构化项在卡片右侧显示的一句摘要（当前首选画质、已选几种语言…），由设置页算好传进来 */
   summary?: string
+  /**
+   * 这一行是在折叠卡片里，还是自己独占一张卡片
+   *
+   * 两者的外壳不同（`GroupWidget` vs `SettingCard`：缩进、高度、有没有边框），
+   * 但里面挑控件、判依赖、存值那一整套完全一样，所以只换外壳，不复制一份组件
+   */
+  inGroup?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -31,6 +39,8 @@ const emit = defineEmits<{
 }>()
 
 const store = useSettingsStore()
+
+const shell = computed(() => (props.inGroup ? settingGroupRow : settingCard))
 
 const pickerOpen = ref(false)
 
@@ -146,12 +156,13 @@ function update(value: unknown) {
 
 <template>
   <!-- 后端没有这一项就整张卡片不出现。后端可能是旧版本，界面上少一项好过报错 -->
-  <settingCard
+  <component
+    :is="shell"
     v-if="item"
     :title="label"
+    :icon="spec.icon ?? ''"
     :description="description"
     :disabled="!enabled"
-    :nested="Boolean(spec.enabledWhen)"
     :restart="needsRestart"
     :restart-hint="t('settings.restartBadge')"
   >
@@ -160,6 +171,8 @@ function update(value: unknown) {
       :model-value="Boolean(item.value)"
       :disabled="!enabled"
       :label="label"
+      :on-text="t('settings.switch.on')"
+      :off-text="t('settings.switch.off')"
       @update:model-value="update"
     />
 
@@ -220,13 +233,13 @@ function update(value: unknown) {
       :aria-label="label"
       @update:model-value="update"
     />
-  </settingCard>
+  </component>
 </template>
 
 <style scoped>
 .path-value {
   max-width: 320px;
-  font-size: 10.5pt;
+  font-size: 12px;
   color: var(--text-secondary);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -239,7 +252,7 @@ function update(value: unknown) {
 
 .summary {
   max-width: 260px;
-  font-size: 10.5pt;
+  font-size: 12px;
   color: var(--text-secondary);
   overflow: hidden;
   text-overflow: ellipsis;

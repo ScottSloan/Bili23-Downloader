@@ -15,10 +15,11 @@
 // 一律来自后端下发的 schema。在这里再写一遍 min/max 就等于维护第二份真相，
 // 后端一改这边就悄悄对不上了。
 //
-// ## 分组顺序对着桌面版的设置界面
+// ## 分组与卡片的形状对着桌面版的设置界面
 //
 // 见 `src/gui/interface/setting.py`：Interface / Behavior / Download /
-// Additional / Advanced。文案也照抄那边的 `self.tr(...)`，好让两边说的是同一件事。
+// Additional / File naming / Advanced，**每组里再由若干张折叠卡片装下具体的项**。
+// 文案也照抄那边的 `self.tr(...)`，好让两边说的是同一件事。
 
 /** 控件类型。不指定则按后端下发的 `type` 推断 */
 export type ControlKind = 'switch' | 'combo' | 'spin' | 'text' | 'password' | 'path' | 'dialog'
@@ -30,7 +31,12 @@ export type ControlKind = 'switch' | 'combo' | 'spin' | 'text' | 'password' | 'p
  * 卡片上只放一个「自定义…」按钮加一句摘要 —— 与桌面版一致
  */
 export type DialogKind =
-  'priority' | 'subtitleLanguage' | 'browseRoots' | 'danmakuStyle' | 'subtitleStyle' | 'namingRule'
+  | 'priority'
+  | 'subtitleLanguage'
+  | 'browseRoots'
+  | 'danmakuStyle'
+  | 'subtitleStyle'
+  | 'namingRule'
 
 /** 启用条件：另一项为真，或等于某个值 */
 export interface Condition {
@@ -43,7 +49,7 @@ export interface SettingSpec {
   /** 后端的 attr。找不到这一项时整张卡片跳过，不报错 —— 后端可能是旧版本 */
   attr: string
   kind?: ControlKind
-  /** 缩进并在条件不满足时置灰 */
+  /** 条件不满足时置灰 */
   enabledWhen?: Condition
   /** kind 为 dialog 时，用哪个编辑器 */
   dialog?: DialogKind
@@ -60,6 +66,13 @@ export interface SettingSpec {
   /** 有说明文字的项在 i18n 里配 `settings.desc.<attr>`，这里标一下要不要取 */
   described?: boolean
   /**
+   * 行首的图标名，见 icons/settingIcons.ts
+   *
+   * 只给桌面版确实画了图标的那些项。桌面版大量 `addGroup("", ...)` 传的是空图标，
+   * 那些行左边就是空的 —— 这里跟着空，不要自己补一个
+   */
+  icon?: string
+  /**
    * 改完是否要重启后端。**不给则沿用后端下发的 `restart`**
    *
    * 那个标记是**桌面版的语义**，两边并不总是一致：
@@ -73,60 +86,101 @@ export interface SettingSpec {
   restart?: boolean
 }
 
+/**
+ * 一张折叠卡片：头部一个标题，展开后是若干行
+ *
+ * 桌面版设置页里**大多数卡片都是这个**（`ExpandGroupSettingCard`）——「弹幕下载设置」
+ * 一张卡片装五项，收起来只占一行。在此之前 Web 端把这些项平铺成一排卡片、
+ * 靠左缩进表示从属，一屏塞不下几项，与桌面版看起来完全是两个页面
+ */
+export interface ExpandCardSpec {
+  /** i18n 键：`settings.card.<key>.title` 与 `settings.card.<key>.desc` */
+  key: string
+  icon: string
+  items: SettingSpec[]
+}
+
+/** 组里的一项：要么是一张单独的卡片，要么是一张折叠卡片 */
+export type GroupEntry = SettingSpec | ExpandCardSpec
+
+export function isExpandCard(entry: GroupEntry): entry is ExpandCardSpec {
+  return 'items' in entry
+}
+
 export interface SettingGroupSpec {
   /** i18n 键：`settings.group.<key>` */
   key: string
-  items: SettingSpec[]
+  items: GroupEntry[]
 }
 
 /**
  * 界面组是特殊的：主题与主题色只存在浏览器本地（D14 各存各的），
- * 不走 `/api/settings`，所以由 SettingsView 单独渲染，不在这份清单里。
- * 只有语言是共用配置，放这儿
+ * 不走 `/api/settings`，所以由 SettingsView 单独渲染成一张「个性化」折叠卡片，
+ * 不在这份清单里。只有语言是共用配置，放这儿
  */
 export const INTERFACE_ITEMS: SettingSpec[] = [
   // 后端标着要重启（Qt 要重载 .qm），Web 端切完立刻生效
-  { attr: 'language', described: true, restart: false },
+  { attr: 'language', icon: 'language', described: true, restart: false },
 ]
 
 export const SETTING_GROUPS: SettingGroupSpec[] = [
   {
     key: 'download',
     items: [
-      { attr: 'download_path', kind: 'path', described: true },
-      { attr: 'download_thread', suffix: '', described: true },
-      { attr: 'download_parallel', described: true },
-      { attr: 'speed_limit_enabled', described: true },
-      {
-        attr: 'speed_limit_rate',
-        suffix: 'MB/s',
-        step: 1,
-        decimals: 1,
-        enabledWhen: { attr: 'speed_limit_enabled' },
-      },
-      { attr: 'video_container', described: true },
-      { attr: 'm4a_to_mp3', described: true },
+      { attr: 'download_path', kind: 'path', icon: 'folder', described: true },
 
       {
-        attr: 'video_quality_priority',
-        kind: 'dialog',
-        dialog: 'priority',
-        choices: 'video_quality',
-        described: true,
+        key: 'concurrency',
+        icon: 'fastDownload',
+        items: [
+          { attr: 'download_thread', described: true },
+          { attr: 'download_parallel', described: true },
+          { attr: 'speed_limit_enabled', described: true },
+          {
+            attr: 'speed_limit_rate',
+            suffix: 'MB/s',
+            step: 1,
+            decimals: 1,
+            enabledWhen: { attr: 'speed_limit_enabled' },
+          },
+        ],
       },
+
       {
-        attr: 'audio_quality_priority',
-        kind: 'dialog',
-        dialog: 'priority',
-        choices: 'audio_quality',
-        described: true,
+        key: 'priority',
+        icon: 'setting',
+        items: [
+          {
+            attr: 'video_quality_priority',
+            kind: 'dialog',
+            dialog: 'priority',
+            choices: 'video_quality',
+            icon: 'video',
+          },
+          {
+            attr: 'audio_quality_priority',
+            kind: 'dialog',
+            dialog: 'priority',
+            choices: 'audio_quality',
+            icon: 'music',
+          },
+          {
+            attr: 'video_codec_priority',
+            kind: 'dialog',
+            dialog: 'priority',
+            choices: 'video_codec',
+            icon: 'code',
+          },
+        ],
       },
+
       {
-        attr: 'video_codec_priority',
-        kind: 'dialog',
-        dialog: 'priority',
-        choices: 'video_codec',
-        described: true,
+        key: 'downloadFormat',
+        icon: 'document',
+        items: [
+          { attr: 'video_container', icon: 'video', described: true },
+          { attr: 'm4a_to_mp3', icon: 'music', described: true },
+        ],
       },
     ],
   },
@@ -134,121 +188,186 @@ export const SETTING_GROUPS: SettingGroupSpec[] = [
   {
     key: 'behavior',
     items: [
-      { attr: 'show_download_options_dialog', described: true },
-      { attr: 'duplicate_download_resolution', described: true },
-      { attr: 'file_conflict_resolution', described: true },
+      {
+        key: 'downloadHandling',
+        icon: 'download',
+        items: [
+          { attr: 'show_download_options_dialog', described: true },
+          { attr: 'duplicate_download_resolution', described: true },
+          { attr: 'file_conflict_resolution', described: true },
+        ],
+      },
     ],
   },
 
   {
     key: 'additional',
     items: [
-      { attr: 'download_danmaku' },
-      { attr: 'danmaku_type', enabledWhen: { attr: 'download_danmaku' } },
       {
-        attr: 'danmaku_style',
-        kind: 'dialog',
-        dialog: 'danmakuStyle',
-        described: true,
-        enabledWhen: { attr: 'download_danmaku' },
-      },
-      { attr: 'embed_danmaku', described: true, enabledWhen: { attr: 'download_danmaku' } },
-      {
-        attr: 'delete_danmaku_after_embed',
-        described: true,
-        enabledWhen: { attr: 'embed_danmaku' },
-      },
-
-      { attr: 'download_subtitle' },
-      { attr: 'subtitle_type', enabledWhen: { attr: 'download_subtitle' } },
-      {
-        attr: 'subtitle_style',
-        kind: 'dialog',
-        dialog: 'subtitleStyle',
-        described: true,
-        enabledWhen: { attr: 'download_subtitle' },
-      },
-      {
-        attr: 'subtitle_language',
-        kind: 'dialog',
-        dialog: 'subtitleLanguage',
-        choices: 'subtitle_language',
-        described: true,
-        enabledWhen: { attr: 'download_subtitle' },
-      },
-      { attr: 'embed_subtitle', described: true, enabledWhen: { attr: 'download_subtitle' } },
-      {
-        attr: 'delete_subtitle_after_embed',
-        described: true,
-        enabledWhen: { attr: 'embed_subtitle' },
+        key: 'danmaku',
+        icon: 'comment',
+        items: [
+          { attr: 'download_danmaku' },
+          { attr: 'danmaku_type', enabledWhen: { attr: 'download_danmaku' } },
+          {
+            attr: 'danmaku_style',
+            kind: 'dialog',
+            dialog: 'danmakuStyle',
+            described: true,
+            enabledWhen: { attr: 'download_danmaku' },
+          },
+          { attr: 'embed_danmaku', described: true, enabledWhen: { attr: 'download_danmaku' } },
+          {
+            attr: 'delete_danmaku_after_embed',
+            described: true,
+            enabledWhen: { attr: 'embed_danmaku' },
+          },
+        ],
       },
 
-      { attr: 'download_cover' },
-      { attr: 'cover_type', enabledWhen: { attr: 'download_cover' } },
-      { attr: 'attach_cover', described: true, enabledWhen: { attr: 'download_cover' } },
       {
-        attr: 'delete_cover_after_attach',
-        described: true,
-        enabledWhen: { attr: 'attach_cover' },
+        key: 'subtitle',
+        icon: 'subtitles',
+        items: [
+          { attr: 'download_subtitle' },
+          { attr: 'subtitle_type', enabledWhen: { attr: 'download_subtitle' } },
+          {
+            attr: 'subtitle_language',
+            kind: 'dialog',
+            dialog: 'subtitleLanguage',
+            choices: 'subtitle_language',
+            described: true,
+            enabledWhen: { attr: 'download_subtitle' },
+          },
+          {
+            attr: 'subtitle_style',
+            kind: 'dialog',
+            dialog: 'subtitleStyle',
+            described: true,
+            enabledWhen: { attr: 'download_subtitle' },
+          },
+          { attr: 'embed_subtitle', described: true, enabledWhen: { attr: 'download_subtitle' } },
+          {
+            attr: 'delete_subtitle_after_embed',
+            described: true,
+            enabledWhen: { attr: 'embed_subtitle' },
+          },
+        ],
       },
 
-      { attr: 'embed_chapter', described: true },
+      {
+        key: 'cover',
+        icon: 'photo',
+        items: [
+          { attr: 'download_cover' },
+          { attr: 'cover_type', enabledWhen: { attr: 'download_cover' } },
+          { attr: 'attach_cover', described: true, enabledWhen: { attr: 'download_cover' } },
+          {
+            attr: 'delete_cover_after_attach',
+            described: true,
+            enabledWhen: { attr: 'attach_cover' },
+          },
+        ],
+      },
 
-      { attr: 'download_metadata' },
-      { attr: 'metadata_type', enabledWhen: { attr: 'download_metadata' } },
+      {
+        key: 'chapter',
+        icon: 'bookShelf',
+        items: [{ attr: 'embed_chapter', described: true }],
+      },
+
+      {
+        key: 'metadata',
+        icon: 'document',
+        items: [
+          { attr: 'download_metadata' },
+          { attr: 'metadata_type', enabledWhen: { attr: 'download_metadata' } },
+        ],
+      },
     ],
   },
 
   {
     key: 'naming',
-    items: [{ attr: 'naming_rule_list', kind: 'dialog', dialog: 'namingRule', described: true }],
+    items: [
+      {
+        attr: 'naming_rule_list',
+        kind: 'dialog',
+        dialog: 'namingRule',
+        icon: 'document',
+        described: true,
+      },
+    ],
   },
 
   {
     key: 'advanced',
     items: [
-      { attr: 'prefer_cdn_server_provider', described: true },
-      { attr: 'area', described: true },
-
-      { attr: 'ffmpeg_source', described: true },
       {
-        attr: 'custom_ffmpeg_path',
-        kind: 'text',
-        enabledWhen: { attr: 'ffmpeg_source', equals: 'custom' },
+        key: 'cdn',
+        icon: 'cloudDownload',
+        items: [
+          { attr: 'prefer_cdn_server_provider', described: true },
+          { attr: 'area', described: true },
+        ],
       },
 
-      { attr: 'proxy_mode', described: true },
-      { attr: 'proxy_server', enabledWhen: { attr: 'proxy_mode', equals: 'manual' } },
-      { attr: 'proxy_port', enabledWhen: { attr: 'proxy_mode', equals: 'manual' } },
-      { attr: 'proxy_uname', enabledWhen: { attr: 'proxy_mode', equals: 'manual' } },
       {
-        attr: 'proxy_password',
-        kind: 'password',
-        enabledWhen: { attr: 'proxy_mode', equals: 'manual' },
+        key: 'ffmpeg',
+        icon: 'setting',
+        items: [
+          { attr: 'ffmpeg_source', described: true },
+          {
+            attr: 'custom_ffmpeg_path',
+            kind: 'text',
+            enabledWhen: { attr: 'ffmpeg_source', equals: 'custom' },
+          },
+        ],
       },
 
-      { attr: 'user_agent', described: true },
-    ],
-  },
+      {
+        key: 'proxy',
+        icon: 'server',
+        items: [
+          { attr: 'proxy_mode', described: true },
+          { attr: 'proxy_server', enabledWhen: { attr: 'proxy_mode', equals: 'manual' } },
+          { attr: 'proxy_port', enabledWhen: { attr: 'proxy_mode', equals: 'manual' } },
+          { attr: 'proxy_uname', enabledWhen: { attr: 'proxy_mode', equals: 'manual' } },
+          {
+            attr: 'proxy_password',
+            kind: 'password',
+            enabledWhen: { attr: 'proxy_mode', equals: 'manual' },
+          },
+        ],
+      },
 
-  {
-    key: 'aria2',
-    items: [
-      { attr: 'aria2_managed', described: true, restart: true },
-      { attr: 'aria2_path', kind: 'text', described: true, restart: true },
-      { attr: 'aria2_rpc_host', described: true, restart: true },
-      { attr: 'aria2_rpc_port', restart: true },
-    ],
-  },
+      { attr: 'user_agent', icon: 'code', described: true },
 
-  {
-    key: 'webui',
-    items: [
-      { attr: 'webui_host', described: true, restart: true },
-      { attr: 'webui_port', restart: true },
-      { attr: 'webui_username', described: true },
-      { attr: 'webui_session_hours', suffix: 'h', described: true },
-      { attr: 'webui_browse_roots', kind: 'dialog', dialog: 'browseRoots', described: true },
+      // aria2 与 WebUI 这两张卡片桌面版没有对应物（那边的下载器是内置的，也没有服务端）。
+      // 放进「高级」而不是各开一个组：它们和 CDN、代理一样属于排障与部署，
+      // 单开一个只装四项的组，页面上会多出两个几乎空的大标题
+      {
+        key: 'aria2',
+        icon: 'fastDownload',
+        items: [
+          { attr: 'aria2_managed', described: true, restart: true },
+          { attr: 'aria2_path', kind: 'text', described: true, restart: true },
+          { attr: 'aria2_rpc_host', described: true, restart: true },
+          { attr: 'aria2_rpc_port', restart: true },
+        ],
+      },
+
+      {
+        key: 'webui',
+        icon: 'server',
+        items: [
+          { attr: 'webui_host', described: true, restart: true },
+          { attr: 'webui_port', restart: true },
+          { attr: 'webui_username', described: true },
+          { attr: 'webui_session_hours', suffix: 'h', described: true },
+          { attr: 'webui_browse_roots', kind: 'dialog', dialog: 'browseRoots', described: true },
+        ],
+      },
     ],
   },
 ]
@@ -261,10 +380,12 @@ export const SETTING_GROUPS: SettingGroupSpec[] = [
  * 仍是 true**，于是孙子项还亮着，用户能去改一个根本不会生效的开关
  */
 export const SPEC_BY_ATTR: Record<string, SettingSpec> = Object.fromEntries(
-  [...INTERFACE_ITEMS, ...SETTING_GROUPS.flatMap((group) => group.items)].map((spec) => [
-    spec.attr,
-    spec,
-  ]),
+  [
+    ...INTERFACE_ITEMS,
+    ...SETTING_GROUPS.flatMap((group) =>
+      group.items.flatMap((entry) => (isExpandCard(entry) ? entry.items : [entry])),
+    ),
+  ].map((spec) => [spec.attr, spec]),
 )
 
 /**

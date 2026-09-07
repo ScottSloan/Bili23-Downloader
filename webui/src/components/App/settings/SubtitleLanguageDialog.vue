@@ -130,8 +130,8 @@ function save() {
       <span class="count">{{
         t('settings.subtitleLanguage.selected', { count: selected.size })
       }}</span>
-      <pushButton :title="t('settings.dialog.cancel')" @click="emit('close')" />
       <primaryPushButton :title="t('settings.dialog.save')" @click="save" />
+      <pushButton :title="t('settings.dialog.cancel')" @click="emit('close')" />
     </template>
   </fluentDialog>
 </template>

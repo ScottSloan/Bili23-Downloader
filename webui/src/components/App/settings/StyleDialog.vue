@@ -332,8 +332,8 @@ const fontOptions = computed(() => {
     </div>
 
     <template #actions>
-      <pushButton :title="t('settings.dialog.cancel')" @click="emit('close')" />
       <primaryPushButton :title="t('settings.dialog.save')" @click="emit('save', draft)" />
+      <pushButton :title="t('settings.dialog.cancel')" @click="emit('close')" />
     </template>
   </fluentDialog>
 </template>

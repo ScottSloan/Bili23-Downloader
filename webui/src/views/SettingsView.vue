@@ -21,6 +21,7 @@ import {
   SETTING_GROUPS,
   INTERFACE_ITEMS,
   SPEC_BY_ATTR,
+  isExpandCard,
   type SettingSpec,
 } from '@/components/App/settings/spec'
 import settingRow from '@/components/App/settings/SettingRow.vue'
@@ -30,8 +31,9 @@ import pathListDialog from '@/components/App/settings/PathListDialog.vue'
 import styleDialog from '@/components/App/settings/StyleDialog.vue'
 import namingRuleDialog from '@/components/App/settings/NamingRuleDialog.vue'
 import type { NamingRule } from '@/components/App/settings/NamingRuleDialog.vue'
-import settingCard from '@/components/Fluent/components/settings/SettingCard.vue'
 import settingCardGroup from '@/components/Fluent/components/settings/SettingCardGroup.vue'
+import expandSettingCard from '@/components/Fluent/components/settings/ExpandSettingCard.vue'
+import settingGroupRow from '@/components/Fluent/components/settings/SettingGroupRow.vue'
 import comboBox from '@/components/Fluent/components/widgets/combo_box/ComboBox.vue'
 import pushButton from '@/components/Fluent/components/widgets/button/PushButton.vue'
 
@@ -197,32 +199,42 @@ function summaryOf(spec: SettingSpec): string | undefined {
     <p v-if="restartNotice" class="status notice">{{ restartNotice }}</p>
 
     <settingCardGroup :title="t('settings.group.interface')">
-      <settingCard
-        :title="t('settings.theme.label')"
-        :description="`${t('settings.theme.description')}（${t('settings.localOnly')}）`"
+      <!--
+        对应桌面版的 PersonalizationCard。主题与主题色不走 /api/settings（D14 两端各存各的），
+        所以这两行手写，不经过 SettingRow
+      -->
+      <expandSettingCard
+        icon="palette"
+        :title="t('settings.card.personalization.title')"
+        :description="t('settings.card.personalization.desc')"
       >
-        <comboBox
-          :model-value="themeStore.mode"
-          :options="themeOptions"
-          :label="t('settings.theme.label')"
-          @update:model-value="(value) => themeStore.setMode(String(value))"
-        />
-      </settingCard>
+        <settingGroupRow
+          :title="t('settings.theme.label')"
+          :description="`${t('settings.theme.description')}（${t('settings.localOnly')}）`"
+        >
+          <comboBox
+            :model-value="themeStore.mode"
+            :options="themeOptions"
+            :label="t('settings.theme.label')"
+            @update:model-value="(value) => themeStore.setMode(String(value))"
+          />
+        </settingGroupRow>
 
-      <settingCard
-        :title="t('settings.accent.label')"
-        :description="`${t('settings.accent.description')}（${t('settings.localOnly')}）`"
-      >
-        <!-- 原生取色器：各平台自带的那个，比自己搭一个色轮可靠得多 -->
-        <input
-          type="color"
-          class="color-input"
-          :value="themeStore.primaryColor"
-          :aria-label="t('settings.accent.label')"
-          @input="themeStore.setPrimaryColor(($event.target as HTMLInputElement).value)"
-        />
-        <pushButton :title="t('settings.accent.reset')" @click="themeStore.setPrimaryColor('')" />
-      </settingCard>
+        <settingGroupRow
+          :title="t('settings.accent.label')"
+          :description="`${t('settings.accent.description')}（${t('settings.localOnly')}）`"
+        >
+          <!-- 原生取色器：各平台自带的那个，比自己搭一个色轮可靠得多 -->
+          <input
+            type="color"
+            class="color-input"
+            :value="themeStore.primaryColor"
+            :aria-label="t('settings.accent.label')"
+            @input="themeStore.setPrimaryColor(($event.target as HTMLInputElement).value)"
+          />
+          <pushButton :title="t('settings.accent.reset')" @click="themeStore.setPrimaryColor('')" />
+        </settingGroupRow>
+      </expandSettingCard>
 
       <settingRow
         v-for="spec in INTERFACE_ITEMS"
@@ -239,14 +251,34 @@ function summaryOf(spec: SettingSpec): string | undefined {
       :key="group.key"
       :title="t(`settings.group.${group.key}`)"
     >
-      <settingRow
-        v-for="spec in group.items"
-        :key="spec.attr"
-        :spec="spec"
-        :summary="summaryOf(spec)"
-        @changed="onChanged"
-        @open-dialog="onOpenDialog"
-      />
+      <template v-for="entry in group.items">
+        <expandSettingCard
+          v-if="isExpandCard(entry)"
+          :key="entry.key"
+          :icon="entry.icon"
+          :title="t(`settings.card.${entry.key}.title`)"
+          :description="t(`settings.card.${entry.key}.desc`)"
+        >
+          <settingRow
+            v-for="spec in entry.items"
+            :key="spec.attr"
+            :spec="spec"
+            :summary="summaryOf(spec)"
+            in-group
+            @changed="onChanged"
+            @open-dialog="onOpenDialog"
+          />
+        </expandSettingCard>
+
+        <settingRow
+          v-else
+          :key="entry.attr"
+          :spec="entry"
+          :summary="summaryOf(entry)"
+          @changed="onChanged"
+          @open-dialog="onOpenDialog"
+        />
+      </template>
     </settingCardGroup>
 
     <priorityDialog
@@ -293,14 +325,16 @@ function summaryOf(spec: SettingSpec): string | undefined {
 </template>
 
 <style scoped>
+/* 页面边距与组间距抄自桌面版 setting.py：contentsMargins(30, 10, 30, 0) + setSpacing(28)，
+   底部那 20 是它最后 addSpacing(20) 留的 */
 .page-view {
   height: 100%;
   overflow-y: auto;
-  padding: 15px 25px 40px 25px;
+  padding: 10px 30px 20px 30px;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 28px;
 }
 
 .status {

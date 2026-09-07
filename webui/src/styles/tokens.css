@@ -38,13 +38,26 @@
   --control-stroke-accent: rgba(0, 0, 0, 0.183);
   /* 输入框底边更深，用于强调可输入 */
   --control-stroke-input: rgba(0, 0, 0, 0.39);
-  --card-stroke-default: rgba(0, 0, 0, 0.068);
+  /* 卡片描边与分隔线是同一个值 —— qfluentwidgets 的 SettingCard 与 GroupSeparator
+     用的都是 QColor(0, 0, 0, 19) */
+  --card-stroke-default: rgba(0, 0, 0, 0.075);
   --divider-stroke: rgba(0, 0, 0, 0.09);
+
+  /* 设置卡片的底色。与 --control-fill-default 不是一回事：卡片是内容层，
+     控件浮在卡片之上，两者在深色主题下差得尤其远 */
+  --card-fill-default: rgba(255, 255, 255, 0.667);
+
+  /* 折叠卡片头部那个箭头按钮。按下比悬停更淡 —— qfluentwidgets 就是这么定的
+     （hover 14/255，pressed 10/255），不是写反了 */
+  --expand-button-hover: rgba(0, 0, 0, 0.055);
+  --expand-button-pressed: rgba(0, 0, 0, 0.039);
 
   /* ---- 文字 ---- */
   --text-primary: rgb(0, 0, 0);
   --text-secondary: rgba(0, 0, 0, 0.6);
   --text-tertiary: rgba(0, 0, 0, 0.55);
+  /* 卡片副标题。桌面版单独给了一档灰，不是 --text-secondary 那种透明黑 */
+  --card-description: rgb(96, 96, 96);
   /* 按下控件时文字变淡 */
   --text-pressed: rgba(0, 0, 0, 0.63);
   --text-placeholder: rgb(141, 141, 142);
@@ -52,6 +65,15 @@
   --text-on-accent: rgb(255, 255, 255);
   --text-danger: rgb(196, 43, 28);
   --text-disabled: rgba(0, 0, 0, 0.3614);
+
+  /* ---- 对话框 ---- */
+  /* 遮罩固定是黑色半透，深浅主题同一个值（QColor(0, 0, 0, 76)）*/
+  --dialog-mask: rgba(0, 0, 0, 0.298);
+  --dialog-fill: rgb(255, 255, 255);
+  --dialog-stroke: rgb(144, 144, 142);
+  /* 底部按钮区是一条独立的浅色带，与内容区分开 */
+  --dialog-footer-fill: rgb(243, 243, 243);
+  --dialog-footer-stroke: rgb(229, 229, 229);
 
   /* ---- 焦点环 ---- */
   /* Fluent 的键盘焦点是双环：外层深色 2px + 内层浅色 1px，
@@ -83,17 +105,28 @@
   /* 深色下立体感来自顶边而非底边 —— 光源方向反了 */
   --control-stroke-accent: rgba(255, 255, 255, 0.08);
   --control-stroke-input: rgba(255, 255, 255, 0.5442);
-  --card-stroke-default: rgba(0, 0, 0, 0.18);
+  --card-stroke-default: rgba(0, 0, 0, 0.196);
   --divider-stroke: rgba(255, 255, 255, 0.09);
+
+  --card-fill-default: rgba(255, 255, 255, 0.051);
+
+  --expand-button-hover: rgba(255, 255, 255, 0.055);
+  --expand-button-pressed: rgba(255, 255, 255, 0.039);
 
   --text-primary: rgb(255, 255, 255);
   --text-secondary: rgba(255, 255, 255, 0.6);
   --text-tertiary: rgba(255, 255, 255, 0.55);
+  --card-description: rgb(208, 208, 208);
   --text-pressed: rgba(255, 255, 255, 0.786);
   --text-placeholder: rgb(154, 154, 154);
   --text-on-accent: rgb(0, 0, 0);
   --text-danger: rgb(255, 153, 164);
   --text-disabled: rgba(255, 255, 255, 0.3628);
+
+  --dialog-fill: rgb(43, 43, 43);
+  --dialog-stroke: rgb(58, 58, 58);
+  --dialog-footer-fill: rgb(32, 32, 32);
+  --dialog-footer-stroke: rgb(29, 29, 29);
 
   --focus-stroke-outer: rgb(255, 255, 255);
   --focus-stroke-inner: rgba(0, 0, 0, 0.7);
