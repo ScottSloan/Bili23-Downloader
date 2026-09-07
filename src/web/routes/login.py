@@ -19,10 +19,22 @@ B 站账号登录（S3-11）
 只有前端知道那个对话框还开不开着。服务端替它轮询的话，用户关掉页面之后
 这个循环还会一直跑下去。
 
-## 短信登录暂缺
+## 短信登录：WebUI 比桌面版简单一圈
 
-它需要极验（geetest）的滑块验证，桌面版是开一个内嵌浏览器让用户过验证再把 token 带回来。
-这套流程在 WebUI 里要重做一遍前端，不适合塞在这一批里 —— 扫码与 Cookie 两条已经够用。
+滑块必须在浏览器里做（极验的 JS 只跑在网页环境）。桌面版为此起了一个本地 HTTP 服务器
+（`auth/server.py`，端口 2333），把 `res/html/captcha.html` 用系统浏览器打开，
+页面从 `/geetest/captcha/init` 取参数，用户过完再 POST 回 `/geetest/captcha/callback`。
+
+**WebUI 不需要这一圈** —— 它本身就是网页。三步走：
+
+1. `POST /api/login/sms/captcha` 拿 `{token, gt, challenge}`
+2. 前端照 `res/html/captcha.html` 里那套调 `initGeetest`，把 `getValidate()` 的
+   `geetest_challenge / geetest_validate / geetest_seccode` 回传
+3. `POST /api/login/sms/send` 发短信拿 `captcha_key`，再 `POST /api/login/sms/verify` 登录
+
+**别把这几个参数搞混**：challenge / validate / seccode 是**发短信**那一步的入参，
+captcha_key 是发短信的**返回值**、登录时才用。名字长得像，接错了接口只会回一句
+「参数错误」。
 """
 
 from typing import Optional
@@ -35,6 +47,7 @@ from pydantic import BaseModel, Field
 
 from util.auth.qrcode_session import QRCodeSession
 from util.auth.session import LoginSession
+from util.auth.sms_session import SMSSession
 from util.common.config import config
 from util.thread import background
 
@@ -49,6 +62,22 @@ async def _off_loop(func, *args):
 class CookieLoginRequest(BaseModel):
     # 粘贴的 Cookie 可能是一整段 JSON，给足长度
     text: str = Field(min_length = 1, max_length = 8192)
+
+class SMSSendRequest(BaseModel):
+    cid: str = Field(min_length = 1, max_length = 8)
+    tel: str = Field(min_length = 1, max_length = 32)
+    token: str = Field(min_length = 1, max_length = 256)
+    challenge: str = Field(min_length = 1, max_length = 256)
+    # **字段名不能直接叫 validate**：那是 pydantic BaseModel 自己的属性，
+    # 会被它警告并遮蔽。用别名把对外的 JSON 键保持成极验回调里那个名字
+    validate_code: str = Field(min_length = 1, max_length = 512, alias = "validate")
+    seccode: str = Field(min_length = 1, max_length = 512)
+
+class SMSVerifyRequest(BaseModel):
+    cid: str = Field(min_length = 1, max_length = 8)
+    tel: str = Field(min_length = 1, max_length = 32)
+    code: str = Field(min_length = 1, max_length = 16)
+    captcha_key: str = Field(min_length = 1, max_length = 512)
 
 @router.get("/login/status")
 async def login_status(refresh: bool = Query(default = False)):
@@ -135,3 +164,62 @@ async def logout():
     session = LoginSession()
 
     return await _off_loop(session.logout)
+
+# ---------------- 短信登录 ----------------
+
+@router.get("/login/sms/regions")
+async def sms_regions():
+    """国家/地区区号。与桌面版下拉框用的是同一份数据"""
+    from util.common.data import cid_list
+
+    return {"regions": cid_list}
+
+@router.post("/login/sms/captcha")
+async def sms_captcha():
+    """
+    申请极验参数
+
+    前端拿 `gt` 与 `challenge` 调 `initGeetest`（写法见 `src/res/html/captcha.html`），
+    `token` 原样留着，发短信时要带回去
+    """
+    session = SMSSession()
+
+    try:
+        return await _off_loop(session.init_captcha)
+
+    except Exception as e:
+        logger.warning("申请极验参数失败：%s", e)
+
+        return JSONResponse({"detail": str(e)}, status_code = 502)
+
+@router.post("/login/sms/send")
+async def sms_send(payload: SMSSendRequest):
+    """发送验证码短信。返回的 captcha_key 登录时要用"""
+    session = SMSSession()
+
+    try:
+        return await _off_loop(session.send, payload.cid, payload.tel, payload.token,
+                               payload.challenge, payload.validate_code, payload.seccode)
+
+    except Exception as e:
+        logger.warning("发送验证码失败：%s", e)
+
+        # 手机号不对、滑块过期这类都由 B 站判定并回一句话，原样透给前端
+        return JSONResponse({"detail": str(e)}, status_code = 400)
+
+@router.post("/login/sms/verify")
+async def sms_verify(payload: SMSVerifyRequest):
+    """用收到的验证码完成登录"""
+    session = SMSSession()
+
+    try:
+        await _off_loop(session.login, payload.cid, payload.tel,
+                        payload.code, payload.captcha_key)
+
+    except Exception as e:
+        logger.warning("短信登录失败：%s", e)
+
+        return JSONResponse({"detail": str(e)}, status_code = 400)
+
+    # 登录成功后顺手把用户信息与 wbi key 取回来，省前端一次往返
+    return await _off_loop(LoginSession().fetch_user_info)

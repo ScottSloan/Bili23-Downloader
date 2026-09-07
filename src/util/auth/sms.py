@@ -7,6 +7,7 @@ from ..thread.async_ import AsyncTask
 
 from .captcha import CaptchaInfo
 from .base import AuthBase
+from .sms_session import SMS_LOGIN_URL, SMS_SEND_URL, login_params, send_params
 
 class SMSInfo:
     cid = ""
@@ -45,19 +46,17 @@ class SMS(AuthBase, QObject):
         super().on_error(message)
 
     def send(self):
-        params = {
-                "cid": SMSInfo.cid,
-                "tel": SMSInfo.tel,
-                "source": "main-fe-header",
-                "token": CaptchaInfo.token,
-                "challenge": CaptchaInfo.challenge,
-                "validate": CaptchaInfo.validate,
-                "seccode": CaptchaInfo.seccode
-            }
+        # 参数拼装在 sms_session.py 里，与 WebUI 共用一份
+        params = send_params(
+            cid = SMSInfo.cid,
+            tel = SMSInfo.tel,
+            token = CaptchaInfo.token,
+            challenge = CaptchaInfo.challenge,
+            validate = CaptchaInfo.validate,
+            seccode = CaptchaInfo.seccode
+        )
 
-        url = "https://passport.bilibili.com/x/passport-login/web/sms/send"
-
-        worker = NetworkRequestWorker(url, request_type = RequestType.POST, params = params)
+        worker = NetworkRequestWorker(SMS_SEND_URL, request_type = RequestType.POST, params = params)
         # 连到本对象的方法而非闭包，由 Qt 排队回 GUI 线程，避免在请求线程里改动全局登录状态
         worker.success.connect(self.on_send_success)
         worker.error.connect(self.on_error)
@@ -81,18 +80,14 @@ class SMS(AuthBase, QObject):
         self.sms_sent.emit()
 
     def login(self):
-        params = {
-                "cid": SMSInfo.cid,
-                "tel": SMSInfo.tel,
-                "code": SMSInfo.verification_code,
-                "source": "main-fe-header",
-                "captcha_key": CaptchaInfo.captcha_key,
-                "go_url": "https://www.bilibili.com/"
-            }
-        
-        url = "https://passport.bilibili.com/x/passport-login/web/login/sms"
+        params = login_params(
+            cid = SMSInfo.cid,
+            tel = SMSInfo.tel,
+            code = SMSInfo.verification_code,
+            captcha_key = CaptchaInfo.captcha_key
+        )
 
-        worker = NetworkRequestWorker(url, request_type = RequestType.POST, params = params)
+        worker = NetworkRequestWorker(SMS_LOGIN_URL, request_type = RequestType.POST, params = params)
         worker.success.connect(self.on_login_success)
         worker.error.connect(self.on_error)
 
