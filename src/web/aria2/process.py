@@ -30,6 +30,13 @@ logger = logging.getLogger(__name__)
 # aria2 的会话文件。进程重启后据此恢复未完成的任务（S3-8 的对账要用）
 SESSION_FILE = "aria2.session"
 
+# aria2 的控制台输出落到这里。**不能用管道**，理由见 Aria2Process._open_log()
+LOG_FILE = "aria2.log"
+
+# 日志超过这个大小就轮换一次。aria2 在下载出错时会持续打印，不轮换的话
+# 长期运行下这个文件会无限长
+MAX_LOG_BYTES = 4 * 1024 * 1024
+
 def ensure_secret() -> str:
     """没有 RPC 令牌就随机生成一个并存起来"""
     secret = config.get(config.aria2_rpc_secret)
@@ -60,6 +67,7 @@ def resolve_executable() -> Optional[str]:
 class Aria2Process:
     def __init__(self):
         self._proc: Optional[subprocess.Popen] = None
+        self._log = None
 
         self.host = config.get(config.aria2_rpc_host)
         self.port = config.get(config.aria2_rpc_port)
@@ -96,7 +104,8 @@ class Aria2Process:
             "--auto-save-interval=30",
             "--force-save=false",
 
-            # 控制台不需要进度刷屏，日志由业务层统一记
+            # 控制台不需要进度刷屏。输出量小不代表可以不管它 ——
+            # 见 _open_log() 里那段，管道写满会让 aria2 整个卡死
             "--console-log-level=warn",
             "--summary-interval=0",
             "--quiet=false",
@@ -107,6 +116,91 @@ class Aria2Process:
         # 恢复统一由 reconcile.py 按 task.db 驱动，aria2 这边保持「只做被交代的事」
 
         return args
+
+    def _open_log(self):
+        """
+        给 aria2 的输出开一个日志文件
+
+        **这不是为了留日志，是为了不让它卡死。**
+
+        原先用的是 `stdout = subprocess.PIPE` 且从不读。管道有容量（Windows 上 64KB），
+        写满之后 aria2 会永远阻塞在 write 上 —— 内核仍会 accept TCP 连接，
+        所以端口看着是通的，但进程再也不处理任何请求。表现出来是
+        「keepalive ping timeout」加上无穷无尽的「timed out during opening handshake」，
+        完全看不出病因。
+
+        实测：`--console-log-level=debug` 下大约 4 秒就写满并卡死；改成文件后全程正常。
+
+        文件写入不会阻塞，所以只要不是管道就行；用文件而不是 DEVNULL 是为了留下
+        启动失败时的诊断信息。
+        """
+        path = get_data_dir() / LOG_FILE
+
+        try:
+            path.parent.mkdir(parents = True, exist_ok = True)
+
+            # 超过上限就截断重来。aria2 在下载出错时会持续打印，不管的话会无限长
+            if path.is_file() and path.stat().st_size > MAX_LOG_BYTES:
+                path.unlink()
+
+            return open(path, "ab", buffering = 0)
+
+        except Exception:
+            logger.exception("无法打开 aria2 日志文件，改用 DEVNULL")
+
+            # 退回 DEVNULL 也比管道强：丢掉诊断信息，但不会把 aria2 卡死
+            return subprocess.DEVNULL
+
+    def _close_log(self) -> None:
+        log = self._log
+        self._log = None
+
+        if log is None or log == subprocess.DEVNULL:
+            return
+
+        try:
+            log.close()
+
+        except Exception:
+            pass
+
+    def _responds(self, timeout: float = 3.0) -> bool:
+        """
+        端口上那个东西是不是一个还答话的 aria2
+
+        用 HTTP 的 JSON-RPC 探一下就够了，不必开 WebSocket：卡死的进程连 HTTP 都不回，
+        而别的程序不会认得 aria2.getVersion
+        """
+        import json
+        import urllib.error
+        import urllib.request
+
+        payload = json.dumps({
+            "jsonrpc": "2.0", "id": "probe", "method": "aria2.getVersion",
+            "params": [f"token:{self.secret}"],
+        }).encode()
+
+        request = urllib.request.Request(
+            f"http://{self.host}:{self.port}/jsonrpc",
+            data = payload, headers = {"Content-Type": "application/json"})
+
+        try:
+            with urllib.request.urlopen(request, timeout = timeout) as response:
+                body = json.loads(response.read())
+
+        except urllib.error.HTTPError as e:
+            # 有响应就说明它活着。401 之类是令牌不对 —— 那是另一个问题，
+            # 但至少不该按「端口被卡死的进程占着」处理
+            logger.warning("aria2 的 RPC 返回 HTTP %s，令牌可能不匹配", e.code)
+
+            return True
+
+        except Exception as e:
+            logger.debug("探测 aria2 RPC 无响应：%s", e)
+
+            return False
+
+        return "result" in body or "error" in body
 
     def port_in_use(self) -> bool:
         """RPC 端口上是否已经有人在听"""
@@ -125,19 +219,30 @@ class Aria2Process:
         if self._proc is not None and self._proc.poll() is None:
             return True
 
-        # 端口已经有人听着：直接复用，不要再起一个。
+        # 端口已经有人听着：可能是上次没退干净的孤儿，也可能是别的程序。
         #
-        # **这不是罕见情况**：本进程若被强杀（崩溃、任务管理器结束进程），
-        # 生命周期的收尾代码没机会跑，上一个 aria2c 就成了孤儿并继续占着端口。
-        # 此时再 spawn 一个只会因为端口冲突失败，而那个孤儿其实是可用的 ——
-        # RPC 令牌存在配置里，重启后仍然对得上。
+        # **孤儿不罕见**：本进程若被强杀（崩溃、任务管理器结束进程），生命周期的收尾代码
+        # 没机会跑，上一个 aria2c 就继续占着端口。它多半还是可用的 —— RPC 令牌存在
+        # 配置里，重启后仍然对得上，直接复用比再起一个好。
         #
-        # 连上去之后如果令牌不匹配（端口被别的程序占了），客户端会给出明确的鉴权错误
+        # **但必须先确认它还答话。** 早先这里是无条件复用的，注释里还写着「令牌不匹配时
+        # 客户端会给出明确的鉴权错误」—— 那句是错的：占端口的若是个卡死的进程或别的程序，
+        # 得到的是握手超时，而且会一直重连下去，日志里只有一行
+        # 「timed out during opening handshake」，看不出病因
         if self.port_in_use():
-            logger.info("RPC 端口 %d 已被占用，复用该实例（可能是上次未正常退出留下的）",
-                        self.port)
+            if self._responds():
+                logger.info("RPC 端口 %d 上已有可用的 aria2，复用它（可能是上次未正常退出留下的）",
+                            self.port)
 
-            return True
+                return True
+
+            logger.error(
+                "RPC 端口 %d 被占用，但对方不响应 aria2 的 RPC。"
+                "多半是上次残留的 aria2c 卡死了，或该端口被别的程序占用。"
+                "请结束占用该端口的进程，或在配置里把 aria2_rpc_port 换一个",
+                self.port)
+
+            return False
 
         executable = resolve_executable()
 
@@ -154,20 +259,22 @@ class Aria2Process:
             kwargs["creationflags"] = getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000)
 
         try:
+            self._log = self._open_log()
+
             self._proc = subprocess.Popen(
                 args,
-                stdout = subprocess.PIPE,
+                # **绝不能用 subprocess.PIPE**，理由见 _open_log()
+                stdout = self._log,
                 stderr = subprocess.STDOUT,
                 # aria2 不需要 stdin，留着只会在某些终端环境下带来干扰
                 stdin = subprocess.DEVNULL,
-                text = True,
-                encoding = "utf-8",
-                errors = "replace",
                 **kwargs
             )
 
         except Exception:
             logger.exception("启动 aria2c 失败：%s", executable)
+
+            self._close_log()
 
             return False
 
@@ -186,13 +293,20 @@ class Aria2Process:
 
         return self._proc is not None and self._proc.poll() is None
 
-    def read_output(self) -> str:
-        """把 aria2 的输出读出来。只在启动失败诊断时用，正常路径不读（会阻塞）"""
-        if self._proc is None or self._proc.stdout is None:
+    def read_output(self, limit: int = 4000) -> str:
+        """把 aria2 日志的末尾读出来，用于启动失败或异常时的诊断"""
+        path = get_data_dir() / LOG_FILE
+
+        if not path.is_file():
             return ""
 
         try:
-            return self._proc.stdout.read() or ""
+            with open(path, "rb") as f:
+                size = path.stat().st_size
+
+                f.seek(max(0, size - limit))
+
+                return f.read().decode("utf-8", errors = "replace")
 
         except Exception:
             return ""
@@ -209,6 +323,8 @@ class Aria2Process:
         self._proc = None
 
         if proc is None or proc.poll() is not None:
+            self._close_log()
+
             return
 
         try:
@@ -230,3 +346,6 @@ class Aria2Process:
 
         except Exception:
             logger.exception("停止 aria2c 时出错")
+
+        finally:
+            self._close_log()

@@ -23,6 +23,7 @@ from .dispatch import install as install_dispatcher
 from .download import MergeCoordinator, Reconciler, StreamMonitor, StreamRegistry, TaskPublisher
 from .events import EventHub
 from .security import SessionStore, SESSION_COOKIE, generate_password, hash_password
+from . import static
 from .routes import aria2 as aria2_routes
 from .routes import events as events_routes
 from .routes import files as files_routes
@@ -243,5 +244,9 @@ def create_app(with_aria2: bool = True) -> FastAPI:
     app.include_router(preview_routes.router, prefix = "/api")
     app.include_router(settings_routes.router, prefix = "/api")
     app.include_router(tasks_routes.router, prefix = "/api")
+
+    # **必须在所有 API 路由之后**：前端挂在根路径上，会吃掉所有未匹配的路径。
+    # 先挂的话 API 就再也轮不到了
+    static.mount(app, api_prefix = API_PREFIX)
 
     return app
