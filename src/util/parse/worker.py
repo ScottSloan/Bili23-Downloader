@@ -5,68 +5,13 @@ from ..common.translator import Translator
 from ..common.data import url_patterns
 from ..common.enum import ParserType
 from .episode.tree import EpisodeData
+# 认类型与惰性实例化 parser 的那部分本就是纯逻辑，搬到 session.py 与 WebUI 共用
+from .session import ParserResolver as WorkerBase
 
 from threading import Event
 import logging
 
 logger = logging.getLogger(__name__)
-
-class WorkerBase:
-    def get_parser(self, parser_type: str):
-        match parser_type:
-            case "video":
-                from .parser.video import VideoParser
-                return VideoParser()
-            
-            case "bangumi":
-                from .parser.bangumi import BangumiParser
-                return BangumiParser()
-            
-            case "cheese":
-                from .parser.cheese import CheeseParser
-                return CheeseParser()
-
-            case "lesson":
-                from .parser.lesson import LessonParser
-                return LessonParser()
-
-            case "space":
-                from .parser.space import SpaceParser
-                return SpaceParser()
-            
-            case "favlist":
-                from .parser.favlist import FavlistParser
-                return FavlistParser()
-            
-            case "list":
-                from .parser.list import ListParser
-                return ListParser()
-            
-            case "popular":
-                from .parser.popular import PopularParser
-                return PopularParser()
-            
-            case "watch_later":
-                from .parser.watch_later import WatchLaterParser
-                return WatchLaterParser()
-            
-            case "history":
-                from .parser.history import HistoryParser
-                return HistoryParser()
-            
-            case "audio":
-                from .parser.audio import AudioParser
-                return AudioParser()
-            
-            case _:
-                raise ValueError("未知的解析类型")
-
-    def get_parser_type(self, url: str):
-        for parser_type, pattern in url_patterns:
-            if pattern.search(url):
-                return parser_type
-            
-        raise ValueError(Translator.ERROR_MESSAGES("INVALID_LINK"))
 
 class ParseWorker(WorkerBase, QObject):
     success = Signal(str, dict)
@@ -105,19 +50,8 @@ class ParseWorker(WorkerBase, QObject):
                 self.finished.emit()
 
     def get_redirect_url(self):
-        from .parser.festival import FestivalParser
-        from .parser.b23 import B23Parser
-
-        _parsers = {
-            "b23": B23Parser(),
-            "festival": FestivalParser()
-        }
-
-        for parser_type, parser in _parsers.items():
-            if parser_type in self.url:
-                self.url = parser.parse(self.url)
-
-                self.parser_type = self.get_parser_type(self.url)
+        # 短链跳转同样在 session.py 里，两端共用
+        self.url, self.parser_type = self.resolve_redirect(self.url)
 
     def on_error(self):
         logger.exception("解析失败")
