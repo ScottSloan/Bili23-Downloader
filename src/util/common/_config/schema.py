@@ -506,6 +506,12 @@ ITEMS = [
     _item("webui_password_hash", "WebUI", "", ValueType.STR),
     # 会话有效期（小时）。默认 7 天，与 qBittorrent 的量级接近
     _item("webui_session_hours", "WebUI", 168, ValueType.INT, range = (1, 8760)),
+    # 允许在 WebUI 里浏览的目录白名单。**空列表表示只允许下载目录本身**。
+    #
+    # 浏览接口是整个后端唯一能读到任意路径的地方，所以它不是「默认放开、按需拦」，
+    # 而是反过来：不在这张表里的路径一律拒绝。Docker 里通常就一个挂载点，
+    # 需要多个（比如另挂一块盘）时在这里加
+    _item("webui_browse_roots", "WebUI", [], ValueType.LIST),
 
     # ---------------- Aria2 ----------------
     # WebUI 用 aria2 接管字节搬运（D4）。桌面版暂不使用，跑稳之后再决定是否跟进

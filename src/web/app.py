@@ -25,6 +25,7 @@ from .events import EventHub
 from .security import SessionStore, SESSION_COOKIE, generate_password, hash_password
 from .routes import aria2 as aria2_routes
 from .routes import events as events_routes
+from .routes import files as files_routes
 from .routes import auth as auth_routes
 from .routes import system as system_routes
 
@@ -231,5 +232,6 @@ def create_app(with_aria2: bool = True) -> FastAPI:
     app.include_router(auth_routes.router, prefix = "/api/auth")
     app.include_router(aria2_routes.router, prefix = "/api/aria2")
     app.include_router(events_routes.router, prefix = "/api")
+    app.include_router(files_routes.router, prefix = "/api")
 
     return app
