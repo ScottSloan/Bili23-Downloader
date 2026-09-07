@@ -131,6 +131,25 @@
         "title": "CaptchaInfo",
         "type": "object"
       },
+      "CheckDuplicatesRequest": {
+        "properties": {
+          "episodes": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "maxItems": 5000,
+            "minItems": 1,
+            "title": "Episodes",
+            "type": "array"
+          }
+        },
+        "required": [
+          "episodes"
+        ],
+        "title": "CheckDuplicatesRequest",
+        "type": "object"
+      },
       "CookieLoginRequest": {
         "properties": {
           "text": {
@@ -263,6 +282,23 @@
           "truncated"
         ],
         "title": "DirectoryListing",
+        "type": "object"
+      },
+      "DuplicateCheck": {
+        "description": "每一条是否已经下载过，**与请求里的 episodes 一一对应、顺序一致**\n\n不用「已重复的下标列表」是因为那要求两边对「下标从哪算」有一致理解，\n而等长的布尔列表没有这个歧义",
+        "properties": {
+          "duplicates": {
+            "items": {
+              "type": "boolean"
+            },
+            "title": "Duplicates",
+            "type": "array"
+          }
+        },
+        "required": [
+          "duplicates"
+        ],
+        "title": "DuplicateCheck",
         "type": "object"
       },
       "EpisodeList": {
@@ -2139,6 +2175,48 @@
           }
         },
         "summary": "Delete Tasks",
+        "tags": [
+          "tasks"
+        ]
+      }
+    },
+    "/api/tasks/duplicates": {
+      "post": {
+        "description": "这批条目里哪些已经下载过\n\n只查不改，也**不触发任何界面交互** —— `task_manager.is_duplicate` 那条路径本身就是\n为无人值守的调用方准备的。\n\n解析页靠它把已下过的标出来。那不是锦上添花：重复项在服务端是被**静默跳过**的\n（WebUI 没有可询问的对象），不提前标的话，用户点完下载只会看到\n「创建了 3 个，共勾选 10 项」，而不知道另外 7 项去了哪里",
+        "operationId": "check_duplicates_api_tasks_duplicates_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CheckDuplicatesRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DuplicateCheck"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Check Duplicates",
         "tags": [
           "tasks"
         ]

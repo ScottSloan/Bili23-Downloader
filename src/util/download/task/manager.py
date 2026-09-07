@@ -534,6 +534,21 @@ class TaskManager:
         """
         return self.db_manager.check_duplicate(self._calc_hash_id(episode_info))
 
+    def which_are_duplicates(self, episode_info_list: list) -> list:
+        """
+        一次问一批，返回与入参等长的布尔列表
+
+        与 is_duplicate 同样不触发任何界面交互。给 WebUI 的解析页用：
+        它要在列表上把「已经下过的」标出来 —— 那条提示不是锦上添花，
+        **重复项在服务端是被静默跳过的**（没有人可以询问），不提前标出来的话，
+        用户点了下载只会看到「创建了 3 个，共勾选 10 项」而不知道另外 7 项去哪了。
+        """
+        hash_id_list = [self._calc_hash_id(episode_info) for episode_info in episode_info_list]
+
+        found = self.db_manager.check_duplicates(hash_id_list)
+
+        return [hash_id in found for hash_id in hash_id_list]
+
     def _check_duplicate(self, episode_info: dict, options: dict = None):
         hash_id = self._calc_hash_id(episode_info)
 

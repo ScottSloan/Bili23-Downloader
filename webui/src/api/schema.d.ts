@@ -544,6 +544,33 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/tasks/duplicates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Check Duplicates
+         * @description 这批条目里哪些已经下载过
+         *
+         *     只查不改，也**不触发任何界面交互** —— `task_manager.is_duplicate` 那条路径本身就是
+         *     为无人值守的调用方准备的。
+         *
+         *     解析页靠它把已下过的标出来。那不是锦上添花：重复项在服务端是被**静默跳过**的
+         *     （WebUI 没有可询问的对象），不提前标的话，用户点完下载只会看到
+         *     「创建了 3 个，共勾选 10 项」，而不知道另外 7 项去了哪里
+         */
+        post: operations["check_duplicates_api_tasks_duplicates_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/tasks/list": {
         parameters: {
             query?: never;
@@ -730,6 +757,13 @@ export interface components {
             /** Token */
             token: string;
         };
+        /** CheckDuplicatesRequest */
+        CheckDuplicatesRequest: {
+            /** Episodes */
+            episodes: {
+                [key: string]: unknown;
+            }[];
+        };
         /** CookieLoginRequest */
         CookieLoginRequest: {
             /** Text */
@@ -775,6 +809,17 @@ export interface components {
             relative?: string | null;
             /** Truncated */
             truncated: boolean;
+        };
+        /**
+         * DuplicateCheck
+         * @description 每一条是否已经下载过，**与请求里的 episodes 一一对应、顺序一致**
+         *
+         *     不用「已重复的下标列表」是因为那要求两边对「下标从哪算」有一致理解，
+         *     而等长的布尔列表没有这个歧义
+         */
+        DuplicateCheck: {
+            /** Duplicates */
+            duplicates: boolean[];
         };
         /**
          * EpisodeList
@@ -1954,6 +1999,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DeleteResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    check_duplicates_api_tasks_duplicates_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CheckDuplicatesRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DuplicateCheck"];
                 };
             };
             /** @description Validation Error */

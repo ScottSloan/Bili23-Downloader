@@ -41,6 +41,9 @@ let saveTimer: ReturnType<typeof setTimeout> | null = null
 // 放进 state 会让它出现在 devtools 的时间线里徒增噪音
 let queued: Record<string, Value> = {}
 
+// 正在飞的那次 load。**并发的调用要等它，不能直接返回** —— 见 load() 里的说明
+let loading: Promise<void> | null = null
+
 export const useSettingsStore = defineStore('settings', {
   state: (): SettingsState => ({
     items: {},
@@ -71,31 +74,49 @@ export const useSettingsStore = defineStore('settings', {
   },
 
   actions: {
+    /**
+     * 读配置。已经读过就直接返回，正在读则**等那一次**
+     *
+     * 「正在读就直接返回」曾经是这里的写法，那是错的：并发的调用方拿到的是一个
+     * 还没加载完的 store，`value(...)` 全是 undefined，然后各自静默退回默认值。
+     * 解析页的列配置就这么丢过一次 —— 页面初始化时同时有两个调用方，
+     * 后来的那个什么也没等到，列表一直用的是内置默认列，而且不报错
+     */
     async load(force = false) {
-      if (this.loading || (this.loaded && !force)) {
+      if (this.loaded && !force) {
         return
+      }
+
+      if (loading) {
+        return loading
       }
 
       this.loading = true
 
-      try {
-        const payload = await settings.read()
+      loading = (async () => {
+        try {
+          const payload = await settings.read()
 
-        const items: Record<string, SettingItem> = {}
+          const items: Record<string, SettingItem> = {}
 
-        for (const item of payload.items) {
-          items[item.attr] = item
+          for (const item of payload.items) {
+            items[item.attr] = item
+          }
+
+          this.items = items
+          this.groups = payload.groups
+          this.loaded = true
+          this.error = ''
+        } catch (e) {
+          this.error = e instanceof ApiError ? e.message : String(e)
+        } finally {
+          this.loading = false
+
+          loading = null
         }
+      })()
 
-        this.items = items
-        this.groups = payload.groups
-        this.loaded = true
-        this.error = ''
-      } catch (e) {
-        this.error = e instanceof ApiError ? e.message : String(e)
-      } finally {
-        this.loading = false
-      }
+      return loading
     },
 
     /**

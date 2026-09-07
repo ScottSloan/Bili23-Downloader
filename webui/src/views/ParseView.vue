@@ -62,6 +62,9 @@ function onCreated(count: number) {
     count > 0
       ? t('parse.created', { count, requested: pendingEpisodes.value.length })
       : t('parse.createdNone')
+
+  // 重新标一遍「已下载」：刚建的这批现在也算了，列表要跟上
+  void store.refreshDownloaded()
 }
 
 // 新后端没有「取回上次解析结果」的接口 —— 那是 S0 垫片专有的。
@@ -71,9 +74,12 @@ function submit() {
   store.parse(url.value)
 }
 
-// 设置在别处也要用（这里判断要不要弹对话框），页面挂载时确保读过一次。
-// store 自己会去重，重复调不会多发请求
+// 设置在别处也要用（这里判断要不要弹对话框，列配置也在里面），
+// 页面挂载时确保读过一次。store 自己会去重，重复调不会多发请求
 void settingsStore.load()
+
+// 列配置与桌面版共用 `parse_list_column`，读回来之前先用内置默认列
+void store.loadColumns()
 </script>
 
 <template>

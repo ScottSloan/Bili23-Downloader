@@ -141,6 +141,7 @@ function onToggle(id: string, event: Event) {
           :class="{
             'is-node': node.is_node,
             'is-reparse': node.attributes.includes('need_parse_bit'),
+            'is-downloaded': store.downloaded.has(rowId),
           }"
           :style="{
             gridTemplateColumns: gridTemplate,
@@ -175,7 +176,7 @@ function onToggle(id: string, event: Event) {
               {{ cellText(node, column.key) }}
             </span>
 
-            <span v-if="index === 1 && false /* 已下载标记待接后端（原垫片字段） */" class="tag">{{
+            <span v-if="index === 1 && store.downloaded.has(rowId)" class="tag">{{
               t('parse.tagDownloaded')
             }}</span>
             <span v-if="index === 1 && node.attributes.includes('need_parse_bit')" class="tag">{{
@@ -250,6 +251,13 @@ function onToggle(id: string, event: Event) {
 }
 
 .tree-row.is-reparse .cell-text {
+  color: var(--text-tertiary);
+}
+
+/* 已下过的整行变淡，与桌面版一致（model.py 里给这类行上的是灰色画刷）。
+   除了淡，还挂了一枚标签 —— 网页上没有鼠标悬停解释的余地，
+   光靠颜色深浅，用户认不出这是「已下载」还是「不可用」 */
+.tree-row.is-downloaded .cell-text {
   color: var(--text-tertiary);
 }
 

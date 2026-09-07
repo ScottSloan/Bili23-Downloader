@@ -144,6 +144,16 @@ class CreateResult(BaseModel):
     created: int
     tasks: List[TaskView]
 
+class DuplicateCheck(BaseModel):
+    """
+    每一条是否已经下载过，**与请求里的 episodes 一一对应、顺序一致**
+
+    不用「已重复的下标列表」是因为那要求两边对「下标从哪算」有一致理解，
+    而等长的布尔列表没有这个歧义
+    """
+
+    duplicates: List[bool]
+
 class DeleteResult(BaseModel):
     deleted: int
 

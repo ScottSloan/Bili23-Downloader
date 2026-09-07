@@ -42,7 +42,16 @@ export const useTaskStore = defineStore('task', {
   }),
 
   getters: {
-    /** 正在下载 / 合并中的任务数，给导航栏上的角标用 */
+    /**
+     * 导航栏角标上的数字
+     *
+     * 口径与桌面版一致：**下载列表里的行数**，不是「正在跑的任务数」。
+     * 桌面版那边是 `_source_model.rowCount()`（见 download_list/list_view.py），
+     * 排队中与已暂停的都算 —— 角标回答的是「还有多少没下完」
+     */
+    pendingCount: (state): number => state.downloading.length,
+
+    /** 正在下载 / 合并中的任务数，用于下载页顶部那行摘要 */
     activeCount: (state): number =>
       state.downloading.filter((task) =>
         ['downloading', 'merging', 'converting', 'additional_processing'].includes(task.status),

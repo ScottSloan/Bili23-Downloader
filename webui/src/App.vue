@@ -5,11 +5,13 @@ import LoginView from '@/views/LoginView.vue'
 import { useThemeStore } from '@/stores/themeStore'
 import { useAppStore } from '@/stores/appStore'
 import { useAuthStore } from '@/stores/authStore'
+import { useTaskStore } from '@/stores/taskStore'
 import { setUnauthorizedHandler } from '@/api'
 
 const themeStore = useThemeStore()
 const appStore = useAppStore()
 const authStore = useAuthStore()
+const taskStore = useTaskStore()
 
 // 主题在 index.html 的首屏脚本里已经写过一次，这里补齐主题色色阶并开始监听系统主题
 themeStore.initialize()
@@ -21,11 +23,18 @@ themeStore.initialize()
 setUnauthorizedHandler(() => authStore.onSessionExpired())
 
 // 登录之后再去拉版本、账号、语言：未登录时这些请求只会得到 401
+//
+// 任务流也在这里起停，**不再跟着下载页的进出**。导航栏上的下载数角标要求它一直是新的，
+// 而用户多数时间待在解析页 —— 跟着页面起停的话，角标只在你正看着下载页时才准，
+// 那正是最不需要它的时候
 watch(
   () => authStore.authenticated,
   (authenticated) => {
     if (authenticated) {
       appStore.fetchStatus()
+      taskStore.start()
+    } else {
+      taskStore.stop()
     }
   },
   { immediate: true },

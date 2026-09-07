@@ -7,7 +7,7 @@
 // **所有操作都不在本地先改状态**，等服务端的事件推回来。本地先改的话，
 // 操作失败时界面已经变了，而用户不会知道。
 
-import { computed, onActivated, onDeactivated } from 'vue'
+import { computed, onActivated } from 'vue'
 import { useTaskStore } from '@/stores/taskStore'
 import { t } from '@/i18n'
 import pushButton from '@/components/Fluent/components/widgets/button/PushButton.vue'
@@ -15,10 +15,12 @@ import transparentCheckBox from '@/components/Fluent/components/widgets/checkbox
 
 const store = useTaskStore()
 
-// keep-alive 下用 onActivated 而不是 onMounted：组件只挂载一次，
-// 之后来回切页面走的是 activated / deactivated
+// 任务流的起停归 App.vue 管（跟着登录态），这里不再自己开关 ——
+// 导航栏的下载数角标要求它在任何页面上都是新的。
+//
+// 进页面时仍然 start() 一次：它自带幂等（已经连着就直接返回），
+// 用来兜住「连接断了而用户正好切回来」这种情况
 onActivated(() => store.start())
-onDeactivated(() => store.stop())
 
 const selectedIds = computed(() => [...store.selected])
 const hasSelection = computed(() => selectedIds.value.length > 0)

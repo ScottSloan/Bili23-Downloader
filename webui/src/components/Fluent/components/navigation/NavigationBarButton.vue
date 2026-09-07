@@ -27,7 +27,20 @@ const props = defineProps({
     type: String,
     default: '',
   },
+
+  /**
+   * 角标上的数字。0 或负数不显示
+   *
+   * 与桌面版一致：超过 99 显示 "99+"（见 main_window.py 的
+   * update_download_btn_badge_info）—— 三位数在 64px 宽的按钮上摆不下
+   */
+  badge: {
+    type: Number,
+    default: 0,
+  },
 })
+
+const badgeText = computed(() => (props.badge > 99 ? '99+' : String(props.badge)))
 
 const isActive = computed(() => props.active || (props.to ? route.path === props.to : false))
 </script>
@@ -38,6 +51,7 @@ const isActive = computed(() => props.active || (props.to ? route.path === props
       <component :is="icon" v-if="icon" />
 
       <span>{{ title }}</span>
+      <span v-if="badge > 0" class="badge">{{ badgeText }}</span>
     </a>
   </RouterLink>
 
@@ -45,6 +59,7 @@ const isActive = computed(() => props.active || (props.to ? route.path === props
     <component :is="icon" v-if="icon" />
 
     <span>{{ title }}</span>
+    <span v-if="badge > 0" class="badge">{{ badgeText }}</span>
   </div>
 </template>
 
@@ -88,5 +103,25 @@ const isActive = computed(() => props.active || (props.to ? route.path === props
 .navigation-bar-button.active {
   color: var(--primary-color);
   background-color: var(--subtle-fill-selected);
+}
+
+/* 角标压在图标右上角。绝对定位是为了不占布局空间 ——
+   否则数字一出现，图标与文字会整体往上跳一下 */
+.badge {
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  box-sizing: border-box;
+  border-radius: 8px;
+  font-size: 8pt;
+  line-height: 16px;
+  text-align: center;
+  user-select: none;
+
+  color: var(--text-on-accent);
+  background-color: var(--text-danger);
 }
 </style>

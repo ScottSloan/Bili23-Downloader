@@ -7,10 +7,12 @@ import navigationBarStretch from '@/components/Fluent/components/navigation/Navi
 import navigationBarAvatar from '@/components/Fluent/components/navigation/NavigationBarAvatar.vue'
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
+import { useTaskStore } from '@/stores/taskStore'
 import { t } from '@/i18n'
 import { IconDownload, IconSearch, IconSettings } from '@/components/Fluent/icons'
 
 const route = useRoute()
+const taskStore = useTaskStore()
 
 const activeNavIndex = computed(() => {
   const map: Record<string, number> = {
@@ -29,7 +31,12 @@ const activeNavIndex = computed(() => {
     <div class="main-content">
       <navigationBar :active-index="activeNavIndex">
         <navigationBarButton :title="t('nav.parse')" :icon="IconSearch" to="/parse" />
-        <navigationBarButton :title="t('nav.download')" :icon="IconDownload" to="/download" />
+        <navigationBarButton
+          :title="t('nav.download')"
+          :icon="IconDownload"
+          to="/download"
+          :badge="taskStore.pendingCount"
+        />
         <navigationBarStretch />
         <!-- 头像在设置项之上，与 GUI 的导航栏顺序一致 -->
         <navigationBarAvatar />

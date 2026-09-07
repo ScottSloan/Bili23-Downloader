@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
-import { parse as parseApi } from '@/api'
+import { parse as parseApi, tasks as tasksApi } from '@/api'
 import type { ParseNode, ParseResult } from '@/api'
+import { useSettingsStore } from './settingsStore'
 
 // 组件从 store 取类型即可，不必再认识 api 层
 export type { ParseNode }
@@ -25,9 +26,9 @@ export interface ParseColumn {
   show: boolean
 }
 
-// 列配置原先由后端的垫片一并返回，新后端没有这一项 —— 它在共用配置的
-// `parse_list_column` 里，由设置页那条链路读回来。在读到之前先用这份默认的，
-// 否则首屏的树会没有表头
+// 列配置在共用配置的 `parse_list_column` 里，由 `loadColumns()` 从 `/api/settings`
+// 读回来（那是与桌面版同一份配置，两边的列设置因此是一致的）。
+// 这份默认值只在还没读到、或配置里那一项坏掉时兜底，否则首屏的树会没有表头
 const DEFAULT_COLUMNS: ParseColumn[] = [
   { key: 'number', width: 160, show: true },
   { key: 'title', width: 350, show: true },
@@ -93,6 +94,8 @@ interface ParseState {
   mediaError: string
   expanded: Set<string>
   checkState: Map<string, CheckState>
+  /** 已经下过的行。**服务端会静默跳过它们**，所以必须在列表上标出来 */
+  downloaded: Set<string>
   _nodes: Map<string, ParseNode>
   _parents: Map<string, string | null>
 }
@@ -115,6 +118,8 @@ export const useParseStore = defineStore('parse', {
     expanded: new Set(),
     // id → 勾选态。与 tree 分开存，重新解析时整体替换
     checkState: new Map(),
+
+    downloaded: new Set(),
 
     _nodes: new Map(),
     _parents: new Map(),
@@ -186,6 +191,103 @@ export const useParseStore = defineStore('parse', {
       this.expanded = new Set(
         this.tree.filter((node) => node.children?.length).map((node) => node.id as string),
       )
+
+      // 上一次解析的标记必须先清掉：id 是位置路径，换了一棵树之后同一个 id
+      // 指的完全是另一集
+      this.downloaded = new Set()
+
+      // 不 await：查重是锦上添花，慢一点不该拖住列表出现
+      void this.checkDownloaded()
+    },
+
+    /**
+     * 可下载的叶子，连同它们的行 id
+     *
+     * 判据取自后端在每个节点上给的两个字段（`is_node` 与 `episode`），
+     * 与 `parse/session.py` 的 `collect_episodes()` 是同一条 —— 那边也是
+     * 「没有孩子 + 有 episode + 不是树节点」。
+     *
+     * 这里没有改走后端的 `/api/parse/episodes`，是因为**那个接口只返回 episode 列表，
+     * 认不出哪一条属于哪一行**；而标记要落到具体的行上，必须有 id ↔ episode 的配对
+     */
+    _leaves(): { id: string; episode: Record<string, unknown> }[] {
+      const found: { id: string; episode: Record<string, unknown> }[] = []
+
+      const walk = (list: ParseNode[]) => {
+        for (const node of list) {
+          if (node.children?.length) {
+            walk(node.children)
+
+            continue
+          }
+
+          if (node.episode && !node.is_node) {
+            found.push({ id: node.id as string, episode: node.episode })
+          }
+        }
+      }
+
+      walk(this.tree)
+
+      return found
+    },
+
+    /** 问后端这批条目里哪些已经下过，标到行上 */
+    async checkDownloaded() {
+      const leaves = this._leaves()
+
+      if (!leaves.length) {
+        return
+      }
+
+      try {
+        const result = await tasksApi.duplicates(leaves.map((leaf) => leaf.episode))
+
+        const marked = new Set<string>()
+
+        result.duplicates.forEach((isDuplicate, index) => {
+          if (isDuplicate && leaves[index]) {
+            marked.add(leaves[index].id)
+          }
+        })
+
+        this.downloaded = marked
+      } catch {
+        // 查不到就不标。这条信息没有也能用，不值得为它在页面上弹个错
+      }
+    },
+
+    /**
+     * 列配置
+     *
+     * 与桌面版共用 `parse_list_column`，所以两边的列设置是一致的。
+     * 配置里那一项坏掉（手改过、或旧版本写的）时退回默认列 —— 表头空掉比列错更难用
+     */
+    async loadColumns() {
+      const settingsStore = useSettingsStore()
+
+      await settingsStore.load()
+
+      const raw = settingsStore.value('parse_list_column')
+
+      if (!Array.isArray(raw)) {
+        return
+      }
+
+      const columns = raw
+        .filter(
+          (entry): entry is Record<string, unknown> => Boolean(entry) && typeof entry === 'object',
+        )
+        .map((entry) => ({
+          key: String(entry.attr_key ?? ''),
+          width: Number(entry.width) || 120,
+          show: entry.show !== false,
+        }))
+        .filter((column) => column.key)
+
+      if (columns.length) {
+        this.columns = columns
+      }
     },
 
     toggleExpanded(id: string) {
@@ -305,6 +407,17 @@ export const useParseStore = defineStore('parse', {
       const payload = await parseApi.episodes(root, true)
 
       return payload.episodes
+    },
+
+    /**
+     * 建完任务后重新标一遍
+     *
+     * 不在本地直接把勾选项标成已下载：实际建出来的可能比勾选的少（需要二次解析的
+     * 会被后端拦掉），本地硬标会标出一批其实没进队列的。重问一次数据库最准，
+     * 也就一次请求
+     */
+    async refreshDownloaded() {
+      await this.checkDownloaded()
     },
   },
 })

@@ -31,7 +31,8 @@ from util.thread import background
 from ..download.view import task_views
 
 from ..schemas import (
-    CreateResult, DeleteResult, PauseResult, RetryResult, TaskCount, TaskList, TaskView,
+    CreateResult, DeleteResult, DuplicateCheck, PauseResult, RetryResult, TaskCount, TaskList,
+    TaskView,
 )
 
 logger = logging.getLogger(__name__)
@@ -56,6 +57,10 @@ class CreateTasksRequest(BaseModel):
 
 class TaskIdsRequest(BaseModel):
     task_ids: List[str] = Field(min_length = 1, max_length = 2000)
+
+class CheckDuplicatesRequest(BaseModel):
+    # 上限比建任务那边宽：一部长番的解析结果就有一千多条，而这里只是查询
+    episodes: List[dict] = Field(min_length = 1, max_length = 5000)
 
 async def _off_loop(func, *args, **kwargs):
     return await asyncio.wrap_future(background.submit(func, *args, **kwargs))
@@ -201,6 +206,22 @@ async def create_tasks(payload: CreateTasksRequest):
         "created": len(created),
         "tasks": created,
     }
+
+@router.post("/tasks/duplicates", response_model = DuplicateCheck)
+async def check_duplicates(payload: CheckDuplicatesRequest):
+    """
+    这批条目里哪些已经下载过
+
+    只查不改，也**不触发任何界面交互** —— `task_manager.is_duplicate` 那条路径本身就是
+    为无人值守的调用方准备的。
+
+    解析页靠它把已下过的标出来。那不是锦上添花：重复项在服务端是被**静默跳过**的
+    （WebUI 没有可询问的对象），不提前标的话，用户点完下载只会看到
+    「创建了 3 个，共勾选 10 项」，而不知道另外 7 项去了哪里
+    """
+    flags = await _off_loop(task_manager.which_are_duplicates, payload.episodes)
+
+    return {"duplicates": flags}
 
 @router.post("/tasks/delete", response_model = DeleteResult)
 async def delete_tasks(payload: TaskIdsRequest, completed: bool = Query(default = False)):

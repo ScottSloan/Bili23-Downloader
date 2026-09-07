@@ -268,6 +268,40 @@ class TaskDatabase(Database):
 
         return bool(result and result[0][0])
 
+    def check_duplicates(self, hash_id_list: list) -> set:
+        """
+        一次问一批，返回其中已存在的那些
+
+        解析一部番剧动辄上千条。实测 1200 条（空库）：逐条走 check_duplicate 是
+        3.9ms，这里是 1.4ms —— **差距没有想象中大**，长连接上的一次查询本来就很便宜
+        （CLAUDE.md 里那个 0.13ms 说的是建连接的成本，不是查询的）。同一批数据算
+        hash_id 反而要 5ms，才是大头。
+
+        仍然用批量，是因为它随着库里数据变多不会跟着劣化：那时逐条是上千次索引查找，
+        这里是三条 IN 查询。
+
+        分批是因为 SQLite 对单条语句的参数个数有上限（旧版本默认 999）。
+        每批 400 个占位符，两张表各用一次，稳在上限之内
+        """
+        unique = list(dict.fromkeys(hash_id_list))
+
+        found = set()
+
+        for start in range(0, len(unique), 400):
+            batch = unique[start:start + 400]
+
+            placeholders = ",".join("?" * len(batch))
+
+            rows = self.query(f"""
+                SELECT hash_id FROM completed_task WHERE hash_id IN ({placeholders})
+                UNION
+                SELECT hash_id FROM download_task WHERE hash_id IN ({placeholders})
+            """, tuple(batch) * 2)
+
+            found.update(row[0] for row in rows)
+
+        return found
+
     def _upgrade(self):
         def _to_task_list(result):
             _task_info_list = []

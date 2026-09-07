@@ -134,6 +134,10 @@ export const tasks = {
 
   count: () => get<Ok<'/api/tasks/count', 'get'>>('/tasks/count'),
 
+  /** 这批条目里哪些已经下载过。返回的布尔列表与传进去的 episodes 一一对应、顺序一致 */
+  duplicates: (episodes: Record<string, unknown>[]) =>
+    post<Ok<'/api/tasks/duplicates', 'post'>>('/tasks/duplicates', { episodes }),
+
   create: (episodes: Record<string, unknown>[], options?: Record<string, unknown>) =>
     post<Ok<'/api/tasks', 'post'>>('/tasks', { episodes, options }),
 
