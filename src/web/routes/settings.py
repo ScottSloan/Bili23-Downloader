@@ -28,6 +28,8 @@ from pydantic import BaseModel, Field
 from util.common._config.schema import ITEMS, ValueType
 from util.common.config import config
 
+from ..schemas import SettingsPayload, SettingsUpdateResult
+
 logger = logging.getLogger(__name__)
 
 router = APIRouter(tags = ["settings"])
@@ -82,7 +84,7 @@ class UpdateSettingsRequest(BaseModel):
     # {attr: value}
     values: Dict[str, Any] = Field(min_length = 1)
 
-@router.get("/settings")
+@router.get("/settings", response_model = SettingsPayload)
 async def read_settings():
     """
     读配置
@@ -94,7 +96,7 @@ async def read_settings():
 
     return {"items": items, "groups": sorted({item["group"] for item in items})}
 
-@router.post("/settings")
+@router.post("/settings", response_model = SettingsUpdateResult)
 async def update_settings(payload: UpdateSettingsRequest):
     """
     改配置

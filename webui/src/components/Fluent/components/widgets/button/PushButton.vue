@@ -9,10 +9,18 @@ withDefaults(
     variant?: ButtonVariant
     /** 禁用态。用原生 disabled，浏览器不会给禁用控件派发 click，无需再手动拦截 */
     disabled?: boolean
+    /**
+     * 原生 button 的 type
+     *
+     * 默认 button 而不是浏览器默认的 submit —— 表单外的按钮占绝大多数，
+     * 让它们意外提交表单是更常见的错。表单里的提交按钮显式传 'submit'
+     */
+    type?: 'button' | 'submit' | 'reset'
   }>(),
   {
     variant: 'push',
     disabled: false,
+    type: 'button',
   },
 )
 </script>
@@ -23,7 +31,7 @@ withDefaults(
     换成 button 之后 Tab 可达、Enter/Space 触发、disabled 语义全部由浏览器提供。
     根元素只有一个，@click / class / style 仍按 attrs fallthrough 落在这里。
   -->
-  <button type="button" class="fluent-button" :class="`is-${variant}`" :disabled="disabled">
+  <button :type="type" class="fluent-button" :class="`is-${variant}`" :disabled="disabled">
     <span>{{ title }}</span>
   </button>
 </template>

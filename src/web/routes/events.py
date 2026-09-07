@@ -26,6 +26,8 @@ from ..download.view import task_views
 from ..events import EVENT_RESYNC
 from ..security import SESSION_COOKIE
 
+from ..schemas import TaskSnapshot
+
 logger = logging.getLogger(__name__)
 
 router = APIRouter(tags = ["events"])
@@ -34,7 +36,7 @@ router = APIRouter(tags = ["events"])
 # 鉴权失败不在此列 —— 那一条在 accept 之前就拒了，走的是 HTTP 403
 WS_UNAVAILABLE = 4503
 
-@router.get("/tasks")
+@router.get("/tasks", response_model = TaskSnapshot)
 async def task_snapshot(request: Request, limit: int = Query(default = None, ge = 1, le = 5000)):
     """
     全量快照

@@ -1,4 +1,4 @@
-import type { ParseNode } from '@/api/types'
+import type { ParseNode } from '@/api'
 
 // 列的显示格式，与 GUI 的 gui/component/parse_list/header.py 保持一致
 
@@ -35,8 +35,20 @@ export function cellText(node: ParseNode, key: string): string {
     case 'duration':
       return formatDuration(node.duration)
 
+    // 后端不再合成 dyn_time，改为分别给三个时间字段：
+    // 投稿视频看发布时间、收藏夹看收藏时间、历史记录看观看时间。
+    // 哪个有值就显示哪个 —— 同一列在不同来源下本就是不同的含义
     case 'dyn_time':
-      return formatDate(node.dyn_time)
+      return formatDate(node.pubtime || node.favtime || node.viewtime || 0)
+
+    case 'pubtime':
+      return formatDate(node.pubtime || 0)
+
+    case 'favtime':
+      return formatDate(node.favtime || 0)
+
+    case 'viewtime':
+      return formatDate(node.viewtime || 0)
 
     default:
       return String((node as unknown as Record<string, unknown>)[key] ?? '')

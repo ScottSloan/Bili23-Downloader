@@ -47,8 +47,20 @@ export default {
     viewtime: '上次觀看時間',
   },
 
+  auth: {
+    title: '登入',
+    hint: '口令在首次啟動時印到主控台，只顯示一次，且不會寫入日誌檔案。',
+    username: '使用者名稱',
+    password: '口令',
+    submit: '登入',
+    submitting: '登入中',
+    failed: '使用者名稱或口令不正確。',
+    expired: '登入已過期，請重新登入。',
+    signOut: '登出 WebUI',
+  },
+
   error: {
-    backendUnreachable: '無法連線到後端，請確認桌面版正在執行且已啟用 MCP 服務',
+    backendUnreachable: '無法連線到後端，請先執行：python src/main.py --web-ui',
     requestFailed: '請求失敗（HTTP {status}）',
   },
 }

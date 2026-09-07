@@ -4,9 +4,11 @@ from fastapi import APIRouter, Request
 
 from ..aria2 import Aria2NotConnected
 
+from ..schemas import Aria2Status
+
 router = APIRouter(tags = ["aria2"])
 
-@router.get("/status")
+@router.get("/status", response_model = Aria2Status)
 async def aria2_status(request: Request):
     """
     aria2 是否可用

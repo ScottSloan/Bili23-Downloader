@@ -4,9 +4,11 @@ from fastapi import APIRouter
 
 from util.common.config import config
 
+from ..schemas import HealthInfo, SystemStatus
+
 router = APIRouter(tags = ["system"])
 
-@router.get("/health")
+@router.get("/health", response_model = HealthInfo)
 async def health():
     """
     健康检查。**不需要登录** —— 反向代理与容器编排要靠它判断存活，
@@ -14,7 +16,7 @@ async def health():
     """
     return {"status": "ok"}
 
-@router.get("/status")
+@router.get("/status", response_model = SystemStatus)
 async def status():
     """登录后可见的运行状态"""
     return {

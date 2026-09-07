@@ -25,6 +25,8 @@ from pydantic import BaseModel, Field
 from util.parse.preview.session import PreviewSession
 from util.thread import background
 
+from ..schemas import PreviewResult
+
 logger = logging.getLogger(__name__)
 
 router = APIRouter(tags = ["preview"])
@@ -33,7 +35,7 @@ class PreviewRequest(BaseModel):
     # 按顺序尝试，取不到就换下一个。用户手动指定某一集时只传这一项，失败即失败
     candidates: List[dict] = Field(min_length = 1, max_length = 20)
 
-@router.post("/preview")
+@router.post("/preview", response_model = PreviewResult)
 async def preview(payload: PreviewRequest):
     """取一次媒体信息，返回可选的画质 / 编码 / 音质"""
     session = PreviewSession()

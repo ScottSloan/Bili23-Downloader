@@ -5,7 +5,7 @@ import { useVirtualizer } from '@tanstack/vue-virtual'
 import type { VirtualItem } from '@tanstack/vue-virtual'
 import { useParseStore, CHECKED, PARTIAL } from '@/stores/parseStore'
 import { cellText } from './formatters'
-import type { CheckState, ParseNode } from '@/api/types'
+import type { CheckState, ParseNode } from '@/stores/parseStore'
 import { t, columnName } from '@/i18n'
 
 const store = useParseStore()
@@ -52,7 +52,7 @@ const virtualizer = useVirtualizer<HTMLElement, HTMLElement>(
     estimateSize: () => rowHeight.value,
     // 用节点 id 而不是下标做键：展开 / 折叠会让同一个节点换下标，
     // 以 id 为键时库内的行高缓存能跟着节点走，折叠后再展开不会拿错行高
-    getItemKey: (index: number) => store.rows[index]?.node.id ?? index,
+    getItemKey: (index: number) => store.rows[index]?.id ?? index,
     overscan: 10,
   })),
 )
@@ -62,6 +62,8 @@ interface VirtualRow {
   item: VirtualItem
   node: ParseNode
   depth: number
+  /** 行标识，来自 store 派发的位置路径 */
+  id: string
 }
 
 // 只把窗口内的行映射成渲染数据。count 变小的那一帧里 virtualizer 可能还持有旧下标，
@@ -74,7 +76,7 @@ const virtualRows = computed<VirtualRow[]>(() => {
     .map((item) => {
       const row = rows[item.index]
 
-      return row ? { item, node: row.node, depth: row.depth } : null
+      return row ? { item, node: row.node, depth: row.depth, id: row.id } : null
     })
     .filter((entry): entry is VirtualRow => entry !== null)
 })
@@ -113,8 +115,8 @@ function stateOf(id: string): CheckState {
   return store.checkState.get(id) ?? 0
 }
 
-function onToggle(node: ParseNode, event: Event) {
-  store.setChecked(node.id, (event.target as HTMLInputElement).checked)
+function onToggle(id: string, event: Event) {
+  store.setChecked(id, (event.target as HTMLInputElement).checked)
 }
 </script>
 
@@ -131,12 +133,12 @@ function onToggle(node: ParseNode, event: Event) {
 
       <div v-else class="tree-canvas" :style="{ height: `${totalSize}px` }">
         <div
-          v-for="{ item, node, depth } in virtualRows"
-          :key="node.id"
+          v-for="{ item, node, depth, id: rowId } in virtualRows"
+          :key="rowId"
           :ref="measureRow"
           :data-index="item.index"
           class="tree-row"
-          :class="{ 'is-node': node.is_node, 'is-reparse': node.needs_reparse }"
+          :class="{ 'is-node': node.is_node, 'is-reparse': node.attributes.includes('need_parse_bit') }"
           :style="{
             gridTemplateColumns: gridTemplate,
             transform: `translateY(${item.start}px)`,
@@ -151,8 +153,8 @@ function onToggle(node: ParseNode, event: Event) {
             <template v-if="index === 0">
               <span
                 class="chevron"
-                :class="{ open: store.expanded.has(node.id), hidden: !node.children }"
-                @click="store.toggleExpanded(node.id)"
+                :class="{ open: store.expanded.has(rowId), hidden: !node.children }"
+                @click="store.toggleExpanded(rowId)"
               >
                 &#9656;
               </span>
@@ -160,9 +162,9 @@ function onToggle(node: ParseNode, event: Event) {
               <input
                 type="checkbox"
                 class="row-check"
-                :checked="stateOf(node.id) === CHECKED"
-                :indeterminate="stateOf(node.id) === PARTIAL"
-                @change="onToggle(node, $event)"
+                :checked="stateOf(rowId) === CHECKED"
+                :indeterminate="stateOf(rowId) === PARTIAL"
+                @change="onToggle(rowId, $event)"
               />
             </template>
 
@@ -170,10 +172,10 @@ function onToggle(node: ParseNode, event: Event) {
               {{ cellText(node, column.key) }}
             </span>
 
-            <span v-if="index === 1 && node.already_downloaded" class="tag">{{
+            <span v-if="index === 1 && false /* 已下载标记待接后端（原垫片字段） */" class="tag">{{
               t('parse.tagDownloaded')
             }}</span>
-            <span v-if="index === 1 && node.needs_reparse" class="tag">{{
+            <span v-if="index === 1 && node.attributes.includes('need_parse_bit')" class="tag">{{
               t('parse.tagNeedsReparse')
             }}</span>
           </div>

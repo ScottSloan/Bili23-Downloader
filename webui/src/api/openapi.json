@@ -1,6 +1,136 @@
 {
   "components": {
     "schemas": {
+      "Aria2Status": {
+        "description": "aria2 不可用不算错误，如实报告即可",
+        "properties": {
+          "active": {
+            "default": 0,
+            "title": "Active",
+            "type": "integer"
+          },
+          "connected": {
+            "title": "Connected",
+            "type": "boolean"
+          },
+          "download_speed": {
+            "default": 0,
+            "title": "Download Speed",
+            "type": "integer"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "stopped": {
+            "default": 0,
+            "title": "Stopped",
+            "type": "integer"
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version"
+          },
+          "waiting": {
+            "default": 0,
+            "title": "Waiting",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "connected"
+        ],
+        "title": "Aria2Status",
+        "type": "object"
+      },
+      "BilibiliStatus": {
+        "properties": {
+          "expired": {
+            "default": false,
+            "title": "Expired",
+            "type": "boolean"
+          },
+          "face": {
+            "default": "",
+            "title": "Face",
+            "type": "string"
+          },
+          "level": {
+            "default": 0,
+            "title": "Level",
+            "type": "integer"
+          },
+          "logged_in": {
+            "title": "Logged In",
+            "type": "boolean"
+          },
+          "uid": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "default": 0,
+            "title": "Uid"
+          },
+          "uname": {
+            "default": "",
+            "title": "Uname",
+            "type": "string"
+          },
+          "vip_status": {
+            "default": 0,
+            "title": "Vip Status",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "logged_in"
+        ],
+        "title": "BilibiliStatus",
+        "type": "object"
+      },
+      "CaptchaInfo": {
+        "description": "极验参数。前端拿 gt / challenge 调 initGeetest，token 发短信时带回来",
+        "properties": {
+          "challenge": {
+            "title": "Challenge",
+            "type": "string"
+          },
+          "gt": {
+            "title": "Gt",
+            "type": "string"
+          },
+          "token": {
+            "title": "Token",
+            "type": "string"
+          }
+        },
+        "required": [
+          "token",
+          "gt",
+          "challenge"
+        ],
+        "title": "CaptchaInfo",
+        "type": "object"
+      },
       "CookieLoginRequest": {
         "properties": {
           "text": {
@@ -14,6 +144,33 @@
           "text"
         ],
         "title": "CookieLoginRequest",
+        "type": "object"
+      },
+      "CreateResult": {
+        "description": "实际建出来的可能比请求的少：重复下载与需要二次解析的会被拦掉",
+        "properties": {
+          "created": {
+            "title": "Created",
+            "type": "integer"
+          },
+          "requested": {
+            "title": "Requested",
+            "type": "integer"
+          },
+          "tasks": {
+            "items": {
+              "$ref": "#/components/schemas/TaskView"
+            },
+            "title": "Tasks",
+            "type": "array"
+          }
+        },
+        "required": [
+          "requested",
+          "created",
+          "tasks"
+        ],
+        "title": "CreateResult",
         "type": "object"
       },
       "CreateTasksRequest": {
@@ -47,6 +204,157 @@
         "title": "CreateTasksRequest",
         "type": "object"
       },
+      "DeleteResult": {
+        "properties": {
+          "deleted": {
+            "title": "Deleted",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "deleted"
+        ],
+        "title": "DeleteResult",
+        "type": "object"
+      },
+      "DirectoryListing": {
+        "properties": {
+          "entries": {
+            "items": {
+              "$ref": "#/components/schemas/FileEntry"
+            },
+            "title": "Entries",
+            "type": "array"
+          },
+          "parent": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent"
+          },
+          "path": {
+            "title": "Path",
+            "type": "string"
+          },
+          "relative": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Relative"
+          },
+          "truncated": {
+            "title": "Truncated",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "path",
+          "entries",
+          "truncated"
+        ],
+        "title": "DirectoryListing",
+        "type": "object"
+      },
+      "EpisodeList": {
+        "description": "`episode` 是 TaskInfo 那套自由字典，原样回传给创建任务的接口即可",
+        "properties": {
+          "episodes": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Episodes",
+            "type": "array"
+          }
+        },
+        "required": [
+          "episodes"
+        ],
+        "title": "EpisodeList",
+        "type": "object"
+      },
+      "FileEntry": {
+        "properties": {
+          "is_dir": {
+            "title": "Is Dir",
+            "type": "boolean"
+          },
+          "is_link": {
+            "title": "Is Link",
+            "type": "boolean"
+          },
+          "modified": {
+            "title": "Modified",
+            "type": "integer"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "size": {
+            "title": "Size",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "name",
+          "is_dir",
+          "size",
+          "modified",
+          "is_link"
+        ],
+        "title": "FileEntry",
+        "type": "object"
+      },
+      "FileRoot": {
+        "properties": {
+          "exists": {
+            "title": "Exists",
+            "type": "boolean"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "path": {
+            "title": "Path",
+            "type": "string"
+          }
+        },
+        "required": [
+          "path",
+          "name",
+          "exists"
+        ],
+        "title": "FileRoot",
+        "type": "object"
+      },
+      "FileRoots": {
+        "properties": {
+          "roots": {
+            "items": {
+              "$ref": "#/components/schemas/FileRoot"
+            },
+            "title": "Roots",
+            "type": "array"
+          }
+        },
+        "required": [
+          "roots"
+        ],
+        "title": "FileRoots",
+        "type": "object"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -58,6 +366,19 @@
           }
         },
         "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "HealthInfo": {
+        "properties": {
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status"
+        ],
+        "title": "HealthInfo",
         "type": "object"
       },
       "LoginRequest": {
@@ -80,6 +401,41 @@
           "password"
         ],
         "title": "LoginRequest",
+        "type": "object"
+      },
+      "LogoutResult": {
+        "properties": {
+          "authenticated": {
+            "default": false,
+            "title": "Authenticated",
+            "type": "boolean"
+          }
+        },
+        "title": "LogoutResult",
+        "type": "object"
+      },
+      "MakeDirResult": {
+        "properties": {
+          "path": {
+            "title": "Path",
+            "type": "string"
+          },
+          "relative": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Relative"
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "title": "MakeDirResult",
         "type": "object"
       },
       "MkdirRequest": {
@@ -126,6 +482,29 @@
         "title": "ParseRequest",
         "type": "object"
       },
+      "PauseResult": {
+        "properties": {
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "streams_affected": {
+            "title": "Streams Affected",
+            "type": "integer"
+          },
+          "updated": {
+            "title": "Updated",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "updated",
+          "streams_affected",
+          "status"
+        ],
+        "title": "PauseResult",
+        "type": "object"
+      },
       "PreviewRequest": {
         "properties": {
           "candidates": {
@@ -143,6 +522,167 @@
           "candidates"
         ],
         "title": "PreviewRequest",
+        "type": "object"
+      },
+      "PreviewResult": {
+        "properties": {
+          "audio_quality": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Audio Quality",
+            "type": "object"
+          },
+          "bvid": {
+            "default": "",
+            "title": "Bvid",
+            "type": "string"
+          },
+          "cid": {
+            "default": 0,
+            "title": "Cid",
+            "type": "integer"
+          },
+          "episode_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              }
+            ],
+            "default": "",
+            "title": "Episode Number"
+          },
+          "episode_title": {
+            "default": "",
+            "title": "Episode Title",
+            "type": "string"
+          },
+          "from_fallback": {
+            "default": false,
+            "title": "From Fallback",
+            "type": "boolean"
+          },
+          "media_type": {
+            "default": "unknown",
+            "title": "Media Type",
+            "type": "string"
+          },
+          "need_parse": {
+            "default": true,
+            "title": "Need Parse",
+            "type": "boolean"
+          },
+          "video_codec": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Video Codec",
+            "type": "object"
+          },
+          "video_quality": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Video Quality",
+            "type": "object"
+          }
+        },
+        "title": "PreviewResult",
+        "type": "object"
+      },
+      "QRCodeInfo": {
+        "description": "`url` 交给前端渲染成二维码，服务端不出图",
+        "properties": {
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "url",
+          "key"
+        ],
+        "title": "QRCodeInfo",
+        "type": "object"
+      },
+      "QRCodeStatus": {
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "integer"
+          },
+          "message": {
+            "default": "",
+            "title": "Message",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "status"
+        ],
+        "title": "QRCodeStatus",
+        "type": "object"
+      },
+      "Region": {
+        "additionalProperties": true,
+        "properties": {
+          "code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              }
+            ],
+            "title": "Code"
+          }
+        },
+        "required": [
+          "code"
+        ],
+        "title": "Region",
+        "type": "object"
+      },
+      "RegionList": {
+        "properties": {
+          "regions": {
+            "items": {
+              "$ref": "#/components/schemas/Region"
+            },
+            "title": "Regions",
+            "type": "array"
+          }
+        },
+        "required": [
+          "regions"
+        ],
+        "title": "RegionList",
+        "type": "object"
+      },
+      "RetryResult": {
+        "properties": {
+          "retried": {
+            "title": "Retried",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "retried"
+        ],
+        "title": "RetryResult",
         "type": "object"
       },
       "SMSSendRequest": {
@@ -195,6 +735,20 @@
         "title": "SMSSendRequest",
         "type": "object"
       },
+      "SMSSendResult": {
+        "description": "captcha_key 是**发短信的返回值**，登录时才用，别与极验的三件套搞混",
+        "properties": {
+          "captcha_key": {
+            "title": "Captcha Key",
+            "type": "string"
+          }
+        },
+        "required": [
+          "captcha_key"
+        ],
+        "title": "SMSSendResult",
+        "type": "object"
+      },
       "SMSVerifyRequest": {
         "properties": {
           "captcha_key": {
@@ -231,6 +785,181 @@
         "title": "SMSVerifyRequest",
         "type": "object"
       },
+      "SessionInfo": {
+        "properties": {
+          "authenticated": {
+            "title": "Authenticated",
+            "type": "boolean"
+          },
+          "username": {
+            "default": "",
+            "title": "Username",
+            "type": "string"
+          }
+        },
+        "required": [
+          "authenticated"
+        ],
+        "title": "SessionInfo",
+        "type": "object"
+      },
+      "SettingItem": {
+        "properties": {
+          "attr": {
+            "title": "Attr",
+            "type": "string"
+          },
+          "default": {
+            "title": "Default"
+          },
+          "group": {
+            "title": "Group",
+            "type": "string"
+          },
+          "options": {
+            "anyOf": [
+              {
+                "items": {},
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Options"
+          },
+          "range": {
+            "anyOf": [
+              {
+                "items": {},
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Range"
+          },
+          "restart": {
+            "default": false,
+            "title": "Restart",
+            "type": "boolean"
+          },
+          "type": {
+            "title": "Type",
+            "type": "string"
+          },
+          "value": {
+            "title": "Value"
+          }
+        },
+        "required": [
+          "attr",
+          "group",
+          "type"
+        ],
+        "title": "SettingItem",
+        "type": "object"
+      },
+      "SettingsPayload": {
+        "properties": {
+          "groups": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Groups",
+            "type": "array"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/SettingItem"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items",
+          "groups"
+        ],
+        "title": "SettingsPayload",
+        "type": "object"
+      },
+      "SettingsUpdateResult": {
+        "properties": {
+          "changed": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Changed",
+            "type": "array"
+          },
+          "values": {
+            "additionalProperties": true,
+            "title": "Values",
+            "type": "object"
+          }
+        },
+        "required": [
+          "changed",
+          "values"
+        ],
+        "title": "SettingsUpdateResult",
+        "type": "object"
+      },
+      "SystemStatus": {
+        "properties": {
+          "logged_in_bilibili": {
+            "title": "Logged In Bilibili",
+            "type": "boolean"
+          },
+          "uid": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "default": "",
+            "title": "Uid"
+          },
+          "uname": {
+            "default": "",
+            "title": "Uname",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "version",
+          "logged_in_bilibili"
+        ],
+        "title": "SystemStatus",
+        "type": "object"
+      },
+      "TaskCount": {
+        "properties": {
+          "completed": {
+            "title": "Completed",
+            "type": "integer"
+          },
+          "downloading": {
+            "title": "Downloading",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "downloading",
+          "completed"
+        ],
+        "title": "TaskCount",
+        "type": "object"
+      },
       "TaskIdsRequest": {
         "properties": {
           "task_ids": {
@@ -247,6 +976,178 @@
           "task_ids"
         ],
         "title": "TaskIdsRequest",
+        "type": "object"
+      },
+      "TaskList": {
+        "properties": {
+          "ascending": {
+            "title": "Ascending",
+            "type": "boolean"
+          },
+          "sort_by": {
+            "title": "Sort By",
+            "type": "string"
+          },
+          "tasks": {
+            "items": {
+              "$ref": "#/components/schemas/TaskView"
+            },
+            "title": "Tasks",
+            "type": "array"
+          }
+        },
+        "required": [
+          "tasks",
+          "sort_by",
+          "ascending"
+        ],
+        "title": "TaskList",
+        "type": "object"
+      },
+      "TaskSnapshot": {
+        "description": "全量快照\n\n`cursor` 是发快照那一刻的事件编号，前端带着它连 WebSocket（`?since=cursor`），\n否则快照与增量之间会漏掉一段",
+        "properties": {
+          "completed": {
+            "items": {
+              "$ref": "#/components/schemas/TaskView"
+            },
+            "title": "Completed",
+            "type": "array"
+          },
+          "cursor": {
+            "title": "Cursor",
+            "type": "integer"
+          },
+          "downloading": {
+            "items": {
+              "$ref": "#/components/schemas/TaskView"
+            },
+            "title": "Downloading",
+            "type": "array"
+          }
+        },
+        "required": [
+          "cursor",
+          "downloading",
+          "completed"
+        ],
+        "title": "TaskSnapshot",
+        "type": "object"
+      },
+      "TaskView": {
+        "description": "与 `web/download/view.py` 的 `task_view()` 一一对应\n\n**两边字段必须同步**：那边加了字段这里不加，前端就看不见；\n这里多写一个那边没有的，前端会拿到 undefined",
+        "properties": {
+          "audio_quality": {
+            "default": "",
+            "title": "Audio Quality",
+            "type": "string"
+          },
+          "completed_time": {
+            "default": 0,
+            "title": "Completed Time",
+            "type": "integer"
+          },
+          "cover_id": {
+            "default": "",
+            "title": "Cover Id",
+            "type": "string"
+          },
+          "created_time": {
+            "default": 0,
+            "title": "Created Time",
+            "type": "integer"
+          },
+          "download_path": {
+            "default": "",
+            "title": "Download Path",
+            "type": "string"
+          },
+          "downloaded_size": {
+            "default": 0,
+            "title": "Downloaded Size",
+            "type": "integer"
+          },
+          "duration": {
+            "default": 0,
+            "title": "Duration",
+            "type": "integer"
+          },
+          "file_name": {
+            "default": "",
+            "title": "File Name",
+            "type": "string"
+          },
+          "folder": {
+            "default": "",
+            "title": "Folder",
+            "type": "string"
+          },
+          "info_label": {
+            "default": "",
+            "title": "Info Label",
+            "type": "string"
+          },
+          "progress": {
+            "default": 0,
+            "title": "Progress",
+            "type": "integer"
+          },
+          "speed": {
+            "default": 0,
+            "title": "Speed",
+            "type": "integer"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "status_label": {
+            "default": "",
+            "title": "Status Label",
+            "type": "string"
+          },
+          "task_id": {
+            "title": "Task Id",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "total_size": {
+            "default": 0,
+            "title": "Total Size",
+            "type": "integer"
+          },
+          "type": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Type",
+            "type": "array"
+          },
+          "url": {
+            "default": "",
+            "title": "Url",
+            "type": "string"
+          },
+          "video_codec": {
+            "default": "",
+            "title": "Video Codec",
+            "type": "string"
+          },
+          "video_quality": {
+            "default": "",
+            "title": "Video Quality",
+            "type": "string"
+          }
+        },
+        "required": [
+          "task_id",
+          "title",
+          "status"
+        ],
+        "title": "TaskView",
         "type": "object"
       },
       "UpdateSettingsRequest": {
@@ -320,7 +1221,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/Aria2Status"
+                }
               }
             },
             "description": "Successful Response"
@@ -349,7 +1252,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/SessionInfo"
+                }
               }
             },
             "description": "Successful Response"
@@ -378,7 +1283,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/LogoutResult"
+                }
               }
             },
             "description": "Successful Response"
@@ -398,7 +1305,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/SessionInfo"
+                }
               }
             },
             "description": "Successful Response"
@@ -440,7 +1349,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/DirectoryListing"
+                }
               }
             },
             "description": "Successful Response"
@@ -480,7 +1391,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/MakeDirResult"
+                }
               }
             },
             "description": "Successful Response"
@@ -510,7 +1423,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/FileRoots"
+                }
               }
             },
             "description": "Successful Response"
@@ -530,7 +1445,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/HealthInfo"
+                }
               }
             },
             "description": "Successful Response"
@@ -560,7 +1477,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/BilibiliStatus"
+                }
               }
             },
             "description": "Successful Response"
@@ -590,7 +1509,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/BilibiliStatus"
+                }
               }
             },
             "description": "Successful Response"
@@ -610,7 +1531,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/QRCodeInfo"
+                }
               }
             },
             "description": "Successful Response"
@@ -643,7 +1566,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/QRCodeStatus"
+                }
               }
             },
             "description": "Successful Response"
@@ -673,7 +1598,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/CaptchaInfo"
+                }
               }
             },
             "description": "Successful Response"
@@ -693,7 +1620,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/RegionList"
+                }
               }
             },
             "description": "Successful Response"
@@ -723,7 +1652,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/SMSSendResult"
+                }
               }
             },
             "description": "Successful Response"
@@ -763,7 +1694,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/BilibiliStatus"
+                }
               }
             },
             "description": "Successful Response"
@@ -805,7 +1738,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/BilibiliStatus"
+                }
               }
             },
             "description": "Successful Response"
@@ -899,7 +1834,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/EpisodeList"
+                }
               }
             },
             "description": "Successful Response"
@@ -939,7 +1876,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/PreviewResult"
+                }
               }
             },
             "description": "Successful Response"
@@ -969,7 +1908,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/SettingsPayload"
+                }
               }
             },
             "description": "Successful Response"
@@ -997,7 +1938,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/SettingsUpdateResult"
+                }
               }
             },
             "description": "Successful Response"
@@ -1027,7 +1970,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/SystemStatus"
+                }
               }
             },
             "description": "Successful Response"
@@ -1060,7 +2005,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/TaskSnapshot"
+                }
               }
             },
             "description": "Successful Response"
@@ -1098,7 +2045,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/CreateResult"
+                }
               }
             },
             "description": "Successful Response"
@@ -1127,7 +2076,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/TaskCount"
+                }
               }
             },
             "description": "Successful Response"
@@ -1169,7 +2120,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/DeleteResult"
+                }
               }
             },
             "description": "Successful Response"
@@ -1242,7 +2195,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/TaskList"
+                }
               }
             },
             "description": "Successful Response"
@@ -1282,7 +2237,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/PauseResult"
+                }
               }
             },
             "description": "Successful Response"
@@ -1322,7 +2279,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/PauseResult"
+                }
               }
             },
             "description": "Successful Response"
@@ -1362,7 +2321,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/RetryResult"
+                }
               }
             },
             "description": "Successful Response"
@@ -1402,7 +2363,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/TaskView"
+                }
               }
             },
             "description": "Successful Response"

@@ -51,6 +51,10 @@ from util.auth.sms_session import SMSSession
 from util.common.config import config
 from util.thread import background
 
+from ..schemas import (
+    BilibiliStatus, CaptchaInfo, QRCodeInfo, QRCodeStatus, RegionList, SMSSendResult,
+)
+
 logger = logging.getLogger(__name__)
 
 router = APIRouter(tags = ["login"])
@@ -79,7 +83,7 @@ class SMSVerifyRequest(BaseModel):
     code: str = Field(min_length = 1, max_length = 16)
     captcha_key: str = Field(min_length = 1, max_length = 512)
 
-@router.get("/login/status")
+@router.get("/login/status", response_model = BilibiliStatus)
 async def login_status(refresh: bool = Query(default = False)):
     """
     当前的 B 站登录态
@@ -106,7 +110,7 @@ async def login_status(refresh: bool = Query(default = False)):
         "face": config.user_face_url or "",
     }
 
-@router.post("/login/qrcode")
+@router.post("/login/qrcode", response_model = QRCodeInfo)
 async def create_qrcode():
     """
     申请一个登录二维码
@@ -123,7 +127,7 @@ async def create_qrcode():
 
         return JSONResponse({"detail": str(e)}, status_code = 502)
 
-@router.get("/login/qrcode/poll")
+@router.get("/login/qrcode/poll", response_model = QRCodeStatus)
 async def poll_qrcode(key: str = Query(min_length = 1, max_length = 256)):
     """
     查一次扫码状态
@@ -141,7 +145,7 @@ async def poll_qrcode(key: str = Query(min_length = 1, max_length = 256)):
 
         return JSONResponse({"detail": str(e)}, status_code = 502)
 
-@router.post("/login/cookie")
+@router.post("/login/cookie", response_model = BilibiliStatus)
 async def login_with_cookie(payload: CookieLoginRequest):
     """用粘贴的 Cookie 登录。验证不通过会回滚，不会把无效 Cookie 留在 client 上"""
     session = LoginSession()
@@ -158,7 +162,7 @@ async def login_with_cookie(payload: CookieLoginRequest):
 
         return JSONResponse({"detail": str(e)}, status_code = 502)
 
-@router.post("/login/logout")
+@router.post("/login/logout", response_model = BilibiliStatus)
 async def logout():
     """退出 B 站账号。**不影响 WebUI 自身的会话**"""
     session = LoginSession()
@@ -167,14 +171,14 @@ async def logout():
 
 # ---------------- 短信登录 ----------------
 
-@router.get("/login/sms/regions")
+@router.get("/login/sms/regions", response_model = RegionList)
 async def sms_regions():
     """国家/地区区号。与桌面版下拉框用的是同一份数据"""
     from util.common.data import cid_list
 
     return {"regions": cid_list}
 
-@router.post("/login/sms/captcha")
+@router.post("/login/sms/captcha", response_model = CaptchaInfo)
 async def sms_captcha():
     """
     申请极验参数
@@ -192,7 +196,7 @@ async def sms_captcha():
 
         return JSONResponse({"detail": str(e)}, status_code = 502)
 
-@router.post("/login/sms/send")
+@router.post("/login/sms/send", response_model = SMSSendResult)
 async def sms_send(payload: SMSSendRequest):
     """发送验证码短信。返回的 captcha_key 登录时要用"""
     session = SMSSession()
@@ -207,7 +211,7 @@ async def sms_send(payload: SMSSendRequest):
         # 手机号不对、滑块过期这类都由 B 站判定并回一句话，原样透给前端
         return JSONResponse({"detail": str(e)}, status_code = 400)
 
-@router.post("/login/sms/verify")
+@router.post("/login/sms/verify", response_model = BilibiliStatus)
 async def sms_verify(payload: SMSVerifyRequest):
     """用收到的验证码完成登录"""
     session = SMSSession()

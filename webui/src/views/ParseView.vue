@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref } from 'vue'
 import fluentLineEdit from '@/components/Fluent/components/widgets/line_edit/LineEdit.vue'
 import primaryPushButton from '@/components/Fluent/components/widgets/button/PrimaryPushButton.vue'
 import parseTree from '@/components/App/parse_list/ParseTree.vue'
@@ -9,8 +9,8 @@ import { t } from '@/i18n'
 const store = useParseStore()
 const url = ref('')
 
-// 刷新页面后把桌面版进程里现有的解析结果拉回来，避免现场丢失
-onMounted(() => store.restore())
+// 新后端没有「取回上次解析结果」的接口 —— 那是 S0 垫片专有的。
+// 解析结果只活在这个页面里，刷新即清空
 
 function submit() {
   store.parse(url.value)

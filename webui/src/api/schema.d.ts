@@ -651,10 +651,101 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /**
+         * Aria2Status
+         * @description aria2 不可用不算错误，如实报告即可
+         */
+        Aria2Status: {
+            /**
+             * Active
+             * @default 0
+             */
+            active: number;
+            /** Connected */
+            connected: boolean;
+            /**
+             * Download Speed
+             * @default 0
+             */
+            download_speed: number;
+            /** Error */
+            error?: string | null;
+            /**
+             * Stopped
+             * @default 0
+             */
+            stopped: number;
+            /** Version */
+            version?: string | null;
+            /**
+             * Waiting
+             * @default 0
+             */
+            waiting: number;
+        };
+        /** BilibiliStatus */
+        BilibiliStatus: {
+            /**
+             * Expired
+             * @default false
+             */
+            expired: boolean;
+            /**
+             * Face
+             * @default
+             */
+            face: string;
+            /**
+             * Level
+             * @default 0
+             */
+            level: number;
+            /** Logged In */
+            logged_in: boolean;
+            /**
+             * Uid
+             * @default 0
+             */
+            uid: number | string;
+            /**
+             * Uname
+             * @default
+             */
+            uname: string;
+            /**
+             * Vip Status
+             * @default 0
+             */
+            vip_status: number;
+        };
+        /**
+         * CaptchaInfo
+         * @description 极验参数。前端拿 gt / challenge 调 initGeetest，token 发短信时带回来
+         */
+        CaptchaInfo: {
+            /** Challenge */
+            challenge: string;
+            /** Gt */
+            gt: string;
+            /** Token */
+            token: string;
+        };
         /** CookieLoginRequest */
         CookieLoginRequest: {
             /** Text */
             text: string;
+        };
+        /**
+         * CreateResult
+         * @description 实际建出来的可能比请求的少：重复下载与需要二次解析的会被拦掉
+         */
+        CreateResult: {
+            /** Created */
+            created: number;
+            /** Requested */
+            requested: number;
+            /** Tasks */
+            tasks: components["schemas"]["TaskView"][];
         };
         /** CreateTasksRequest */
         CreateTasksRequest: {
@@ -667,10 +758,70 @@ export interface components {
                 [key: string]: unknown;
             } | null;
         };
+        /** DeleteResult */
+        DeleteResult: {
+            /** Deleted */
+            deleted: number;
+        };
+        /** DirectoryListing */
+        DirectoryListing: {
+            /** Entries */
+            entries: components["schemas"]["FileEntry"][];
+            /** Parent */
+            parent?: string | null;
+            /** Path */
+            path: string;
+            /** Relative */
+            relative?: string | null;
+            /** Truncated */
+            truncated: boolean;
+        };
+        /**
+         * EpisodeList
+         * @description `episode` 是 TaskInfo 那套自由字典，原样回传给创建任务的接口即可
+         */
+        EpisodeList: {
+            /** Episodes */
+            episodes: {
+                [key: string]: unknown;
+            }[];
+        };
+        /** FileEntry */
+        FileEntry: {
+            /** Is Dir */
+            is_dir: boolean;
+            /** Is Link */
+            is_link: boolean;
+            /** Modified */
+            modified: number;
+            /** Name */
+            name: string;
+            /** Size */
+            size: number;
+        };
+        /** FileRoot */
+        FileRoot: {
+            /** Exists */
+            exists: boolean;
+            /** Name */
+            name: string;
+            /** Path */
+            path: string;
+        };
+        /** FileRoots */
+        FileRoots: {
+            /** Roots */
+            roots: components["schemas"]["FileRoot"][];
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
+        };
+        /** HealthInfo */
+        HealthInfo: {
+            /** Status */
+            status: string;
         };
         /** LoginRequest */
         LoginRequest: {
@@ -678,6 +829,21 @@ export interface components {
             password: string;
             /** Username */
             username: string;
+        };
+        /** LogoutResult */
+        LogoutResult: {
+            /**
+             * Authenticated
+             * @default false
+             */
+            authenticated: boolean;
+        };
+        /** MakeDirResult */
+        MakeDirResult: {
+            /** Path */
+            path: string;
+            /** Relative */
+            relative?: string | null;
         };
         /** MkdirRequest */
         MkdirRequest: {
@@ -696,12 +862,110 @@ export interface components {
             /** Url */
             url: string;
         };
+        /** PauseResult */
+        PauseResult: {
+            /** Status */
+            status: string;
+            /** Streams Affected */
+            streams_affected: number;
+            /** Updated */
+            updated: number;
+        };
         /** PreviewRequest */
         PreviewRequest: {
             /** Candidates */
             candidates: {
                 [key: string]: unknown;
             }[];
+        };
+        /** PreviewResult */
+        PreviewResult: {
+            /** Audio Quality */
+            audio_quality?: {
+                [key: string]: number;
+            };
+            /**
+             * Bvid
+             * @default
+             */
+            bvid: string;
+            /**
+             * Cid
+             * @default 0
+             */
+            cid: number;
+            /**
+             * Episode Number
+             * @default
+             */
+            episode_number: string | number;
+            /**
+             * Episode Title
+             * @default
+             */
+            episode_title: string;
+            /**
+             * From Fallback
+             * @default false
+             */
+            from_fallback: boolean;
+            /**
+             * Media Type
+             * @default unknown
+             */
+            media_type: string;
+            /**
+             * Need Parse
+             * @default true
+             */
+            need_parse: boolean;
+            /** Video Codec */
+            video_codec?: {
+                [key: string]: number;
+            };
+            /** Video Quality */
+            video_quality?: {
+                [key: string]: number;
+            };
+        };
+        /**
+         * QRCodeInfo
+         * @description `url` 交给前端渲染成二维码，服务端不出图
+         */
+        QRCodeInfo: {
+            /** Key */
+            key: string;
+            /** Url */
+            url: string;
+        };
+        /** QRCodeStatus */
+        QRCodeStatus: {
+            /** Code */
+            code: number;
+            /**
+             * Message
+             * @default
+             */
+            message: string;
+            /** Status */
+            status: string;
+        };
+        /** Region */
+        Region: {
+            /** Code */
+            code: string | number;
+        } & {
+            [key: string]: unknown;
+        };
+        /** RegionList */
+        RegionList: {
+            /** Regions */
+            regions: components["schemas"]["Region"][];
+        };
+        /** RetryResult */
+        RetryResult: {
+            /** Retried */
+            retried: number;
         };
         /** SMSSendRequest */
         SMSSendRequest: {
@@ -718,6 +982,14 @@ export interface components {
             /** Validate */
             validate: string;
         };
+        /**
+         * SMSSendResult
+         * @description captcha_key 是**发短信的返回值**，登录时才用，别与极验的三件套搞混
+         */
+        SMSSendResult: {
+            /** Captcha Key */
+            captcha_key: string;
+        };
         /** SMSVerifyRequest */
         SMSVerifyRequest: {
             /** Captcha Key */
@@ -729,10 +1001,208 @@ export interface components {
             /** Tel */
             tel: string;
         };
+        /** SessionInfo */
+        SessionInfo: {
+            /** Authenticated */
+            authenticated: boolean;
+            /**
+             * Username
+             * @default
+             */
+            username: string;
+        };
+        /** SettingItem */
+        SettingItem: {
+            /** Attr */
+            attr: string;
+            /** Default */
+            default?: unknown;
+            /** Group */
+            group: string;
+            /** Options */
+            options?: unknown[] | null;
+            /** Range */
+            range?: unknown[] | null;
+            /**
+             * Restart
+             * @default false
+             */
+            restart: boolean;
+            /** Type */
+            type: string;
+            /** Value */
+            value?: unknown;
+        };
+        /** SettingsPayload */
+        SettingsPayload: {
+            /** Groups */
+            groups: string[];
+            /** Items */
+            items: components["schemas"]["SettingItem"][];
+        };
+        /** SettingsUpdateResult */
+        SettingsUpdateResult: {
+            /** Changed */
+            changed: string[];
+            /** Values */
+            values: {
+                [key: string]: unknown;
+            };
+        };
+        /** SystemStatus */
+        SystemStatus: {
+            /** Logged In Bilibili */
+            logged_in_bilibili: boolean;
+            /**
+             * Uid
+             * @default
+             */
+            uid: number | string;
+            /**
+             * Uname
+             * @default
+             */
+            uname: string;
+            /** Version */
+            version: string;
+        };
+        /** TaskCount */
+        TaskCount: {
+            /** Completed */
+            completed: number;
+            /** Downloading */
+            downloading: number;
+        };
         /** TaskIdsRequest */
         TaskIdsRequest: {
             /** Task Ids */
             task_ids: string[];
+        };
+        /** TaskList */
+        TaskList: {
+            /** Ascending */
+            ascending: boolean;
+            /** Sort By */
+            sort_by: string;
+            /** Tasks */
+            tasks: components["schemas"]["TaskView"][];
+        };
+        /**
+         * TaskSnapshot
+         * @description 全量快照
+         *
+         *     `cursor` 是发快照那一刻的事件编号，前端带着它连 WebSocket（`?since=cursor`），
+         *     否则快照与增量之间会漏掉一段
+         */
+        TaskSnapshot: {
+            /** Completed */
+            completed: components["schemas"]["TaskView"][];
+            /** Cursor */
+            cursor: number;
+            /** Downloading */
+            downloading: components["schemas"]["TaskView"][];
+        };
+        /**
+         * TaskView
+         * @description 与 `web/download/view.py` 的 `task_view()` 一一对应
+         *
+         *     **两边字段必须同步**：那边加了字段这里不加，前端就看不见；
+         *     这里多写一个那边没有的，前端会拿到 undefined
+         */
+        TaskView: {
+            /**
+             * Audio Quality
+             * @default
+             */
+            audio_quality: string;
+            /**
+             * Completed Time
+             * @default 0
+             */
+            completed_time: number;
+            /**
+             * Cover Id
+             * @default
+             */
+            cover_id: string;
+            /**
+             * Created Time
+             * @default 0
+             */
+            created_time: number;
+            /**
+             * Download Path
+             * @default
+             */
+            download_path: string;
+            /**
+             * Downloaded Size
+             * @default 0
+             */
+            downloaded_size: number;
+            /**
+             * Duration
+             * @default 0
+             */
+            duration: number;
+            /**
+             * File Name
+             * @default
+             */
+            file_name: string;
+            /**
+             * Folder
+             * @default
+             */
+            folder: string;
+            /**
+             * Info Label
+             * @default
+             */
+            info_label: string;
+            /**
+             * Progress
+             * @default 0
+             */
+            progress: number;
+            /**
+             * Speed
+             * @default 0
+             */
+            speed: number;
+            /** Status */
+            status: string;
+            /**
+             * Status Label
+             * @default
+             */
+            status_label: string;
+            /** Task Id */
+            task_id: string;
+            /** Title */
+            title: string;
+            /**
+             * Total Size
+             * @default 0
+             */
+            total_size: number;
+            /** Type */
+            type?: string[];
+            /**
+             * Url
+             * @default
+             */
+            url: string;
+            /**
+             * Video Codec
+             * @default
+             */
+            video_codec: string;
+            /**
+             * Video Quality
+             * @default
+             */
+            video_quality: string;
         };
         /** UpdateSettingsRequest */
         UpdateSettingsRequest: {
@@ -778,7 +1248,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["Aria2Status"];
                 };
             };
         };
@@ -802,7 +1272,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["SessionInfo"];
                 };
             };
             /** @description Validation Error */
@@ -831,7 +1301,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["LogoutResult"];
                 };
             };
         };
@@ -851,7 +1321,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["SessionInfo"];
                 };
             };
         };
@@ -874,7 +1344,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["DirectoryListing"];
                 };
             };
             /** @description Validation Error */
@@ -907,7 +1377,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["MakeDirResult"];
                 };
             };
             /** @description Validation Error */
@@ -936,7 +1406,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["FileRoots"];
                 };
             };
         };
@@ -956,7 +1426,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["HealthInfo"];
                 };
             };
         };
@@ -980,7 +1450,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["BilibiliStatus"];
                 };
             };
             /** @description Validation Error */
@@ -1009,7 +1479,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["BilibiliStatus"];
                 };
             };
         };
@@ -1029,7 +1499,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["QRCodeInfo"];
                 };
             };
         };
@@ -1051,7 +1521,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["QRCodeStatus"];
                 };
             };
             /** @description Validation Error */
@@ -1080,7 +1550,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["CaptchaInfo"];
                 };
             };
         };
@@ -1100,7 +1570,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["RegionList"];
                 };
             };
         };
@@ -1124,7 +1594,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["SMSSendResult"];
                 };
             };
             /** @description Validation Error */
@@ -1157,7 +1627,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["BilibiliStatus"];
                 };
             };
             /** @description Validation Error */
@@ -1188,7 +1658,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["BilibiliStatus"];
                 };
             };
             /** @description Validation Error */
@@ -1258,7 +1728,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["EpisodeList"];
                 };
             };
             /** @description Validation Error */
@@ -1291,7 +1761,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["PreviewResult"];
                 };
             };
             /** @description Validation Error */
@@ -1320,7 +1790,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["SettingsPayload"];
                 };
             };
         };
@@ -1344,7 +1814,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["SettingsUpdateResult"];
                 };
             };
             /** @description Validation Error */
@@ -1373,7 +1843,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["SystemStatus"];
                 };
             };
         };
@@ -1395,7 +1865,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["TaskSnapshot"];
                 };
             };
             /** @description Validation Error */
@@ -1428,7 +1898,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["CreateResult"];
                 };
             };
             /** @description Validation Error */
@@ -1457,7 +1927,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["TaskCount"];
                 };
             };
         };
@@ -1483,7 +1953,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["DeleteResult"];
                 };
             };
             /** @description Validation Error */
@@ -1517,7 +1987,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["TaskList"];
                 };
             };
             /** @description Validation Error */
@@ -1550,7 +2020,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["PauseResult"];
                 };
             };
             /** @description Validation Error */
@@ -1583,7 +2053,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["PauseResult"];
                 };
             };
             /** @description Validation Error */
@@ -1616,7 +2086,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["RetryResult"];
                 };
             };
             /** @description Validation Error */
@@ -1647,7 +2117,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["TaskView"];
                 };
             };
             /** @description Validation Error */

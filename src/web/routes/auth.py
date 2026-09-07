@@ -14,6 +14,7 @@ from pydantic import BaseModel, Field
 
 from util.common.config import config
 
+from ..schemas import LogoutResult, SessionInfo
 from ..security import SESSION_COOKIE, verify_password
 
 logger = logging.getLogger(__name__)
@@ -52,7 +53,7 @@ def _locked_out(key: str) -> bool:
 
     return len(attempts) >= MAX_FAILURES
 
-@router.post("/login")
+@router.post("/login", response_model = SessionInfo)
 async def login(payload: LoginRequest, request: Request, response: Response):
     key = _client_key(request)
 
@@ -95,7 +96,7 @@ async def login(payload: LoginRequest, request: Request, response: Response):
 
     return {"authenticated": True, "username": expected_username}
 
-@router.post("/logout")
+@router.post("/logout", response_model = LogoutResult)
 async def logout(request: Request, response: Response):
     token = request.cookies.get(SESSION_COOKIE)
 
@@ -105,7 +106,7 @@ async def logout(request: Request, response: Response):
 
     return {"authenticated": False}
 
-@router.get("/session")
+@router.get("/session", response_model = SessionInfo)
 async def session_state(request: Request):
     """
     查询当前是否已登录。**不需要鉴权** —— 前端要靠它决定跳不跳登录页，

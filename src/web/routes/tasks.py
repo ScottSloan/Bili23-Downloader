@@ -29,6 +29,10 @@ from util.thread import background
 
 from ..download.view import task_views
 
+from ..schemas import (
+    CreateResult, DeleteResult, PauseResult, RetryResult, TaskCount, TaskList, TaskView,
+)
+
 logger = logging.getLogger(__name__)
 
 router = APIRouter(tags = ["tasks"])
@@ -66,7 +70,7 @@ def _find(task_ids: List[str]) -> List:
 
     return found
 
-@router.get("/tasks/list")
+@router.get("/tasks/list", response_model = TaskList)
 async def list_tasks(completed: bool = Query(default = False),
                      sort_by: str = Query(default = "created_time"),
                      ascending: bool = Query(default = True),
@@ -88,14 +92,14 @@ async def list_tasks(completed: bool = Query(default = False),
 
     return {"tasks": task_views(task_list), "sort_by": sort_by, "ascending": ascending}
 
-@router.get("/tasks/count")
+@router.get("/tasks/count", response_model = TaskCount)
 async def count_tasks():
     downloading = await _off_loop(task_manager.count, False)
     completed = await _off_loop(task_manager.count, True)
 
     return {"downloading": downloading, "completed": completed}
 
-@router.get("/tasks/{task_id}")
+@router.get("/tasks/{task_id}", response_model = TaskView)
 async def get_task(task_id: str):
     task_info = await _off_loop(task_manager.query_by_id, task_id)
 
@@ -132,7 +136,7 @@ def _create_and_collect(episodes: List[dict], options: Optional[dict]) -> List[d
 
     return task_views(created)
 
-@router.post("/tasks")
+@router.post("/tasks", response_model = CreateResult)
 async def create_tasks(payload: CreateTasksRequest):
     """
     创建下载任务
@@ -149,7 +153,7 @@ async def create_tasks(payload: CreateTasksRequest):
         "tasks": created,
     }
 
-@router.post("/tasks/delete")
+@router.post("/tasks/delete", response_model = DeleteResult)
 async def delete_tasks(payload: TaskIdsRequest, completed: bool = Query(default = False)):
     """
     删除任务
@@ -171,7 +175,7 @@ async def delete_tasks(payload: TaskIdsRequest, completed: bool = Query(default 
 
     return {"deleted": len(task_list)}
 
-@router.post("/tasks/retry")
+@router.post("/tasks/retry", response_model = RetryResult)
 async def retry_tasks(payload: TaskIdsRequest):
     """
     重新下载
@@ -190,12 +194,12 @@ async def retry_tasks(payload: TaskIdsRequest):
 
     return {"retried": len(task_list)}
 
-@router.post("/tasks/pause")
+@router.post("/tasks/pause", response_model = PauseResult)
 async def pause_tasks(payload: TaskIdsRequest, request: Request):
     """暂停：让 aria2 停下来，并把任务状态置为已暂停"""
     return await _set_paused(request, payload.task_ids, paused = True)
 
-@router.post("/tasks/resume")
+@router.post("/tasks/resume", response_model = PauseResult)
 async def resume_tasks(payload: TaskIdsRequest, request: Request):
     """恢复"""
     return await _set_paused(request, payload.task_ids, paused = False)

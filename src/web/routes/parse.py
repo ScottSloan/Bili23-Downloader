@@ -24,6 +24,8 @@ from pydantic import BaseModel, Field
 from util.parse.session import ParseSession, collect_episodes
 from util.thread import background
 
+from ..schemas import EpisodeList
+
 logger = logging.getLogger(__name__)
 
 router = APIRouter(tags = ["parse"])
@@ -66,7 +68,7 @@ async def parse_url(payload: ParseRequest):
 
             return JSONResponse({"detail": str(e)}, status_code = 502)
 
-@router.post("/parse/episodes")
+@router.post("/parse/episodes", response_model = EpisodeList)
 async def extract_episodes(tree: dict, only_checked: bool = Query(default = True)):
     """
     从解析树里把叶子摘出来

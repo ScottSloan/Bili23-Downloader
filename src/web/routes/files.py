@@ -21,6 +21,8 @@ from pydantic import BaseModel, Field
 
 from ..paths import PathNotAllowed, browse_roots, relative_label, resolve_within_roots
 
+from ..schemas import DirectoryListing, FileRoots, MakeDirResult
+
 logger = logging.getLogger(__name__)
 
 router = APIRouter(tags = ["files"])
@@ -38,7 +40,7 @@ def _denied(exc: PathNotAllowed) -> JSONResponse:
     # 那等于把「这个路径存在吗」变成一个可探测的接口
     return JSONResponse({"detail": str(exc)}, status_code = 403)
 
-@router.get("/files/roots")
+@router.get("/files/roots", response_model = FileRoots)
 async def list_roots():
     """可浏览的根目录。前端据此显示入口，不给用户输入任意路径的机会"""
     roots = browse_roots()
@@ -50,7 +52,7 @@ async def list_roots():
         ]
     }
 
-@router.get("/files/list")
+@router.get("/files/list", response_model = DirectoryListing)
 async def list_directory(path: str = Query(default = ""),
                          dirs_only: bool = Query(default = False)):
     """列出一个目录。`path` 为空时给第一个根目录"""
@@ -126,7 +128,7 @@ async def list_directory(path: str = Query(default = ""),
         "truncated": truncated,
     }
 
-@router.post("/files/mkdir")
+@router.post("/files/mkdir", response_model = MakeDirResult)
 async def make_directory(payload: MkdirRequest):
     """
     在允许的目录下新建一个子目录

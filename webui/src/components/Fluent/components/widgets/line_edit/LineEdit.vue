@@ -8,14 +8,26 @@ defineProps({
     type: String,
     default: '',
   },
+  /**
+   * 原生 input 的 type
+   *
+   * 口令输入必须能设成 password —— 少了这个 prop，口令会以明文显示在屏幕上。
+   * 只开放确实用得到的几种：text / password / search / number
+   */
+  type: {
+    type: String,
+    default: 'text',
+  },
 })
 
 const emit = defineEmits(['update:modelValue', 'submit'])
 </script>
 
 <template>
+  <!-- autocomplete、name 之类的原生属性经 attrs fallthrough 落到这里，不必逐个声明 -->
   <input
     class="fluent-line-edit"
+    :type="type"
     :placeholder="placeholder"
     :value="modelValue"
     @input="emit('update:modelValue', ($event.target as HTMLInputElement).value)"

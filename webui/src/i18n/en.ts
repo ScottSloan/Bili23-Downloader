@@ -51,9 +51,21 @@ export default {
     viewtime: 'Last Watched',
   },
 
+  auth: {
+    title: 'Sign in',
+    hint: 'The password was printed to the console on first launch. It is shown only once and is not written to the log file.',
+    username: 'Username',
+    password: 'Password',
+    submit: 'Sign in',
+    submitting: 'Signing in',
+    failed: 'Incorrect username or password.',
+    expired: 'Your session has expired. Please sign in again.',
+    signOut: 'Sign out of the WebUI',
+  },
+
   error: {
     backendUnreachable:
-      'Cannot reach the backend. Make sure the desktop app is running with the MCP service enabled.',
+      'Cannot reach the backend. Start it with: python src/main.py --web-ui',
     requestFailed: 'Request failed (HTTP {status})',
   },
 }
