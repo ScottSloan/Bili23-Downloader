@@ -47,6 +47,31 @@ export default {
     viewtime: '上次观看时间',
   },
 
+  task: {
+    summary: '{total} 个任务，{active} 个进行中',
+    offline: '实时更新已断开',
+    empty: '暂无下载任务。',
+    completedSection: '已完成（{count}）',
+    pause: '暂停',
+    resume: '继续',
+    retry: '重新下载',
+    remove: '删除',
+    status: {
+      queued: '等待下载',
+      parsing: '解析中',
+      downloading: '下载中',
+      paused: '已暂停',
+      completed: '已完成',
+      ffmpeg_queued: '等待处理',
+      merging: '合并中',
+      converting: '转换中',
+      additional_processing: '获取附加内容',
+      failed: '下载失败',
+      ffmpeg_failed: '处理失败',
+      unknown: '未知',
+    },
+  },
+
   auth: {
     title: '登录',
     hint: '口令在首次启动时打印到控制台，只显示一次，且不会写入日志文件。',

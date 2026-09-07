@@ -51,6 +51,31 @@ export default {
     viewtime: 'Last Watched',
   },
 
+  task: {
+    summary: '{active} downloading of {total}',
+    offline: 'Live updates disconnected',
+    empty: 'No download tasks yet.',
+    completedSection: 'Completed ({count})',
+    pause: 'Pause',
+    resume: 'Resume',
+    retry: 'Redownload',
+    remove: 'Remove',
+    status: {
+      queued: 'Queued',
+      parsing: 'Parsing',
+      downloading: 'Downloading',
+      paused: 'Paused',
+      completed: 'Completed',
+      ffmpeg_queued: 'Queued for FFmpeg',
+      merging: 'Merging',
+      converting: 'Converting',
+      additional_processing: 'Fetching extras',
+      failed: 'Download failed',
+      ffmpeg_failed: 'FFmpeg failed',
+      unknown: 'Unknown',
+    },
+  },
+
   auth: {
     title: 'Sign in',
     hint: 'The password was printed to the console on first launch. It is shown only once and is not written to the log file.',

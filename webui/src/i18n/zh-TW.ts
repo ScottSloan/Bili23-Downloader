@@ -47,6 +47,31 @@ export default {
     viewtime: '上次觀看時間',
   },
 
+  task: {
+    summary: '{total} 個任務，{active} 個進行中',
+    offline: '即時更新已中斷',
+    empty: '暫無下載任務。',
+    completedSection: '已完成（{count}）',
+    pause: '暫停',
+    resume: '繼續',
+    retry: '重新下載',
+    remove: '刪除',
+    status: {
+      queued: '等待下載',
+      parsing: '解析中',
+      downloading: '下載中',
+      paused: '已暫停',
+      completed: '已完成',
+      ffmpeg_queued: '等待處理',
+      merging: '合併中',
+      converting: '轉換中',
+      additional_processing: '取得附加內容',
+      failed: '下載失敗',
+      ffmpeg_failed: '處理失敗',
+      unknown: '未知',
+    },
+  },
+
   auth: {
     title: '登入',
     hint: '口令在首次啟動時印到主控台，只顯示一次，且不會寫入日誌檔案。',
