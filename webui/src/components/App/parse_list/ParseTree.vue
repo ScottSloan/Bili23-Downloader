@@ -138,7 +138,10 @@ function onToggle(id: string, event: Event) {
           :ref="measureRow"
           :data-index="item.index"
           class="tree-row"
-          :class="{ 'is-node': node.is_node, 'is-reparse': node.attributes.includes('need_parse_bit') }"
+          :class="{
+            'is-node': node.is_node,
+            'is-reparse': node.attributes.includes('need_parse_bit'),
+          }"
           :style="{
             gridTemplateColumns: gridTemplate,
             transform: `translateY(${item.start}px)`,

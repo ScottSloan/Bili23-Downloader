@@ -11,18 +11,18 @@ import { t } from '@/i18n'
 import type { paths } from './schema'
 
 /** 从生成的类型里取某个接口的成功响应体 */
-export type Ok<
-  P extends keyof paths,
-  M extends keyof paths[P],
-> = paths[P][M] extends { responses: { 200: { content: { 'application/json': infer R } } } }
+export type Ok<P extends keyof paths, M extends keyof paths[P]> = paths[P][M] extends {
+  responses: { 200: { content: { 'application/json': infer R } } }
+}
   ? R
   : never
 
 /** 取某个接口的请求体 */
-export type Body<
-  P extends keyof paths,
-  M extends keyof paths[P],
-> = paths[P][M] extends { requestBody: { content: { 'application/json': infer B } } } ? B : never
+export type Body<P extends keyof paths, M extends keyof paths[P]> = paths[P][M] extends {
+  requestBody: { content: { 'application/json': infer B } }
+}
+  ? B
+  : never
 
 export class ApiError extends Error {
   status: number

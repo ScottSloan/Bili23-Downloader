@@ -18,6 +18,7 @@ import { t } from '@/i18n'
 import pushButton from '@/components/Fluent/components/widgets/button/PushButton.vue'
 import primaryPushButton from '@/components/Fluent/components/widgets/button/PrimaryPushButton.vue'
 import transparentCheckBox from '@/components/Fluent/components/widgets/checkbox/TransparentCheckBox.vue'
+import comboBox from '@/components/Fluent/components/widgets/combo_box/ComboBox.vue'
 
 const props = defineProps<{
   open: boolean
@@ -76,6 +77,11 @@ async function load() {
   } finally {
     loading.value = false
   }
+}
+
+/** 后端给的是 {档位名: id}，ComboBox 要的是 [{value, label}] */
+function toOptions(map?: Record<string, number>) {
+  return Object.entries(map ?? {}).map(([label, value]) => ({ value, label }))
 }
 
 /**
@@ -140,29 +146,29 @@ async function confirm() {
 
         <label class="field">
           <span>{{ t('download.videoQuality') }}</span>
-          <select v-model.number="videoQuality" class="select">
-            <option v-for="(id, name) in info.video_quality" :key="name" :value="id">
-              {{ name }}
-            </option>
-          </select>
+          <comboBox
+            v-model="videoQuality"
+            :options="toOptions(info.video_quality)"
+            :label="t('download.videoQuality')"
+          />
         </label>
 
         <label class="field">
           <span>{{ t('download.videoCodec') }}</span>
-          <select v-model.number="videoCodec" class="select">
-            <option v-for="(id, name) in info.video_codec" :key="name" :value="id">
-              {{ name }}
-            </option>
-          </select>
+          <comboBox
+            v-model="videoCodec"
+            :options="toOptions(info.video_codec)"
+            :label="t('download.videoCodec')"
+          />
         </label>
 
         <label class="field">
           <span>{{ t('download.audioQuality') }}</span>
-          <select v-model.number="audioQuality" class="select">
-            <option v-for="(id, name) in info.audio_quality" :key="name" :value="id">
-              {{ name }}
-            </option>
-          </select>
+          <comboBox
+            v-model="audioQuality"
+            :options="toOptions(info.audio_quality)"
+            :label="t('download.audioQuality')"
+          />
         </label>
 
         <div class="extras">
@@ -246,7 +252,7 @@ async function confirm() {
 .error {
   margin: 0;
   font-size: 12px;
-  color: var(--text-critical, #c42b1c);
+  color: var(--text-danger);
 }
 
 .field {
@@ -255,17 +261,6 @@ async function confirm() {
   gap: 4px;
   font-size: 13px;
   color: var(--text-primary);
-}
-
-/* 原生 select：Fluent 组件里还没有下拉框，先用原生的 —— 它自带键盘可达与无障碍语义，
-   自己糊一个反而更容易做丢这些 */
-.select {
-  padding: 6px 8px;
-  border-radius: 5px;
-  font-size: 13px;
-  color: var(--text-primary);
-  background-color: var(--control-fill-default);
-  border: 1px solid var(--control-stroke-default);
 }
 
 .extras {

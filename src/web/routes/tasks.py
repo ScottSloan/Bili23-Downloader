@@ -23,7 +23,8 @@ from fastapi import APIRouter, Query, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
-from util.common.enum import DownloadStatus
+from util.common.config import config
+from util.common.enum import DownloadStatus, DuplicateDownloadResolution
 from util.download.task.manager import task_manager
 from util.thread import background
 
@@ -108,6 +109,53 @@ async def get_task(task_id: str):
 
     return task_views([task_info])[0]
 
+def _resolve_duplicate_option(options: Optional[dict]) -> dict:
+    """
+    补上重复下载的处理方式，**绝不能让它落到 ALWAYS_ASK**
+
+    `TaskManager._check_duplicate()` 遇到 ALWAYS_ASK 会发一个信号请 GUI 弹窗，
+    然后 `done_event.wait()` 无限期等下去。WebUI 进程里没有那个窗口，也没有人去点，
+    于是这一次建任务的 HTTP 请求就永远挂着 —— 而 ALWAYS_ASK 恰恰是**默认值**。
+
+    manager.py 里那段注释已经写明「无人值守的调用方必须显式指定处理方式」，MCP 是
+    这么做的，WebUI 也照做。选 SKIP 而不是 CONTINUE：已经下过的东西默认不重下，
+    符合这个设置本身的意图；跳掉了多少条会在返回里如实给出（requested 与 created 的差）。
+    """
+    resolved = dict(options or {})
+
+    given = resolved.get("duplicate_resolution")
+
+    if given is not None:
+        # 调用方明确说了要怎么处理，尊重它 —— 但必须换成枚举成员再往下传。
+        #
+        # **`DuplicateDownloadResolution` 是普通 Enum 不是 IntEnum**：JSON 里过来的
+        # `1` 与 `DuplicateDownloadResolution.SKIP` 比较恒为 False 且不报错，
+        # manager.py 那个 match 会一个分支都不命中，然后按「跳过」处理 ——
+        # 于是「继续下载」这个选择被无声地反转（同 CLAUDE.md 里 Qt.CheckState 那条坑）
+        resolved["duplicate_resolution"] = _as_resolution(given)
+
+        return resolved
+
+    if config.get(config.duplicate_download_resolution) == DuplicateDownloadResolution.ALWAYS_ASK:
+        resolved["duplicate_resolution"] = DuplicateDownloadResolution.SKIP
+
+    return resolved
+
+def _as_resolution(value) -> DuplicateDownloadResolution:
+    """把 JSON 传来的取值换成枚举成员。认不出来一律按 SKIP —— 绝不能是 ALWAYS_ASK"""
+    if isinstance(value, DuplicateDownloadResolution):
+        return DuplicateDownloadResolution.SKIP if value == DuplicateDownloadResolution.ALWAYS_ASK else value
+
+    try:
+        member = DuplicateDownloadResolution(value)
+
+    except ValueError:
+        logger.warning("认不出的 duplicate_resolution：%r，按跳过处理", value)
+
+        return DuplicateDownloadResolution.SKIP
+
+    return DuplicateDownloadResolution.SKIP if member == DuplicateDownloadResolution.ALWAYS_ASK else member
+
 def _create_and_collect(episodes: List[dict], options: Optional[dict]) -> List[dict]:
     """
     创建任务并把实际建出来的那些收集回来
@@ -145,7 +193,8 @@ async def create_tasks(payload: CreateTasksRequest):
     所以实际建出来的可能比传进来的少 —— 返回里如实给出两个数字，
     不然前端会以为「点了没反应」
     """
-    created = await _off_loop(_create_and_collect, payload.episodes, payload.options)
+    created = await _off_loop(_create_and_collect, payload.episodes,
+                              _resolve_duplicate_option(payload.options))
 
     return {
         "requested": len(payload.episodes),

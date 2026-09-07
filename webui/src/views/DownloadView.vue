@@ -182,7 +182,7 @@ function statusText(status: string): string {
 .error {
   margin: 0;
   font-size: 12px;
-  color: var(--text-critical, #c42b1c);
+  color: var(--text-danger);
 }
 
 .task-list {
@@ -250,7 +250,7 @@ function statusText(status: string): string {
 }
 
 .progress-fill.is-error {
-  background-color: var(--text-critical, #c42b1c);
+  background-color: var(--text-danger);
 }
 
 .task-meta {

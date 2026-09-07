@@ -82,7 +82,8 @@ export const login = {
   status: (refresh = false) => get<LoginStatus>('/login/status', { refresh }),
 
   qrcode: () => post<Ok<'/api/login/qrcode', 'post'>>('/login/qrcode'),
-  pollQrcode: (key: string) => get<Ok<'/api/login/qrcode/poll', 'get'>>('/login/qrcode/poll', { key }),
+  pollQrcode: (key: string) =>
+    get<Ok<'/api/login/qrcode/poll', 'get'>>('/login/qrcode/poll', { key }),
 
   withCookie: (text: string) => post<Ok<'/api/login/cookie', 'post'>>('/login/cookie', { text }),
 
@@ -121,7 +122,9 @@ export const tasks = {
   /** 全量快照。`cursor` 拿去连 WebSocket，否则快照与增量之间会漏事件 */
   snapshot: (limit?: number) => get<TaskSnapshot>('/tasks', { limit }),
 
-  list: (options: { completed?: boolean; sortBy?: string; ascending?: boolean; limit?: number } = {}) =>
+  list: (
+    options: { completed?: boolean; sortBy?: string; ascending?: boolean; limit?: number } = {},
+  ) =>
     get<Ok<'/api/tasks/list', 'get'>>('/tasks/list', {
       completed: options.completed,
       sort_by: options.sortBy,

@@ -118,6 +118,6 @@ async function submit() {
   margin: 0;
   font-size: 12px;
   /* 用语义色而不是写死红色：深浅两套主题下的对比度不一样 */
-  color: var(--text-critical, #c42b1c);
+  color: var(--text-danger);
 }
 </style>

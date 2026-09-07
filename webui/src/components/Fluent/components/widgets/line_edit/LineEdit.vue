@@ -62,6 +62,19 @@ const emit = defineEmits(['update:modelValue', 'submit'])
   background-color: var(--control-fill-secondary);
 }
 
+/* 禁用态：设置页里有若干项要跟着上一项灰掉（代理服务器跟着代理模式），
+   少了这段的话它看起来仍然可输入，点进去却打不了字 */
+.fluent-line-edit:disabled {
+  cursor: default;
+  color: var(--text-disabled);
+  background-color: var(--control-fill-tertiary);
+  border-color: var(--control-stroke-default);
+}
+
+.fluent-line-edit:disabled::placeholder {
+  color: var(--text-disabled);
+}
+
 .fluent-line-edit:focus {
   /* 底边加粗 1px，上边距同步减 1px，避免控件整体高度跳动 */
   padding: 6px 10px 5px 10px;

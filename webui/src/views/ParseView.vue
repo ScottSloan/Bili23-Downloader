@@ -6,9 +6,12 @@ import pushButton from '@/components/Fluent/components/widgets/button/PushButton
 import parseTree from '@/components/App/parse_list/ParseTree.vue'
 import downloadOptionsDialog from '@/components/App/DownloadOptionsDialog.vue'
 import { useParseStore } from '@/stores/parseStore'
+import { useSettingsStore } from '@/stores/settingsStore'
+import { tasks as tasksApi, ApiError } from '@/api'
 import { t } from '@/i18n'
 
 const store = useParseStore()
+const settingsStore = useSettingsStore()
 const url = ref('')
 
 const dialogOpen = ref(false)
@@ -28,7 +31,29 @@ async function openDownload() {
   }
 
   pendingEpisodes.value = episodes
+
+  // 「下载时显示选项对话框」关掉时直接建任务，全部沿用全局设置 —— 与桌面版一致
+  // （gui/interface/parse.py 里也是这么分的一条岔路）。
+  //
+  // 配置可能还没读回来（没进过设置页）：那时按默认值 true 处理，宁可多弹一次窗
+  if (settingsStore.loaded && settingsStore.value('show_download_options_dialog') === false) {
+    await createDirectly(episodes)
+
+    return
+  }
+
   dialogOpen.value = true
+}
+
+/** 不经对话框直接建任务。不传 options，后端就按全局设置取画质与附加内容 */
+async function createDirectly(episodes: Record<string, unknown>[]) {
+  try {
+    const result = await tasksApi.create(episodes)
+
+    onCreated(result.created)
+  } catch (e) {
+    notice.value = e instanceof ApiError ? e.message : String(e)
+  }
 }
 
 function onCreated(count: number) {
@@ -45,6 +70,10 @@ function onCreated(count: number) {
 function submit() {
   store.parse(url.value)
 }
+
+// 设置在别处也要用（这里判断要不要弹对话框），页面挂载时确保读过一次。
+// store 自己会去重，重复调不会多发请求
+void settingsStore.load()
 </script>
 
 <template>

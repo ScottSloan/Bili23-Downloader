@@ -59,8 +59,7 @@ export const useAuthStore = defineStore('auth', {
         return this.authenticated
       } catch (error) {
         // 登录失败次数过多时后端回 429，那句话比「用户名或密码错误」有用得多，原样显示
-        this.error =
-          error instanceof ApiError && error.message ? error.message : t('auth.failed')
+        this.error = error instanceof ApiError && error.message ? error.message : t('auth.failed')
 
         return false
       } finally {

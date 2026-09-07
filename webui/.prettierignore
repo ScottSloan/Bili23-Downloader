@@ -1,0 +1,9 @@
+# 生成物，权威在 scripts/gen_api_types.py
+#
+# 让 prettier 改这两个文件会让 `gen_api_types.py --check` 直接失效：
+# 生成器是按固定缩进 + sort_keys 写的，prettier 一格式化就与生成结果对不上，
+# CI 上表现为「接口类型已过期」，而实际上后端并没有改过
+src/api/openapi.json
+src/api/schema.d.ts
+
+dist

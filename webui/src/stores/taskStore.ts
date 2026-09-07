@@ -265,7 +265,8 @@ export const useTaskStore = defineStore('task', {
 
         this.error = ''
       } catch (error) {
-        this.error = error instanceof ApiError ? error.message : t('error.requestFailed', { status: 0 })
+        this.error =
+          error instanceof ApiError ? error.message : t('error.requestFailed', { status: 0 })
       }
     },
   },
