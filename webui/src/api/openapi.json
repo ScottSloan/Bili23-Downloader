@@ -150,6 +150,24 @@
         "title": "CheckDuplicatesRequest",
         "type": "object"
       },
+      "Choice": {
+        "description": "一个可选项。value 的类型随配置项而变（画质是 int，字幕语言是字符串）",
+        "properties": {
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "value": {
+            "title": "Value"
+          }
+        },
+        "required": [
+          "value",
+          "label"
+        ],
+        "title": "Choice",
+        "type": "object"
+      },
       "CookieLoginRequest": {
         "properties": {
           "text": {
@@ -837,6 +855,47 @@
           "authenticated"
         ],
         "title": "SessionInfo",
+        "type": "object"
+      },
+      "SettingChoices": {
+        "description": "结构化配置项的候选值\n\n这些表长在 core 里（`util/common/data/media_info.py` 等），**不该在前端再抄一份**：\n抄了之后 B 站加一档新画质，桌面版认得而 WebUI 不认得，且没有任何报错。\n与 `/api/preview` 下发画质档位是同一个思路。",
+        "properties": {
+          "audio_quality": {
+            "items": {
+              "$ref": "#/components/schemas/Choice"
+            },
+            "title": "Audio Quality",
+            "type": "array"
+          },
+          "subtitle_language": {
+            "items": {
+              "$ref": "#/components/schemas/Choice"
+            },
+            "title": "Subtitle Language",
+            "type": "array"
+          },
+          "video_codec": {
+            "items": {
+              "$ref": "#/components/schemas/Choice"
+            },
+            "title": "Video Codec",
+            "type": "array"
+          },
+          "video_quality": {
+            "items": {
+              "$ref": "#/components/schemas/Choice"
+            },
+            "title": "Video Quality",
+            "type": "array"
+          }
+        },
+        "required": [
+          "video_quality",
+          "audio_quality",
+          "video_codec",
+          "subtitle_language"
+        ],
+        "title": "SettingChoices",
         "type": "object"
       },
       "SettingItem": {
@@ -1993,6 +2052,28 @@
           }
         },
         "summary": "Update Settings",
+        "tags": [
+          "settings"
+        ]
+      }
+    },
+    "/api/settings/choices": {
+      "get": {
+        "description": "结构化配置项的候选值：画质 / 音质 / 编码 / 字幕语言\n\n**这些表只有 core 里那一份。** 前端再抄一遍的话，B 站加一档新画质时桌面版认得、\nWebUI 不认得，而且没有任何报错 —— 只是那一档在优先级列表里凭空消失。\n\n画质与音质里的 `auto` 不下发：优先级列表本身回答的就是「auto 时按什么顺序挑」，\n把 auto 放进这个顺序里没有意义（配置的默认值里也没有它）",
+        "operationId": "read_choices_api_settings_choices_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SettingChoices"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Read Choices",
         "tags": [
           "settings"
         ]

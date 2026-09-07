@@ -453,6 +453,32 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/settings/choices": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read Choices
+         * @description 结构化配置项的候选值：画质 / 音质 / 编码 / 字幕语言
+         *
+         *     **这些表只有 core 里那一份。** 前端再抄一遍的话，B 站加一档新画质时桌面版认得、
+         *     WebUI 不认得，而且没有任何报错 —— 只是那一档在优先级列表里凭空消失。
+         *
+         *     画质与音质里的 `auto` 不下发：优先级列表本身回答的就是「auto 时按什么顺序挑」，
+         *     把 auto 放进这个顺序里没有意义（配置的默认值里也没有它）
+         */
+        get: operations["read_choices_api_settings_choices_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/status": {
         parameters: {
             query?: never;
@@ -764,6 +790,16 @@ export interface components {
                 [key: string]: unknown;
             }[];
         };
+        /**
+         * Choice
+         * @description 一个可选项。value 的类型随配置项而变（画质是 int，字幕语言是字符串）
+         */
+        Choice: {
+            /** Label */
+            label: string;
+            /** Value */
+            value: unknown;
+        };
         /** CookieLoginRequest */
         CookieLoginRequest: {
             /** Text */
@@ -1055,6 +1091,24 @@ export interface components {
              * @default
              */
             username: string;
+        };
+        /**
+         * SettingChoices
+         * @description 结构化配置项的候选值
+         *
+         *     这些表长在 core 里（`util/common/data/media_info.py` 等），**不该在前端再抄一份**：
+         *     抄了之后 B 站加一档新画质，桌面版认得而 WebUI 不认得，且没有任何报错。
+         *     与 `/api/preview` 下发画质档位是同一个思路。
+         */
+        SettingChoices: {
+            /** Audio Quality */
+            audio_quality: components["schemas"]["Choice"][];
+            /** Subtitle Language */
+            subtitle_language: components["schemas"]["Choice"][];
+            /** Video Codec */
+            video_codec: components["schemas"]["Choice"][];
+            /** Video Quality */
+            video_quality: components["schemas"]["Choice"][];
         };
         /** SettingItem */
         SettingItem: {
@@ -1869,6 +1923,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_choices_api_settings_choices_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SettingChoices"];
                 };
             };
         };

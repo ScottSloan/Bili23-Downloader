@@ -16,6 +16,7 @@ import { t } from '@/i18n'
 import pushButton from '@/components/Fluent/components/widgets/button/PushButton.vue'
 import primaryPushButton from '@/components/Fluent/components/widgets/button/PrimaryPushButton.vue'
 import lineEdit from '@/components/Fluent/components/widgets/line_edit/LineEdit.vue'
+import fluentDialog from '@/components/Fluent/components/dialog/FluentDialog.vue'
 
 const props = defineProps<{
   open: boolean
@@ -133,124 +134,95 @@ function describe(e: unknown): string {
 </script>
 
 <template>
-  <div v-if="open" class="mask" @click.self="emit('close')">
-    <div class="dialog" role="dialog" aria-modal="true">
-      <h2 class="title">{{ t('settings.picker.title') }}</h2>
+  <fluentDialog
+    :open="open"
+    :title="t('settings.picker.title')"
+    width="460px"
+    @close="emit('close')"
+  >
+    <p v-if="!roots.length && !loading" class="hint">{{ t('settings.picker.noRoots') }}</p>
 
-      <p v-if="!roots.length && !loading" class="hint">{{ t('settings.picker.noRoots') }}</p>
-
-      <div v-if="roots.length" class="roots">
-        <span class="roots-label">{{ t('settings.picker.locations') }}</span>
-        <button
-          v-for="root in roots"
-          :key="root.path"
-          type="button"
-          class="root"
-          :class="{ 'is-current': root.path === path }"
-          @click="navigate(root.path)"
-        >
-          {{ root.name }}
-        </button>
-      </div>
-
-      <div class="breadcrumb">
-        <pushButton
-          :title="t('settings.picker.parent')"
-          :disabled="!parent"
-          @click="parent && navigate(parent)"
-        />
-        <!-- 在根目录上时后端给的 relative 是 "."，那个点单独摆在面包屑里没人看得懂，
-             换成完整路径 -->
-        <span class="path" :title="path">{{ relative && relative !== '.' ? relative : path }}</span>
-      </div>
-
-      <p v-if="error" class="error" role="alert">{{ error }}</p>
-
-      <ul class="entries">
-        <li v-for="entry in entries" :key="entry.name">
-          <button type="button" @click="navigate(`${path}/${entry.name}`)">
-            <svg class="folder" viewBox="0 0 16 16" aria-hidden="true">
-              <path
-                d="M1.5 4.2a1 1 0 0 1 1-1h3.3l1.2 1.4h6.5a1 1 0 0 1 1 1v6.2a1 1 0 0 1-1 1h-11a1 1 0 0 1-1-1z"
-                fill="currentColor"
-                opacity="0.75"
-              />
-            </svg>
-            <span class="name">{{ entry.name }}</span>
-            <!-- 链接可能指向根目录之外，点进去会被后端拒。提前标出来，
-                 比让用户撞一次墙好 -->
-            <span v-if="entry.is_link" class="link-tag">link</span>
-          </button>
-        </li>
-
-        <li v-if="!entries.length && !loading" class="empty">
-          {{ t('settings.picker.empty') }}
-        </li>
-      </ul>
-
-      <p v-if="truncated" class="hint">
-        {{ t('settings.picker.truncated', { count: entries.length }) }}
-      </p>
-
-      <div v-if="creating" class="new-folder">
-        <lineEdit
-          v-model="newName"
-          :placeholder="t('settings.picker.newFolderPlaceholder')"
-          @submit="createFolder"
-        />
-        <pushButton :title="t('settings.picker.create')" @click="createFolder" />
-      </div>
-
-      <div class="actions">
-        <pushButton
-          v-if="!creating"
-          :title="t('settings.picker.newFolder')"
-          :disabled="!path"
-          @click="creating = true"
-        />
-        <span class="spacer"></span>
-        <pushButton :title="t('settings.picker.cancel')" @click="emit('close')" />
-        <primaryPushButton
-          :title="t('settings.picker.choose')"
-          :disabled="!path"
-          @click="emit('select', path)"
-        />
-      </div>
+    <div v-if="roots.length" class="roots">
+      <span class="roots-label">{{ t('settings.picker.locations') }}</span>
+      <button
+        v-for="root in roots"
+        :key="root.path"
+        type="button"
+        class="root"
+        :class="{ 'is-current': root.path === path }"
+        @click="navigate(root.path)"
+      >
+        {{ root.name }}
+      </button>
     </div>
-  </div>
+
+    <div class="breadcrumb">
+      <pushButton
+        :title="t('settings.picker.parent')"
+        :disabled="!parent"
+        @click="parent && navigate(parent)"
+      />
+      <!-- 在根目录上时后端给的 relative 是 "."，那个点单独摆在面包屑里没人看得懂，
+             换成完整路径 -->
+      <span class="path" :title="path">{{ relative && relative !== '.' ? relative : path }}</span>
+    </div>
+
+    <p v-if="error" class="error" role="alert">{{ error }}</p>
+
+    <ul class="entries">
+      <li v-for="entry in entries" :key="entry.name">
+        <button type="button" @click="navigate(`${path}/${entry.name}`)">
+          <svg class="folder" viewBox="0 0 16 16" aria-hidden="true">
+            <path
+              d="M1.5 4.2a1 1 0 0 1 1-1h3.3l1.2 1.4h6.5a1 1 0 0 1 1 1v6.2a1 1 0 0 1-1 1h-11a1 1 0 0 1-1-1z"
+              fill="currentColor"
+              opacity="0.75"
+            />
+          </svg>
+          <span class="name">{{ entry.name }}</span>
+          <!-- 链接可能指向根目录之外，点进去会被后端拒。提前标出来，
+                 比让用户撞一次墙好 -->
+          <span v-if="entry.is_link" class="link-tag">link</span>
+        </button>
+      </li>
+
+      <li v-if="!entries.length && !loading" class="empty">
+        {{ t('settings.picker.empty') }}
+      </li>
+    </ul>
+
+    <p v-if="truncated" class="hint">
+      {{ t('settings.picker.truncated', { count: entries.length }) }}
+    </p>
+
+    <div v-if="creating" class="new-folder">
+      <lineEdit
+        v-model="newName"
+        :placeholder="t('settings.picker.newFolderPlaceholder')"
+        @submit="createFolder"
+      />
+      <pushButton :title="t('settings.picker.create')" @click="createFolder" />
+    </div>
+
+    <template #actions>
+      <pushButton
+        v-if="!creating"
+        :title="t('settings.picker.newFolder')"
+        :disabled="!path"
+        @click="creating = true"
+      />
+      <span class="spacer"></span>
+      <pushButton :title="t('settings.picker.cancel')" @click="emit('close')" />
+      <primaryPushButton
+        :title="t('settings.picker.choose')"
+        :disabled="!path"
+        @click="emit('select', path)"
+      />
+    </template>
+  </fluentDialog>
 </template>
 
 <style scoped>
-.mask {
-  position: fixed;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: rgba(0, 0, 0, 0.35);
-  z-index: 100;
-}
-
-.dialog {
-  width: 460px;
-  max-width: 92vw;
-  max-height: 82vh;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 22px 24px;
-  border-radius: 8px;
-  background-color: var(--solid-bg-base);
-  border: 1px solid var(--card-stroke-default);
-}
-
-.title {
-  margin: 0;
-  font-size: 17px;
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
 .roots {
   display: flex;
   flex-wrap: wrap;
@@ -380,12 +352,6 @@ function describe(e: unknown): string {
 
 .new-folder :deep(.fluent-line-edit) {
   flex: 1 1 auto;
-}
-
-.actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
 }
 
 .spacer {

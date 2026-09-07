@@ -41,6 +41,41 @@ export default {
     restartBadge: 'Restart required',
     restartNotice: 'Restart the backend for these to take effect: {items}',
     localOnly: 'Stored in this browser only',
+    customize: 'Customize…',
+
+    dialog: {
+      save: 'Save',
+      cancel: 'Cancel',
+    },
+
+    priority: {
+      hint: 'The topmost entry is preferred. If a video does not offer it, the next one is tried.',
+      summary: 'Prefers {first}',
+      moveUp: 'Move up',
+      moveDown: 'Move down',
+    },
+
+    subtitleLanguage: {
+      title: 'Customize Subtitle Languages',
+      all: 'Download all available subtitles',
+      specified: 'Download only selected subtitles',
+      search: 'Search by name or code',
+      empty: 'No language matches.',
+      selected: '{count} selected',
+      summaryAll: 'All available',
+      summarySome: '{count} selected',
+    },
+
+    browseRoots: {
+      title: 'Browsable Folders',
+      hint: 'Paths on the machine running the backend, not on this device. Type the full path — folders that are not roots yet cannot be browsed to.',
+      placeholder: '/downloads',
+      add: 'Add',
+      remove: 'Remove',
+      empty: 'No extra folder. Only the download folder can be browsed.',
+      summary: '{count} folder(s)',
+      summaryEmpty: 'Download folder only',
+    },
 
     theme: {
       label: 'Theme',
@@ -76,6 +111,12 @@ export default {
       speed_limit_rate: 'Speed Limit Rate',
       video_container: 'Output Container Format',
       m4a_to_mp3: 'Convert M4A to MP3',
+
+      video_quality_priority: 'Video Quality Priority',
+      audio_quality_priority: 'Audio Quality Priority',
+      video_codec_priority: 'Codec Priority',
+      subtitle_language: 'Subtitle Language',
+      webui_browse_roots: 'Browsable Folders',
 
       show_download_options_dialog: 'Show Download Options Dialog',
       duplicate_download_resolution: 'Duplicate Download Resolution',
@@ -130,6 +171,13 @@ export default {
       video_container: 'Choose the container format for the final output video file',
       m4a_to_mp3:
         'Only applies when downloading audio-only streams. Disabled if video is also selected.',
+
+      video_quality_priority: 'Which quality to prefer when a video offers several',
+      audio_quality_priority: 'Which audio quality to prefer when several are available',
+      video_codec_priority: 'Which codec to prefer when several are available',
+      subtitle_language: 'Download all subtitles, or only the languages you pick',
+      webui_browse_roots:
+        'Where the folder picker is allowed to look. Leave empty to allow the download folder only.',
 
       show_download_options_dialog:
         'Show a dialog before starting the download to customize settings for this task',

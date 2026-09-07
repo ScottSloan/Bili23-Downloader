@@ -28,7 +28,7 @@ from pydantic import BaseModel, Field
 from util.common._config.schema import ITEMS, ValueType
 from util.common.config import config
 
-from ..schemas import SettingsPayload, SettingsUpdateResult
+from ..schemas import SettingChoices, SettingsPayload, SettingsUpdateResult
 
 logger = logging.getLogger(__name__)
 
@@ -95,6 +95,38 @@ async def read_settings():
     items = [_describe(spec) for spec in _visible_items()]
 
     return {"items": items, "groups": sorted({item["group"] for item in items})}
+
+@router.get("/settings/choices", response_model = SettingChoices)
+async def read_choices():
+    """
+    结构化配置项的候选值：画质 / 音质 / 编码 / 字幕语言
+
+    **这些表只有 core 里那一份。** 前端再抄一遍的话，B 站加一档新画质时桌面版认得、
+    WebUI 不认得，而且没有任何报错 —— 只是那一档在优先级列表里凭空消失。
+
+    画质与音质里的 `auto` 不下发：优先级列表本身回答的就是「auto 时按什么顺序挑」，
+    把 auto 放进这个顺序里没有意义（配置的默认值里也没有它）
+    """
+    from util.common.data import audio_quality_map, subtitles_language_list, video_codec_map, video_quality_map
+    from util.common.translator import Translator
+
+    def media_choices(source: dict, translate) -> list:
+        return [
+            {"value": value, "label": translate(name)}
+            for name, value in source.items()
+            if name != "auto"
+        ]
+
+    return {
+        "video_quality": media_choices(video_quality_map, Translator.VIDEO_QUALITY),
+        "audio_quality": media_choices(audio_quality_map, Translator.AUDIO_QUALITY),
+        # 编码名本身就是 AVC/H.264 这种写法，没有可翻译的部分
+        "video_codec": media_choices(video_codec_map, lambda name: name),
+        "subtitle_language": [
+            {"value": entry["lan"], "label": entry["doc_zh"]}
+            for entry in subtitles_language_list
+        ],
+    }
 
 @router.post("/settings", response_model = SettingsUpdateResult)
 async def update_settings(payload: UpdateSettingsRequest):

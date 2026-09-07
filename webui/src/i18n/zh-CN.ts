@@ -38,6 +38,41 @@ export default {
     restartBadge: '需重启',
     restartNotice: '以下设置需要重启后端后生效：{items}',
     localOnly: '仅保存在当前浏览器',
+    customize: '自定义…',
+
+    dialog: {
+      save: '保存',
+      cancel: '取消',
+    },
+
+    priority: {
+      hint: '越靠前越优先。视频没有该档位时，依次尝试下一个。',
+      summary: '优先 {first}',
+      moveUp: '上移',
+      moveDown: '下移',
+    },
+
+    subtitleLanguage: {
+      title: '自定义字幕语言',
+      all: '下载全部可用字幕',
+      specified: '仅下载选中的字幕',
+      search: '按名称或语言代码搜索',
+      empty: '没有匹配的语言。',
+      selected: '已选 {count} 种',
+      summaryAll: '全部可用字幕',
+      summarySome: '已选 {count} 种',
+    },
+
+    browseRoots: {
+      title: '可浏览的目录',
+      hint: '填的是运行后端那台机器上的路径，不是本机的。只能手输 —— 还没成为根目录的地方，浏览接口本来就不让看。',
+      placeholder: '/downloads',
+      add: '添加',
+      remove: '移除',
+      empty: '没有额外目录，只能浏览下载目录。',
+      summary: '{count} 个目录',
+      summaryEmpty: '仅下载目录',
+    },
 
     theme: {
       label: '主题',
@@ -73,6 +108,12 @@ export default {
       speed_limit_rate: '限速值',
       video_container: '输出容器格式',
       m4a_to_mp3: '将 M4A 转换为 MP3',
+
+      video_quality_priority: '视频清晰度优先级',
+      audio_quality_priority: '音质优先级',
+      video_codec_priority: '编码优先级',
+      subtitle_language: '字幕语言',
+      webui_browse_roots: '可浏览的目录',
 
       show_download_options_dialog: '下载时显示选项对话框',
       duplicate_download_resolution: '重复下载处理',
@@ -125,6 +166,12 @@ export default {
       speed_limit_enabled: '限制所有任务的总下载速度',
       video_container: '选择最终输出视频文件的容器格式',
       m4a_to_mp3: '仅在下载纯音频流时有效',
+
+      video_quality_priority: '视频有多个清晰度可选时，优先选择哪一个',
+      audio_quality_priority: '有多种音质可选时，优先选择哪一个',
+      video_codec_priority: '有多种编码可选时，优先选择哪一个',
+      subtitle_language: '下载全部字幕，还是只下你指定的语言',
+      webui_browse_roots: '「选择文件夹」允许浏览的范围。留空则只能浏览下载目录。',
 
       show_download_options_dialog: '在开始下载前弹出对话框，以便自定义本次下载设置',
       duplicate_download_resolution:

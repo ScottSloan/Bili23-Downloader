@@ -21,7 +21,15 @@
 // Additional / Advanced。文案也照抄那边的 `self.tr(...)`，好让两边说的是同一件事。
 
 /** 控件类型。不指定则按后端下发的 `type` 推断 */
-export type ControlKind = 'switch' | 'combo' | 'spin' | 'text' | 'password' | 'path'
+export type ControlKind = 'switch' | 'combo' | 'spin' | 'text' | 'password' | 'path' | 'dialog'
+
+/**
+ * 结构化配置项的专用编辑器
+ *
+ * 这些项是列表或字典，一行卡片放不下，各自需要一个对话框。
+ * 卡片上只放一个「自定义…」按钮加一句摘要 —— 与桌面版一致
+ */
+export type DialogKind = 'priority' | 'subtitleLanguage' | 'browseRoots'
 
 /** 启用条件：另一项为真，或等于某个值 */
 export interface Condition {
@@ -36,6 +44,14 @@ export interface SettingSpec {
   kind?: ControlKind
   /** 缩进并在条件不满足时置灰 */
   enabledWhen?: Condition
+  /** kind 为 dialog 时，用哪个编辑器 */
+  dialog?: DialogKind
+  /**
+   * priority 编辑器的候选来自 `/api/settings/choices` 的哪一组
+   *
+   * 三个优先级项共用同一个对话框，靠这个字段区分候选表
+   */
+  choices?: 'video_quality' | 'audio_quality' | 'video_codec' | 'subtitle_language'
   /** 单位后缀，显示在数字框右侧 */
   suffix?: string
   step?: number
@@ -89,6 +105,28 @@ export const SETTING_GROUPS: SettingGroupSpec[] = [
       },
       { attr: 'video_container', described: true },
       { attr: 'm4a_to_mp3', described: true },
+
+      {
+        attr: 'video_quality_priority',
+        kind: 'dialog',
+        dialog: 'priority',
+        choices: 'video_quality',
+        described: true,
+      },
+      {
+        attr: 'audio_quality_priority',
+        kind: 'dialog',
+        dialog: 'priority',
+        choices: 'audio_quality',
+        described: true,
+      },
+      {
+        attr: 'video_codec_priority',
+        kind: 'dialog',
+        dialog: 'priority',
+        choices: 'video_codec',
+        described: true,
+      },
     ],
   },
 
@@ -115,6 +153,14 @@ export const SETTING_GROUPS: SettingGroupSpec[] = [
 
       { attr: 'download_subtitle' },
       { attr: 'subtitle_type', enabledWhen: { attr: 'download_subtitle' } },
+      {
+        attr: 'subtitle_language',
+        kind: 'dialog',
+        dialog: 'subtitleLanguage',
+        choices: 'subtitle_language',
+        described: true,
+        enabledWhen: { attr: 'download_subtitle' },
+      },
       { attr: 'embed_subtitle', described: true, enabledWhen: { attr: 'download_subtitle' } },
       {
         attr: 'delete_subtitle_after_embed',
@@ -182,6 +228,7 @@ export const SETTING_GROUPS: SettingGroupSpec[] = [
       { attr: 'webui_port', restart: true },
       { attr: 'webui_username', described: true },
       { attr: 'webui_session_hours', suffix: 'h', described: true },
+      { attr: 'webui_browse_roots', kind: 'dialog', dialog: 'browseRoots', described: true },
     ],
   },
 ]
@@ -216,11 +263,13 @@ export const SPEC_BY_ATTR: Record<string, SettingSpec> = Object.fromEntries(
  *   `parse_list_*`）：由各自列表的表头控制，不该在设置页里另开一份
  * - **MCP**（`mcp_*`）：跑在桌面进程里，WebUI 改了不会生效
  * - **更新检查**（`include_prerelease`）：桌面版的自动更新，Docker 部署下不适用
- * - **结构化的表**：`danmaku_style` / `subtitle_style` / `subtitle_language` /
- *   `naming_rule_list` / `numbering_type` / `video_quality_priority` /
- *   `audio_quality_priority` / `video_codec_priority` / `cn_cdn_server_list` /
- *   `ov_cdn_server_list` / `auto_select_conditions` / `webui_browse_roots`。
- *   各自需要一个编辑器，留待后续
+ * - **还没有编辑器的结构化项**：`danmaku_style` / `subtitle_style`（字体、边框、颜色、
+ *   边距、分辨率，只在 ASS 输出时生效）、`naming_rule_list`（每种媒体类型一条模板 +
+ *   一张变量表）、`cn_cdn_server_list` / `ov_cdn_server_list`
+ *   （`prefer_cdn_server_provider` 开关已覆盖多数场景）、`auto_select_conditions`
+ *   （跟 `auto_select_mode` 一起，Web 端还没有对应实现）。
+ *
+ *   已经有编辑器的：三个优先级、`subtitle_language`、`webui_browse_roots`
  *
  * `numbering_type` 单独说一句：它的 FROM_SPECIFIED 档要配合起始序号，而那是个
  * **进程级的运行时游标**（见 PROGRESS.md 待解决第 2 条），WebUI 是另一个进程、

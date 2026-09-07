@@ -183,6 +183,26 @@ class SettingsPayload(BaseModel):
     items: List[SettingItem]
     groups: List[str]
 
+class Choice(BaseModel):
+    """一个可选项。value 的类型随配置项而变（画质是 int，字幕语言是字符串）"""
+
+    value: Any
+    label: str
+
+class SettingChoices(BaseModel):
+    """
+    结构化配置项的候选值
+
+    这些表长在 core 里（`util/common/data/media_info.py` 等），**不该在前端再抄一份**：
+    抄了之后 B 站加一档新画质，桌面版认得而 WebUI 不认得，且没有任何报错。
+    与 `/api/preview` 下发画质档位是同一个思路。
+    """
+
+    video_quality: List[Choice]
+    audio_quality: List[Choice]
+    video_codec: List[Choice]
+    subtitle_language: List[Choice]
+
 class SettingsUpdateResult(BaseModel):
     changed: List[str]
     # 回读纠正后的值：取值校验是「纠正而非拒绝」，用户传的可能被 clamp

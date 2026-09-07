@@ -38,6 +38,41 @@ export default {
     restartBadge: '需重新啟動',
     restartNotice: '以下設定需要重新啟動後端後生效：{items}',
     localOnly: '僅儲存於目前瀏覽器',
+    customize: '自訂…',
+
+    dialog: {
+      save: '儲存',
+      cancel: '取消',
+    },
+
+    priority: {
+      hint: '越靠前越優先。影片沒有該檔位時，依序嘗試下一個。',
+      summary: '優先 {first}',
+      moveUp: '上移',
+      moveDown: '下移',
+    },
+
+    subtitleLanguage: {
+      title: '自訂字幕語言',
+      all: '下載全部可用字幕',
+      specified: '僅下載選取的字幕',
+      search: '依名稱或語言代碼搜尋',
+      empty: '沒有符合的語言。',
+      selected: '已選 {count} 種',
+      summaryAll: '全部可用字幕',
+      summarySome: '已選 {count} 種',
+    },
+
+    browseRoots: {
+      title: '可瀏覽的目錄',
+      hint: '填的是執行後端那台機器上的路徑，不是本機的。只能手動輸入 —— 尚未成為根目錄的位置，瀏覽介面本來就不允許查看。',
+      placeholder: '/downloads',
+      add: '新增',
+      remove: '移除',
+      empty: '沒有額外目錄，只能瀏覽下載目錄。',
+      summary: '{count} 個目錄',
+      summaryEmpty: '僅下載目錄',
+    },
 
     theme: {
       label: '主題',
@@ -73,6 +108,12 @@ export default {
       speed_limit_rate: '限速值',
       video_container: '輸出容器格式',
       m4a_to_mp3: '將 M4A 轉換為 MP3',
+
+      video_quality_priority: '影片清晰度優先順序',
+      audio_quality_priority: '音質優先順序',
+      video_codec_priority: '編碼優先順序',
+      subtitle_language: '字幕語言',
+      webui_browse_roots: '可瀏覽的目錄',
 
       show_download_options_dialog: '下載時顯示選項對話方塊',
       duplicate_download_resolution: '重複下載處理',
@@ -125,6 +166,12 @@ export default {
       speed_limit_enabled: '限制所有任務的總下載速度',
       video_container: '選擇最終輸出影片檔案的容器格式',
       m4a_to_mp3: '僅於下載純音訊串流時有效',
+
+      video_quality_priority: '影片有多個清晰度可選時，優先選擇哪一個',
+      audio_quality_priority: '有多種音質可選時，優先選擇哪一個',
+      video_codec_priority: '有多種編碼可選時，優先選擇哪一個',
+      subtitle_language: '下載全部字幕，或僅下載你指定的語言',
+      webui_browse_roots: '「選取資料夾」允許瀏覽的範圍。留空則僅能瀏覽下載目錄。',
 
       show_download_options_dialog: '開始下載前跳出對話方塊以自訂本次下載設定',
       duplicate_download_resolution:

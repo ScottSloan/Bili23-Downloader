@@ -19,6 +19,7 @@ import pushButton from '@/components/Fluent/components/widgets/button/PushButton
 import primaryPushButton from '@/components/Fluent/components/widgets/button/PrimaryPushButton.vue'
 import transparentCheckBox from '@/components/Fluent/components/widgets/checkbox/TransparentCheckBox.vue'
 import comboBox from '@/components/Fluent/components/widgets/combo_box/ComboBox.vue'
+import fluentDialog from '@/components/Fluent/components/dialog/FluentDialog.vue'
 
 const props = defineProps<{
   open: boolean
@@ -130,112 +131,83 @@ async function confirm() {
 </script>
 
 <template>
-  <div v-if="open" class="mask" @click.self="emit('close')">
-    <div class="dialog" role="dialog" aria-modal="true">
-      <h2 class="title">{{ t('download.title', { count: episodes.length }) }}</h2>
+  <fluentDialog
+    :open="open"
+    :title="t('download.title', { count: episodes.length })"
+    width="360px"
+    @close="emit('close')"
+  >
+    <p v-if="loading" class="hint">{{ t('download.loading') }}</p>
 
-      <p v-if="loading" class="hint">{{ t('download.loading') }}</p>
+    <p v-else-if="error" class="error" role="alert">{{ error }}</p>
 
-      <p v-else-if="error" class="error" role="alert">{{ error }}</p>
+    <template v-else-if="info">
+      <!-- 信息来自别的视频时必须说清楚，否则用户以为看的是他选的那一集 -->
+      <p v-if="info.from_fallback" class="hint warn">
+        {{ t('download.fallback', { title: info.episode_title }) }}
+      </p>
 
-      <template v-else-if="info">
-        <!-- 信息来自别的视频时必须说清楚，否则用户以为看的是他选的那一集 -->
-        <p v-if="info.from_fallback" class="hint warn">
-          {{ t('download.fallback', { title: info.episode_title }) }}
-        </p>
-
-        <label class="field">
-          <span>{{ t('download.videoQuality') }}</span>
-          <comboBox
-            v-model="videoQuality"
-            :options="toOptions(info.video_quality)"
-            :label="t('download.videoQuality')"
-          />
-        </label>
-
-        <label class="field">
-          <span>{{ t('download.videoCodec') }}</span>
-          <comboBox
-            v-model="videoCodec"
-            :options="toOptions(info.video_codec)"
-            :label="t('download.videoCodec')"
-          />
-        </label>
-
-        <label class="field">
-          <span>{{ t('download.audioQuality') }}</span>
-          <comboBox
-            v-model="audioQuality"
-            :options="toOptions(info.audio_quality)"
-            :label="t('download.audioQuality')"
-          />
-        </label>
-
-        <div class="extras">
-          <span class="extras-label">{{ t('download.extras') }}</span>
-
-          <label class="extra">
-            <transparentCheckBox v-model:checked="extras.danmaku" />
-            <span>{{ t('download.danmaku') }}</span>
-          </label>
-          <label class="extra">
-            <transparentCheckBox v-model:checked="extras.subtitle" />
-            <span>{{ t('download.subtitle') }}</span>
-          </label>
-          <label class="extra">
-            <transparentCheckBox v-model:checked="extras.cover" />
-            <span>{{ t('download.cover') }}</span>
-          </label>
-          <label class="extra">
-            <transparentCheckBox v-model:checked="extras.metadata" />
-            <span>{{ t('download.metadata') }}</span>
-          </label>
-        </div>
-      </template>
-
-      <div class="actions">
-        <pushButton :title="t('download.cancel')" @click="emit('close')" />
-        <primaryPushButton
-          :title="submitting ? t('download.submitting') : t('download.confirm')"
-          :disabled="loading || submitting || !info"
-          @click="confirm"
+      <label class="field">
+        <span>{{ t('download.videoQuality') }}</span>
+        <comboBox
+          v-model="videoQuality"
+          :options="toOptions(info.video_quality)"
+          :label="t('download.videoQuality')"
         />
+      </label>
+
+      <label class="field">
+        <span>{{ t('download.videoCodec') }}</span>
+        <comboBox
+          v-model="videoCodec"
+          :options="toOptions(info.video_codec)"
+          :label="t('download.videoCodec')"
+        />
+      </label>
+
+      <label class="field">
+        <span>{{ t('download.audioQuality') }}</span>
+        <comboBox
+          v-model="audioQuality"
+          :options="toOptions(info.audio_quality)"
+          :label="t('download.audioQuality')"
+        />
+      </label>
+
+      <div class="extras">
+        <span class="extras-label">{{ t('download.extras') }}</span>
+
+        <label class="extra">
+          <transparentCheckBox v-model:checked="extras.danmaku" />
+          <span>{{ t('download.danmaku') }}</span>
+        </label>
+        <label class="extra">
+          <transparentCheckBox v-model:checked="extras.subtitle" />
+          <span>{{ t('download.subtitle') }}</span>
+        </label>
+        <label class="extra">
+          <transparentCheckBox v-model:checked="extras.cover" />
+          <span>{{ t('download.cover') }}</span>
+        </label>
+        <label class="extra">
+          <transparentCheckBox v-model:checked="extras.metadata" />
+          <span>{{ t('download.metadata') }}</span>
+        </label>
       </div>
-    </div>
-  </div>
+    </template>
+
+    <template #actions>
+      <pushButton :title="t('download.cancel')" @click="emit('close')" />
+      <primaryPushButton
+        :title="submitting ? t('download.submitting') : t('download.confirm')"
+        :disabled="loading || submitting || !info"
+        @click="confirm"
+      />
+    </template>
+  </fluentDialog>
 </template>
 
 <style scoped>
-.mask {
-  position: fixed;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: rgba(0, 0, 0, 0.35);
-  z-index: 100;
-}
-
-.dialog {
-  width: 360px;
-  max-height: 80vh;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 22px 24px;
-  border-radius: 8px;
-  background-color: var(--solid-bg-base);
-  border: 1px solid var(--card-stroke-default);
-}
-
-.title {
-  margin: 0;
-  font-size: 17px;
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
 .hint {
   margin: 0;
   font-size: 12px;
@@ -283,12 +255,5 @@ async function confirm() {
   align-items: center;
   gap: 2px;
   cursor: pointer;
-}
-
-.actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-  margin-top: 4px;
 }
 </style>

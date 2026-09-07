@@ -9,13 +9,24 @@
 //
 // 保存是自动的：改完就存，攒 400ms 合并成一次请求（见 settingsStore）。
 // 没有「保存」按钮 —— 桌面版也没有，两边行为保持一致。
+//
+// 结构化的项（优先级、字幕语言、可浏览目录）各有一个对话框，**统一在这里托管**：
+// 放进 SettingRow 的话，每一行都会带着一个自己永远用不到的对话框。
 
-import { computed, onMounted, onUnmounted } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useSettingsStore } from '@/stores/settingsStore'
 import { useThemeStore } from '@/stores/themeStore'
 import { t, setLocale } from '@/i18n'
-import { SETTING_GROUPS, INTERFACE_ITEMS } from '@/components/App/settings/spec'
+import {
+  SETTING_GROUPS,
+  INTERFACE_ITEMS,
+  SPEC_BY_ATTR,
+  type SettingSpec,
+} from '@/components/App/settings/spec'
 import settingRow from '@/components/App/settings/SettingRow.vue'
+import priorityDialog from '@/components/App/settings/PriorityDialog.vue'
+import subtitleLanguageDialog from '@/components/App/settings/SubtitleLanguageDialog.vue'
+import pathListDialog from '@/components/App/settings/PathListDialog.vue'
 import settingCard from '@/components/Fluent/components/settings/SettingCard.vue'
 import settingCardGroup from '@/components/Fluent/components/settings/SettingCardGroup.vue'
 import comboBox from '@/components/Fluent/components/widgets/combo_box/ComboBox.vue'
@@ -23,6 +34,13 @@ import pushButton from '@/components/Fluent/components/widgets/button/PushButton
 
 const store = useSettingsStore()
 const themeStore = useThemeStore()
+
+/** 当前打开的是哪一项的对话框。null 表示没开 */
+const openAttr = ref<string | null>(null)
+
+const openSpec = computed<SettingSpec | null>(() =>
+  openAttr.value ? (SPEC_BY_ATTR[openAttr.value] ?? null) : null,
+)
 
 const themeOptions = computed(() => [
   { value: 'light', label: t('settings.theme.light') },
@@ -40,6 +58,9 @@ const restartNotice = computed(() =>
 
 onMounted(() => {
   void store.load()
+
+  // 候选表也一起拉：卡片上的摘要要靠它把 id 翻成画质名（7.5 KB，不值得为它做懒加载）
+  void store.loadChoices()
 })
 
 // 离开设置页时把攒着的改动立刻发出去。少了这一步，改完最后一项就切页的话，
@@ -53,6 +74,85 @@ function onChanged(attr: string, value: unknown) {
   if (attr === 'language') {
     setLocale(typeof value === 'string' ? value : null)
   }
+}
+
+async function onOpenDialog(attr: string) {
+  // 进页面时已经拉过了，这里兜住「那次失败了」的情况。store 自己去重
+  await store.loadChoices()
+
+  openAttr.value = attr
+}
+
+function save(value: unknown) {
+  if (openAttr.value) {
+    store.set(openAttr.value, value as never, Boolean(SPEC_BY_ATTR[openAttr.value]?.restart))
+  }
+
+  openAttr.value = null
+}
+
+/**
+ * 对话框要用的候选表
+ *
+ * 后端那边 `Choice.value` 是 `Any`（画质是整数、字幕语言是字符串代码），生成的类型
+ * 因此是 `unknown`。**收窄放在这一处**，而不是让每个对话框都去处理 unknown ——
+ * 具体到某一张表，取值类型是确定的
+ */
+function choicesOf(spec: SettingSpec | null): { value: string | number; label: string }[] {
+  if (!spec?.choices || !store.choices) {
+    return []
+  }
+
+  return (store.choices[spec.choices] ?? []).map((choice) => ({
+    value: choice.value as string | number,
+    label: choice.label,
+  }))
+}
+
+/**
+ * 卡片右侧那句摘要
+ *
+ * 结构化项在卡片上看不到内容，不给一句摘要的话，用户每次都得点开才知道现在设的是什么
+ */
+function summaryOf(spec: SettingSpec): string | undefined {
+  if (spec.kind !== 'dialog') {
+    return undefined
+  }
+
+  const value = store.value(spec.attr)
+
+  if (spec.dialog === 'priority') {
+    // 首选的那一档最有信息量 —— 这个列表回答的就是「优先要哪个」
+    const first = Array.isArray(value) ? value[0] : undefined
+
+    if (first === undefined) {
+      return undefined
+    }
+
+    const label = choicesOf(spec).find((choice) => choice.value === first)?.label
+
+    return t('settings.priority.summary', { first: label ?? String(first) })
+  }
+
+  if (spec.dialog === 'subtitleLanguage') {
+    const detail = (value ?? {}) as { download_specified?: boolean; specified_language?: string[] }
+
+    return detail.download_specified
+      ? t('settings.subtitleLanguage.summarySome', {
+          count: detail.specified_language?.length ?? 0,
+        })
+      : t('settings.subtitleLanguage.summaryAll')
+  }
+
+  if (spec.dialog === 'browseRoots') {
+    const count = Array.isArray(value) ? value.length : 0
+
+    return count
+      ? t('settings.browseRoots.summary', { count })
+      : t('settings.browseRoots.summaryEmpty')
+  }
+
+  return undefined
 }
 </script>
 
@@ -98,7 +198,9 @@ function onChanged(attr: string, value: unknown) {
         v-for="spec in INTERFACE_ITEMS"
         :key="spec.attr"
         :spec="spec"
+        :summary="summaryOf(spec)"
         @changed="onChanged"
+        @open-dialog="onOpenDialog"
       />
     </settingCardGroup>
 
@@ -107,8 +209,39 @@ function onChanged(attr: string, value: unknown) {
       :key="group.key"
       :title="t(`settings.group.${group.key}`)"
     >
-      <settingRow v-for="spec in group.items" :key="spec.attr" :spec="spec" @changed="onChanged" />
+      <settingRow
+        v-for="spec in group.items"
+        :key="spec.attr"
+        :spec="spec"
+        :summary="summaryOf(spec)"
+        @changed="onChanged"
+        @open-dialog="onOpenDialog"
+      />
     </settingCardGroup>
+
+    <priorityDialog
+      :open="openSpec?.dialog === 'priority'"
+      :title="openAttr ? t(`settings.label.${openAttr}`) : ''"
+      :choices="choicesOf(openSpec)"
+      :value="(store.value(openAttr ?? '') as (number | string)[]) ?? []"
+      @close="openAttr = null"
+      @save="save"
+    />
+
+    <subtitleLanguageDialog
+      :open="openSpec?.dialog === 'subtitleLanguage'"
+      :choices="choicesOf(openSpec)"
+      :value="(store.value('subtitle_language') as Record<string, never>) ?? null"
+      @close="openAttr = null"
+      @save="save"
+    />
+
+    <pathListDialog
+      :open="openSpec?.dialog === 'browseRoots'"
+      :value="(store.value('webui_browse_roots') as string[]) ?? []"
+      @close="openAttr = null"
+      @save="save"
+    />
   </div>
 </template>
 

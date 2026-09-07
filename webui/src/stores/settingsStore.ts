@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { settings, type SettingItem } from '@/api'
+import { settings, type SettingChoices, type SettingItem } from '@/api'
 import { ApiError } from '@/api'
 
 /**
@@ -33,6 +33,14 @@ interface SettingsState {
   error: string
   /** 改过、且要重启后端才生效的项 */
   pendingRestart: string[]
+  /**
+   * 结构化项的候选值（画质 / 音质 / 编码 / 字幕语言）
+   *
+   * 单独一个接口，但**与设置本身一起拉**。原先是「打开对话框时才拉」，理由是
+   * 字幕语言有 158 条 —— 实测整个响应 7.5 KB，那个理由不成立；而代价是实打实的：
+   * 卡片上的摘要要靠它把 id 翻成画质名，没拉到之前显示的是「优先 127」
+   */
+  choices: SettingChoices | null
 }
 
 let saveTimer: ReturnType<typeof setTimeout> | null = null
@@ -44,6 +52,9 @@ let queued: Record<string, Value> = {}
 // 正在飞的那次 load。**并发的调用要等它，不能直接返回** —— 见 load() 里的说明
 let loading: Promise<void> | null = null
 
+// 候选表同理：三个优先级对话框可能几乎同时要它
+let choicesPromise: Promise<void> | null = null
+
 export const useSettingsStore = defineStore('settings', {
   state: (): SettingsState => ({
     items: {},
@@ -53,6 +64,7 @@ export const useSettingsStore = defineStore('settings', {
     saving: false,
     error: '',
     pendingRestart: [],
+    choices: null,
   }),
 
   getters: {
@@ -117,6 +129,25 @@ export const useSettingsStore = defineStore('settings', {
       })()
 
       return loading
+    },
+
+    /** 拉候选表。只拉一次 */
+    async loadChoices() {
+      if (this.choices || choicesPromise) {
+        return choicesPromise ?? undefined
+      }
+
+      choicesPromise = (async () => {
+        try {
+          this.choices = await settings.choices()
+        } catch (e) {
+          this.error = e instanceof ApiError ? e.message : String(e)
+        } finally {
+          choicesPromise = null
+        }
+      })()
+
+      return choicesPromise
     },
 
     /**

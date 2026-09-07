@@ -16,6 +16,7 @@ export type TaskSnapshot = Ok<'/api/tasks', 'get'>
 export type PreviewResult = Ok<'/api/preview', 'post'>
 export type SettingsPayload = Ok<'/api/settings', 'get'>
 export type SettingItem = SettingsPayload['items'][number]
+export type SettingChoices = Ok<'/api/settings/choices', 'get'>
 export type LoginStatus = Ok<'/api/login/status', 'get'>
 export type SessionInfo = Ok<'/api/auth/session', 'get'>
 export type FileEntry = Ok<'/api/files/list', 'get'>['entries'][number]
@@ -158,6 +159,9 @@ export const tasks = {
 
 export const settings = {
   read: () => get<SettingsPayload>('/settings'),
+
+  /** 结构化项的候选值（画质 / 音质 / 编码 / 字幕语言）。这些表只有 core 里那一份 */
+  choices: () => get<SettingChoices>('/settings/choices'),
   /** 一项不合法则整批拒绝，返回里是纠正后的值（后端语义是纠正而非拒绝） */
   write: (values: Record<string, unknown>) =>
     post<Ok<'/api/settings', 'post'>>('/settings', { values }),

@@ -19,11 +19,15 @@ import directoryPickerDialog from './DirectoryPickerDialog.vue'
 
 const props = defineProps<{
   spec: SettingSpec
+  /** 结构化项在卡片右侧显示的一句摘要（当前首选画质、已选几种语言…），由设置页算好传进来 */
+  summary?: string
 }>()
 
 const emit = defineEmits<{
   /** 值变了。语言那种改完要立刻反映到界面上的项，由父组件接住 */
   changed: [attr: string, value: unknown]
+  /** 结构化项要开专用的对话框。对话框统一由设置页托管，不散落在每一行里 */
+  openDialog: [attr: string]
 }>()
 
 const store = useSettingsStore()
@@ -181,6 +185,15 @@ function update(value: unknown) {
       @update:model-value="update"
     />
 
+    <template v-else-if="kind === 'dialog'">
+      <span v-if="summary" class="summary">{{ summary }}</span>
+      <pushButton
+        :title="t('settings.customize')"
+        :disabled="!enabled"
+        @click="emit('openDialog', spec.attr)"
+      />
+    </template>
+
     <template v-else-if="kind === 'path'">
       <span class="path-value" :title="String(item.value)">{{ item.value || '—' }}</span>
       <pushButton :title="t('settings.picker.title')" @click="pickerOpen = true" />
@@ -222,5 +235,14 @@ function update(value: unknown) {
 
 .text-value {
   width: 260px;
+}
+
+.summary {
+  max-width: 260px;
+  font-size: 10.5pt;
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 </style>
