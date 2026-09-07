@@ -65,7 +65,8 @@ async def list_directory(path: str = Query(default = ""),
         return _denied(e)
 
     if not target.is_dir():
-        return JSONResponse({"detail": "Not a directory"}, status_code = 404)
+        return JSONResponse({"detail": "Not a directory", "code": "NOT_A_DIRECTORY"},
+                            status_code = 404)
 
     entries = []
     truncated = False
@@ -108,12 +109,14 @@ async def list_directory(path: str = Query(default = ""),
                 })
 
     except PermissionError:
-        return JSONResponse({"detail": "Permission denied"}, status_code = 403)
+        return JSONResponse({"detail": "Permission denied", "code": "PERMISSION_DENIED"},
+                            status_code = 403)
 
     except OSError as e:
         logger.warning("列目录失败：%s（%s）", target, e)
 
-        return JSONResponse({"detail": "Cannot read directory"}, status_code = 400)
+        return JSONResponse({"detail": "Cannot read directory", "code": "CANNOT_READ_DIRECTORY"},
+                            status_code = 400)
 
     entries.sort(key = lambda item: (not item["is_dir"], item["name"].lower()))
 
@@ -139,11 +142,12 @@ async def make_directory(payload: MkdirRequest):
     name = payload.name.strip()
 
     if not name or name in (".", ".."):
-        return JSONResponse({"detail": "Invalid folder name"}, status_code = 400)
+        return JSONResponse({"detail": "Invalid folder name", "code": "INVALID_FOLDER_NAME"},
+                            status_code = 400)
 
     if os.sep in name or (os.altsep and os.altsep in name) or "/" in name or "\\" in name:
-        return JSONResponse({"detail": "Folder name cannot contain path separators"},
-                            status_code = 400)
+        return JSONResponse({"detail": "Folder name cannot contain path separators",
+                             "code": "FOLDER_NAME_HAS_SEPARATOR"}, status_code = 400)
 
     roots = browse_roots()
 
@@ -157,7 +161,8 @@ async def make_directory(payload: MkdirRequest):
         return _denied(e)
 
     if not parent.is_dir():
-        return JSONResponse({"detail": "Parent is not a directory"}, status_code = 404)
+        return JSONResponse({"detail": "Parent is not a directory", "code": "PARENT_NOT_A_DIRECTORY"},
+                            status_code = 404)
 
     try:
         target.mkdir(parents = False, exist_ok = True)
@@ -165,7 +170,8 @@ async def make_directory(payload: MkdirRequest):
     except OSError as e:
         logger.warning("新建目录失败：%s（%s）", target, e)
 
-        return JSONResponse({"detail": "Cannot create directory"}, status_code = 400)
+        return JSONResponse({"detail": "Cannot create directory", "code": "CANNOT_CREATE_DIRECTORY"},
+                            status_code = 400)
 
     return {"path": str(target), "relative": relative_label(target, roots)}
 

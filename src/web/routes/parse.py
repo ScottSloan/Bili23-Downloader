@@ -50,7 +50,8 @@ async def parse_url(payload: ParseRequest):
     """
     if _pending.locked():
         return JSONResponse(
-            {"detail": "Too many parse requests in flight"}, status_code = 429)
+            {"detail": "Too many parse requests in flight",
+             "code": "PARSE_BUSY"}, status_code = 429)
 
     async with _pending:
         session = ParseSession()

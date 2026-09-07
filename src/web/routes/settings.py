@@ -132,11 +132,11 @@ async def read_choices():
             {"value": entry["lan"], "label": entry["doc_zh"]}
             for entry in subtitles_language_list
         ],
-        # 对齐方式的编号跟着标签一起给：ASS 的 1–9 是小键盘方位，
-        # 光看数字认不出是哪个角，桌面版也是「说明（编号）」这么显示的
+        # 只给纯标签。**编号由前端拼**（ASS 的 1–9 是小键盘方位，光看数字认不出
+        # 是哪个角，所以界面上显示成「说明（编号）」）—— 后端也拼一遍的话，
+        # 前端用自己的译文时会变成「底部居中 (2) (2)」
         "subtitle_alignment": [
-            {"value": value,
-             "label": f"{Translator.SUBTITLES_ALIGNMENT(name)} ({value})"}
+            {"value": value, "label": Translator.SUBTITLES_ALIGNMENT(name)}
             for name, value in subtitles_alignment_map.items()
         ],
     }
@@ -254,12 +254,14 @@ async def update_settings(payload: UpdateSettingsRequest):
 
     if forbidden:
         return JSONResponse(
-            {"detail": "These settings cannot be changed here", "attrs": sorted(forbidden)},
+            {"detail": "These settings cannot be changed here",
+             "code": "SETTINGS_FORBIDDEN", "attrs": sorted(forbidden)},
             status_code = 403)
 
     if unknown:
         return JSONResponse(
-            {"detail": "Unknown settings", "attrs": sorted(unknown)}, status_code = 400)
+            {"detail": "Unknown settings", "code": "SETTINGS_UNKNOWN",
+             "attrs": sorted(unknown)}, status_code = 400)
 
     changed = []
 

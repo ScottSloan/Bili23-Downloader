@@ -133,5 +133,29 @@ export function columnName(key: string): string {
   return t(`column.${key}`)
 }
 
+/**
+ * 数据标签（画质 / 音质 / 编码 / 字幕对齐 / 命名规则类型）
+ *
+ * **不用后端给的 label。** 服务端进程里没装 Qt 的翻译函数（D12：那套是桌面版的），
+ * `Translator` 返回的一律是英文源串 —— 直接显示的话，中文界面上会出现
+ * `8K UHD`、`Single Video` 这种英文标签。
+ *
+ * 键是后端给的稳定取值（画质 id、类型编号），不是英文串：那些数字是 B 站的协议，
+ * 比英文措辞稳定得多。
+ *
+ * `fallback` 传后端给的 label：**这张表认不出的值要靠它**。B 站加一档新画质时，
+ * 前端还不认得它，那时显示英文名也好过显示一个裸数字
+ */
+export function mediaLabel(group: string, value: string | number, fallback = ''): string {
+  const key = `media.${group}.${value}`
+  const text = t(key)
+
+  if (text !== key) {
+    return text
+  }
+
+  return fallback || String(value)
+}
+
 // 首屏先按浏览器语言渲染，拿到桌面版配置后再由 App 调 setLocale 校正
 setLocale('Auto')

@@ -14,7 +14,7 @@
 import { ref, watch } from 'vue'
 import { preview as previewApi, tasks as tasksApi, ApiError } from '@/api'
 import type { PreviewResult } from '@/api'
-import { t } from '@/i18n'
+import { t, mediaLabel } from '@/i18n'
 import pushButton from '@/components/Fluent/components/widgets/button/PushButton.vue'
 import primaryPushButton from '@/components/Fluent/components/widgets/button/PrimaryPushButton.vue'
 import transparentCheckBox from '@/components/Fluent/components/widgets/checkbox/TransparentCheckBox.vue'
@@ -80,9 +80,18 @@ async function load() {
   }
 }
 
-/** 后端给的是 {档位名: id}，ComboBox 要的是 [{value, label}] */
-function toOptions(map?: Record<string, number>) {
-  return Object.entries(map ?? {}).map(([label, value]) => ({ value, label }))
+/**
+ * 后端给的是 {档位名: id}，ComboBox 要的是 [{value, label}]
+ *
+ * **档位名用前端自己那份翻译**（D12）：后端那些名字来自 `Translator`，
+ * 而服务端进程里没装 Qt 的翻译函数，拿到的一律是英文（`8K UHD`）。
+ * 认不出的 id 才回落到后端给的名字 —— B 站加新档位时至少还看得懂
+ */
+function toOptions(group: string, map?: Record<string, number>) {
+  return Object.entries(map ?? {}).map(([label, value]) => ({
+    value,
+    label: mediaLabel(group, value, label),
+  }))
 }
 
 /**
@@ -151,7 +160,7 @@ async function confirm() {
         <span>{{ t('download.videoQuality') }}</span>
         <comboBox
           v-model="videoQuality"
-          :options="toOptions(info.video_quality)"
+          :options="toOptions('video_quality', info.video_quality)"
           :label="t('download.videoQuality')"
         />
       </label>
@@ -160,7 +169,7 @@ async function confirm() {
         <span>{{ t('download.videoCodec') }}</span>
         <comboBox
           v-model="videoCodec"
-          :options="toOptions(info.video_codec)"
+          :options="toOptions('video_codec', info.video_codec)"
           :label="t('download.videoCodec')"
         />
       </label>
@@ -169,7 +178,7 @@ async function confirm() {
         <span>{{ t('download.audioQuality') }}</span>
         <comboBox
           v-model="audioQuality"
-          :options="toOptions(info.audio_quality)"
+          :options="toOptions('audio_quality', info.audio_quality)"
           :label="t('download.audioQuality')"
         />
       </label>

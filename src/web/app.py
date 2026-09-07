@@ -230,7 +230,8 @@ def create_app(with_aria2: bool = True) -> FastAPI:
             if sessions.get(token) is None:
                 # 用 401 而不是重定向：这是给前端的 API，重定向会让 fetch 拿到一个
                 # 莫名其妙的 HTML 页面
-                return JSONResponse({"detail": "Not authenticated"}, status_code = 401)
+                return JSONResponse({"detail": "Not authenticated", "code": "NOT_AUTHENTICATED"},
+                            status_code = 401)
 
         return await call_next(request)
 

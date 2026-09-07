@@ -330,6 +330,68 @@ export default {
     },
   },
 
+  media: {
+    video_quality: {
+      200: '依優先順序自動選擇',
+      127: '8K 超高畫質',
+      126: '杜比視界',
+      125: 'HDR 真彩',
+      122: '4K SDR 增強',
+      120: '4K 超高畫質',
+      116: '1080P 60 幀',
+      112: '1080P 高碼率',
+      100: '智慧修復',
+      80: '1080P 高畫質',
+      64: '720P 準高清',
+      32: '480P 標準畫質',
+      16: '360P 流暢',
+    },
+
+    audio_quality: {
+      30300: '依優先順序自動選擇',
+      30251: 'Hi-Res 無損音質',
+      30250: '杜比全景聲',
+      30280: '192K',
+      30232: '132K',
+      30216: '64K',
+    },
+
+    video_codec: {
+      20: '依優先順序自動選擇',
+      7: 'AVC/H.264',
+      12: 'HEVC/H.265',
+      13: 'AV1',
+    },
+
+    subtitle_alignment: {
+      1: '底部左對齊',
+      2: '底部置中',
+      3: '底部右對齊',
+      4: '中部左對齊',
+      5: '中部置中',
+      6: '中部右對齊',
+      7: '頂部左對齊',
+      8: '頂部置中',
+      9: '頂部右對齊',
+    },
+
+    naming_type: {
+      11: '單個影片',
+      12: '分P影片',
+      13: '合集',
+      14: '互動影片',
+      20: '影視',
+      30: '課程',
+      31: '會員購課程',
+      40: '收藏',
+      50: '個人空間',
+      60: '歷史記錄',
+      70: '稍後觀看',
+      80: '每週必看',
+      90: '音樂',
+    },
+  },
+
   column: {
     number: '序號',
     title: '標題名稱',
@@ -396,6 +458,26 @@ export default {
   },
 
   error: {
+    code: {
+      NOT_AUTHENTICATED: '尚未登入。',
+      INVALID_CREDENTIALS: '使用者名稱或口令不正確。',
+      TOO_MANY_ATTEMPTS: '失敗次數過多，請稍後再試。',
+      PARSE_BUSY: '同時解析的請求過多，請等一個完成。',
+      TASK_NOT_FOUND: '該任務已不存在。',
+      NO_MATCHING_TASK: '沒有符合的任務。',
+      UNKNOWN_SORT_KEY: '無法辨識的排序方式。',
+      NOT_A_DIRECTORY: '這不是一個資料夾。',
+      PARENT_NOT_A_DIRECTORY: '上層不是一個資料夾。',
+      PERMISSION_DENIED: '沒有存取權限。',
+      CANNOT_READ_DIRECTORY: '無法讀取該資料夾。',
+      CANNOT_CREATE_DIRECTORY: '無法建立資料夾。',
+      INVALID_FOLDER_NAME: '資料夾名稱無效。',
+      FOLDER_NAME_HAS_SEPARATOR: '資料夾名稱不可包含路徑分隔符號。',
+      SETTINGS_FORBIDDEN: '這些設定不可從這裡修改。',
+      SETTINGS_UNKNOWN: '無法辨識的設定項。',
+      NOT_FOUND: '找不到。',
+    },
+
     backendUnreachable: '無法連線到後端，請先執行：python src/main.py --web-ui',
     requestFailed: '請求失敗（HTTP {status}）',
   },

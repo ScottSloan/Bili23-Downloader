@@ -70,7 +70,7 @@ def mount(app: FastAPI, api_prefix: str = "/api") -> bool:
     async def spa_fallback(full_path: str):
         # API 路径绝不回落成 HTML，理由见模块说明
         if full_path.startswith(api_prefix.strip("/")):
-            return JSONResponse({"detail": "Not Found"}, status_code = 404)
+            return JSONResponse({"detail": "Not Found", "code": "NOT_FOUND"}, status_code = 404)
 
         # dist 根下的真实文件（favicon、manifest 等）直接给
         candidate = dist / full_path

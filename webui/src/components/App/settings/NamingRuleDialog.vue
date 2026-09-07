@@ -12,7 +12,7 @@
 import { computed, ref, watch } from 'vue'
 import { settings as settingsApi, ApiError } from '@/api'
 import type { NamingRulePreviewResult } from '@/api'
-import { t } from '@/i18n'
+import { t, mediaLabel } from '@/i18n'
 import fluentDialog from '@/components/Fluent/components/dialog/FluentDialog.vue'
 import pushButton from '@/components/Fluent/components/widgets/button/PushButton.vue'
 import primaryPushButton from '@/components/Fluent/components/widgets/button/PrimaryPushButton.vue'
@@ -68,9 +68,10 @@ watch(
 
     if (!types.value.length) {
       try {
+        // 标签用前端自己那份（D12）。后端给的只当兜底 —— 服务端没装 Qt 的翻译函数
         types.value = (await settingsApi.namingRuleTypes()).types.map((entry) => ({
           value: Number(entry.value),
-          label: entry.label,
+          label: mediaLabel('naming_type', Number(entry.value), entry.label),
         }))
       } catch (e) {
         error.value = e instanceof ApiError ? e.message : String(e)

@@ -89,7 +89,8 @@ async def list_tasks(completed: bool = Query(default = False),
     """
     if sort_by not in SORT_KEYS:
         return JSONResponse(
-            {"detail": f"Unknown sort key: {sort_by}", "allowed": sorted(SORT_KEYS)},
+            {"detail": f"Unknown sort key: {sort_by}", "code": "UNKNOWN_SORT_KEY",
+             "allowed": sorted(SORT_KEYS)},
             status_code = 400)
 
     task_list = await _off_loop(task_manager.query, completed, limit)
@@ -110,7 +111,8 @@ async def get_task(task_id: str):
     task_info = await _off_loop(task_manager.query_by_id, task_id)
 
     if task_info is None:
-        return JSONResponse({"detail": "Task not found"}, status_code = 404)
+        return JSONResponse({"detail": "Task not found", "code": "TASK_NOT_FOUND"},
+                            status_code = 404)
 
     return task_views([task_info])[0]
 
@@ -234,7 +236,8 @@ async def delete_tasks(payload: TaskIdsRequest, completed: bool = Query(default 
     task_list = await _off_loop(_find, payload.task_ids)
 
     if not task_list:
-        return JSONResponse({"detail": "No matching task"}, status_code = 404)
+        return JSONResponse({"detail": "No matching task", "code": "NO_MATCHING_TASK"},
+                            status_code = 404)
 
     if completed:
         # 已完成的任务没有临时文件要清，直接删记录
@@ -256,7 +259,8 @@ async def retry_tasks(payload: TaskIdsRequest):
     task_list = await _off_loop(_find, payload.task_ids)
 
     if not task_list:
-        return JSONResponse({"detail": "No matching task"}, status_code = 404)
+        return JSONResponse({"detail": "No matching task", "code": "NO_MATCHING_TASK"},
+                            status_code = 404)
 
     for task_info in task_list:
         await _off_loop(task_manager.reset, task_info)
@@ -278,7 +282,8 @@ async def _set_paused(request: Request, task_ids: List[str], paused: bool):
     task_list = await _off_loop(_find, task_ids)
 
     if not task_list:
-        return JSONResponse({"detail": "No matching task"}, status_code = 404)
+        return JSONResponse({"detail": "No matching task", "code": "NO_MATCHING_TASK"},
+                            status_code = 404)
 
     registry = getattr(request.app.state, "streams", None)
     client = getattr(request.app.state, "aria2", None)

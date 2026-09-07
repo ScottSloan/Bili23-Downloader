@@ -16,7 +16,7 @@
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useSettingsStore } from '@/stores/settingsStore'
 import { useThemeStore } from '@/stores/themeStore'
-import { t, setLocale } from '@/i18n'
+import { t, setLocale, mediaLabel } from '@/i18n'
 import {
   SETTING_GROUPS,
   INTERFACE_ITEMS,
@@ -97,9 +97,15 @@ function save(value: unknown) {
 /**
  * 对话框要用的候选表
  *
- * 后端那边 `Choice.value` 是 `Any`（画质是整数、字幕语言是字符串代码），生成的类型
- * 因此是 `unknown`。**收窄放在这一处**，而不是让每个对话框都去处理 unknown ——
- * 具体到某一张表，取值类型是确定的
+ * 两件事：
+ *
+ * 1. 后端那边 `Choice.value` 是 `Any`（画质是整数、字幕语言是字符串代码），生成的类型
+ *    因此是 `unknown`。**收窄放在这一处**，而不是让每个对话框都去处理 unknown
+ * 2. **标签用前端自己那份翻译**（D12）。后端给的 label 只当兜底 —— 服务端没装 Qt 的
+ *    翻译函数，它给出来的一律是英文
+ *
+ * 字幕语言是例外：那 158 条是 B 站自己的语言表，源数据只有中文名，前端没有第二份
+ * 可抄，所以直接用后端给的（`mediaLabel` 认不出就回落到它）
  */
 function choicesOf(spec: SettingSpec | null): { value: string | number; label: string }[] {
   if (!spec?.choices || !store.choices) {
@@ -108,9 +114,17 @@ function choicesOf(spec: SettingSpec | null): { value: string | number; label: s
 
   return (store.choices[spec.choices] ?? []).map((choice) => ({
     value: choice.value as string | number,
-    label: choice.label,
+    label: mediaLabel(spec.choices as string, choice.value as string | number, choice.label),
   }))
 }
+
+/** 字幕对齐：标签后面跟上 ASS 的编号，与桌面版一致（光看数字认不出是哪个角） */
+const alignmentOptions = computed(() =>
+  (store.choices?.subtitle_alignment ?? []).map((entry) => ({
+    value: entry.value as string | number,
+    label: `${mediaLabel('subtitle_alignment', entry.value as string | number, entry.label)} (${entry.value})`,
+  })),
+)
 
 /**
  * 卡片右侧那句摘要
@@ -264,12 +278,7 @@ function summaryOf(spec: SettingSpec): string | undefined {
       :kind="openSpec?.dialog === 'subtitleStyle' ? 'subtitle' : 'danmaku'"
       :value="(store.value(openAttr ?? '') as Record<string, unknown>) ?? null"
       :fonts="store.fonts"
-      :alignments="
-        (store.choices?.subtitle_alignment ?? []).map((entry) => ({
-          value: entry.value as string | number,
-          label: entry.label,
-        }))
-      "
+      :alignments="alignmentOptions"
       @close="openAttr = null"
       @save="save"
     />

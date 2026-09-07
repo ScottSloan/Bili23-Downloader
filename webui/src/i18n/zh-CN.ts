@@ -330,6 +330,68 @@ export default {
     },
   },
 
+  media: {
+    video_quality: {
+      200: '按优先级自动选择',
+      127: '8K 超高清',
+      126: '杜比视界',
+      125: 'HDR 真彩',
+      122: '4K SDR 增强',
+      120: '4K 超高清',
+      116: '1080P 60帧',
+      112: '1080P 高码率',
+      100: '智能修复',
+      80: '1080P 高清',
+      64: '720P 准高清',
+      32: '480P 标清',
+      16: '360P 流畅',
+    },
+
+    audio_quality: {
+      30300: '按优先级自动选择',
+      30251: 'Hi-Res 无损',
+      30250: '杜比全景声',
+      30280: '192K',
+      30232: '132K',
+      30216: '64K',
+    },
+
+    video_codec: {
+      20: '按优先级自动选择',
+      7: 'AVC/H.264',
+      12: 'HEVC/H.265',
+      13: 'AV1',
+    },
+
+    subtitle_alignment: {
+      1: '底部左对齐',
+      2: '底部居中',
+      3: '底部右对齐',
+      4: '中部左对齐',
+      5: '中部居中',
+      6: '中部右对齐',
+      7: '顶部左对齐',
+      8: '顶部居中',
+      9: '顶部右对齐',
+    },
+
+    naming_type: {
+      11: '单个视频',
+      12: '分P视频',
+      13: '合集',
+      14: '互动视频',
+      20: '影视',
+      30: '课程',
+      31: '会员购课程',
+      40: '收藏',
+      50: '个人空间',
+      60: '历史记录',
+      70: '稍后再看',
+      80: '每周必看',
+      90: '音乐',
+    },
+  },
+
   column: {
     number: '序号',
     title: '标题名称',
@@ -396,6 +458,26 @@ export default {
   },
 
   error: {
+    code: {
+      NOT_AUTHENTICATED: '尚未登录。',
+      INVALID_CREDENTIALS: '用户名或口令不正确。',
+      TOO_MANY_ATTEMPTS: '失败次数过多，请稍后再试。',
+      PARSE_BUSY: '同时解析的请求过多，请等一个完成。',
+      TASK_NOT_FOUND: '该任务已不存在。',
+      NO_MATCHING_TASK: '没有匹配的任务。',
+      UNKNOWN_SORT_KEY: '认不出的排序方式。',
+      NOT_A_DIRECTORY: '这不是一个文件夹。',
+      PARENT_NOT_A_DIRECTORY: '上级不是一个文件夹。',
+      PERMISSION_DENIED: '没有访问权限。',
+      CANNOT_READ_DIRECTORY: '无法读取该文件夹。',
+      CANNOT_CREATE_DIRECTORY: '无法创建文件夹。',
+      INVALID_FOLDER_NAME: '文件夹名称无效。',
+      FOLDER_NAME_HAS_SEPARATOR: '文件夹名称不能包含路径分隔符。',
+      SETTINGS_FORBIDDEN: '这些设置不能从这里修改。',
+      SETTINGS_UNKNOWN: '认不出的设置项。',
+      NOT_FOUND: '未找到。',
+    },
+
     backendUnreachable: '无法连接到后端，请先运行：python src/main.py --web-ui',
     requestFailed: '请求失败（HTTP {status}）',
   },

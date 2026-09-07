@@ -61,7 +61,8 @@ async def login(payload: LoginRequest, request: Request, response: Response):
         logger.warning("登录失败次数过多，暂时拒绝：%s", key)
 
         return JSONResponse(
-            {"detail": "Too many failed attempts. Try again later."}, status_code = 429)
+            {"detail": "Too many failed attempts. Try again later.",
+             "code": "TOO_MANY_ATTEMPTS"}, status_code = 429)
 
     expected_username = config.get(config.webui_username)
     password_hash = config.get(config.webui_password_hash)
@@ -76,7 +77,8 @@ async def login(payload: LoginRequest, request: Request, response: Response):
         logger.warning("登录失败：%s", key)
 
         # 不区分「用户名不对」与「口令不对」，避免用它来枚举用户名
-        return JSONResponse({"detail": "Invalid username or password"}, status_code = 401)
+        return JSONResponse({"detail": "Invalid username or password",
+                             "code": "INVALID_CREDENTIALS"}, status_code = 401)
 
     _failures.pop(key, None)
 

@@ -127,10 +127,30 @@ export async function request<T>(
  * 从错误响应里取一句能给用户看的话
  *
  * FastAPI 的错误体是 `{"detail": ...}`；422 时 detail 是一个数组（pydantic 的逐字段报错），
- * 直接 String() 会得到 `[object Object]`，所以要分开处理
+ * 直接 String() 会得到 `[object Object]`，所以要分开处理。
+ *
+ * ## 固定的错误按 `code` 查前端自己的文案
+ *
+ * 服务端进程里没装 Qt 的翻译函数（D12：那套是桌面版的），后端写出来的 `detail`
+ * 一律是英文。所以后端在固定的错误上带一个 `code`，这里按码查前端的译文。
+ *
+ * **查不到就用 `detail`**，两种情况都会走到：一是后端加了新码而前端还没配文案，
+ * 二是 `str(e)` 那类透传 —— 那些话来自 B 站的接口或底层库，内容是动态的，
+ * 前端无从翻译，原样显示比换成一句笼统的「操作失败」有用得多
  */
 function errorMessage(payload: unknown, status: number): string {
-  const detail = (payload as { detail?: unknown } | null)?.detail
+  const body = payload as { detail?: unknown; code?: unknown } | null
+
+  const detail = body?.detail
+
+  if (typeof body?.code === 'string' && body.code) {
+    const key = `error.code.${body.code}`
+    const text = t(key)
+
+    if (text !== key) {
+      return text
+    }
+  }
 
   if (typeof detail === 'string' && detail) {
     return detail

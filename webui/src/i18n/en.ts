@@ -348,6 +348,81 @@ export default {
     },
   },
 
+  // 后端下发的数据标签在这里翻译（D12：不与 Qt 那套共用）
+  //
+  // 服务端进程里没装 Qt 的翻译函数，`Translator` 返回的一律是英文源串 ——
+  // 照搬的话，中文界面上会出现 `8K UHD`、`Single Video` 这种英文标签。
+  //
+  // 键是**后端给的稳定取值**（画质 id、规则类型编号），不是英文串：
+  // 那些数字是 B 站的协议，比英文措辞稳定得多。
+  //
+  // 这里认不出的值会回落到后端给的 label —— B 站加一档新画质时，
+  // 至少还能显示它的英文名，而不是一个裸数字。
+  //
+  // **字幕语言（158 条）不在这里**：那是 B 站自己的语言表，源数据只有中文名，
+  // 桌面版也是直接显示它。翻一遍不现实，也没有第二份可抄
+  media: {
+    video_quality: {
+      200: 'Auto (by priority)',
+      127: '8K UHD',
+      126: 'Dolby Vision',
+      125: 'HDR True Color',
+      122: '4K SDR Enhanced',
+      120: '4K UHD',
+      116: '1080P 60fps',
+      112: '1080P High Bitrate',
+      100: 'AI Upscale',
+      80: '1080P',
+      64: '720P',
+      32: '480P',
+      16: '360P',
+    },
+
+    audio_quality: {
+      30300: 'Auto (by priority)',
+      30251: 'Hi-Res Audio',
+      30250: 'Dolby Atmos',
+      30280: '192 kbps',
+      30232: '132 kbps',
+      30216: '64 kbps',
+    },
+
+    video_codec: {
+      20: 'Auto (by priority)',
+      7: 'AVC/H.264',
+      12: 'HEVC/H.265',
+      13: 'AV1',
+    },
+
+    subtitle_alignment: {
+      1: 'Bottom Left',
+      2: 'Bottom Center',
+      3: 'Bottom Right',
+      4: 'Middle Left',
+      5: 'Middle Center',
+      6: 'Middle Right',
+      7: 'Top Left',
+      8: 'Top Center',
+      9: 'Top Right',
+    },
+
+    naming_type: {
+      11: 'Single Video',
+      12: 'Multi-part Series',
+      13: 'Collection',
+      14: 'Interactive Video',
+      20: 'Film & TV',
+      30: 'Courses',
+      31: 'Mall Courses',
+      40: 'Favorites',
+      50: 'Profile',
+      60: 'History',
+      70: 'Watch Later',
+      80: 'Weekly Picks',
+      90: 'Music',
+    },
+  },
+
   // 键与后端 parse_list_column 的 attr_key 一一对应
   column: {
     number: 'No.',
@@ -416,6 +491,31 @@ export default {
   },
 
   error: {
+    // 后端固定错误的文案。**键是后端给的 code，不是它给的英文句子**
+    //
+    // 服务端进程里没装 Qt 的翻译函数（D12），后端写出来的 detail 一律是英文。
+    // 这里按码查前端自己的译文，查不到才回落到 detail —— 那既包括后端加了新码
+    // 而这里还没配，也包括 str(e) 那类透传（内容来自 B 站接口，前端翻不了）
+    code: {
+      NOT_AUTHENTICATED: 'Not signed in.',
+      INVALID_CREDENTIALS: 'Incorrect username or password.',
+      TOO_MANY_ATTEMPTS: 'Too many failed attempts. Try again later.',
+      PARSE_BUSY: 'Too many parses running. Wait for one to finish.',
+      TASK_NOT_FOUND: 'This task no longer exists.',
+      NO_MATCHING_TASK: 'No matching task.',
+      UNKNOWN_SORT_KEY: 'Unknown sort key.',
+      NOT_A_DIRECTORY: 'Not a folder.',
+      PARENT_NOT_A_DIRECTORY: 'The parent is not a folder.',
+      PERMISSION_DENIED: 'Permission denied.',
+      CANNOT_READ_DIRECTORY: 'Cannot read this folder.',
+      CANNOT_CREATE_DIRECTORY: 'Cannot create the folder.',
+      INVALID_FOLDER_NAME: 'Invalid folder name.',
+      FOLDER_NAME_HAS_SEPARATOR: 'A folder name cannot contain path separators.',
+      SETTINGS_FORBIDDEN: 'These settings cannot be changed here.',
+      SETTINGS_UNKNOWN: 'Unknown settings.',
+      NOT_FOUND: 'Not found.',
+    },
+
     backendUnreachable: 'Cannot reach the backend. Start it with: python src/main.py --web-ui',
     requestFailed: 'Request failed (HTTP {status})',
   },
