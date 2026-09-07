@@ -375,7 +375,7 @@ async function commitEdit() {
 
 .meta {
   margin-top: 2px;
-  font-size: 9.5pt;
+  font-size: 12px;
   color: var(--text-secondary);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -383,7 +383,7 @@ async function commitEdit() {
 }
 
 .tag {
-  font-size: 8.5pt;
+  font-size: 11px;
   padding: 1px 6px;
   border-radius: 10px;
   color: var(--text-on-accent);
@@ -406,7 +406,7 @@ async function commitEdit() {
 
 .fields label > span,
 .rule-field > span {
-  font-size: 10pt;
+  font-size: 13px;
   color: var(--text-secondary);
 }
 
@@ -417,7 +417,7 @@ async function commitEdit() {
 }
 
 .default-label {
-  font-size: 10pt;
+  font-size: 13px;
   color: var(--text-primary);
 }
 
@@ -429,7 +429,7 @@ async function commitEdit() {
   margin: 0;
   padding: 8px 10px;
   border-radius: 6px;
-  font-size: 10pt;
+  font-size: 13px;
   color: var(--text-primary);
   background-color: var(--control-fill-secondary);
   word-break: break-all;
@@ -469,12 +469,12 @@ async function commitEdit() {
 .desc {
   flex: 1 1 auto;
   min-width: 0;
-  font-size: 10pt;
+  font-size: 13px;
 }
 
 .example {
   flex: 0 0 auto;
-  font-size: 9.5pt;
+  font-size: 12px;
   color: var(--text-secondary);
   overflow: hidden;
   text-overflow: ellipsis;

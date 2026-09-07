@@ -160,7 +160,7 @@ void store.loadColumns()
 .status-bar {
   min-height: 20px;
   margin: 8px 0 2px;
-  font-size: 10pt;
+  font-size: 13px;
 }
 
 .status {

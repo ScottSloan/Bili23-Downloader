@@ -30,7 +30,9 @@ body,
 
 #app {
   font-family: 'Segoe UI', 'Microsoft YaHei', 'PingFang SC';
-  font-size: 11pt;
+  /* qfluentwidgets 的正文是 14px（common/font.py 的 getFont 默认值）。
+     用 px 而不是 pt：那边全套度量都是像素，混用会整体偏大约 5% */
+  font-size: 14px;
   color: var(--text-primary);
   background-color: var(--solid-bg-base);
 }

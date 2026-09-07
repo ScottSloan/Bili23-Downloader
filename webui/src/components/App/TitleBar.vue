@@ -26,7 +26,7 @@ import IconApp from '@/components/Fluent/icons/IconApp.vue'
 }
 
 .app-name {
-  font-size: 10pt;
+  font-size: 13px;
   user-select: none;
 }
 </style>

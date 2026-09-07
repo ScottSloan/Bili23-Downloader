@@ -90,7 +90,8 @@ const isActive = computed(() => props.active || (props.to ? route.path === props
 }
 
 .navigation-bar-button span {
-  font-size: 9pt;
+  /* NavigationBarPushButton 的 setFont(self, 11) */
+  font-size: 11px;
   text-align: center;
   user-select: none;
 }
@@ -116,7 +117,7 @@ const isActive = computed(() => props.active || (props.to ? route.path === props
   padding: 0 4px;
   box-sizing: border-box;
   border-radius: 8px;
-  font-size: 8pt;
+  font-size: 10px;
   line-height: 16px;
   text-align: center;
   user-select: none;

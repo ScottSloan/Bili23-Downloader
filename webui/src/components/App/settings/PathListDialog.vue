@@ -144,7 +144,7 @@ function remove(index: number) {
   text-overflow: ellipsis;
   white-space: nowrap;
   color: var(--text-primary);
-  font-size: 10.5pt;
+  font-size: 14px;
 }
 
 .remove {

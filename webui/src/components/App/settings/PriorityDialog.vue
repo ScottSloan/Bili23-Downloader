@@ -150,7 +150,7 @@ function move(index: number, delta: number) {
 .rank {
   width: 20px;
   flex: 0 0 auto;
-  font-size: 10pt;
+  font-size: 13px;
   color: var(--text-secondary);
   text-align: right;
 }

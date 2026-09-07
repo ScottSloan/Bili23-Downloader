@@ -357,7 +357,7 @@ section {
 
 h3 {
   margin: 0;
-  font-size: 11pt;
+  font-size: 14px;
   font-weight: 600;
   color: var(--text-primary);
 }
@@ -378,7 +378,7 @@ h3 {
 }
 
 .grid label > span {
-  font-size: 10pt;
+  font-size: 13px;
   color: var(--text-secondary);
 }
 

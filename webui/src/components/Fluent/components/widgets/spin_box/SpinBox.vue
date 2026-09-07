@@ -170,7 +170,7 @@ function stepBy(delta: number) {
 
 .fluent-spin-box input {
   font: inherit;
-  font-size: 11pt;
+  font-size: 14px;
   box-sizing: border-box;
   width: 78px;
   padding: 6px 4px 6px 10px;
@@ -185,7 +185,7 @@ function stepBy(delta: number) {
 }
 
 .suffix {
-  font-size: 10pt;
+  font-size: 13px;
   color: var(--text-secondary);
   user-select: none;
   padding-right: 2px;

@@ -197,7 +197,7 @@ function save() {
 
 .code {
   flex: 0 0 auto;
-  font-size: 9.5pt;
+  font-size: 12px;
   color: var(--text-secondary);
 }
 

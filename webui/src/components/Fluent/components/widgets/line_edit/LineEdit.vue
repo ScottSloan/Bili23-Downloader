@@ -39,7 +39,7 @@ const emit = defineEmits(['update:modelValue', 'submit'])
 .fluent-line-edit {
   border-radius: 5px;
   padding: 6px 10px;
-  font-size: 11pt;
+  font-size: 14px;
   font-family: 'Segoe UI', 'Microsoft YaHei', 'PingFang SC';
   outline: none;
   transition:

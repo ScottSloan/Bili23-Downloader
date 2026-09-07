@@ -42,6 +42,8 @@
      用的都是 QColor(0, 0, 0, 19) */
   --card-stroke-default: rgba(0, 0, 0, 0.075);
   --divider-stroke: rgba(0, 0, 0, 0.09);
+  /* 列表表头的格线。比卡片描边更浅，且深浅主题下都是黑色（QHeaderView::section） */
+  --header-stroke: rgba(0, 0, 0, 0.059);
 
   /* 设置卡片的底色。与 --control-fill-default 不是一回事：卡片是内容层，
      控件浮在卡片之上，两者在深色主题下差得尤其远 */
@@ -107,6 +109,7 @@
   --control-stroke-input: rgba(255, 255, 255, 0.5442);
   --card-stroke-default: rgba(0, 0, 0, 0.196);
   --divider-stroke: rgba(255, 255, 255, 0.09);
+  --header-stroke: rgba(0, 0, 0, 0.082);
 
   --card-fill-default: rgba(255, 255, 255, 0.051);
 

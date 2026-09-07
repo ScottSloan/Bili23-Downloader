@@ -201,14 +201,22 @@ function onToggle(id: string, event: Event) {
 .tree-row {
   display: grid;
   align-items: center;
-  column-gap: 8px;
+  /*
+    列之间不留间隙，改由单元格自己的左右内边距撑开 —— 表头的竖分隔线要正好落在
+    列的边界上（`QHeaderView::section` 是靠每段的右边框画的），有间隙的话
+    那条线会歪在离下一列 8px 的地方
+  */
+  column-gap: 0;
 }
 
+/* 度量取自 qfluentwidgets 的 tree_view.qss：高 33、字号 13、左右内边距 5 */
 .tree-header {
-  padding: 6px 4px;
-  font-size: 10pt;
-  border-bottom: 1px solid var(--divider-stroke);
-  color: var(--text-tertiary);
+  min-height: 33px;
+  font-size: 13px;
+  border-top: 1px solid var(--header-stroke);
+  border-bottom: 1px solid var(--header-stroke);
+  /* 与卡片副标题同一档灰，桌面版这两处的取值差 5/255，不值得单开一个 token */
+  color: var(--card-description);
   user-select: none;
 }
 
@@ -267,6 +275,19 @@ function onToggle(id: string, event: Event) {
   align-items: center;
   gap: 6px;
   min-width: 0;
+  padding: 0 5px;
+  box-sizing: border-box;
+}
+
+/* 表头文字居中，正文靠左 —— 与桌面版 QHeaderView 的默认对齐一致 */
+.header-cell {
+  justify-content: center;
+  /* 每段右边一条竖线，最后一段没有（qss 里的 `section:horizontal:last`） */
+  border-right: 1px solid var(--header-stroke);
+}
+
+.header-cell:last-child {
+  border-right: none;
 }
 
 .cell-text {
@@ -301,7 +322,7 @@ function onToggle(id: string, event: Event) {
 
 .tag {
   flex: 0 0 auto;
-  font-size: 8pt;
+  font-size: 11px;
   padding: 1px 5px;
   border-radius: 3px;
   color: var(--text-tertiary);
