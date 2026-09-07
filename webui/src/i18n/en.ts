@@ -20,6 +20,10 @@ export default {
     summary: '{category} ({total} total, {checked} selected)',
     mediaUnavailable:
       'Media information is unavailable ({reason}), downloads cannot be created yet.',
+    download: 'Download selected',
+    nothingChecked: 'Nothing selected.',
+    created: 'Created {count} of {requested} task(s).',
+    createdNone: 'No task was created — they may already exist in the queue.',
     tagDownloaded: 'Downloaded',
     tagNeedsReparse: 'Needs re-parsing',
   },
@@ -49,6 +53,24 @@ export default {
     pubtime: 'Publish Time',
     favtime: 'Favorite Time',
     viewtime: 'Last Watched',
+  },
+
+  download: {
+    title: 'Download {count} item(s)',
+    loading: 'Fetching media information…',
+    fallback:
+      'Media information comes from another video ({title}) because the first choice is not accessible.',
+    videoQuality: 'Video quality',
+    videoCodec: 'Video codec',
+    audioQuality: 'Audio quality',
+    extras: 'Also download',
+    danmaku: 'Danmaku',
+    subtitle: 'Subtitles',
+    cover: 'Cover',
+    metadata: 'Metadata',
+    cancel: 'Cancel',
+    confirm: 'Start download',
+    submitting: 'Creating',
   },
 
   task: {

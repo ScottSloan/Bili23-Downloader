@@ -2,12 +2,42 @@
 import { ref } from 'vue'
 import fluentLineEdit from '@/components/Fluent/components/widgets/line_edit/LineEdit.vue'
 import primaryPushButton from '@/components/Fluent/components/widgets/button/PrimaryPushButton.vue'
+import pushButton from '@/components/Fluent/components/widgets/button/PushButton.vue'
 import parseTree from '@/components/App/parse_list/ParseTree.vue'
+import downloadOptionsDialog from '@/components/App/DownloadOptionsDialog.vue'
 import { useParseStore } from '@/stores/parseStore'
 import { t } from '@/i18n'
 
 const store = useParseStore()
 const url = ref('')
+
+const dialogOpen = ref(false)
+const pendingEpisodes = ref<Record<string, unknown>[]>([])
+const notice = ref('')
+
+async function openDownload() {
+  notice.value = ''
+
+  // 摘取走后端的 /api/parse/episodes：「树节点不算下载项」这条规则只该有一处
+  const episodes = await store.checkedEpisodes()
+
+  if (!episodes.length) {
+    notice.value = t('parse.nothingChecked')
+
+    return
+  }
+
+  pendingEpisodes.value = episodes
+  dialogOpen.value = true
+}
+
+function onCreated(count: number) {
+  // 建出来的可能比勾选的少（重复下载、需要二次解析的会被后端拦掉），如实说
+  notice.value =
+    count > 0
+      ? t('parse.created', { count, requested: pendingEpisodes.value.length })
+      : t('parse.createdNone')
+}
 
 // 新后端没有「取回上次解析结果」的接口 —— 那是 S0 垫片专有的。
 // 解析结果只活在这个页面里，刷新即清空
@@ -53,6 +83,25 @@ function submit() {
     </div>
 
     <parseTree />
+
+    <div v-if="store.total" class="actions">
+      <span v-if="notice" class="notice">{{ notice }}</span>
+
+      <span class="flex-stretch" />
+
+      <pushButton
+        :title="t('parse.download')"
+        :disabled="!store.checkedCount"
+        @click="openDownload"
+      />
+    </div>
+
+    <downloadOptionsDialog
+      :open="dialogOpen"
+      :episodes="pendingEpisodes"
+      @close="dialogOpen = false"
+      @created="onCreated"
+    />
   </div>
 </template>
 
@@ -85,5 +134,17 @@ function submit() {
 
 .status.error {
   color: var(--text-danger);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-top: 8px;
+}
+
+.notice {
+  font-size: 12px;
+  color: var(--text-secondary);
 }
 </style>
