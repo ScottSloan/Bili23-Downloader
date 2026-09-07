@@ -202,6 +202,49 @@ class SettingChoices(BaseModel):
     audio_quality: List[Choice]
     video_codec: List[Choice]
     subtitle_language: List[Choice]
+    subtitle_alignment: List[Choice]
+
+class NamingVariable(BaseModel):
+    variable: str
+    description: str
+    example: str
+
+class NamingRuleTypes(BaseModel):
+    """规则类型（单个视频 / 多 P / 合集 …）与各自可用的变量"""
+
+    types: List[Choice]
+
+class NamingRuleVariables(BaseModel):
+    variables: List[NamingVariable]
+
+class NamingRulePreview(BaseModel):
+    """
+    校验结果与套上示例数据之后的样子
+
+    判据在 `util/format/naming_rule.py`，桌面版的编辑对话框用的是同一份 ——
+    两边各写一套的话，迟早出现「桌面版存得下的规则 WebUI 说非法」
+    """
+
+    valid: bool
+    message: Optional[str] = None
+    # 相对下载目录的子目录，与文件名（不含扩展名）
+    folder: Optional[str] = None
+    filename: Optional[str] = None
+
+class FontFamilies(BaseModel):
+    """
+    服务端装了哪些字体
+
+    **要的是服务端的字体，不是浏览器所在机器的。** ASS 是在服务端生成的，
+    弹幕轨道的排布还要靠 QFontMetrics 量文字宽度（见 `web/qt_runtime.py`），
+    填一个服务端没有的字体名，度量会落到 fallback 字体上，排出来的轨道会偏。
+
+    取不到时 `available` 为假（镜像里没装 PySide6 就是这样），
+    前端据此退回成一个自由输入框 —— 那时用户得自己保证名字对
+    """
+
+    available: bool
+    families: List[str]
 
 class SettingsUpdateResult(BaseModel):
     changed: List[str]

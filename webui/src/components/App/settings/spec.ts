@@ -29,7 +29,8 @@ export type ControlKind = 'switch' | 'combo' | 'spin' | 'text' | 'password' | 'p
  * 这些项是列表或字典，一行卡片放不下，各自需要一个对话框。
  * 卡片上只放一个「自定义…」按钮加一句摘要 —— 与桌面版一致
  */
-export type DialogKind = 'priority' | 'subtitleLanguage' | 'browseRoots'
+export type DialogKind =
+  'priority' | 'subtitleLanguage' | 'browseRoots' | 'danmakuStyle' | 'subtitleStyle' | 'namingRule'
 
 /** 启用条件：另一项为真，或等于某个值 */
 export interface Condition {
@@ -144,6 +145,13 @@ export const SETTING_GROUPS: SettingGroupSpec[] = [
     items: [
       { attr: 'download_danmaku' },
       { attr: 'danmaku_type', enabledWhen: { attr: 'download_danmaku' } },
+      {
+        attr: 'danmaku_style',
+        kind: 'dialog',
+        dialog: 'danmakuStyle',
+        described: true,
+        enabledWhen: { attr: 'download_danmaku' },
+      },
       { attr: 'embed_danmaku', described: true, enabledWhen: { attr: 'download_danmaku' } },
       {
         attr: 'delete_danmaku_after_embed',
@@ -153,6 +161,13 @@ export const SETTING_GROUPS: SettingGroupSpec[] = [
 
       { attr: 'download_subtitle' },
       { attr: 'subtitle_type', enabledWhen: { attr: 'download_subtitle' } },
+      {
+        attr: 'subtitle_style',
+        kind: 'dialog',
+        dialog: 'subtitleStyle',
+        described: true,
+        enabledWhen: { attr: 'download_subtitle' },
+      },
       {
         attr: 'subtitle_language',
         kind: 'dialog',
@@ -182,6 +197,11 @@ export const SETTING_GROUPS: SettingGroupSpec[] = [
       { attr: 'download_metadata' },
       { attr: 'metadata_type', enabledWhen: { attr: 'download_metadata' } },
     ],
+  },
+
+  {
+    key: 'naming',
+    items: [{ attr: 'naming_rule_list', kind: 'dialog', dialog: 'namingRule', described: true }],
   },
 
   {
@@ -263,13 +283,9 @@ export const SPEC_BY_ATTR: Record<string, SettingSpec> = Object.fromEntries(
  *   `parse_list_*`）：由各自列表的表头控制，不该在设置页里另开一份
  * - **MCP**（`mcp_*`）：跑在桌面进程里，WebUI 改了不会生效
  * - **更新检查**（`include_prerelease`）：桌面版的自动更新，Docker 部署下不适用
- * - **还没有编辑器的结构化项**：`danmaku_style` / `subtitle_style`（字体、边框、颜色、
- *   边距、分辨率，只在 ASS 输出时生效）、`naming_rule_list`（每种媒体类型一条模板 +
- *   一张变量表）、`cn_cdn_server_list` / `ov_cdn_server_list`
- *   （`prefer_cdn_server_provider` 开关已覆盖多数场景）、`auto_select_conditions`
- *   （跟 `auto_select_mode` 一起，Web 端还没有对应实现）。
- *
- *   已经有编辑器的：三个优先级、`subtitle_language`、`webui_browse_roots`
+ * - **还没有编辑器的结构化项**：`cn_cdn_server_list` / `ov_cdn_server_list`
+ *   （`prefer_cdn_server_provider` 开关已覆盖多数场景，自定义 CDN 属于排障手段）、
+ *   `auto_select_conditions`（跟 `auto_select_mode` 一起，Web 端还没有对应实现）
  *
  * `numbering_type` 单独说一句：它的 FROM_SPECIFIED 档要配合起始序号，而那是个
  * **进程级的运行时游标**（见 PROGRESS.md 待解决第 2 条），WebUI 是另一个进程、

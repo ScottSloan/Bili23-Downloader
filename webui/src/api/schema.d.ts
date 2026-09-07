@@ -479,6 +479,109 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/settings/fonts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read Fonts
+         * @description 服务端装了哪些字体
+         *
+         *     **这里会惰性拉起 offscreen 的 QGuiApplication**（`web/qt_runtime.py`），
+         *     与生成 ASS 弹幕走的是同一条路 —— 也正因如此，列出来的就是那时真正能用的字体。
+         *
+         *     必须在事件循环线程（= 主线程）上调用：QGuiApplication 只能在主线程构造。
+         *     所以这个函数是 async 且**不能**丢给 `run_in_executor`。
+         *
+         *     ## 空列表是常态，不是错误
+         *
+         *     实测：**Windows 上 `QT_QPA_PLATFORM=offscreen` 一款字体都枚举不到**
+         *     （`QFontDatabase.families()` 返回空，systemFont 是 "Sans Serif"）。
+         *     Linux 容器里走 fontconfig 通常能列出来，但也取决于镜像里装没装字体。
+         *
+         *     所以 `available` 的含义是「**这份列表能用吗**」，不是「Qt 在不在」——
+         *     列表为空时前端会退回自由输入框，让用户自己填字体名。
+         *     报 available 却给一个空列表，比直接说不可用更糟：前端会画出一个点不开的空下拉框。
+         *
+         *     顺带一提：枚举不到字体也就意味着 ASS 弹幕的轨道排布是按 fallback 字体量的，
+         *     宽度会有偏差。那属于 D16 已经接受的近似（见 PROGRESS 的待解决第 4 条）
+         */
+        get: operations["read_fonts_api_settings_fonts_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/settings/naming-rule/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Preview Naming Rule
+         * @description 校验一条规则并套上示例数据
+         *
+         *     **非法的规则也返回 200**：这里回答的是「这条规则行不行」，
+         *     不合法是一个正常的答案，不是请求出错。用 4xx 的话前端得把「校验没通过」
+         *     和「请求本身失败」分开处理，而它们在界面上是两回事
+         */
+        post: operations["preview_naming_rule_api_settings_naming_rule_preview_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/settings/naming-rule/types": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read Naming Rule Types
+         * @description 规则类型。名字与编号都由 core 给，前端不自己维护一份对照表
+         */
+        get: operations["read_naming_rule_types_api_settings_naming_rule_types_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/settings/naming-rule/variables": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read Naming Rule Variables
+         * @description 某个规则类型能用哪些变量。认不出的类型返回空表而不是报错
+         */
+        get: operations["read_naming_rule_variables_api_settings_naming_rule_variables_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/status": {
         parameters: {
             query?: never;
@@ -894,6 +997,23 @@ export interface components {
             /** Roots */
             roots: components["schemas"]["FileRoot"][];
         };
+        /**
+         * FontFamilies
+         * @description 服务端装了哪些字体
+         *
+         *     **要的是服务端的字体，不是浏览器所在机器的。** ASS 是在服务端生成的，
+         *     弹幕轨道的排布还要靠 QFontMetrics 量文字宽度（见 `web/qt_runtime.py`），
+         *     填一个服务端没有的字体名，度量会落到 fallback 字体上，排出来的轨道会偏。
+         *
+         *     取不到时 `available` 为假（镜像里没装 PySide6 就是这样），
+         *     前端据此退回成一个自由输入框 —— 那时用户得自己保证名字对
+         */
+        FontFamilies: {
+            /** Available */
+            available: boolean;
+            /** Families */
+            families: string[];
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -932,6 +1052,52 @@ export interface components {
             name: string;
             /** Path */
             path: string;
+        };
+        /**
+         * NamingRulePreview
+         * @description 校验结果与套上示例数据之后的样子
+         *
+         *     判据在 `util/format/naming_rule.py`，桌面版的编辑对话框用的是同一份 ——
+         *     两边各写一套的话，迟早出现「桌面版存得下的规则 WebUI 说非法」
+         */
+        NamingRulePreview: {
+            /** Filename */
+            filename?: string | null;
+            /** Folder */
+            folder?: string | null;
+            /** Message */
+            message?: string | null;
+            /** Valid */
+            valid: boolean;
+        };
+        /** NamingRulePreviewRequest */
+        NamingRulePreviewRequest: {
+            /** Rule */
+            rule: string;
+            /** Type */
+            type: number;
+        };
+        /**
+         * NamingRuleTypes
+         * @description 规则类型（单个视频 / 多 P / 合集 …）与各自可用的变量
+         */
+        NamingRuleTypes: {
+            /** Types */
+            types: components["schemas"]["Choice"][];
+        };
+        /** NamingRuleVariables */
+        NamingRuleVariables: {
+            /** Variables */
+            variables: components["schemas"]["NamingVariable"][];
+        };
+        /** NamingVariable */
+        NamingVariable: {
+            /** Description */
+            description: string;
+            /** Example */
+            example: string;
+            /** Variable */
+            variable: string;
         };
         /** ParseRequest */
         ParseRequest: {
@@ -1103,6 +1269,8 @@ export interface components {
         SettingChoices: {
             /** Audio Quality */
             audio_quality: components["schemas"]["Choice"][];
+            /** Subtitle Alignment */
+            subtitle_alignment: components["schemas"]["Choice"][];
             /** Subtitle Language */
             subtitle_language: components["schemas"]["Choice"][];
             /** Video Codec */
@@ -1943,6 +2111,110 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SettingChoices"];
+                };
+            };
+        };
+    };
+    read_fonts_api_settings_fonts_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FontFamilies"];
+                };
+            };
+        };
+    };
+    preview_naming_rule_api_settings_naming_rule_preview_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NamingRulePreviewRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NamingRulePreview"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_naming_rule_types_api_settings_naming_rule_types_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NamingRuleTypes"];
+                };
+            };
+        };
+    };
+    read_naming_rule_variables_api_settings_naming_rule_variables_get: {
+        parameters: {
+            query: {
+                type: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NamingRuleVariables"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

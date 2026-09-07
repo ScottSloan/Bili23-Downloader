@@ -1673,6 +1673,22 @@ Reminder: Due to Bilibili&apos;s anti-abuse mechanism, parsing too many pages or
 
 {error}</translation>
     </message>
+    <message>
+        <source>Naming rule cannot be empty</source>
+        <translation>命名规则不能为空</translation>
+    </message>
+    <message>
+        <source>Rule must not start or end with '/' or '.'</source>
+        <translation>规则不能以 '/' 或 '.' 开头或结尾</translation>
+    </message>
+    <message>
+        <source>Rule contains illegal characters: &lt;&gt;:\&quot;|?* or control characters</source>
+        <translation>规则包含非法字符：&lt;&gt;:\&quot;|?* 或控制字符</translation>
+    </message>
+    <message>
+        <source>Invalid naming rule</source>
+        <translation>命名规则无效</translation>
+    </message>
 </context>
 <context>
     <name>EditActionWidget</name>

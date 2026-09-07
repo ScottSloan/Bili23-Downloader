@@ -21,14 +21,17 @@
 from typing import Any, Dict, List
 import logging
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Query
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
 from util.common._config.schema import ITEMS, ValueType
 from util.common.config import config
 
-from ..schemas import SettingChoices, SettingsPayload, SettingsUpdateResult
+from ..schemas import (
+    FontFamilies, NamingRulePreview, NamingRuleTypes, NamingRuleVariables, SettingChoices,
+    SettingsPayload, SettingsUpdateResult,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -107,7 +110,10 @@ async def read_choices():
     画质与音质里的 `auto` 不下发：优先级列表本身回答的就是「auto 时按什么顺序挑」，
     把 auto 放进这个顺序里没有意义（配置的默认值里也没有它）
     """
-    from util.common.data import audio_quality_map, subtitles_language_list, video_codec_map, video_quality_map
+    from util.common.data import (
+        audio_quality_map, subtitles_alignment_map, subtitles_language_list, video_codec_map,
+        video_quality_map,
+    )
     from util.common.translator import Translator
 
     def media_choices(source: dict, translate) -> list:
@@ -126,6 +132,104 @@ async def read_choices():
             {"value": entry["lan"], "label": entry["doc_zh"]}
             for entry in subtitles_language_list
         ],
+        # 对齐方式的编号跟着标签一起给：ASS 的 1–9 是小键盘方位，
+        # 光看数字认不出是哪个角，桌面版也是「说明（编号）」这么显示的
+        "subtitle_alignment": [
+            {"value": value,
+             "label": f"{Translator.SUBTITLES_ALIGNMENT(name)} ({value})"}
+            for name, value in subtitles_alignment_map.items()
+        ],
+    }
+
+@router.get("/settings/fonts", response_model = FontFamilies)
+async def read_fonts():
+    """
+    服务端装了哪些字体
+
+    **这里会惰性拉起 offscreen 的 QGuiApplication**（`web/qt_runtime.py`），
+    与生成 ASS 弹幕走的是同一条路 —— 也正因如此，列出来的就是那时真正能用的字体。
+
+    必须在事件循环线程（= 主线程）上调用：QGuiApplication 只能在主线程构造。
+    所以这个函数是 async 且**不能**丢给 `run_in_executor`。
+
+    ## 空列表是常态，不是错误
+
+    实测：**Windows 上 `QT_QPA_PLATFORM=offscreen` 一款字体都枚举不到**
+    （`QFontDatabase.families()` 返回空，systemFont 是 "Sans Serif"）。
+    Linux 容器里走 fontconfig 通常能列出来，但也取决于镜像里装没装字体。
+
+    所以 `available` 的含义是「**这份列表能用吗**」，不是「Qt 在不在」——
+    列表为空时前端会退回自由输入框，让用户自己填字体名。
+    报 available 却给一个空列表，比直接说不可用更糟：前端会画出一个点不开的空下拉框。
+
+    顺带一提：枚举不到字体也就意味着 ASS 弹幕的轨道排布是按 fallback 字体量的，
+    宽度会有偏差。那属于 D16 已经接受的近似（见 PROGRESS 的待解决第 4 条）
+    """
+    from ..qt_runtime import ensure_gui_application
+
+    if not ensure_gui_application():
+        # 镜像里没装 PySide6 时就是这条路
+        return {"available": False, "families": []}
+
+    try:
+        from PySide6.QtGui import QFontDatabase
+
+        families = list(QFontDatabase.families())
+
+    except Exception:
+        logger.exception("枚举字体失败")
+
+        return {"available": False, "families": []}
+
+    if not families:
+        logger.info("当前平台在 offscreen 下枚举不到字体，字体名改由用户自行填写")
+
+    return {"available": bool(families), "families": families}
+
+class NamingRulePreviewRequest(BaseModel):
+    type: int
+    rule: str = Field(max_length = 1000)
+
+@router.get("/settings/naming-rule/types", response_model = NamingRuleTypes)
+async def read_naming_rule_types():
+    """规则类型。名字与编号都由 core 给，前端不自己维护一份对照表"""
+    from util.common.data import convention_type_map
+    from util.common.translator import Translator
+
+    return {
+        "types": [
+            {"value": int(value), "label": Translator.CONVENTION_TYPE(name)}
+            for name, value in convention_type_map.items()
+        ]
+    }
+
+@router.get("/settings/naming-rule/variables", response_model = NamingRuleVariables)
+async def read_naming_rule_variables(type: int = Query(...)):
+    """某个规则类型能用哪些变量。认不出的类型返回空表而不是报错"""
+    from util.format.naming_rule import variables_for
+
+    return {"variables": variables_for(type)}
+
+@router.post("/settings/naming-rule/preview", response_model = NamingRulePreview)
+async def preview_naming_rule(payload: NamingRulePreviewRequest):
+    """
+    校验一条规则并套上示例数据
+
+    **非法的规则也返回 200**：这里回答的是「这条规则行不行」，
+    不合法是一个正常的答案，不是请求出错。用 4xx 的话前端得把「校验没通过」
+    和「请求本身失败」分开处理，而它们在界面上是两回事
+    """
+    from util.format.naming_rule import preview_rule
+
+    ok, message, result = preview_rule(payload.type, payload.rule)
+
+    if not ok:
+        return {"valid": False, "message": message}
+
+    return {
+        "valid": True,
+        "folder": str(result.parent) if str(result.parent) != "." else "",
+        "filename": result.stem,
     }
 
 @router.post("/settings", response_model = SettingsUpdateResult)

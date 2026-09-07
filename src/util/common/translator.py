@@ -330,6 +330,12 @@ class Translator:
             "USER_AVATAR_FAILED": translate("ERROR_MESSAGES", "Failed to retrieve user avatar"),
             "LOGOUT_FAILED": translate("ERROR_MESSAGES", "Logout failed"),
             "UNKNOWN_ERROR": translate("ERROR_MESSAGES", "An unknown error occurred"),
+            # 命名规则的校验。原先这几句写在 gui/dialog/setting/edit_rule.py 的 self.tr() 里，
+            # 校验逻辑抽到 util/format/naming_rule.py 给两端共用之后，措辞跟着搬过来
+            "NAMING_RULE_EMPTY": translate("ERROR_MESSAGES", "Naming rule cannot be empty"),
+            "NAMING_RULE_BAD_EDGE": translate("ERROR_MESSAGES", "Rule must not start or end with '/' or '.'"),
+            "NAMING_RULE_ILLEGAL_CHARS": translate("ERROR_MESSAGES", "Rule contains illegal characters: <>:\\\"|?* or control characters"),
+            "NAMING_RULE_INVALID": translate("ERROR_MESSAGES", "Invalid naming rule"),
             "CHECK_UPDATE_FAILED": translate("ERROR_MESSAGES", "Failed to check for updates"),
             "FFMPEG_PROCESSING_FAILED": translate("ERROR_MESSAGES", "FFmpeg processing failed"),
             "M4A_NOT_FOUND": translate("ERROR_MESSAGES", "M4A audio file not found for conversion"),

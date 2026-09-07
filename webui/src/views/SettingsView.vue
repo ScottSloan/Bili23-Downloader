@@ -27,6 +27,9 @@ import settingRow from '@/components/App/settings/SettingRow.vue'
 import priorityDialog from '@/components/App/settings/PriorityDialog.vue'
 import subtitleLanguageDialog from '@/components/App/settings/SubtitleLanguageDialog.vue'
 import pathListDialog from '@/components/App/settings/PathListDialog.vue'
+import styleDialog from '@/components/App/settings/StyleDialog.vue'
+import namingRuleDialog from '@/components/App/settings/NamingRuleDialog.vue'
+import type { NamingRule } from '@/components/App/settings/NamingRuleDialog.vue'
 import settingCard from '@/components/Fluent/components/settings/SettingCard.vue'
 import settingCardGroup from '@/components/Fluent/components/settings/SettingCardGroup.vue'
 import comboBox from '@/components/Fluent/components/widgets/combo_box/ComboBox.vue'
@@ -152,6 +155,19 @@ function summaryOf(spec: SettingSpec): string | undefined {
       : t('settings.browseRoots.summaryEmpty')
   }
 
+  if (spec.dialog === 'danmakuStyle' || spec.dialog === 'subtitleStyle') {
+    // 字体名 + 字号最能说明当前设的是什么
+    const font = (value as { font?: { name?: string; size?: number } } | null)?.font
+
+    return font?.name ? `${font.name} · ${font.size ?? ''}` : undefined
+  }
+
+  if (spec.dialog === 'namingRule') {
+    const count = Array.isArray(value) ? value.length : 0
+
+    return t('settings.namingRule.summary', { count })
+  }
+
   return undefined
 }
 </script>
@@ -239,6 +255,28 @@ function summaryOf(spec: SettingSpec): string | undefined {
     <pathListDialog
       :open="openSpec?.dialog === 'browseRoots'"
       :value="(store.value('webui_browse_roots') as string[]) ?? []"
+      @close="openAttr = null"
+      @save="save"
+    />
+
+    <styleDialog
+      :open="openSpec?.dialog === 'danmakuStyle' || openSpec?.dialog === 'subtitleStyle'"
+      :kind="openSpec?.dialog === 'subtitleStyle' ? 'subtitle' : 'danmaku'"
+      :value="(store.value(openAttr ?? '') as Record<string, unknown>) ?? null"
+      :fonts="store.fonts"
+      :alignments="
+        (store.choices?.subtitle_alignment ?? []).map((entry) => ({
+          value: entry.value as string | number,
+          label: entry.label,
+        }))
+      "
+      @close="openAttr = null"
+      @save="save"
+    />
+
+    <namingRuleDialog
+      :open="openSpec?.dialog === 'namingRule'"
+      :value="(store.value('naming_rule_list') as NamingRule[]) ?? []"
       @close="openAttr = null"
       @save="save"
     />

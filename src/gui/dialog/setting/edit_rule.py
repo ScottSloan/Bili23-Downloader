@@ -8,16 +8,12 @@ from gui.component.widget.tree_widget import ColumnTreeWidget
 from gui.component.setting import InsertActionWidget
 from gui.component.dialog import DialogBase
 
-from util.common.data import convention_type_map, VariableListFactory
+from util.common.data import convention_type_map
 from util.common.enum import ToastNotificationCategory
 from util.common.translator import Translator
-from util.format.file_name import FileNameFormatter
+from util.format.naming_rule import preview_rule, variables_for
 
 from functools import wraps
-from pathlib import Path
-import string
-import re
-import os
 
 def check_result(func):
     @wraps(func)
@@ -114,9 +110,6 @@ class EditRuleDialog(DialogBase):
         self.variable_list.customContextMenuRequested.connect(self.on_context_menu)
 
     def init_data(self):
-        self.file_name_formatter = FileNameFormatter()
-
-        self.variable_list_factory = VariableListFactory()
         self.variable_list.setColumnHeaders(
             [
                 self.tr("Variable"),
@@ -148,21 +141,9 @@ class EditRuleDialog(DialogBase):
     def init_variable_list(self):
         self.variable_list.clear()
 
-        variable_list = self.variable_list_factory.build(self.type_choice.currentData())
-
-        for entry in variable_list:
-            desc = entry.get("description")
-
-            variable_description = Translator.VARIABLE_DESCRIPTION()
-
-            if desc in variable_description.keys():
-                desc_str = variable_description.get(desc)
-            else:
-                desc_str = desc
-
-            self._add_item(entry["variable"], desc_str, str(entry["example"]))
-            
-        self.file_name_formatter.set_variable_data(variable_list)
+        # 变量表与描述的翻译都在 util/format/naming_rule.py 里，与 WebUI 共用同一份
+        for entry in variables_for(self.type_choice.currentData()):
+            self._add_item(entry["variable"], entry["description"], entry["example"])
 
         self.variable_list.header().setSectionResizeMode(0, self.variable_list.header().ResizeMode.Stretch)
 
@@ -222,47 +203,21 @@ class EditRuleDialog(DialogBase):
 
     @check_result
     def get_format_result(self):
-        # 对用户输入的规则进行校验
-        rule = self.rule_box.text()
+        """
+        校验并套上示例数据
 
-        if not rule:
-            return False, self.tr("Naming rule cannot be empty")
+        判据在 `util/format/naming_rule.py`，**与 WebUI 用的是同一份** ——
+        两边各写一套的话，迟早出现「桌面版存得下的规则 WebUI 说非法」，
+        或者更糟：WebUI 存下一条桌面版会崩的规则
+        """
+        ok, message, result = preview_rule(self.type_choice.currentData(), self.rule_box.text())
 
-        elif rule.startswith(("/", ".", "..")) or rule.endswith(("/", ".")):
-            return False, self.tr("""Rule must not start or end with '/' or '.'""")
-
-        validate, message = self._validate_rule_template(rule)
-
-        if not validate:
+        if not ok:
             return False, message
-        
-        self.file_name_formatter.set_rule(rule)
 
-        result = self.file_name_formatter.format()
+        self.rule_box.setError(False)
 
-        if result:
-            for part in result.split(os.sep):
-                if re.search(r'[<>:\\"|?*\x00-\x1f]', part):
-                    return False, self.tr("""Rule contains illegal characters: <>:\\"|?* or control characters""")
-
-            else:
-                self.rule_box.setError(False)
-
-                return True, Path(result)
-        
-        else:
-            return False, self.tr("Invalid naming rule")
-
-    def _validate_rule_template(self, rule: str):
-        try:
-            for literal_text, _, _, _ in string.Formatter().parse(rule):
-                if literal_text and re.search(r'[<>:\\"|?*\x00-\x1f]', literal_text):
-                    return False, self.tr("""Rule contains illegal characters: <>:\\"|?* or control characters""")
-
-            return True, None
-
-        except (ValueError, KeyError):
-            return False, self.tr("Invalid naming rule")
+        return True, result
 
     def on_context_menu(self, pos):
         menu = RoundMenu(parent = self)

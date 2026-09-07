@@ -409,6 +409,28 @@
         "title": "FileRoots",
         "type": "object"
       },
+      "FontFamilies": {
+        "description": "服务端装了哪些字体\n\n**要的是服务端的字体，不是浏览器所在机器的。** ASS 是在服务端生成的，\n弹幕轨道的排布还要靠 QFontMetrics 量文字宽度（见 `web/qt_runtime.py`），\n填一个服务端没有的字体名，度量会落到 fallback 字体上，排出来的轨道会偏。\n\n取不到时 `available` 为假（镜像里没装 PySide6 就是这样），\n前端据此退回成一个自由输入框 —— 那时用户得自己保证名字对",
+        "properties": {
+          "available": {
+            "title": "Available",
+            "type": "boolean"
+          },
+          "families": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Families",
+            "type": "array"
+          }
+        },
+        "required": [
+          "available",
+          "families"
+        ],
+        "title": "FontFamilies",
+        "type": "object"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -512,6 +534,128 @@
           "name"
         ],
         "title": "MkdirRequest",
+        "type": "object"
+      },
+      "NamingRulePreview": {
+        "description": "校验结果与套上示例数据之后的样子\n\n判据在 `util/format/naming_rule.py`，桌面版的编辑对话框用的是同一份 ——\n两边各写一套的话，迟早出现「桌面版存得下的规则 WebUI 说非法」",
+        "properties": {
+          "filename": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Filename"
+          },
+          "folder": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Folder"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          },
+          "valid": {
+            "title": "Valid",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "valid"
+        ],
+        "title": "NamingRulePreview",
+        "type": "object"
+      },
+      "NamingRulePreviewRequest": {
+        "properties": {
+          "rule": {
+            "maxLength": 1000,
+            "title": "Rule",
+            "type": "string"
+          },
+          "type": {
+            "title": "Type",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "type",
+          "rule"
+        ],
+        "title": "NamingRulePreviewRequest",
+        "type": "object"
+      },
+      "NamingRuleTypes": {
+        "description": "规则类型（单个视频 / 多 P / 合集 …）与各自可用的变量",
+        "properties": {
+          "types": {
+            "items": {
+              "$ref": "#/components/schemas/Choice"
+            },
+            "title": "Types",
+            "type": "array"
+          }
+        },
+        "required": [
+          "types"
+        ],
+        "title": "NamingRuleTypes",
+        "type": "object"
+      },
+      "NamingRuleVariables": {
+        "properties": {
+          "variables": {
+            "items": {
+              "$ref": "#/components/schemas/NamingVariable"
+            },
+            "title": "Variables",
+            "type": "array"
+          }
+        },
+        "required": [
+          "variables"
+        ],
+        "title": "NamingRuleVariables",
+        "type": "object"
+      },
+      "NamingVariable": {
+        "properties": {
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "example": {
+            "title": "Example",
+            "type": "string"
+          },
+          "variable": {
+            "title": "Variable",
+            "type": "string"
+          }
+        },
+        "required": [
+          "variable",
+          "description",
+          "example"
+        ],
+        "title": "NamingVariable",
         "type": "object"
       },
       "ParseRequest": {
@@ -867,6 +1011,13 @@
             "title": "Audio Quality",
             "type": "array"
           },
+          "subtitle_alignment": {
+            "items": {
+              "$ref": "#/components/schemas/Choice"
+            },
+            "title": "Subtitle Alignment",
+            "type": "array"
+          },
           "subtitle_language": {
             "items": {
               "$ref": "#/components/schemas/Choice"
@@ -893,7 +1044,8 @@
           "video_quality",
           "audio_quality",
           "video_codec",
-          "subtitle_language"
+          "subtitle_language",
+          "subtitle_alignment"
         ],
         "title": "SettingChoices",
         "type": "object"
@@ -2074,6 +2226,135 @@
           }
         },
         "summary": "Read Choices",
+        "tags": [
+          "settings"
+        ]
+      }
+    },
+    "/api/settings/fonts": {
+      "get": {
+        "description": "服务端装了哪些字体\n\n**这里会惰性拉起 offscreen 的 QGuiApplication**（`web/qt_runtime.py`），\n与生成 ASS 弹幕走的是同一条路 —— 也正因如此，列出来的就是那时真正能用的字体。\n\n必须在事件循环线程（= 主线程）上调用：QGuiApplication 只能在主线程构造。\n所以这个函数是 async 且**不能**丢给 `run_in_executor`。\n\n## 空列表是常态，不是错误\n\n实测：**Windows 上 `QT_QPA_PLATFORM=offscreen` 一款字体都枚举不到**\n（`QFontDatabase.families()` 返回空，systemFont 是 \"Sans Serif\"）。\nLinux 容器里走 fontconfig 通常能列出来，但也取决于镜像里装没装字体。\n\n所以 `available` 的含义是「**这份列表能用吗**」，不是「Qt 在不在」——\n列表为空时前端会退回自由输入框，让用户自己填字体名。\n报 available 却给一个空列表，比直接说不可用更糟：前端会画出一个点不开的空下拉框。\n\n顺带一提：枚举不到字体也就意味着 ASS 弹幕的轨道排布是按 fallback 字体量的，\n宽度会有偏差。那属于 D16 已经接受的近似（见 PROGRESS 的待解决第 4 条）",
+        "operationId": "read_fonts_api_settings_fonts_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FontFamilies"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Read Fonts",
+        "tags": [
+          "settings"
+        ]
+      }
+    },
+    "/api/settings/naming-rule/preview": {
+      "post": {
+        "description": "校验一条规则并套上示例数据\n\n**非法的规则也返回 200**：这里回答的是「这条规则行不行」，\n不合法是一个正常的答案，不是请求出错。用 4xx 的话前端得把「校验没通过」\n和「请求本身失败」分开处理，而它们在界面上是两回事",
+        "operationId": "preview_naming_rule_api_settings_naming_rule_preview_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NamingRulePreviewRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NamingRulePreview"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Preview Naming Rule",
+        "tags": [
+          "settings"
+        ]
+      }
+    },
+    "/api/settings/naming-rule/types": {
+      "get": {
+        "description": "规则类型。名字与编号都由 core 给，前端不自己维护一份对照表",
+        "operationId": "read_naming_rule_types_api_settings_naming_rule_types_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NamingRuleTypes"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Read Naming Rule Types",
+        "tags": [
+          "settings"
+        ]
+      }
+    },
+    "/api/settings/naming-rule/variables": {
+      "get": {
+        "description": "某个规则类型能用哪些变量。认不出的类型返回空表而不是报错",
+        "operationId": "read_naming_rule_variables_api_settings_naming_rule_variables_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "type",
+            "required": true,
+            "schema": {
+              "title": "Type",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NamingRuleVariables"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Read Naming Rule Variables",
         "tags": [
           "settings"
         ]

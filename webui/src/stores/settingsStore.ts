@@ -41,6 +41,12 @@ interface SettingsState {
    * 卡片上的摘要要靠它把 id 翻成画质名，没拉到之前显示的是「优先 127」
    */
   choices: SettingChoices | null
+  /**
+   * 服务端装了哪些字体。空数组表示枚举不到 —— 样式对话框据此退回自由输入框
+   *
+   * 实测 Windows 上 offscreen 一款都枚举不到，那是常态不是错误
+   */
+  fonts: string[]
 }
 
 let saveTimer: ReturnType<typeof setTimeout> | null = null
@@ -65,6 +71,7 @@ export const useSettingsStore = defineStore('settings', {
     error: '',
     pendingRestart: [],
     choices: null,
+    fonts: [],
   }),
 
   getters: {
@@ -131,7 +138,7 @@ export const useSettingsStore = defineStore('settings', {
       return loading
     },
 
-    /** 拉候选表。只拉一次 */
+    /** 拉候选表与字体列表。只拉一次 */
     async loadChoices() {
       if (this.choices || choicesPromise) {
         return choicesPromise ?? undefined
@@ -142,9 +149,17 @@ export const useSettingsStore = defineStore('settings', {
           this.choices = await settings.choices()
         } catch (e) {
           this.error = e instanceof ApiError ? e.message : String(e)
-        } finally {
-          choicesPromise = null
         }
+
+        try {
+          // 字体单独一个接口：它会惰性拉起 offscreen 的 QGuiApplication，
+          // 而候选表是纯数据。取不到不算错，样式对话框会退回自由输入
+          this.fonts = (await settings.fonts()).families
+        } catch {
+          this.fonts = []
+        }
+
+        choicesPromise = null
       })()
 
       return choicesPromise

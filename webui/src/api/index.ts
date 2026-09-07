@@ -17,6 +17,7 @@ export type PreviewResult = Ok<'/api/preview', 'post'>
 export type SettingsPayload = Ok<'/api/settings', 'get'>
 export type SettingItem = SettingsPayload['items'][number]
 export type SettingChoices = Ok<'/api/settings/choices', 'get'>
+export type NamingRulePreviewResult = Ok<'/api/settings/naming-rule/preview', 'post'>
 export type LoginStatus = Ok<'/api/login/status', 'get'>
 export type SessionInfo = Ok<'/api/auth/session', 'get'>
 export type FileEntry = Ok<'/api/files/list', 'get'>['entries'][number]
@@ -160,8 +161,26 @@ export const tasks = {
 export const settings = {
   read: () => get<SettingsPayload>('/settings'),
 
-  /** 结构化项的候选值（画质 / 音质 / 编码 / 字幕语言）。这些表只有 core 里那一份 */
+  /** 结构化项的候选值（画质 / 音质 / 编码 / 字幕语言 / 字幕对齐）。这些表只有 core 里那一份 */
   choices: () => get<SettingChoices>('/settings/choices'),
+
+  /** 服务端装了哪些字体。ASS 在服务端生成，要的是那台机器上的字体 */
+  fonts: () => get<Ok<'/api/settings/fonts', 'get'>>('/settings/fonts'),
+
+  namingRuleTypes: () =>
+    get<Ok<'/api/settings/naming-rule/types', 'get'>>('/settings/naming-rule/types'),
+
+  namingRuleVariables: (type: number) =>
+    get<Ok<'/api/settings/naming-rule/variables', 'get'>>('/settings/naming-rule/variables', {
+      type,
+    }),
+
+  /** 校验一条规则并套上示例数据。非法的规则也返回 200，valid 为假 */
+  namingRulePreview: (type: number, rule: string) =>
+    post<Ok<'/api/settings/naming-rule/preview', 'post'>>('/settings/naming-rule/preview', {
+      type,
+      rule,
+    }),
   /** 一项不合法则整批拒绝，返回里是纠正后的值（后端语义是纠正而非拒绝） */
   write: (values: Record<string, unknown>) =>
     post<Ok<'/api/settings', 'post'>>('/settings', { values }),
