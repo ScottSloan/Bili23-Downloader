@@ -24,6 +24,7 @@ from threading import Lock
 from typing import List, Optional
 import logging
 
+from ..auth.session import ensure_wbi_keys
 from ..common.data import url_patterns
 from ..common.enum import CheckState
 from ..common.signal_bus import signal_bus
@@ -127,6 +128,9 @@ class ParseSession(ParserResolver):
             captured["category_name"] = category_name
             captured["root_node"] = root_node
             captured["current"] = current_episode_data
+
+        # 同预览：解析链路里多处要用 wbi 签名，密钥缺失时的报错认不出来
+        ensure_wbi_keys()
 
         with _parse_lock:
             # DIRECT：要在本线程就地拿到结果，不能被投递到事件循环去

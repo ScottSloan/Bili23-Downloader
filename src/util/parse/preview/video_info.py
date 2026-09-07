@@ -11,11 +11,12 @@ from ..quality import parse_declared_quality_map, merge_video_streams
 
 from .worker import QueryInfoWorker
 from .info import PreviewerInfo
+from .quality_base import VideoQualityBase
 
 from collections import defaultdict
 from typing import Callable
 
-class VideoInfoParser(QObject):
+class VideoInfoParser(VideoQualityBase, QObject):
     # 继承 QObject 是为了让 QueryInfoWorker 的信号能排队回 GUI 线程：
     # callback 指向下载选项对话框的控件方法，在查询线程里直连调用等于在子线程操作 QWidget
     def __init__(self):
@@ -28,83 +29,6 @@ class VideoInfoParser(QObject):
         self.available_quality_list = []
 
         signal_bus.parse.query_video_info.connect(self.query_info)
-
-    def _get_dash_available_quality_list(self):
-        for entry in PreviewerInfo.info_data["dash"]["video"].copy():
-            self.video_info_map[entry["id"]][entry["codecid"]] = entry.copy()
-
-        # 画质列表以 support_formats 的声明为准，而不是响应里实际给到的流：
-        # 少数稿件一次请求拿不全所有档位，据 dash.video 建列表会漏掉可选画质，原因见 quality.py。
-        # 只对普通视频这么做：番剧、课程同样带 support_formats，但它们的流要走各自的接口取，
-        # 缺档时按普通视频的 playurl 去补只会拿到对不上的结果
-        if PreviewerInfo.info_data.get("parser_type") == "video":
-            self.declared_quality_map = parse_declared_quality_map(PreviewerInfo.info_data)
-
-        if self.declared_quality_map:
-            return list(self.declared_quality_map.keys())
-
-        return sorted(self.video_info_map.keys(), reverse = True)
-    
-    def _get_mp4_available_quality_list(self):
-        accept_quality_list = PreviewerInfo.info_data["accept_quality"].copy()
-        
-        for quality_id in accept_quality_list.copy():
-            self.video_info_map[quality_id][7] = {
-                "id": quality_id,
-                "codecid": 7,
-                "frame_rate": 0,
-                "bandwidth": 0,
-                "timelength": 0
-            }
-
-        return accept_quality_list
-
-    def get_available_quality_list(self):
-        match PreviewerInfo.media_type:
-            case MediaType.DASH:
-                return self._get_dash_available_quality_list()
-            
-            case MediaType.MP4 | MediaType.FLV:
-                return self._get_mp4_available_quality_list()
-            
-            case MediaType.UNKNOWN | MediaType.M4A:
-                return []
-
-    def get_available_codec_list(self, video_quality_id: int):
-        codec_list = list(self.video_info_map[video_quality_id].keys())
-
-        if codec_list:
-            return codec_list
-
-        # 该档位的流尚未取到，用 support_formats 声明的编码顶上，实测两者始终一致
-        return (self.declared_quality_map or {}).get(video_quality_id, [])
-
-    def parse_quality_info(self):
-        self.video_info_map = defaultdict(lambda: defaultdict(dict))
-        self.declared_quality_map = None
-
-        initial_data = {
-            "auto": 200
-        }
-
-        self.available_quality_list = self.get_available_quality_list()
-
-        for quality_id in self.available_quality_list.copy():
-            quality_str = reversed_video_quality_map.get(quality_id)
-
-            initial_data[quality_str] = quality_id
-        
-        PreviewerInfo.video_quality_choice_data = initial_data.copy()
-
-    def parse_codec_info(self):
-        initial_data = {
-            "auto": 20,
-            "AVC/H.264": 7,
-            "HEVC/H.265": 12,
-            "AV1": 13
-        }
-
-        PreviewerInfo.video_codec_choice_data = initial_data.copy()
 
     def query_info(self, video_quality_id: int, video_codec_id: int, callback: Callable):
         self.callback = callback
@@ -196,23 +120,6 @@ class VideoInfoParser(QObject):
             video_codec_id = self.get_video_codec_id_by_priority(video_quality_id)
 
         return video_quality_id, video_codec_id
-
-    def get_video_quality_id_by_priority(self):
-        # 以声明的档位为准，缺流的档位同样参与优先级匹配，否则会错选成更高的画质
-        for quality_id in config.get(config.video_quality_priority):
-            if quality_id in self.available_quality_list:
-                return quality_id
-
-        return self.available_quality_list[0]
-
-    def get_video_codec_id_by_priority(self, video_quality_id: int):
-        available_codec_list = self.get_available_codec_list(video_quality_id)
-
-        for codec_id in config.get(config.video_codec_priority):
-            if codec_id in available_codec_list:
-                return codec_id
-
-        return available_codec_list[0]
 
     def check_is_full_video(self, media_info: dict):
         match PreviewerInfo.media_type:

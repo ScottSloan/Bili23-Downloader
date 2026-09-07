@@ -9,6 +9,7 @@ from ...thread.async_ import AsyncTask
 
 from .worker import QueryInfoWorker
 from .info import PreviewerInfo
+from .quality_base import AudioQualityBase
 
 from collections import defaultdict
 from typing import Callable
@@ -16,7 +17,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-class AudioInfoParser(QObject):
+class AudioInfoParser(AudioQualityBase, QObject):
     # 继承 QObject 是为了让 QueryInfoWorker 的信号能排队回 GUI 线程，原因见 VideoInfoParser
     def __init__(self):
         super().__init__()
@@ -25,82 +26,6 @@ class AudioInfoParser(QObject):
         self.audio_quality_info_map = {}
 
         signal_bus.parse.query_audio_info.connect(self.query_info)
-
-    def _get_dash_available_quality_list(self):
-        available_quality_list = []
-
-        dash_node = PreviewerInfo.info_data["dash"]
-
-        if audio_node := self.safe_get(dash_node.copy(), ["flac", "audio"]):
-            # 30251 为 Hi-Res 无损
-            quality_id = 30251
-            audio_node["id"] = quality_id
-
-            available_quality_list.append(quality_id)
-
-            self.audio_quality_info_map[quality_id] = audio_node.copy()
-
-        if audio_node := self.safe_get(dash_node.copy(), ["dolby", "audio"]):
-            # 30250 30255 均为杜比全景声，为便于区分，统一为 30250
-            if audio_node[0]["id"] == 30255:
-                logger.info("检测到 audio_quality_id 为 30255 的杜比全景声音频，已统一为 30250 以便区分")
-
-            quality_id = 30250
-            audio_node[0]["id"] = quality_id
-
-            available_quality_list.append(quality_id)
-
-            self.audio_quality_info_map[quality_id] = audio_node[0].copy()
-
-        if dash_node.get("audio", []):
-
-            for entry in dash_node["audio"].copy():
-                quality_id = entry["id"]
-
-                if quality_id not in available_quality_list:
-                    available_quality_list.append(quality_id)
-
-                    self.audio_quality_info_map[quality_id] = entry.copy()
-
-        return sorted(available_quality_list, key = lambda x: audio_reorder_map.get(x))
-
-    def _get_m4a_available_quality_list(self):
-        # m4a 只支持 192K 码率
-        self.audio_quality_info_map[30280] = {
-            "id": 30280,
-            "codecs": "mp4a.40.2",
-            "backup_url": PreviewerInfo.info_data["cdns"],
-            "bandwidth": 192000
-        }
-
-        return [30280]
-
-    def get_available_list(self):
-        match PreviewerInfo.media_type:
-            case MediaType.DASH:
-                return self._get_dash_available_quality_list()
-            
-            case MediaType.M4A:
-                return self._get_m4a_available_quality_list()
-            
-            case _:
-                return []
-    
-    def parse_info(self):
-        self.audio_quality_info_map = defaultdict(dict)
-
-        initial_data = {
-            "auto": 30300
-        }
-
-        available_audio_quality = self.get_available_list()
-
-        for quality_id in available_audio_quality.copy():
-            quality_str = reversed_audio_quality_map.get(quality_id)
-
-            initial_data[quality_str] = quality_id
-
-        PreviewerInfo.audio_quality_choice_data = initial_data.copy()
 
     def query_info(self, audio_quality_id: int, callback: Callable):
         self.callback = callback
@@ -172,19 +97,3 @@ class AudioInfoParser(QObject):
         for quality_id in config.get(config.audio_quality_priority):
             if quality_id in self.audio_quality_info_map.keys():
                 return self.audio_quality_info_map.get(quality_id, {})
-
-    def make_empty_data(self, reason: str):
-        return {
-            "empty": True,
-            "reason": reason
-        }
-
-    def safe_get(self, data: dict, keys: list, default = None):
-        for key in keys:
-            if data := data.get(key):
-                continue
-
-            else:
-                return default
-
-        return data

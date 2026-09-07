@@ -85,6 +85,30 @@ def restore_cookies() -> None:
 
     sync_cookies_from_config()
 
+def ensure_wbi_keys() -> bool:
+    """
+    确保 wbi 的签名密钥可用，缺了就去 nav 接口取一次
+
+    **这不是可有可无的**：投稿视频的 playurl 要 wbi 签名，而 `enc_wbi` 在密钥为空时
+    抛的是 `IndexError: string index out of range` —— 一句完全看不出病因的报错。
+    桌面版启动时会调 `init_user_info()` 顺带把密钥取回来，服务端没有那一步，
+    所以在真正要用之前自己保证一次。
+
+    已经有密钥时不发请求，可以放心地在每次解析、预览前调
+    """
+    if config.get(config.img_key) and config.get(config.sub_key):
+        return True
+
+    try:
+        LoginSession().fetch_user_info()
+
+    except Exception as e:
+        logger.warning("获取 wbi 签名密钥失败：%s", e)
+
+        return False
+
+    return bool(config.get(config.img_key) and config.get(config.sub_key))
+
 class LoginSession(AuthBase):
     """阻塞版的登录操作。调用方负责放到线程里"""
 
