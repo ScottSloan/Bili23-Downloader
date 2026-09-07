@@ -29,6 +29,8 @@ from .routes import files as files_routes
 from .routes import login as login_routes
 from .routes import parse as parse_routes
 from .routes import preview as preview_routes
+from .routes import settings as settings_routes
+from .routes import tasks as tasks_routes
 from .routes import auth as auth_routes
 from .routes import system as system_routes
 
@@ -239,5 +241,7 @@ def create_app(with_aria2: bool = True) -> FastAPI:
     app.include_router(login_routes.router, prefix = "/api")
     app.include_router(parse_routes.router, prefix = "/api")
     app.include_router(preview_routes.router, prefix = "/api")
+    app.include_router(settings_routes.router, prefix = "/api")
+    app.include_router(tasks_routes.router, prefix = "/api")
 
     return app
