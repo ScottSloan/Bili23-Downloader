@@ -19,6 +19,7 @@
 """
 
 from typing import Any, Dict, List
+import asyncio
 import logging
 
 from fastapi import APIRouter, Query
@@ -27,10 +28,11 @@ from pydantic import BaseModel, Field
 
 from util.common._config.schema import ITEMS, ValueType
 from util.common.config import config
+from util.thread import background
 
 from ..schemas import (
     FontFamilies, NamingRulePreview, NamingRuleTypes, NamingRuleVariables, SettingChoices,
-    SettingsPayload, SettingsUpdateResult,
+    SettingsPayload, SettingsUpdateResult, UpdateInfo,
 )
 
 logger = logging.getLogger(__name__)
@@ -280,3 +282,29 @@ async def update_settings(payload: UpdateSettingsRequest):
     # clamp 或回落成默认值。不回读的话前端会以为自己设成功了
     return {"changed": changed,
             "values": {attr: config.get(getattr(config, attr)) for attr in changed}}
+
+# ---------------- 检查更新 ----------------
+
+@router.get("/update", response_model = UpdateInfo)
+async def check_update(include_preview: bool = Query(default = None)):
+    """
+    问一次版本服务有没有新版本
+
+    **不做缓存也不自动轮询**：调用点只有标题栏那个按钮和进入页面时的一次，
+    加一层缓存反而会让「点了没反应」变得难查。
+
+    `include_preview` 不传就用共用配置里的 `include_prerelease`，与桌面版一致
+    """
+    from util.common.config import config
+    from util.misc.update_check import check_for_update
+
+    preview = config.get(config.include_prerelease) if include_preview is None else include_preview
+
+    info, error = await asyncio.wrap_future(background.submit(check_for_update, preview))
+
+    if error:
+        # 检查不到不是错误状态 —— 网络不通是常态，用 200 带一个 checked=false，
+        # 免得前端把它当成接口坏了去重试
+        return {"checked": False, "error": error, "current_version": config.app_version}
+
+    return {"checked": True, "current_version": config.app_version, **info}

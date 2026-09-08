@@ -31,6 +31,7 @@ import subtitleLanguageDialog from '@/components/App/settings/SubtitleLanguageDi
 import pathListDialog from '@/components/App/settings/PathListDialog.vue'
 import styleDialog from '@/components/App/settings/StyleDialog.vue'
 import namingRuleDialog from '@/components/App/settings/NamingRuleDialog.vue'
+import userAgentDialog from '@/components/App/settings/UserAgentDialog.vue'
 import type { NamingRule } from '@/components/App/settings/NamingRuleDialog.vue'
 import settingCardGroup from '@/components/Fluent/components/settings/SettingCardGroup.vue'
 import expandSettingCard from '@/components/Fluent/components/settings/ExpandSettingCard.vue'
@@ -197,6 +198,13 @@ function summaryOf(spec: SettingSpec): string | undefined {
     return t('settings.namingRule.summary', { count })
   }
 
+  if (spec.dialog === 'userAgent') {
+    // UA 很长，卡片上放不下。截一段让用户认得出改没改过就够了
+    const text = String(value ?? '')
+
+    return text.length > 40 ? `${text.slice(0, 40)}…` : text
+  }
+
   return undefined
 }
 </script>
@@ -327,6 +335,14 @@ function summaryOf(spec: SettingSpec): string | undefined {
     <namingRuleDialog
       :open="openSpec?.dialog === 'namingRule'"
       :value="(store.value('naming_rule_list') as NamingRule[]) ?? []"
+      @close="openAttr = null"
+      @save="save"
+    />
+
+    <userAgentDialog
+      :open="openSpec?.dialog === 'userAgent'"
+      :value="String(store.value('user_agent') ?? '')"
+      :default-value="String(store.item('user_agent')?.default ?? '')"
       @close="openAttr = null"
       @save="save"
     />

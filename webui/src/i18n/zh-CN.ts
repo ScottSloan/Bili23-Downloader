@@ -11,6 +11,19 @@ export default {
   },
 
   // 气泡提示的标题。桌面版每条 InfoBar 都有标题 + 正文两段，标题写「发生了什么」
+  // 新版本提示。桌面版是启动后自动弹对话框，Web 端做成标题栏上的一个按钮
+  update: {
+    title: '发现新版本 {version}',
+    from: '当前 {current} → 最新 {latest}',
+    required: '这是一个必要更新',
+    available: '发现新版本 {version}',
+    noContent: '没有提供更新说明。',
+    download: '前往下载',
+    later: '稍后再说',
+    alreadyLatest: '当前已是最新版本。',
+    checkFailed: '检查更新失败',
+  },
+
   toast: {
     parseFailed: '解析失败',
     saveFailed: '保存失败',
@@ -375,6 +388,14 @@ export default {
       alignment: '对齐方式',
       screen_width: '屏幕宽度 (像素)',
       screen_height: '屏幕高度 (像素)',
+    },
+
+    userAgent: {
+      title: '自定义 User-Agent',
+      hint: '用于向哔哩哔哩发起请求。没有明确理由不建议改动。',
+      placeholder: '请输入 User-Agent',
+      reset: '恢复默认',
+      empty: 'User-Agent 不能为空',
     },
 
     namingRule: {

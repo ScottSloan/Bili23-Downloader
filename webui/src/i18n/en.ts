@@ -12,6 +12,19 @@ export default {
   },
 
   // 气泡提示的标题。桌面版每条 InfoBar 都有标题 + 正文两段，标题写「发生了什么」
+  // 新版本提示。桌面版是启动后自动弹对话框，Web 端做成标题栏上的一个按钮
+  update: {
+    title: 'New version {version} is available',
+    from: 'Current {current} → Latest {latest}',
+    required: 'This update is required',
+    available: 'New version {version} is available',
+    noContent: 'No release notes provided.',
+    download: 'Go to download',
+    later: 'Later',
+    alreadyLatest: 'You are already on the latest version.',
+    checkFailed: 'Update check failed',
+  },
+
   toast: {
     parseFailed: 'Parse Failed',
     saveFailed: 'Save Failed',
@@ -393,6 +406,14 @@ export default {
       alignment: 'Alignment',
       screen_width: 'Screen Width (px)',
       screen_height: 'Screen Height (px)',
+    },
+
+    userAgent: {
+      title: 'Customize User-Agent',
+      hint: 'Used for requests to Bilibili. Leave it alone unless you know why you are changing it.',
+      placeholder: 'Please enter a User-Agent',
+      reset: 'Restore default',
+      empty: 'User-Agent cannot be empty',
     },
 
     namingRule: {

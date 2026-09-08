@@ -1,3 +1,10 @@
+"""
+检查新版本 —— 桌面侧的外壳
+
+拼请求、读响应那部分在 `update_check.py` 里（不依赖 Qt，WebUI 后端也用它）。
+这里只剩「用 Qt 的方式把它跑起来」：异步 worker + signal_bus 通知界面。
+"""
+
 from PySide6.QtCore import QObject
 
 from ..common.enum import ToastNotificationCategory
@@ -8,75 +15,13 @@ from ..network.worker import NetworkRequestWorker
 from ..thread.async_ import AsyncTask
 from ..common.config import config
 
-import sys
+from .update_check import (
+    CHECK_UPDATE_URL, build_headers, build_payload, get_error_message, parse_response
+)
+
 import logging
 
 logger = logging.getLogger(__name__)
-
-VERHUB_BASE_URL = "https://verhub.hanloth.cn/api/v1"
-VERHUB_PROJECT_KEY = "scottsloan-bili23-downloader"
-
-# 客户端来源声明，仅供服务端统计使用，不影响接口返回内容
-PLATFORM_HEADER = "x-verhub-platform"
-PLATFORM_VERSION_HEADER = "x-verhub-platform-version"
-
-# 系统版本明细的长度上限，与服务端一致，超出直接截断
-MAX_PLATFORM_VERSION_LENGTH = 32
-
-# 老 Windows 的 NT 内核号 → 市场版本号，Win10 / Win11 均为 10.0，另按构建号区分
-WINDOWS_NT_TO_MARKET = {
-    (6, 1): "7",
-    (6, 2): "8",
-    (6, 3): "8.1"
-}
-
-def get_platform():
-    # 只区分服务端契约中的取值，认不出时返回 others
-    if sys.platform.startswith("win"):
-        return "windows"
-
-    if sys.platform == "darwin":
-        return "macos"
-
-    if sys.platform.startswith("linux"):
-        return "linux"
-
-    return "others"
-
-def get_platform_version():
-    # 版本探测纯属锦上添花，取不到就返回空串，交给服务端从 User-Agent 兜底推断
-    try:
-        if sys.platform.startswith("win"):
-            info = sys.getwindowsversion()
-
-            # Win11 仍上报内核 10.0，只有构建号 >= 22000 能区分出来
-            if info.major == 10 and info.minor == 0:
-                return "11" if info.build >= 22000 else "10"
-
-            return WINDOWS_NT_TO_MARKET.get((info.major, info.minor), "")
-
-        if sys.platform == "darwin":
-            import platform
-
-            return platform.mac_ver()[0]
-
-        if sys.platform.startswith("linux"):
-            import platform
-
-            data = platform.freedesktop_os_release()
-
-            return f"{(data.get('ID') or '').strip().lower()} {(data.get('VERSION_ID') or '').strip()}"
-
-    except Exception:
-        return ""
-
-    return ""
-
-def sanitize_platform_version(value: str):
-    # 请求头只能承载 ASCII，非可打印字符一律当作空白处理，折叠连续空白后截断，避免编码请求头时抛出异常
-    ascii_only = "".join(char if " " < char <= "~" else " " for char in value)
-
-    return " ".join(ascii_only.split())[:MAX_PLATFORM_VERSION_LENGTH].rstrip()
 
 class Updater(QObject):
     def __init__(self, parent = None):
@@ -86,21 +31,13 @@ class Updater(QObject):
 
     def check(self, response: dict):
         # 服务端返回非 2xx 时响应体形如 {"statusCode": 400, "message": "..."}，此处统一按错误处理
-        if error_message := self.get_error_message(response):
+        if error_message := get_error_message(response):
             self.on_error(error_message)
             return
 
-        latest_version = response["latest_version"]
+        info = parse_response(response)
 
-        version = latest_version["version"]
-
-        info = {
-            "should_update": response["should_update"],
-            "required": response["required"],
-            "version": version,
-            "content": latest_version["content"],
-            "update_url": latest_version["download_url"]
-        }
+        version = info["version"]
 
         if info.get("should_update"):
 
@@ -128,44 +65,14 @@ class Updater(QObject):
         self.manual = manual
 
         worker = NetworkRequestWorker(
-            url = f"{VERHUB_BASE_URL}/public/{VERHUB_PROJECT_KEY}/versions/check-update",
+            url = CHECK_UPDATE_URL,
             request_type = RequestType.POST,
-            json_data = {
-                "current_version": config.app_version,
-                "current_comparable_version": config.app_comparable_version,
-                "include_preview": config.get(config.include_prerelease)
-            },
+            json_data = build_payload(config.get(config.include_prerelease)),
             raise_for_status = False,
             content_type = "application/json",
-            extra_headers = self.get_extra_headers()
+            extra_headers = build_headers()
         )
         worker.success.connect(self.check)
         worker.error.connect(self.on_error)
 
         AsyncTask.run(worker)
-
-    @staticmethod
-    def get_extra_headers():
-        headers = {
-            "User-Agent": f"Bili23-Downloader/{config.app_version}",
-            PLATFORM_HEADER: get_platform()
-        }
-
-        # 取不到系统版本明细时不发这个头
-        if platform_version := sanitize_platform_version(get_platform_version()):
-            headers[PLATFORM_VERSION_HEADER] = platform_version
-
-        return headers
-
-    @staticmethod
-    def get_error_message(response: dict):
-        if isinstance(response, dict) and "should_update" in response:
-            return None
-
-        message = response.get("message") if isinstance(response, dict) else None
-
-        # 校验失败时 message 为字符串数组
-        if isinstance(message, list):
-            return "；".join(str(item) for item in message)
-
-        return str(message) if message else Translator.ERROR_MESSAGES("UNKNOWN_ERROR")

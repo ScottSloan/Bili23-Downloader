@@ -147,6 +147,10 @@ function stepBy(delta: number) {
   display: inline-flex;
   align-items: center;
   flex: 0 0 auto;
+  /* 78 的输入宽 + 右边加减按钮那一列。给的是**最小**宽度而不是定宽：
+     放进对话框的网格里时容器会被拉宽，那时输入框要跟着长，
+     加减按钮才留得住右边缘 */
+  min-width: 106px;
   border-radius: 5px;
   transition:
     background-color 0.2s ease,
@@ -168,11 +172,17 @@ function stepBy(delta: number) {
   padding-bottom: 0;
 }
 
+/*
+  输入框吃掉剩余空间。**不能写死宽度** —— 容器被外层拉宽时（弹幕样式对话框里
+  那几列就是），定宽的输入框撑不满，加减按钮会停在中间，右边空一大片
+*/
 .fluent-spin-box input {
   font: inherit;
   font-size: 14px;
   box-sizing: border-box;
-  width: 78px;
+  flex: 1 1 auto;
+  width: auto;
+  min-width: 0;
   padding: 6px 4px 6px 10px;
   border: none;
   background: transparent;

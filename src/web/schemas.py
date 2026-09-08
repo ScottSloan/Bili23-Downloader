@@ -344,3 +344,24 @@ class HistoryList(BaseModel):
 
 class HistoryDeleteResult(BaseModel):
     deleted: int
+
+# ---------------- 检查更新 ----------------
+
+class UpdateInfo(BaseModel):
+    """
+    检查更新的结果
+
+    `checked` 为 false 表示这次没问成（网络不通、服务端出错），`error` 里是原因。
+    **不要用 `should_update` 兼作「问没问到」** —— 那样一次失败会被当成「已是最新」
+    """
+
+    checked: bool = False
+    error: str = ""
+    should_update: bool = False
+    # 服务端标记的强制更新。前端据此决定提示的语气，不做拦截
+    required: bool = False
+    version: str = ""
+    # 更新说明，可能是多行
+    content: str = ""
+    update_url: str = ""
+    current_version: str = ""

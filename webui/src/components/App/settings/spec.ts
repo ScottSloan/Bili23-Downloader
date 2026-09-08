@@ -37,6 +37,7 @@ export type DialogKind =
   | 'danmakuStyle'
   | 'subtitleStyle'
   | 'namingRule'
+  | 'userAgent'
 
 /** 启用条件：另一项为真，或等于某个值 */
 export interface Condition {
@@ -347,7 +348,15 @@ export const SETTING_GROUPS: SettingGroupSpec[] = [
         ],
       },
 
-      { attr: 'user_agent', icon: 'code', described: true },
+      // 与桌面版一样弹对话框改：UA 串又长又不该误碰，摆在卡片右边既显示不全，
+      // 改一半失焦还会存进去
+      {
+        attr: 'user_agent',
+        kind: 'dialog',
+        dialog: 'userAgent',
+        icon: 'code',
+        described: true,
+      },
 
       // aria2 与 WebUI 这两张卡片桌面版没有对应物（那边的下载器是内置的，也没有服务端）。
       // 放进「高级」而不是各开一个组：它们和 CDN、代理一样属于排障与部署，

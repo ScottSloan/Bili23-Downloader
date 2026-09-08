@@ -54,6 +54,10 @@ ICONS = {
     "music":             ":/qfluentwidgets/images/icons/Music_black.svg",
     "code":              ":/qfluentwidgets/images/icons/Code_black.svg",
     "search":            ":/qfluentwidgets/images/icons/Search_black.svg",
+    "brightness":        ":/qfluentwidgets/images/icons/Brightness_black.svg",
+    "quietHours":        ":/qfluentwidgets/images/icons/QuietHours_black.svg",
+    "constract":         ":/qfluentwidgets/images/icons/Constract_black.svg",
+    "update":            ":/qfluentwidgets/images/icons/Update_black.svg",
     "history":           ":/qfluentwidgets/images/icons/History_black.svg",
 
     # 本项目补的（ExtendedFluentIcon）

@@ -838,6 +838,31 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Check Update
+         * @description 问一次版本服务有没有新版本
+         *
+         *     **不做缓存也不自动轮询**：调用点只有标题栏那个按钮和进入页面时的一次，
+         *     加一层缓存反而会让「点了没反应」变得难查。
+         *
+         *     `include_preview` 不传就用共用配置里的 `include_prerelease`，与桌面版一致
+         */
+        get: operations["check_update_api_update_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1535,6 +1560,55 @@ export interface components {
              * @default
              */
             video_quality: string;
+        };
+        /**
+         * UpdateInfo
+         * @description 检查更新的结果
+         *
+         *     `checked` 为 false 表示这次没问成（网络不通、服务端出错），`error` 里是原因。
+         *     **不要用 `should_update` 兼作「问没问到」** —— 那样一次失败会被当成「已是最新」
+         */
+        UpdateInfo: {
+            /**
+             * Checked
+             * @default false
+             */
+            checked: boolean;
+            /**
+             * Content
+             * @default
+             */
+            content: string;
+            /**
+             * Current Version
+             * @default
+             */
+            current_version: string;
+            /**
+             * Error
+             * @default
+             */
+            error: string;
+            /**
+             * Required
+             * @default false
+             */
+            required: boolean;
+            /**
+             * Should Update
+             * @default false
+             */
+            should_update: boolean;
+            /**
+             * Update Url
+             * @default
+             */
+            update_url: string;
+            /**
+             * Version
+             * @default
+             */
+            version: string;
         };
         /** UpdateSettingsRequest */
         UpdateSettingsRequest: {
@@ -2678,6 +2752,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TaskView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    check_update_api_update_get: {
+        parameters: {
+            query?: {
+                include_preview?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UpdateInfo"];
                 };
             };
             /** @description Validation Error */

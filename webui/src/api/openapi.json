@@ -1477,6 +1477,53 @@
         "title": "TaskView",
         "type": "object"
       },
+      "UpdateInfo": {
+        "description": "检查更新的结果\n\n`checked` 为 false 表示这次没问成（网络不通、服务端出错），`error` 里是原因。\n**不要用 `should_update` 兼作「问没问到」** —— 那样一次失败会被当成「已是最新」",
+        "properties": {
+          "checked": {
+            "default": false,
+            "title": "Checked",
+            "type": "boolean"
+          },
+          "content": {
+            "default": "",
+            "title": "Content",
+            "type": "string"
+          },
+          "current_version": {
+            "default": "",
+            "title": "Current Version",
+            "type": "string"
+          },
+          "error": {
+            "default": "",
+            "title": "Error",
+            "type": "string"
+          },
+          "required": {
+            "default": false,
+            "title": "Required",
+            "type": "boolean"
+          },
+          "should_update": {
+            "default": false,
+            "title": "Should Update",
+            "type": "boolean"
+          },
+          "update_url": {
+            "default": "",
+            "title": "Update Url",
+            "type": "string"
+          },
+          "version": {
+            "default": "",
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "title": "UpdateInfo",
+        "type": "object"
+      },
       "UpdateSettingsRequest": {
         "properties": {
           "values": {
@@ -2986,6 +3033,49 @@
         "summary": "Get Task",
         "tags": [
           "tasks"
+        ]
+      }
+    },
+    "/api/update": {
+      "get": {
+        "description": "问一次版本服务有没有新版本\n\n**不做缓存也不自动轮询**：调用点只有标题栏那个按钮和进入页面时的一次，\n加一层缓存反而会让「点了没反应」变得难查。\n\n`include_preview` 不传就用共用配置里的 `include_prerelease`，与桌面版一致",
+        "operationId": "check_update_api_update_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "include_preview",
+            "required": false,
+            "schema": {
+              "title": "Include Preview",
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateInfo"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Check Update",
+        "tags": [
+          "settings"
         ]
       }
     }

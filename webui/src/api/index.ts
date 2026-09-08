@@ -174,6 +174,9 @@ export const tasks = {
 // ---------------- 配置与系统 ----------------
 
 export const settings = {
+  /** 问版本服务有没有新版本。checked 为 false 表示这次没问成，看 error */
+  checkUpdate: () => get<Ok<'/api/update', 'get'>>('/update'),
+
   read: () => get<SettingsPayload>('/settings'),
 
   /** 结构化项的候选值（画质 / 音质 / 编码 / 字幕语言 / 字幕对齐）。这些表只有 core 里那一份 */
