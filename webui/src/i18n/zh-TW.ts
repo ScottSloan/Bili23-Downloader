@@ -38,6 +38,8 @@ export default {
     submitting: '解析中',
     empty: '解析結果會顯示在這裡。',
     summary: '{category}（共 {total} 項，已選 {checked} 項）',
+    // 一条都没勾时用它 —— 「已选 0 项」是纯噪声
+    summaryPlain: '{category}（共 {total} 項）',
     mediaUnavailable: '媒體資訊無法取得（{reason}），暫時無法下載',
     download: '下載選取項',
     nothingChecked: '沒有勾選任何內容。',
@@ -510,6 +512,29 @@ export default {
       80: '每週必看',
       90: '音樂',
     },
+  },
+
+  // 解析類型。**鍵是後端給的穩定取值**（`EPISODE_TYPE` 的鍵），不是英文串 ——
+  // 伺服器行程裡沒有 Qt 的翻譯函式，它下發的一律是 `USER_UPLOADS` 這樣的裸鍵（D12）。
+  // 譯文抄自 src/res/i18n/bili23.zh_TW.ts 的 EPISODE_TYPE 段
+  episodeType: {
+    USER_UPLOADS: '投稿影片',
+    INTERACTIVE_VIDEO: '互動影片',
+    ANIME: '動畫',
+    MOVIE: '電影',
+    DOCUMENTARY: '紀錄片',
+    CHN_ANIME: '國創',
+    TV: '電視劇',
+    VARIETY: '綜藝',
+    COURSE: '課程',
+    MALL_COURSE: '會員購課程',
+    WEEKLY: '每週必看',
+    COLLECTION_LIST: '合集',
+    FAVORITES: '收藏夾',
+    PROFILE: '個人空間',
+    WATCH_LATER: '稍後觀看',
+    HISTORY: '歷史記錄',
+    AUDIO: '音樂',
   },
 
   column: {

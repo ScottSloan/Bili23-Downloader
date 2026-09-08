@@ -40,6 +40,8 @@ export default {
     empty: 'Parsed results will appear here.',
     // GUI 的原串是 "{category_name} ({total_count} total)"，Web 端多显示一个已选数
     summary: '{category} ({total} total, {checked} selected)',
+    // 一条都没勾时用它 —— 「已选 0 项」是纯噪声
+    summaryPlain: '{category} ({total} total)',
     mediaUnavailable:
       'Media information is unavailable ({reason}), downloads cannot be created yet.',
     download: 'Download selected',
@@ -545,6 +547,28 @@ export default {
   },
 
   // 键与后端 parse_list_column 的 attr_key 一一对应
+  // Parse category. Keys are the stable values the backend sends (EPISODE_TYPE),
+  // not English strings — the server process has no Qt translator (D12)
+  episodeType: {
+    USER_UPLOADS: 'User Uploads',
+    INTERACTIVE_VIDEO: 'Interactive Video',
+    ANIME: 'Anime',
+    MOVIE: 'Movies',
+    DOCUMENTARY: 'Documentaries',
+    CHN_ANIME: 'Chinese Animation',
+    TV: 'TV Dramas',
+    VARIETY: 'Variety Shows',
+    COURSE: 'Courses',
+    MALL_COURSE: 'Mall Courses',
+    WEEKLY: 'Weekly Picks',
+    COLLECTION_LIST: 'Collection',
+    FAVORITES: 'Favorites',
+    PROFILE: 'Profile',
+    WATCH_LATER: 'Watch Later',
+    HISTORY: 'History',
+    AUDIO: 'Music',
+  },
+
   column: {
     number: 'No.',
     title: 'Title',

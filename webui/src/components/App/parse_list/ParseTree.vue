@@ -207,9 +207,12 @@ function isMatch(node: { title?: string }): boolean {
               </span>
               <span v-else class="chevron is-empty"></span>
 
+              <!-- 19 而不是默认的 18：树形列表那个由 tree_view.py 的委托手画，
+                   库里它跟普通复选框本来就差 1px -->
               <fluentCheckBox
                 :state="stateOf(rowId)"
                 :label="node.title"
+                :size="19"
                 @change="(checked: boolean) => store.setChecked(rowId, checked)"
               />
             </template>

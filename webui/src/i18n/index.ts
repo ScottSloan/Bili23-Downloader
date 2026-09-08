@@ -134,6 +134,26 @@ export function columnName(key: string): string {
 }
 
 /**
+ * 解析类型的名字
+ *
+ * 后端下发的是 `USER_UPLOADS`、`ANIME` 这样的**稳定键**（`Translator.EPISODE_TYPE`
+ * 的键），不是译好的文案 —— 服务端进程里没有 Qt 的翻译函数，那边拿到的一律是英文源串
+ * （D12）。所以翻译在这边做，键用它给的那个：那些键是内部枚举，比英文措辞稳定得多。
+ *
+ * 认不出来就原样显示。B 站加了新分类时，看到一个大写的键至少还知道是哪一类，
+ * 比显示空白强
+ */
+export function episodeTypeName(key: string): string {
+  if (!key) {
+    return ''
+  }
+
+  const text = t(`episodeType.${key}`)
+
+  return text === `episodeType.${key}` ? key : text
+}
+
+/**
  * 数据标签（画质 / 音质 / 编码 / 字幕对齐 / 命名规则类型）
  *
  * **不用后端给的 label。** 服务端进程里没装 Qt 的翻译函数（D12：那套是桌面版的），

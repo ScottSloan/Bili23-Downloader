@@ -17,7 +17,7 @@ import type { PreviewResult } from '@/api'
 import { t, mediaLabel } from '@/i18n'
 import pushButton from '@/components/Fluent/components/widgets/button/PushButton.vue'
 import primaryPushButton from '@/components/Fluent/components/widgets/button/PrimaryPushButton.vue'
-import transparentCheckBox from '@/components/Fluent/components/widgets/checkbox/TransparentCheckBox.vue'
+import fluentCheckBox from '@/components/Fluent/components/widgets/checkbox/CheckBox.vue'
 import comboBox from '@/components/Fluent/components/widgets/combo_box/ComboBox.vue'
 import fluentDialog from '@/components/Fluent/components/dialog/FluentDialog.vue'
 
@@ -186,22 +186,26 @@ async function confirm() {
       <div class="extras">
         <span class="extras-label">{{ t('download.extras') }}</span>
 
-        <label class="extra">
-          <transparentCheckBox v-model:checked="extras.danmaku" />
-          <span>{{ t('download.danmaku') }}</span>
-        </label>
-        <label class="extra">
-          <transparentCheckBox v-model:checked="extras.subtitle" />
-          <span>{{ t('download.subtitle') }}</span>
-        </label>
-        <label class="extra">
-          <transparentCheckBox v-model:checked="extras.cover" />
-          <span>{{ t('download.cover') }}</span>
-        </label>
-        <label class="extra">
-          <transparentCheckBox v-model:checked="extras.metadata" />
-          <span>{{ t('download.metadata') }}</span>
-        </label>
+        <fluentCheckBox
+          :state="extras.danmaku ? 2 : 0"
+          :text="t('download.danmaku')"
+          @change="(checked: boolean) => (extras.danmaku = checked)"
+        />
+        <fluentCheckBox
+          :state="extras.subtitle ? 2 : 0"
+          :text="t('download.subtitle')"
+          @change="(checked: boolean) => (extras.subtitle = checked)"
+        />
+        <fluentCheckBox
+          :state="extras.cover ? 2 : 0"
+          :text="t('download.cover')"
+          @change="(checked: boolean) => (extras.cover = checked)"
+        />
+        <fluentCheckBox
+          :state="extras.metadata ? 2 : 0"
+          :text="t('download.metadata')"
+          @change="(checked: boolean) => (extras.metadata = checked)"
+        />
       </div>
     </template>
 
@@ -248,7 +252,8 @@ async function confirm() {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 4px 12px;
+  /* 行距 4、项距 16：桌面版这一排是 QHBoxLayout 的默认间距 */
+  gap: 4px 16px;
   font-size: 13px;
   color: var(--text-primary);
 }
@@ -259,10 +264,5 @@ async function confirm() {
   font-size: 12px;
 }
 
-.extra {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  cursor: pointer;
-}
+/* .extra 那条没了：间距、手型、文字都归 CheckBox 自己管（qss 的 spacing 8） */
 </style>

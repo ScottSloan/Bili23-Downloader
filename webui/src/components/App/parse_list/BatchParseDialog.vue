@@ -19,7 +19,7 @@ import { computed, ref, watch } from 'vue'
 import fluentDialog from '@/components/Fluent/components/dialog/FluentDialog.vue'
 import pushButton from '@/components/Fluent/components/widgets/button/PushButton.vue'
 import primaryPushButton from '@/components/Fluent/components/widgets/button/PrimaryPushButton.vue'
-import transparentCheckBox from '@/components/Fluent/components/widgets/checkbox/TransparentCheckBox.vue'
+import fluentCheckBox from '@/components/Fluent/components/widgets/checkbox/CheckBox.vue'
 import { t } from '@/i18n'
 
 const props = defineProps<{
@@ -95,10 +95,12 @@ function submit() {
       @input="error = ''"
     ></textarea>
 
-    <label class="auto-add">
-      <transparentCheckBox v-model:checked="autoAddChecked" />
-      <span>{{ t('parse.batchParse.autoAdd') }}</span>
-    </label>
+    <fluentCheckBox
+      class="auto-add"
+      :state="autoAddChecked ? 2 : 0"
+      :text="t('parse.batchParse.autoAdd')"
+      @change="(checked: boolean) => (autoAddChecked = checked)"
+    />
 
     <p v-if="error" class="error" role="alert">{{ error }}</p>
 
@@ -156,12 +158,9 @@ function submit() {
   color: var(--text-placeholder);
 }
 
+/* 间距与手型归 CheckBox 自己管，这里只管它在对话框里排在哪 */
 .auto-add {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 14px;
-  cursor: pointer;
+  align-self: flex-start;
 }
 
 .error {

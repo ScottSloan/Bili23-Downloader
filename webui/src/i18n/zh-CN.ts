@@ -38,6 +38,8 @@ export default {
     submitting: '解析中',
     empty: '解析结果会显示在这里。',
     summary: '{category}（共 {total} 项，已选 {checked} 项）',
+    // 一条都没勾时用它 —— 「已选 0 项」是纯噪声
+    summaryPlain: '{category}（共 {total} 项）',
     mediaUnavailable: '媒体信息不可用（{reason}），暂时无法下载',
     download: '下载选中项',
     nothingChecked: '没有勾选任何内容。',
@@ -510,6 +512,29 @@ export default {
       80: '每周必看',
       90: '音乐',
     },
+  },
+
+  // 解析类型。**键是后端给的稳定取值**（`EPISODE_TYPE` 的键），不是英文串 ——
+  // 服务端进程里没有 Qt 的翻译函数，它下发的一律是 `USER_UPLOADS` 这样的裸键（D12）。
+  // 译文抄自 src/res/i18n/bili23.zh_CN.ts 的 EPISODE_TYPE 段
+  episodeType: {
+    USER_UPLOADS: '投稿视频',
+    INTERACTIVE_VIDEO: '互动视频',
+    ANIME: '番剧',
+    MOVIE: '电影',
+    DOCUMENTARY: '纪录片',
+    CHN_ANIME: '国创',
+    TV: '电视剧',
+    VARIETY: '综艺',
+    COURSE: '课程',
+    MALL_COURSE: '会员购课程',
+    WEEKLY: '每周必看',
+    COLLECTION_LIST: '合集',
+    FAVORITES: '收藏夹',
+    PROFILE: '个人空间',
+    WATCH_LATER: '稍后再看',
+    HISTORY: '历史记录',
+    AUDIO: '音乐',
   },
 
   column: {

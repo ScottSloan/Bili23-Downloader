@@ -16,7 +16,7 @@ import { useParseStore } from '@/stores/parseStore'
 import { useSettingsStore } from '@/stores/settingsStore'
 import { useToastStore } from '@/stores/toastStore'
 import { tasks as tasksApi, ApiError } from '@/api'
-import { t } from '@/i18n'
+import { t, episodeTypeName } from '@/i18n'
 
 const router = useRouter()
 const store = useParseStore()
@@ -239,13 +239,19 @@ void store.loadColumns()
       <span v-if="store.mediaError" class="status error">
         {{ t('parse.mediaUnavailable', { reason: store.mediaError }) }}
       </span>
+      <!-- 一条都没勾时不显示「已选 0 项」：那句话在这种时候只是噪声 -->
       <span v-else-if="store.total" class="status">
         {{
-          t('parse.summary', {
-            category: store.category,
-            total: store.total,
-            checked: store.checkedCount,
-          })
+          store.checkedCount
+            ? t('parse.summary', {
+                category: episodeTypeName(store.category),
+                total: store.total,
+                checked: store.checkedCount,
+              })
+            : t('parse.summaryPlain', {
+                category: episodeTypeName(store.category),
+                total: store.total,
+              })
         }}
       </span>
 

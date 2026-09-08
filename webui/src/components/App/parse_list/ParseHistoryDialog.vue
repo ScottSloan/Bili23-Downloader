@@ -14,7 +14,7 @@ import fluentDialog from '@/components/Fluent/components/dialog/FluentDialog.vue
 import pushButton from '@/components/Fluent/components/widgets/button/PushButton.vue'
 import transparentToolButton from '@/components/Fluent/components/widgets/button/TransparentToolButton.vue'
 import { parse as parseApi, ApiError } from '@/api'
-import { t } from '@/i18n'
+import { t, episodeTypeName } from '@/i18n'
 
 interface HistoryEntry {
   history_id: string
@@ -139,7 +139,7 @@ function formatTime(seconds: number): string {
                 {{ entry.title || entry.url }}
               </button>
             </td>
-            <td class="col-type">{{ entry.type }}</td>
+            <td class="col-type">{{ episodeTypeName(entry.type) }}</td>
             <td class="col-time">{{ formatTime(entry.created_time) }}</td>
             <td class="col-actions">
               <transparentToolButton
