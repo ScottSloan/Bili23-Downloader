@@ -109,6 +109,13 @@ interface ParseState {
   searchKeyword: string
   /** 批量解析的进度。null 表示没在跑 */
   batch: { done: number; total: number; failed: number } | null
+  /**
+   * 当前选中的行
+   *
+   * 与勾选是两回事：勾选决定下载哪些，选中只是「光标停在哪一行」，
+   * 桌面版靠它画左边那道竖条与右键菜单的作用对象（`SingleSelection`）
+   */
+  selected: string
   _nodes: Map<string, ParseNode>
   _parents: Map<string, string | null>
 }
@@ -138,6 +145,7 @@ export const useParseStore = defineStore('parse', {
     extra: {},
     searchKeyword: '',
     batch: null,
+    selected: '',
 
     _nodes: new Map(),
     _parents: new Map(),
@@ -203,6 +211,9 @@ export const useParseStore = defineStore('parse', {
 
       // 上一次的筛选词跟着结果一起作废：换了一棵树，高亮的还是旧的命中项就成了噪声
       this.searchKeyword = ''
+
+      // 选中的行同理 —— id 是位置路径，换棵树之后同一个 id 指的是另一集
+      this.selected = ''
 
       const { nodes, parents } = indexTree(this.tree)
 

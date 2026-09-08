@@ -189,6 +189,16 @@ def serialize_node(node: TreeItem) -> dict:
         "badge": node.badge,
         "cover": node.cover,
         "duration": node.duration,
+        # 时间三兄弟外加 `dyn_time`。
+        #
+        # **`dyn_time` 必须由这边给**：它是 `TreeItem` 上的属性，按 Attribute 位决定
+        # 该显示哪一个（收藏夹看收藏时间、历史记录看观看时间、其余看发布时间）。
+        # 让前端自己「哪个有值用哪个」看似等价，实则不是 —— 收藏夹的条目两个时间都有，
+        # 那样会显示成发布时间
+        "pubtime": node.pubtime,
+        "favtime": node.favtime,
+        "viewtime": node.viewtime,
+        "dyn_time": node.dyn_time,
         "attribute": int(node.attribute),
         "attributes": attribute_names(node.attribute),
         "is_node": bool(node.attribute & Attribute.TREE_NODE_BIT),

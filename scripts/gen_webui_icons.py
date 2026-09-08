@@ -58,6 +58,13 @@ ICONS = {
     "quietHours":        ":/qfluentwidgets/images/icons/QuietHours_black.svg",
     "constract":         ":/qfluentwidgets/images/icons/Constract_black.svg",
     "update":            ":/qfluentwidgets/images/icons/Update_black.svg",
+
+    # 解析列表的复选框里那个勾与横杠。
+    #
+    # 树的展开箭头没有取过来：资源里那两个的图形只占了 6000 单位视口的一小角，
+    # 缩到 9px 渲染出来是个点。那本来就是一个普通的 V 形，直接在组件里画更省事
+    "checkAccept":       ":/qfluentwidgets/images/check_box/Accept_white.svg",
+    "checkPartial":      ":/qfluentwidgets/images/check_box/PartialAccept_white.svg",
     "history":           ":/qfluentwidgets/images/icons/History_black.svg",
 
     # 本项目补的（ExtendedFluentIcon）
@@ -113,9 +120,14 @@ def extract(source: str, recolor: bool = True) -> tuple:
     box = re.sub(r"\s+", " ", box).strip()
 
     if recolor:
-        # 颜色交给 currentColor
-        body = re.sub(r'(fill|stroke)\s*=\s*"#0{3,8}"', r'\1="currentColor"', body, flags = re.I)
-        body = re.sub(r'(fill|stroke)\s*=\s*"black"', r'\1="currentColor"', body, flags = re.I)
+        # 颜色一律交给 currentColor。
+        #
+        # **不能只替换黑色**：这批里有画成 #383838 的（树的展开箭头）、也有画成
+        # #ffffff 的（复选框里的勾，原本画在主题色底上）。漏掉哪个，那个图标就会在
+        # 某个主题下变成一团看不见的东西 —— 而且不报错。
+        # 这张表本来就叫「单色图标」，整体换掉正是它的语义
+        body = re.sub(r'(fill|stroke)\s*=\s*"(#[0-9a-fA-F]{3,8}|black|white)"',
+                      r'\1="currentColor"', body)
 
     body = re.sub(r"<!--.*?-->", "", body, flags = re.S)
     # 标签之间的换行与缩进纯属体积

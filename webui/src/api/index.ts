@@ -41,7 +41,12 @@ export interface ParseNode {
   badge: string
   cover: string
   duration: number
-  /** 发布 / 收藏 / 观看时间。按来源只有其中一个有值，列表里合成一列显示 */
+  /**
+   * 发布 / 收藏 / 观看时间，秒级时间戳
+   *
+   * **不要假设「只有一个有值」** —— 收藏夹的条目发布时间与收藏时间都有。
+   * 列表那一列该显示哪个，看下面的 dyn_time
+   */
   pubtime?: number
   favtime?: number
   viewtime?: number
@@ -53,6 +58,13 @@ export interface ParseNode {
   is_node: boolean
   checked: boolean
   children: ParseNode[]
+  /**
+   * 这一列该显示的时间
+   *
+   * **由后端按 Attribute 位挑好**（收藏夹看收藏时间、历史记录看观看时间、
+   * 其余看发布时间），前端不要自己在三个里面挑 —— 收藏夹的条目两个时间都有值
+   */
+  dyn_time?: number
   /** 只有叶子有。创建下载任务时原样回传，不必自己拼 */
   episode?: Record<string, unknown>
 }

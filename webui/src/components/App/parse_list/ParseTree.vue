@@ -1,14 +1,26 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import type { ComponentPublicInstance } from 'vue'
 import { useVirtualizer } from '@tanstack/vue-virtual'
 import type { VirtualItem } from '@tanstack/vue-virtual'
-import { useParseStore, CHECKED, PARTIAL } from '@/stores/parseStore'
+import { useParseStore } from '@/stores/parseStore'
+import { useSettingsStore } from '@/stores/settingsStore'
+import fluentCheckBox from '@/components/Fluent/components/widgets/checkbox/CheckBox.vue'
 import { cellText } from './formatters'
 import type { CheckState, ParseNode } from '@/stores/parseStore'
 import { t, columnName } from '@/i18n'
 
 const store = useParseStore()
+const settingsStore = useSettingsStore()
+
+/**
+ * 隔行换色
+ *
+ * 桌面版由 `parse_list_alternate_row_color` 控制（`tree_view.py` 的
+ * `update_alternate_row_color`），取值也照它：浅色 5% 黑、深色 8% 白。
+ * 配置读不回来时按关处理 —— 多一条底纹不如没有
+ */
+const alternate = computed(() => Boolean(settingsStore.value('parse_list_alternate_row_color')))
+
 
 // 用 CSS grid 列宽复刻 GUI 的列配置：标题列吃掉剩余空间，其余按配置的像素宽度
 const gridTemplate = computed(() =>
@@ -40,18 +52,26 @@ const bodyRef = ref<HTMLElement | null>(null)
 // 行高的初始估算值。真实行高取决于字体回退（Segoe UI / 微软雅黑 / PingFang 各不相同）、
 // 浏览器缩放，以及行内徽标的高度，没法在代码里写死，所以这个常量只作兜底：
 // 首屏量到真实行高后立刻被覆盖，见 measureRow
-const ESTIMATED_ROW_HEIGHT = 30
-
-const rowHeight = ref(ESTIMATED_ROW_HEIGHT)
-let rowHeightSettled = false
+/**
+ * 行高
+ *
+ * 桌面版 `setUniformRowHeights(True)`，行高是齐的；这边行也定死成 34
+ * （`QTreeView::item` 的 padding 4 + 上下 margin 各 2 + 19px 复选框撑起来的内容高）。
+ *
+ * **因此不再逐行测量。** 之前用 `measureElement` 量真实行高，量到的结果会分批到达，
+ * 中间那些帧里 virtualizer 手上是一份「前面几行高度为 0」的表，于是窗口算到了列表中段
+ * —— 表现为解析完成的一瞬间列表从第十几行开始画，上面一片空白，而且不会自己恢复
+ * （scrollTop 本来就是 0，不会触发 scroll 事件去重算）。行高既然是定的，
+ * 量它没有任何收益，只带来这个毛病。
+ */
+const ROW_HEIGHT = 34
 
 const virtualizer = useVirtualizer<HTMLElement, HTMLElement>(
   computed(() => ({
     count: store.rows.length,
     getScrollElement: () => bodyRef.value,
-    estimateSize: () => rowHeight.value,
-    // 用节点 id 而不是下标做键：展开 / 折叠会让同一个节点换下标，
-    // 以 id 为键时库内的行高缓存能跟着节点走，折叠后再展开不会拿错行高
+    estimateSize: () => ROW_HEIGHT,
+    // 用节点 id 而不是下标做键：展开 / 折叠会让同一个节点换下标
     getItemKey: (index: number) => store.rows[index]?.id ?? index,
     overscan: 10,
   })),
@@ -84,24 +104,6 @@ const virtualRows = computed<VirtualRow[]>(() => {
 // 撑高层的高度。滚动条长度靠它体现真实行数，不能省
 const totalSize = computed(() => virtualizer.value.getTotalSize())
 
-// 行的实测交给库自己做（它内部用 ResizeObserver，按 data-index 定位是哪一行），
-// 顺带把第一次量到的高度回填给 estimateSize。
-//
-// 回填这一步不是多余的：没被渲染过的行一律按估算值累加偏移，估算值哪怕只差 1px，
-// 1376 行累计下来也有上千像素，表现为滚动条长度随滚动来回伸缩。只取第一次的结果
-// 并就此定死，是为了避免个别带徽标的行把估算值带偏、引起反复的选项变更。
-function measureRow(el: Element | ComponentPublicInstance | null) {
-  virtualizer.value.measureElement(el as HTMLElement | null)
-
-  if (!rowHeightSettled && el instanceof HTMLElement) {
-    const height = el.getBoundingClientRect().height
-
-    if (height > 0) {
-      rowHeightSettled = true
-      rowHeight.value = height
-    }
-  }
-}
 
 // 换了一批解析结果就回到顶部。虚拟滚动下这一步省不得：若上次停在第 1000 行，
 // 新结果只有几行时撑高层会瞬间变矮，浏览器把 scrollTop 夹回 0 却不保证抛出 scroll
@@ -129,9 +131,6 @@ function isMatch(node: { title?: string }): boolean {
   return (node.title || '').toLowerCase().includes(store.searchKeyword.toLowerCase())
 }
 
-function onToggle(id: string, event: Event) {
-  store.setChecked(id, (event.target as HTMLInputElement).checked)
-}
 </script>
 
 <template>
@@ -149,7 +148,6 @@ function onToggle(id: string, event: Event) {
         <div
           v-for="{ item, node, depth, id: rowId } in virtualRows"
           :key="rowId"
-          :ref="measureRow"
           :data-index="item.index"
           class="tree-row"
           :class="{
@@ -157,33 +155,49 @@ function onToggle(id: string, event: Event) {
             'is-reparse': node.attributes.includes('need_parse_bit'),
             'is-downloaded': store.downloaded.has(rowId),
             'is-match': isMatch(node),
+            'is-selected': store.selected === rowId,
+            'is-odd': alternate && item.index % 2 === 1,
           }"
           :style="{
             gridTemplateColumns: gridTemplate,
             transform: `translateY(${item.start}px)`,
           }"
+          @click="store.selected = rowId"
         >
           <div
             v-for="(column, index) in store.visibleColumns"
             :key="column.key"
             class="body-cell"
-            :style="index === 0 ? { paddingLeft: `${depth * 20 + 8}px` } : null"
+            :style="index === 0 ? { paddingLeft: `${depth * 20 + 4}px` } : null"
           >
             <template v-if="index === 0">
+              <!-- 收起时朝右、展开时朝下。资源里那两个箭头的图形只占视口一小角，
+                   缩到 9px 是个点，所以自己画 -->
               <span
+                v-if="node.children?.length"
                 class="chevron"
-                :class="{ open: store.expanded.has(rowId), hidden: !node.children }"
-                @click="store.toggleExpanded(rowId)"
+                :class="{ 'is-open': store.expanded.has(rowId) }"
+                role="button"
+                :aria-expanded="store.expanded.has(rowId)"
+                @click.stop="store.toggleExpanded(rowId)"
               >
-                &#9656;
+                <svg viewBox="0 0 12 12" aria-hidden="true">
+                  <path
+                    d="M4.5 2.5 L8.5 6 L4.5 9.5"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.3"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
               </span>
+              <span v-else class="chevron is-empty"></span>
 
-              <input
-                type="checkbox"
-                class="row-check"
-                :checked="stateOf(rowId) === CHECKED"
-                :indeterminate="stateOf(rowId) === PARTIAL"
-                @change="onToggle(rowId, $event)"
+              <fluentCheckBox
+                :state="stateOf(rowId)"
+                :label="node.title"
+                @change="(checked: boolean) => store.setChecked(rowId, checked)"
               />
             </template>
 
@@ -250,10 +264,16 @@ function onToggle(id: string, event: Event) {
   width: 100%;
 }
 
+/*
+  行高 34：桌面版是 `QTreeView::item` 的 padding 4 + 上下 margin 各 2，
+  再加上 19px 的复选框撑起来的内容高。`setUniformRowHeights(True)` 那边行高是齐的，
+  这里也写死，顺带让虚拟滚动不必逐行测量
+*/
 .tree-row {
-  padding: 5px 4px;
-  border-radius: 4px;
+  height: 34px;
+  padding: 0 4px;
   user-select: none;
+  cursor: default;
   /*
     用 left/right 而不是 width: 100% 来横向铺满：本项目没有全局的
     box-sizing: border-box，width: 100% 会把 4px 的左右内边距加到外面去，
@@ -265,8 +285,54 @@ function onToggle(id: string, event: Event) {
   right: 0;
 }
 
-.tree-row:hover {
-  background-color: var(--subtle-fill-secondary);
+/*
+  悬停与选中的底色画在伪元素上，上下各缩 2px、圆角 4 —— 与
+  `TreeItemDelegate._drawBackground` 一致（那边是 top+2、height-4、radius 4）。
+  画在 .tree-row 自己身上的话，底色会顶满行高，两行之间连成一片
+*/
+.tree-row::before {
+  content: '';
+  position: absolute;
+  left: 4px;
+  right: 0;
+  top: 2px;
+  bottom: 2px;
+  border-radius: 4px;
+  pointer-events: none;
+  background-color: transparent;
+}
+
+.tree-row:hover::before,
+.tree-row.is-selected::before {
+  background-color: var(--tree-row-highlight);
+}
+
+/* 选中行左边那道竖条（_drawIndicator：宽 3、圆角 1.5、主题色） */
+.tree-row.is-selected::after {
+  content: '';
+  position: absolute;
+  left: 4px;
+  top: 9px;
+  bottom: 9px;
+  width: 3px;
+  border-radius: 1.5px;
+  pointer-events: none;
+  background-color: var(--primary-color);
+}
+
+/* 隔行换色。压在悬停底色下面，所以用单独一层 */
+.tree-row.is-odd {
+  background-color: var(--tree-row-alternate);
+}
+
+.parse-tree {
+  --tree-row-highlight: rgba(0, 0, 0, 0.035);
+  --tree-row-alternate: rgba(0, 0, 0, 0.05);
+}
+
+:root[data-theme='dark'] .parse-tree {
+  --tree-row-highlight: rgba(255, 255, 255, 0.035);
+  --tree-row-alternate: rgba(255, 255, 255, 0.08);
 }
 
 .tree-row.is-node {
@@ -299,6 +365,14 @@ function onToggle(id: string, event: Event) {
   box-sizing: border-box;
 }
 
+/* 内容压在行底色（::before）之上 */
+.body-cell {
+  position: relative;
+  z-index: 1;
+  /* 行内文字 13px，与桌面版 delegate 的 getFont(13) 一致 */
+  font-size: 13px;
+}
+
 /* 表头文字居中，正文靠左 —— 与桌面版 QHeaderView 的默认对齐一致 */
 .header-cell {
   justify-content: center;
@@ -318,27 +392,39 @@ function onToggle(id: string, event: Event) {
 
 .chevron {
   flex: 0 0 auto;
-  width: 14px;
-  text-align: center;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  transition: transform 0.15s ease;
-  color: var(--text-tertiary);
+  border-radius: 4px;
+  color: var(--text-secondary);
 }
 
-.chevron.open {
+.chevron svg {
+  width: 11px;
+  height: 11px;
+  transition: transform 0.15s ease;
+}
+
+.chevron.is-open svg {
   transform: rotate(90deg);
 }
 
-.chevron.hidden {
-  visibility: hidden;
+.chevron:hover {
+  background-color: var(--subtle-fill-tertiary);
+}
+
+/* 没有子节点的行也要占住这一格，否则同一层的复选框会左右错开 */
+.chevron.is-empty {
   cursor: default;
 }
 
-.row-check {
-  flex: 0 0 auto;
-  margin: 0;
-  accent-color: var(--primary-color);
+.chevron.is-empty:hover {
+  background-color: transparent;
 }
+
 
 .tag {
   flex: 0 0 auto;
