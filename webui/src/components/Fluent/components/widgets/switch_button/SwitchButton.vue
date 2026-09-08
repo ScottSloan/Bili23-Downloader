@@ -69,7 +69,9 @@ function handleChange(event: Event) {
 }
 
 /* 输入框只保留功能，视觉全交给 .track —— 但不能用 display:none，
-   那会让它从无障碍树和 Tab 序里一起消失 */
+   那会让它从无障碍树和 Tab 序里一起消失。
+   下面一律用 `~` 而不是 `+`：文字那一段（.state）夹在 input 与 .track 中间，
+   相邻兄弟选择器会全部落空 —— 表现是开关无论开关都画成灰色的关闭态 */
 .fluent-switch input {
   position: absolute;
   inset: 0;
@@ -130,49 +132,49 @@ function handleChange(event: Event) {
 }
 
 /* ---- 打开 ---- */
-.fluent-switch input:checked + .track {
+.fluent-switch input:checked ~ .track {
   background-color: var(--primary-color);
   border-color: var(--primary-color);
 }
 
-.fluent-switch input:checked + .track .thumb {
+.fluent-switch input:checked ~ .track .thumb {
   background-color: var(--text-on-accent);
   transform: translateX(20px);
 }
 
-.fluent-switch:active:not(.is-disabled) input:checked + .track .thumb {
+.fluent-switch:active:not(.is-disabled) input:checked ~ .track .thumb {
   /* 滑块变宽后右端会越界，位移相应减去多出来的宽度 */
   transform: translateX(15px);
 }
 
-.fluent-switch:hover input:checked + .track {
+.fluent-switch:hover input:checked ~ .track {
   background-color: var(--primary-color-light-1);
   border-color: var(--primary-color-light-1);
 }
 
 /* ---- 键盘焦点：双环，与 PushButton 同一套 ---- */
-.fluent-switch input:focus-visible + .track {
+.fluent-switch input:focus-visible ~ .track {
   outline: 2px solid var(--focus-stroke-outer);
   outline-offset: 2px;
   box-shadow: 0 0 0 1px var(--focus-stroke-inner);
 }
 
 /* ---- 禁用 ---- */
-.fluent-switch input:disabled + .track {
+.fluent-switch input:disabled ~ .track {
   background-color: var(--control-fill-tertiary);
   border-color: var(--accent-fill-disabled);
 }
 
-.fluent-switch input:disabled + .track .thumb {
+.fluent-switch input:disabled ~ .track .thumb {
   background-color: var(--text-disabled);
 }
 
-.fluent-switch input:checked:disabled + .track {
+.fluent-switch input:checked:disabled ~ .track {
   background-color: var(--accent-fill-disabled);
   border-color: var(--accent-fill-disabled);
 }
 
-.fluent-switch input:checked:disabled + .track .thumb {
+.fluent-switch input:checked:disabled ~ .track .thumb {
   background-color: var(--text-on-accent-disabled);
 }
 </style>

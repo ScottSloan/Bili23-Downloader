@@ -7,13 +7,26 @@
 // **所有操作都不在本地先改状态**，等服务端的事件推回来。本地先改的话，
 // 操作失败时界面已经变了，而用户不会知道。
 
-import { computed, onActivated } from 'vue'
+import { computed, onActivated, watch } from 'vue'
 import { useTaskStore } from '@/stores/taskStore'
+import { useToastStore } from '@/stores/toastStore'
 import { t } from '@/i18n'
 import pushButton from '@/components/Fluent/components/widgets/button/PushButton.vue'
 import transparentCheckBox from '@/components/Fluent/components/widgets/checkbox/TransparentCheckBox.vue'
 
 const store = useTaskStore()
+const toast = useToastStore()
+
+// 任务列表的错误也走气泡。这一页大部分操作（暂停 / 重试 / 删除）是即发即忘的，
+// 失败了没有别的地方会说
+watch(
+  () => store.error,
+  (message) => {
+    if (message) {
+      toast.error(t('toast.loadFailed'), message)
+    }
+  },
+)
 
 // 任务流的起停归 App.vue 管（跟着登录态），这里不再自己开关 ——
 // 导航栏的下载数角标要求它在任何页面上都是新的。
@@ -89,7 +102,6 @@ function statusText(status: string): string {
       />
     </div>
 
-    <p v-if="store.error" class="error" role="alert">{{ store.error }}</p>
 
     <div class="task-list">
       <p v-if="!store.downloading.length && !store.completed.length" class="empty">

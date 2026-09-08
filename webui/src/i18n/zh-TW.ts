@@ -10,6 +10,15 @@ export default {
     settings: '設定',
   },
 
+  // 气泡提示的标题。桌面版每条 InfoBar 都有标题 + 正文两段，标题写「发生了什么」
+  toast: {
+    parseFailed: '解析失敗',
+    saveFailed: '儲存失敗',
+    loadFailed: '載入失敗',
+    done: '完成',
+    notice: '提示',
+  },
+
   parse: {
     placeholder: '連結 / av / BV / ep / ss / md / 收藏夾 / 個人空間',
     submit: '解析',

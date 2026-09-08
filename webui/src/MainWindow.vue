@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import titleBar from '@/components/App/TitleBar.vue'
+import infoBarHost from '@/components/Fluent/components/info_bar/InfoBarHost.vue'
 import navigationBar from '@/components/Fluent/components/navigation/NavigationBar.vue'
 import navigationPanel from './components/Fluent/components/navigation/NavigationPanel.vue'
 import navigationBarButton from './components/Fluent/components/navigation/NavigationBarButton.vue'
@@ -27,6 +28,9 @@ const activeNavIndex = computed(() => {
 
 <template>
   <div class="main-interface">
+    <!-- 气泡提示挂在最外层：它 teleport 到 body，切页不该把正在显示的提示带走 -->
+    <infoBarHost />
+
     <titleBar />
     <div class="main-content">
       <navigationBar :active-index="activeNavIndex">

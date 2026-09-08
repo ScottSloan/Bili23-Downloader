@@ -77,6 +77,12 @@
   --dialog-footer-fill: rgb(243, 243, 243);
   --dialog-footer-stroke: rgb(229, 229, 229);
 
+  /* ---- 浮层（下拉、菜单）---- */
+  /* qfluentwidgets 的 MenuActionListWidget。定义在这里而不是组件里：
+     下拉的浮层 teleport 到了 body 上，拿不到组件那一层的自定义属性 */
+  --flyout-fill: rgb(249, 249, 249);
+  --flyout-stroke: rgba(0, 0, 0, 0.1);
+
   /* ---- 焦点环 ---- */
   /* Fluent 的键盘焦点是双环：外层深色 2px + 内层浅色 1px，
      深浅主题下两层对调，保证在任何背景上都有一层是可见的 */
@@ -130,6 +136,9 @@
   --dialog-stroke: rgb(58, 58, 58);
   --dialog-footer-fill: rgb(32, 32, 32);
   --dialog-footer-stroke: rgb(29, 29, 29);
+
+  --flyout-fill: rgb(43, 43, 43);
+  --flyout-stroke: rgba(255, 255, 255, 0.1);
 
   --focus-stroke-outer: rgb(255, 255, 255);
   --focus-stroke-inner: rgba(0, 0, 0, 0.7);

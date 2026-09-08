@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import fluentLineEdit from '@/components/Fluent/components/widgets/line_edit/LineEdit.vue'
 import primarySplitButton from '@/components/Fluent/components/widgets/button/PrimarySplitButton.vue'
@@ -14,17 +14,29 @@ import fluentIcon from '@/components/Fluent/icons/FluentIcon.vue'
 import downloadOptionsDialog from '@/components/App/DownloadOptionsDialog.vue'
 import { useParseStore } from '@/stores/parseStore'
 import { useSettingsStore } from '@/stores/settingsStore'
+import { useToastStore } from '@/stores/toastStore'
 import { tasks as tasksApi, ApiError } from '@/api'
 import { t } from '@/i18n'
 
 const router = useRouter()
 const store = useParseStore()
 const settingsStore = useSettingsStore()
+const toast = useToastStore()
 const url = ref('')
+
+// 解析失败弹气泡，与桌面版一致（那边是 signal_bus.toast.show 发的 "Parse Failed"）。
+// store 里那份 error 仍然留着 —— 它是「当前这次解析的状态」，气泡只是把它推到眼前
+watch(
+  () => store.error,
+  (message) => {
+    if (message) {
+      toast.error(t('toast.parseFailed'), message)
+    }
+  },
+)
 
 const dialogOpen = ref(false)
 const pendingEpisodes = ref<Record<string, unknown>[]>([])
-const notice = ref('')
 
 // 工具栏那四个按钮各自的对话框。与桌面版 ParseInterface 的 toolbar_layout 一一对应
 const searchOpen = ref(false)
@@ -45,7 +57,6 @@ const batchStopped = ref(false)
 async function onBatchParse({ urls, autoAdd }: { urls: string[]; autoAdd: boolean }) {
   batchParseOpen.value = false
   batchStopped.value = false
-  notice.value = ''
 
   let created = 0
 
@@ -80,9 +91,12 @@ async function onBatchParse({ urls, autoAdd }: { urls: string[]; autoAdd: boolea
     },
   })
 
-  notice.value = autoAdd
-    ? t('parse.batchParse.doneWithTasks', { count: created })
-    : t('parse.batchParse.done', { count: store.total })
+  toast.success(
+    t('toast.done'),
+    autoAdd
+      ? t('parse.batchParse.doneWithTasks', { count: created })
+      : t('parse.batchParse.done', { count: store.total }),
+  )
 }
 
 function onSearch({ keywords, server }: { keywords: string; server: boolean }) {
@@ -96,13 +110,18 @@ function onSearch({ keywords, server }: { keywords: string; server: boolean }) {
 
   const matches = store.searchLocal(keywords)
 
-  notice.value = keywords ? t('parse.search.matches', { count: matches }) : ''
+  if (keywords) {
+    toast.info(t('toast.notice'), t('parse.search.matches', { count: matches }))
+  }
 }
 
 function onBatchSelect(numbers: number[]) {
   batchSelectOpen.value = false
 
-  notice.value = t('parse.batchSelect.selected', { count: store.batchSelect(numbers) })
+  toast.info(
+    t('toast.notice'),
+    t('parse.batchSelect.selected', { count: store.batchSelect(numbers) }),
+  )
 }
 
 /** 历史里点一条：把链接填回输入框并直接解析，省得再点一次 */
@@ -129,13 +148,11 @@ function openGlobalOptions() {
 }
 
 async function openDownload() {
-  notice.value = ''
-
   // 摘取走后端的 /api/parse/episodes：「树节点不算下载项」这条规则只该有一处
   const episodes = await store.checkedEpisodes()
 
   if (!episodes.length) {
-    notice.value = t('parse.nothingChecked')
+    toast.warning(t('toast.notice'), t('parse.nothingChecked'))
 
     return
   }
@@ -162,16 +179,19 @@ async function createDirectly(episodes: Record<string, unknown>[]) {
 
     onCreated(result.created)
   } catch (e) {
-    notice.value = e instanceof ApiError ? e.message : String(e)
+    toast.error(t('toast.parseFailed'), e instanceof ApiError ? e.message : String(e))
   }
 }
 
 function onCreated(count: number) {
   // 建出来的可能比勾选的少（重复下载、需要二次解析的会被后端拦掉），如实说
-  notice.value =
+  toast.show(
+    count > 0 ? 'success' : 'info',
+    t('toast.done'),
     count > 0
       ? t('parse.created', { count, requested: pendingEpisodes.value.length })
-      : t('parse.createdNone')
+      : t('parse.createdNone'),
+  )
 
   // 重新标一遍「已下载」：刚建的这批现在也算了，列表要跟上
   void store.refreshDownloaded()
@@ -216,8 +236,7 @@ void store.loadColumns()
 
     <!-- 与桌面版 toolbar_layout 同一排：左边条目计数，右边四个透明工具按钮 -->
     <div class="status-bar">
-      <span v-if="store.error" class="status error">{{ store.error }}</span>
-      <span v-else-if="store.mediaError" class="status error">
+      <span v-if="store.mediaError" class="status error">
         {{ t('parse.mediaUnavailable', { reason: store.mediaError }) }}
       </span>
       <span v-else-if="store.total" class="status">
@@ -274,8 +293,6 @@ void store.loadColumns()
     <parseTree />
 
     <div v-if="store.total" class="actions">
-      <span v-if="notice" class="notice">{{ notice }}</span>
-
       <span class="flex-stretch" />
 
       <pushButton
@@ -363,8 +380,4 @@ void store.loadColumns()
   padding-top: 8px;
 }
 
-.notice {
-  font-size: 12px;
-  color: var(--text-secondary);
-}
 </style>

@@ -13,9 +13,10 @@
 // 结构化的项（优先级、字幕语言、可浏览目录）各有一个对话框，**统一在这里托管**：
 // 放进 SettingRow 的话，每一行都会带着一个自己永远用不到的对话框。
 
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useSettingsStore } from '@/stores/settingsStore'
 import { useThemeStore } from '@/stores/themeStore'
+import { useToastStore } from '@/stores/toastStore'
 import { t, setLocale, mediaLabel } from '@/i18n'
 import {
   SETTING_GROUPS,
@@ -39,6 +40,18 @@ import pushButton from '@/components/Fluent/components/widgets/button/PushButton
 
 const store = useSettingsStore()
 const themeStore = useThemeStore()
+const toast = useToastStore()
+
+// 保存失败弹气泡。设置页是「改完就存」的，失败要是只在页面上留一行小字，
+// 用户多半已经滚到别处去了
+watch(
+  () => store.error,
+  (message) => {
+    if (message) {
+      toast.error(t('toast.saveFailed'), message)
+    }
+  },
+)
 
 /** 当前打开的是哪一项的对话框。null 表示没开 */
 const openAttr = ref<string | null>(null)
@@ -191,10 +204,6 @@ function summaryOf(spec: SettingSpec): string | undefined {
 <template>
   <div class="page-view">
     <p v-if="store.loading && !store.loaded" class="status">{{ t('settings.loading') }}</p>
-
-    <p v-if="store.error" class="status error" role="alert">
-      {{ t('settings.saveFailed', { message: store.error }) }}
-    </p>
 
     <p v-if="restartNotice" class="status notice">{{ restartNotice }}</p>
 

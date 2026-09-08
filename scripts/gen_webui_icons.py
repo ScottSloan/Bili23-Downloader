@@ -66,6 +66,16 @@ ICONS = {
     "clear":             ":/bili23/icon/light/clear.svg",
 }
 
+# Toast（InfoBar）左边那四个图标。**它们不能换成 currentColor** —— 信息 / 成功 /
+# 警告 / 错误各有自己的颜色，那正是这个控件的语义所在。深浅主题各一份，
+# 因为深色下的配色不是浅色那份调亮，而是另选的（黄 #FCE100、红 #FF99A4）
+THEMED_ICONS = {
+    "info":    "Info",
+    "success": "Success",
+    "warning": "Warning",
+    "error":   "Error",
+}
+
 def read_resource(path: str) -> str:
     from PySide6.QtCore import QFile, QIODevice
 
@@ -80,7 +90,7 @@ def read_resource(path: str) -> str:
     finally:
         file.close()
 
-def extract(source: str) -> tuple:
+def extract(source: str, recolor: bool = True) -> tuple:
     """从 svg 文本里取出 viewBox 与内层内容"""
     match = re.search(r"<svg\b([^>]*)>(.*)</svg>", source, re.S)
 
@@ -98,9 +108,10 @@ def extract(source: str) -> tuple:
     box = view_box.group(1).replace(",", " ")
     box = re.sub(r"\s+", " ", box).strip()
 
-    # 颜色交给 currentColor
-    body = re.sub(r'(fill|stroke)\s*=\s*"#0{3,8}"', r'\1="currentColor"', body, flags = re.I)
-    body = re.sub(r'(fill|stroke)\s*=\s*"black"', r'\1="currentColor"', body, flags = re.I)
+    if recolor:
+        # 颜色交给 currentColor
+        body = re.sub(r'(fill|stroke)\s*=\s*"#0{3,8}"', r'\1="currentColor"', body, flags = re.I)
+        body = re.sub(r'(fill|stroke)\s*=\s*"black"', r'\1="currentColor"', body, flags = re.I)
 
     body = re.sub(r"<!--.*?-->", "", body, flags = re.S)
     # 标签之间的换行与缩进纯属体积
@@ -108,6 +119,10 @@ def extract(source: str) -> tuple:
     body = re.sub(r"\s+", " ", body).strip()
 
     return box, body
+
+def escape(body: str) -> str:
+    """塞进 TS 单引号字符串里"""
+    return body.replace("\\", "\\\\").replace("'", "\\'")
 
 def build() -> str:
     lines = [
@@ -129,7 +144,30 @@ def build() -> str:
 
         lines.append(f"  {name}: {{")
         lines.append(f"    viewBox: '{box}',")
-        lines.append(f"    body: '{body.replace(chr(92), chr(92) * 2).replace(chr(39), chr(92) + chr(39))}',")
+        lines.append(f"    body: '{escape(body)}',")
+        lines.append("  },")
+
+    lines.append("}")
+    lines.append("")
+    lines.append("/**")
+    lines.append(" * Toast 左边那四个图标，深浅主题各一份。")
+    lines.append(" *")
+    lines.append(" * 与上面那张表不同，**这些保留原本的颜色** —— 信息 / 成功 / 警告 / 错误")
+    lines.append(" * 各有自己的色，那正是这个控件的语义所在，不能跟着文字走。")
+    lines.append(" */")
+    lines.append("export const INFO_BAR_ICONS: Record<string, "
+                 "{ light: FluentIconData; dark: FluentIconData }> = {")
+
+    for name, stem in THEMED_ICONS.items():
+        lines.append(f"  {name}: {{")
+
+        for theme in ("light", "dark"):
+            box, body = extract(
+                read_resource(f":/qfluentwidgets/images/info_bar/{stem}_{theme}.svg"),
+                recolor = False)
+
+            lines.append(f"    {theme}: {{ viewBox: '{box}', body: '{escape(body)}' }},")
+
         lines.append("  },")
 
     lines.append("}")
@@ -157,7 +195,8 @@ def main() -> int:
 
     OUTPUT.write_text(content, encoding = "utf-8")
 
-    print(f"已写入 {OUTPUT.relative_to(ROOT)}（{len(ICONS)} 个图标，{len(content)} 字节）")
+    print(f"已写入 {OUTPUT.relative_to(ROOT)}"
+          f"（{len(ICONS)} 个单色图标 + {len(THEMED_ICONS)} 个带色图标，{len(content)} 字节）")
 
     return 0
 
