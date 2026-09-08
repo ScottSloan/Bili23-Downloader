@@ -5,28 +5,12 @@ import sys
 
 # --------- MCP stdio 桥接 ---------
 
-# 只认 stdio 传输的 MCP 客户端（如 Claude Desktop）会把本程序当作服务器拉起，
-# 此时只做 stdio ↔ HTTP 转发，不启动界面。
-#
-# 这段必须排在所有其他逻辑之前：桥接进程不需要 GUI，也就不该为它加载 Qt，
-# 更不该走下面的 Windows 版本检查（能连上的程序本身就跑在受支持的系统上）。
-
 if "--mcp-stdio" in sys.argv:
     from util.mcp.stdio_bridge import run_stdio_bridge
 
     sys.exit(run_stdio_bridge())
 
 # --------- WebUI 分流 ---------
-
-# `--web-ui` 走完全不同的一条路：起 FastAPI 服务，不创建任何窗口。
-#
-# 位置同样要排在界面代码之前 —— 这个进程里**不该出现 QtWidgets 与 qfluentwidgets**，
-# 那是 PLAN 对 S2-8 的验收标准。QtCore / QtGui 按 D16 是允许的（弹幕转 ASS 要 QFontMetrics），
-# 但绝不能依赖 Qt 事件循环，因为那边跑的是 uvicorn 的 asyncio 循环。
-#
-# 也刻意排在下面的 Windows 版本检查之前：那条检查针对的是 Qt 6 的界面，
-# 而 WebUI 不开窗口。**代价**是 Win7 上跑 --web-ui 直到用到 QtGui（弹幕转 ASS）
-# 才会失败，而不是启动时就给提示 —— 这类系统上本就该用 Docker 镜像。
 
 if "--web-ui" in sys.argv:
     from web.entry import run_web_ui
@@ -37,9 +21,6 @@ if "--web-ui" in sys.argv:
 
 # 低于 Windows 10 1809 的系统不支持 QT 6
 
-
-# 标记经过特殊处理、可在 Windows 7 上运行的 PySide 版本。该版本需要在
-# 创建 QApplication 前禁用 DirectWrite，否则 Qt 文本会显示为方框。
 qt_win7_compatible = False
 
 if sys.platform == "win32":

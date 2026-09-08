@@ -63,11 +63,15 @@ zh_TW.UninstallAppRunningError=解除安裝程式偵測到 Bili23 Downloader 正
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Files]
+; 应用源码已经打进 Bili23.exe 的资源段，随可执行文件一同被代码签名覆盖，
+; 因此不再有 _pystand_static.int 与 script 目录可装。
+;
+; 装进去的每个文件都记在 exe 内嵌的完整性清单里，程序启动时逐个核对。
+; 在这里增删文件必须同步重新生成清单，否则装出来的程序会判定自己被篡改
+; 而拒绝启动。
 Source: ".\Bili23-Downloader\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
 Source: ".\Bili23-Downloader\LICENSE"; DestDir: "{app}"; Flags: ignoreversion
-Source: ".\Bili23-Downloader\_pystand_static.int"; DestDir: "{app}"; Flags: ignoreversion
 Source: ".\Bili23-Downloader\bundle\*"; DestDir: "{app}\bundle"; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: ".\Bili23-Downloader\script\*"; DestDir: "{app}\script"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: ".\Bili23-Downloader\runtime\*"; DestDir: "{app}\runtime"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: ".\Bili23-Downloader\site-packages\*"; DestDir: "{app}\site-packages"; Flags: ignoreversion recursesubdirs createallsubdirs
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files

@@ -12,10 +12,6 @@ on:
         description: "Release tag or version name, for example v2.00.3 or v2.00.3-rc1"
         required: true
         type: string
-      build_windows:
-        description: "Build Windows packages"
-        type: boolean
-        default: true
       build_linux:
         description: "Build Linux packages"
         type: boolean
@@ -33,7 +29,6 @@ jobs:
       VERSION_NAME: ${{ steps.set-version.outputs.VERSION_NAME }}
       IS_PRERELEASE: ${{ steps.set-version.outputs.IS_PRERELEASE }}
       RPM_RELEASE: ${{ steps.set-version.outputs.RPM_RELEASE }}
-      BUILD_WINDOWS: ${{ steps.set-targets.outputs.BUILD_WINDOWS }}
       BUILD_LINUX: ${{ steps.set-targets.outputs.BUILD_LINUX }}
       BUILD_MACOS: ${{ steps.set-targets.outputs.BUILD_MACOS }}
     steps:
@@ -68,172 +63,17 @@ jobs:
       - name: Set build targets
         id: set-targets
         env:
-          DEFAULT_BUILD_WINDOWS: "true"
           DEFAULT_BUILD_LINUX: "true"
           DEFAULT_BUILD_MACOS: "true"
         run: |
           if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
-            echo "BUILD_WINDOWS=${{ inputs.build_windows }}" >> $GITHUB_OUTPUT
             echo "BUILD_LINUX=${{ inputs.build_linux }}" >> $GITHUB_OUTPUT
             echo "BUILD_MACOS=${{ inputs.build_macos }}" >> $GITHUB_OUTPUT
           else
-            echo "BUILD_WINDOWS=$DEFAULT_BUILD_WINDOWS" >> $GITHUB_OUTPUT
             echo "BUILD_LINUX=$DEFAULT_BUILD_LINUX" >> $GITHUB_OUTPUT
             echo "BUILD_MACOS=$DEFAULT_BUILD_MACOS" >> $GITHUB_OUTPUT
           fi
 
-  windows-build:
-    if: needs.get-version.outputs.BUILD_WINDOWS == 'true'
-    needs: get-version
-    env:
-      VERSION: ${{ needs.get-version.outputs.VERSION }}
-      VERSION_NAME: ${{ needs.get-version.outputs.VERSION_NAME }}
-      IS_PRERELEASE: ${{ needs.get-version.outputs.IS_PRERELEASE }}
-    outputs:
-      VERSION: ${{ env.VERSION }}
-      VERSION_NAME: ${{ env.VERSION_NAME }}
-      IS_PRERELEASE: ${{ env.IS_PRERELEASE }}
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v6
-
-      - name: Clean up files
-        run: |
-          # 清理不需要的资源文件以减小安装包体积
-          Remove-Item -Path src\res\icon -Recurse -Force
-          Remove-Item -Path src\res\image -Recurse -Force
-          Remove-Item -Path src\res\i18n\bili23.zh_CN.ts -Force
-          Remove-Item -Path src\res\i18n\bili23.zh_TW.ts -Force
-
-      - name: Setup Python
-        uses: actions/setup-python@v6
-        with:
-          python-version: 3.13
-          architecture: x64
-
-      - name: Install dependencies
-        run: |
-          pip install -r requirements.txt
-
-      - name: Update Inno Setup script with version
-        run: |
-          $setupPath = "assets\setup.iss"
-          $content = Get-Content $setupPath -Raw
-          $content = $content -replace '(?m)^#define\s+MyAppVersion\s+".*?"', "#define MyAppVersion `"$env:VERSION`""
-          $content = $content -replace '(?m)^#define\s+MyAppVersionName\s+".*?"', "#define MyAppVersionName `"$env:VERSION_NAME`""
-          [System.IO.File]::WriteAllText((Resolve-Path $setupPath), $content, (New-Object System.Text.UTF8Encoding($false)))
-
-      - name: Install Inno Setup and Chinese language pack
-        run: |
-          # 安装 Inno Setup
-          choco install innosetup --yes --no-progress
-          if ($LASTEXITCODE -ne 0) {
-            throw "Failed to install Inno Setup (exit code: $LASTEXITCODE)"
-          }
-
-          $inno = @(
-            "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
-            "$env:ProgramFiles\Inno Setup 6\ISCC.exe"
-          ) | Where-Object { Test-Path $_ } | Select-Object -First 1
-
-          if (-not $inno) {
-            throw "ISCC.exe was not found after installing Inno Setup"
-          }
-
-          $languageDir = Join-Path (Split-Path $inno) "Languages"
-          New-Item -ItemType Directory -Path $languageDir -Force | Out-Null
-
-          # 简中语言包
-          $lang_zh_cn_url = "https://raw.githubusercontent.com/jrsoftware/issrc/main/Files/Languages/ChineseSimplified.isl"
-          $lang_zh_cn_path = Join-Path $languageDir "ChineseSimplified.isl"
-          curl.exe --fail --location --retry 3 --retry-all-errors --output $lang_zh_cn_path $lang_zh_cn_url
-          if ($LASTEXITCODE -ne 0 -or -not (Test-Path $lang_zh_cn_path)) {
-            throw "Failed to download ChineseSimplified.isl"
-          }
-
-          # 繁中语言包
-          $lang_zh_tw_url = "https://raw.githubusercontent.com/jrsoftware/issrc/main/Files/Languages/ChineseTraditional.isl"
-          $lang_zh_tw_path = Join-Path $languageDir "ChineseTraditional.isl"
-          curl.exe --fail --location --retry 3 --retry-all-errors --output $lang_zh_tw_path $lang_zh_tw_url
-          if ($LASTEXITCODE -ne 0 -or -not (Test-Path $lang_zh_tw_path)) {
-            throw "Failed to download ChineseTraditional.isl"
-          }
-
-          "INNO_COMPILER=$inno" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
-
-      - name: Prepare Windows 10/11 runtime
-        run: |
-          # 下载 Python 静态运行时环境
-          Invoke-WebRequest -Uri "https://github.com/ScottSloan/Python-Static/releases/download/v0.1.7/windows_x64_runtime.zip" -OutFile windows_x64_runtime.zip
-          
-          Expand-Archive windows_x64_runtime.zip -DestinationPath Bili23-Downloader
-
-          New-Item -ItemType Directory -Force -Path Bili23-Downloader\script
-
-          Copy-Item -Path "src\*" -Destination "Bili23-Downloader\script" -Recurse
-
-          python -m compileall Bili23-Downloader
-
-      - name: Package Windows version
-        run: |
-          # 便携版：直接打包为 zip
-          7z a -tzip -mx=9 Bili23-Downloader_${{ env.VERSION_NAME }}_windows_x64_portable.zip Bili23-Downloader\*
-
-          # 安装版：使用 Inno Setup 创建安装程序
-          Copy-Item -Path "assets\setup.iss" -Destination ".\"
-
-          $inno = $env:INNO_COMPILER
-          $script = ".\setup.iss"
-
-          & $inno "$script"
-
-      - name: Upload Windows artifacts
-        uses: actions/upload-artifact@v6
-        with:
-          name: windows-artifacts
-          path: |
-            Bili23-Downloader_${{ env.VERSION_NAME }}_windows_x64_portable.zip
-            Bili23-Downloader_${{ env.VERSION_NAME }}_windows_x64.exe
-
-      - name: Clean up files
-        run: |
-          Remove-Item -Path Bili23-Downloader -Recurse -Force -ErrorAction SilentlyContinue
-          Remove-Item -Path windows_x64_runtime.zip -Force -ErrorAction SilentlyContinue
-          Remove-Item -Path Bili23-Downloader_${{ env.VERSION_NAME }}_windows_x64_portable.zip -Recurse -Force -ErrorAction SilentlyContinue
-          Remove-Item -Path Bili23-Downloader_${{ env.VERSION_NAME }}_windows_x64.exe -Recurse -Force -ErrorAction SilentlyContinue
-
-      - name: Prepare Windows 7 runtime
-        run: |
-          # 下载 Python 静态运行时环境
-          Invoke-WebRequest -Uri "https://github.com/ScottSloan/Python-Static/releases/download/v0.1.7/windows_x64_runtime_for_win7.zip" -OutFile windows_x64_runtime_for_win7.zip
-          
-          Expand-Archive windows_x64_runtime_for_win7.zip -DestinationPath Bili23-Downloader
-
-          New-Item -ItemType Directory -Force -Path Bili23-Downloader\script
-
-          Copy-Item -Path "src\*" -Destination "Bili23-Downloader\script" -Recurse
-
-          python -m compileall Bili23-Downloader
-
-      - name: Package Windows 7 version
-        run: |
-          # 使用 Inno Setup 创建安装程序
-
-          $inno = $env:INNO_COMPILER
-          $script = ".\setup.iss"
-
-          & $inno "$script"
-
-          # 重命名文件
-          Rename-Item -Path "Bili23-Downloader_${{ env.VERSION_NAME }}_windows_x64.exe" -NewName "Bili23-Downloader_${{ env.VERSION_NAME }}_windows_x64_for_win7.exe"
-
-      - name: Upload Windows artifacts
-        uses: actions/upload-artifact@v6
-        with:
-          name: windows-artifacts-for-win7
-          path: |
-            Bili23-Downloader_${{ env.VERSION_NAME }}_windows_x64_for_win7.exe
-  
   linux-build:
     if: needs.get-version.outputs.BUILD_LINUX == 'true'
     needs: get-version
@@ -700,7 +540,7 @@ jobs:
   
   publish:
     if: github.event_name != 'workflow_dispatch'
-    needs: [get-version, windows-build, linux-build, macos-build]
+    needs: [get-version, linux-build, macos-build]
     env:
       VERSION_NAME: ${{ needs.get-version.outputs.VERSION_NAME }}
       IS_PRERELEASE: ${{ needs.get-version.outputs.IS_PRERELEASE }}
