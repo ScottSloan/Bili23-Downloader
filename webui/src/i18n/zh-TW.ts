@@ -69,6 +69,22 @@ export default {
       actions: '操作',
     },
 
+
+    batchParse: {
+      title: '批次解析',
+      placeholder: '請在此貼上影片連結，每行一條。目前僅支援 av 與 BV 連結。',
+      count: '連結數量：{count}',
+      clear: '清空',
+      autoAdd: '解析完每條連結後自動加入下載清單',
+      start: '開始解析',
+      stop: '停止',
+      noLinks: '請在文字框中貼上影片連結。',
+      invalid: '目前僅支援 av 或 BV 連結。',
+      progress: '正在解析 {done} / {total}…',
+      done: '批次解析完成，清單中共 {count} 項',
+      doneWithTasks: '批次解析完成，已建立 {count} 個任務',
+    },
+
   },
 
   user: {

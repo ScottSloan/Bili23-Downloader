@@ -2,13 +2,15 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import fluentLineEdit from '@/components/Fluent/components/widgets/line_edit/LineEdit.vue'
-import primaryPushButton from '@/components/Fluent/components/widgets/button/PrimaryPushButton.vue'
+import primarySplitButton from '@/components/Fluent/components/widgets/button/PrimarySplitButton.vue'
 import pushButton from '@/components/Fluent/components/widgets/button/PushButton.vue'
 import transparentToolButton from '@/components/Fluent/components/widgets/button/TransparentToolButton.vue'
 import parseTree from '@/components/App/parse_list/ParseTree.vue'
 import searchDialog from '@/components/App/parse_list/SearchDialog.vue'
 import batchSelectDialog from '@/components/App/parse_list/BatchSelectDialog.vue'
 import parseHistoryDialog from '@/components/App/parse_list/ParseHistoryDialog.vue'
+import batchParseDialog from '@/components/App/parse_list/BatchParseDialog.vue'
+import fluentIcon from '@/components/Fluent/icons/FluentIcon.vue'
 import downloadOptionsDialog from '@/components/App/DownloadOptionsDialog.vue'
 import { useParseStore } from '@/stores/parseStore'
 import { useSettingsStore } from '@/stores/settingsStore'
@@ -28,6 +30,60 @@ const notice = ref('')
 const searchOpen = ref(false)
 const batchSelectOpen = ref(false)
 const historyOpen = ref(false)
+const batchParseOpen = ref(false)
+
+// 批量解析中途停下。用 ref 而不是普通变量：模板里给普通 let 赋值不会触发重渲染，
+// 现在没人渲染它，将来给「停止」按钮加个禁用态就会踩到
+const batchStopped = ref(false)
+
+/**
+ * 开始批量解析
+ *
+ * 「自动加入下载列表」交给这里做而不是塞进 store —— 建任务是 store 之外的事。
+ * 不传 options，后端就按全局设置取画质与附加内容，与桌面版那个勾选项的语义一致
+ */
+async function onBatchParse({ urls, autoAdd }: { urls: string[]; autoAdd: boolean }) {
+  batchParseOpen.value = false
+  batchStopped.value = false
+  notice.value = ''
+
+  let created = 0
+
+  await store.parseBatch(urls, {
+    interval: Number(settingsStore.value('auto_parse_interval') ?? 2),
+    shouldStop: () => batchStopped.value,
+    onEach: async (nodes) => {
+      if (!autoAdd) {
+        return
+      }
+
+      // 只取这一条链接刚解析出来的叶子，别把之前几条的又建一遍
+      const episodes = nodes
+        .flatMap(function collect(node): Record<string, unknown>[] {
+          if (node.children?.length) {
+            return node.children.flatMap(collect)
+          }
+
+          return node.episode && !node.is_node ? [node.episode] : []
+        })
+        .filter(Boolean)
+
+      if (!episodes.length) {
+        return
+      }
+
+      try {
+        created += (await tasksApi.create(episodes)).created
+      } catch {
+        // 单条建任务失败不该把整批停下，继续解析后面的
+      }
+    },
+  })
+
+  notice.value = autoAdd
+    ? t('parse.batchParse.doneWithTasks', { count: created })
+    : t('parse.batchParse.done', { count: store.total })
+}
 
 function onSearch({ keywords, server }: { keywords: string; server: boolean }) {
   searchOpen.value = false
@@ -145,14 +201,17 @@ void store.loadColumns()
         class="flex-stretch"
         @submit="submit"
       />
-      <!-- 81px = 原先 content-box 下的 55px 内容宽 + 24px 内边距 + 2px 边框，
-           PushButton 改用 border-box 后的等价值，渲染宽度与改动前一致 -->
-      <primaryPushButton
+      <!-- 与桌面版一样是个拆分按钮：主体解析，箭头拉出「批量解析」 -->
+      <primarySplitButton
         :title="store.loading ? t('parse.submitting') : t('parse.submit')"
         :disabled="store.loading"
-        style="min-width: 81px"
         @click="submit"
-      />
+      >
+        <button type="button" @click="batchParseOpen = true">
+          <fluentIcon name="todo" />
+          <span>{{ t('parse.batchParse.title') }}</span>
+        </button>
+      </primarySplitButton>
     </div>
 
     <!-- 与桌面版 toolbar_layout 同一排：左边条目计数，右边四个透明工具按钮 -->
@@ -171,7 +230,22 @@ void store.loadColumns()
         }}
       </span>
 
+      <span v-if="store.batch" class="status">
+        {{
+          t('parse.batchParse.progress', {
+            done: store.batch.done,
+            total: store.batch.total,
+          })
+        }}
+      </span>
+
       <span class="flex-stretch" />
+
+      <pushButton
+        v-if="store.batch"
+        :title="t('parse.batchParse.stop')"
+        @click="batchStopped = true"
+      />
 
       <transparentToolButton
         icon="search"
@@ -237,6 +311,13 @@ void store.loadColumns()
       :open="historyOpen"
       @close="historyOpen = false"
       @pick="onPickHistory"
+    />
+
+    <batchParseDialog
+      :open="batchParseOpen"
+      :auto-add="Boolean(settingsStore.value('auto_add_to_download_list'))"
+      @close="batchParseOpen = false"
+      @start="onBatchParse"
     />
   </div>
 </template>

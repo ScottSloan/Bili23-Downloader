@@ -69,6 +69,22 @@ export default {
       actions: '操作',
     },
 
+
+    batchParse: {
+      title: '批量解析',
+      placeholder: '请在此粘贴视频链接，每行一条。目前仅支持 av 和 BV 链接。',
+      count: '链接数量：{count}',
+      clear: '清空',
+      autoAdd: '解析完每条链接后自动添加到下载列表',
+      start: '开始解析',
+      stop: '停止',
+      noLinks: '请在文本框中粘贴视频链接。',
+      invalid: '目前仅支持 av 或 BV 链接。',
+      progress: '正在解析 {done} / {total}…',
+      done: '批量解析完成，列表中共 {count} 项',
+      doneWithTasks: '批量解析完成，已创建 {count} 个任务',
+    },
+
   },
 
   user: {

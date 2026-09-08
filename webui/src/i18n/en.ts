@@ -73,6 +73,22 @@ export default {
       actions: 'Actions',
     },
 
+
+    batchParse: {
+      title: 'Batch Parse',
+      placeholder: 'Paste video links here, one per line. Currently only av and BV links are supported.',
+      count: 'Link Count: {count}',
+      clear: 'Clear',
+      autoAdd: 'Automatically add to download list after parsing each link',
+      start: 'Start Parsing',
+      stop: 'Stop',
+      noLinks: 'Please paste video links in the text box.',
+      invalid: 'Currently only av or BV links are supported.',
+      progress: 'Parsing {done} / {total}…',
+      done: 'Batch parse finished, {count} item(s) in the list',
+      doneWithTasks: 'Batch parse finished, {count} task(s) created',
+    },
+
   },
 
   user: {

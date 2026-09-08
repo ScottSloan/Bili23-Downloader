@@ -107,6 +107,8 @@ interface ParseState {
   extra: Record<string, unknown>
   /** 本地筛选的关键词。命中的行标题用主题色显示，与桌面版一致（那边是 ForegroundRole） */
   searchKeyword: string
+  /** 批量解析的进度。null 表示没在跑 */
+  batch: { done: number; total: number; failed: number } | null
   _nodes: Map<string, ParseNode>
   _parents: Map<string, string | null>
 }
@@ -135,6 +137,7 @@ export const useParseStore = defineStore('parse', {
     url: '',
     extra: {},
     searchKeyword: '',
+    batch: null,
 
     _nodes: new Map(),
     _parents: new Map(),
@@ -394,6 +397,91 @@ export const useParseStore = defineStore('parse', {
         this.error = e instanceof Error ? e.message : String(e)
       } finally {
         this.loading = false
+      }
+    },
+
+    /**
+     * 批量解析：逐条解析，结果累加到同一张列表上
+     *
+     * ## 为什么在前端循环，而不是给后端开一个批量接口
+     *
+     * 桌面版是把整批链接交给 `DynamicParser`，在一个后台线程里顺序解析并往同一棵树上
+     * 追加节点。这里改成逐条调 `/api/parse`：那个接口已经在用、已经有测试，而**进度与
+     * 中途停下在前端天然就有** —— 做成一个长请求的话，二十条链接要等几十秒，
+     * 期间没有任何反馈，还容易撞上网关超时。
+     *
+     * 代价是每条链接各自成为一个顶层节点，不像桌面版那样收在一个动态节点下面。
+     *
+     * ## 两条之间要等一下
+     *
+     * 连着打 B 站接口会被风控挡下（412），整批就废了。间隔取共用配置的
+     * `auto_parse_interval`（桌面版自动解析分页用的也是它），读不到时按 2 秒。
+     *
+     * `onEach` 在每条解析完之后调用，交给调用方做「自动加入下载列表」那一步 ——
+     * 建任务是 store 之外的事，不该塞进来
+     */
+    async parseBatch(
+      urls: string[],
+      options: {
+        interval?: number
+        onEach?: (nodes: ParseNode[]) => Promise<void> | void
+        shouldStop?: () => boolean
+      } = {},
+    ) {
+      if (!urls.length) {
+        return
+      }
+
+      const interval = Math.max(0, options.interval ?? 2) * 1000
+
+      this.loading = true
+      this.error = ''
+      this.batch = { done: 0, total: urls.length, failed: 0 }
+
+      // 从空列表开始重新攒。沿用上一次的结果会让「共 N 项」和实际内容对不上
+      const collected: ParseNode[] = []
+
+      let lastError = ''
+
+      try {
+        for (const [index, url] of urls.entries()) {
+          if (options.shouldStop?.()) {
+            break
+          }
+
+          try {
+            const result = await parseApi.url(url)
+            const nodes = result.tree?.children ?? []
+
+            collected.push(...nodes)
+
+            // 每条都立刻并进列表，用户能看着它一条条长出来
+            this._load({
+              ...result,
+              tree: { ...result.tree, children: [...collected] },
+            })
+
+            await options.onEach?.(nodes)
+          } catch (e) {
+            this.batch.failed += 1
+
+            lastError = e instanceof Error ? e.message : String(e)
+          }
+
+          this.batch.done = index + 1
+
+          if (interval && index < urls.length - 1 && !options.shouldStop?.()) {
+            await new Promise((resolve) => setTimeout(resolve, interval))
+          }
+        }
+
+        // 全军覆没时把最后一条错误摆出来，否则用户只看到一张空列表
+        if (this.batch.failed && !collected.length) {
+          this.error = lastError
+        }
+      } finally {
+        this.loading = false
+        this.batch = null
       }
     },
 
