@@ -36,7 +36,7 @@ export default {
     placeholder: '連結 / av / BV / ep / ss / md / 收藏夾 / 個人空間',
     submit: '解析',
     submitting: '解析中',
-    empty: '解析結果會顯示在這裡。',
+    empty: '解析清單為空',
     summary: '{category}（共 {total} 項，已選 {checked} 項）',
     // 一条都没勾时用它 —— 「已选 0 项」是纯噪声
     summaryPlain: '{category}（共 {total} 項）',
@@ -580,9 +580,6 @@ export default {
     pauseAll: '全部暫停',
     deleteAll: '全部刪除',
     clearAll: '清空清單',
-    openFolder: '開啟下載目錄',
-    downloadPath: '下載目錄',
-    pathCopied: '路徑已複製',
     sort: '排序',
     ascending: '升冪',
     descending: '降冪',

@@ -11,8 +11,9 @@
  *
  * **两处有意偏离**：
  *
- * - 「打开下载目录」在网页上打不开本机的资源管理器，改成显示配置里的下载路径，
- *   点一下复制。做成一个永远没反应的按钮更糟
+ * - **没有「打开下载目录」** —— 浏览器开不了本机的资源管理器（也不该能）。
+ *   一度做成「复制路径」，但那对用户没用：他要的是打开文件夹，
+ *   拿到一串路径还得自己去粘贴。宁可没有这个按钮
  * - 排序做成下拉，不是浮出面板 —— 只有两个选项（按什么排、正倒序），
  *   为它搭一层浮层不划算
  *
@@ -23,7 +24,6 @@
 import { computed, onActivated, ref, watch } from 'vue'
 import { useTaskStore } from '@/stores/taskStore'
 import { useToastStore } from '@/stores/toastStore'
-import { useSettingsStore } from '@/stores/settingsStore'
 import { t } from '@/i18n'
 import type { TaskView } from '@/api'
 import fluentPivot from '@/components/Fluent/components/navigation/FluentPivot.vue'
@@ -36,7 +36,6 @@ import { formatSpeed } from '@/components/App/download/formatters'
 
 const store = useTaskStore()
 const toast = useToastStore()
-const settingsStore = useSettingsStore()
 
 const tab = ref<'downloading' | 'completed'>('downloading')
 
@@ -114,16 +113,14 @@ const selectedIds = computed(() => list.value.map((task) => task.task_id).filter
 /**
  * 一行上那个主按钮
  *
- * 与桌面版 `_pressEvent` 同一套分支：完成的打开目录、排队与暂停的开始、
- * 失败的重来、其余暂停
+ * 与桌面版 `_pressEvent` 同一套分支：排队与暂停的开始、失败的重来、其余暂停。
+ *
+ * **少了「完成的打开目录」那一条** —— 浏览器开不了本机的资源管理器（也不该能）。
+ * 一度做成「复制路径」，但那对用户没有任何用处：他要的是打开文件夹，
+ * 拿到一串路径还得自己去粘贴。宁可没有这个按钮
  */
 function onItemAction(task: TaskView) {
   switch (task.status) {
-    case 'completed':
-      showPath(task.download_path, task.folder)
-
-      break
-
     case 'queued':
     case 'paused':
     case 'ffmpeg_queued':
@@ -164,29 +161,6 @@ function batchRemove() {
   }
 }
 
-/**
- * 「打开下载目录」的网页版
- *
- * 浏览器里开不了本机的资源管理器（也不该能）。退而求其次：把路径告诉用户并复制到剪贴板
- */
-async function showPath(path?: string, folder?: string) {
-  const target = [path || String(settingsStore.value('download_path') || ''), folder]
-    .filter(Boolean)
-    .join('\\')
-
-  if (!target) {
-    return
-  }
-
-  try {
-    await navigator.clipboard.writeText(target)
-
-    toast.success(t('task.pathCopied'), target)
-  } catch {
-    // 非 https 或用户拒绝了剪贴板权限。路径本身仍然要说
-    toast.info(t('task.downloadPath'), target)
-  }
-}
 </script>
 
 <template>
@@ -211,8 +185,6 @@ async function showPath(path?: string, folder?: string) {
           :class="{ 'is-descending': !ascending[tab] }"
           @click="ascending[tab] = !ascending[tab]"
         />
-
-        <toolButton icon="folder" :label="t('task.openFolder')" @click="showPath()" />
 
         <span class="separator" />
 
@@ -372,9 +344,13 @@ async function showPath(path?: string, folder?: string) {
   gap: 0;
 }
 
+/* 空提示在整块列表区域里居中，不是贴着顶 */
 .empty {
-  margin: 24px 0;
-  text-align: center;
+  flex: 1 1 auto;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   color: var(--text-secondary);
 }
 </style>

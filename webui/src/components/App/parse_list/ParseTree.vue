@@ -451,8 +451,13 @@ function isMatch(node: { title?: string }): boolean {
   border: 1px solid var(--divider-stroke);
 }
 
+/* 空提示在整块列表区域里居中，不是贴着顶 */
 .empty {
+  height: 100%;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   color: var(--text-tertiary);
-  padding: 12px 4px;
 }
 </style>

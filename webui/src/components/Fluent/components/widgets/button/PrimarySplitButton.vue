@@ -111,6 +111,9 @@ defineExpose({ closeMenu })
 
 .main {
   padding: 5px 12px 6px 12px;
+  /* 「解析」只有两个字，光靠 padding 撑出来的按钮又瘦又高。
+     桌面版那个是 PushButton 的默认最小宽度（qfluentwidgets 给 96），这里跟它 */
+  min-width: 96px;
   border-radius: 5px 0 0 5px;
   /* 两半之间那条线。qss 里是 --ThemeColorLight3 */
   border-right: 1px solid var(--primary-color-light-3);

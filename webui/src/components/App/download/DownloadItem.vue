@@ -118,12 +118,14 @@ const statusText = computed(() => {
   return t(`task.status.${props.task.status}`)
 })
 
-/** 主按钮的图标，桌面版 `getButtonIcon` */
+/**
+ * 主按钮的图标，桌面版 `getButtonIcon`
+ *
+ * 已完成的那一行**没有主按钮**：桌面版那里是「打开文件所在位置」，
+ * 浏览器做不到，摆一个点了没反应的按钮更糟。只留删除
+ */
 const actionIcon = computed(() => {
   switch (props.task.status) {
-    case 'completed':
-      return 'folder'
-
     case 'queued':
     case 'paused':
     case 'ffmpeg_queued':
@@ -140,9 +142,6 @@ const actionIcon = computed(() => {
 
 const actionLabel = computed(() => {
   switch (actionIcon.value) {
-    case 'folder':
-      return t('task.openFolder')
-
     case 'play':
       return t('task.resume')
 
@@ -205,6 +204,7 @@ const actionLabel = computed(() => {
 
     <div class="actions">
       <toolButton
+        v-if="!isCompleted"
         :icon="actionIcon"
         :label="actionLabel"
         variant="primary"

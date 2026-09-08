@@ -37,7 +37,7 @@ export default {
     placeholder: 'Link / av / BV / ep / ss / md / Favorites / Profile',
     submit: 'Parse',
     submitting: 'Parsing',
-    empty: 'Parsed results will appear here.',
+    empty: 'The parse list is empty',
     // GUI 的原串是 "{category_name} ({total_count} total)"，Web 端多显示一个已选数
     summary: '{category} ({total} total, {checked} selected)',
     // 一条都没勾时用它 —— 「已选 0 项」是纯噪声
@@ -613,9 +613,6 @@ export default {
     pauseAll: 'Pause All',
     deleteAll: 'Delete All',
     clearAll: 'Clear All',
-    openFolder: 'Open Download Directory',
-    downloadPath: 'Download directory',
-    pathCopied: 'Path copied',
     sort: 'Sort',
     ascending: 'Ascending',
     descending: 'Descending',

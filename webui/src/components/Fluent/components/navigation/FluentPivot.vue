@@ -154,6 +154,15 @@ function onKeydown(event: KeyboardEvent) {
   flex-direction: row;
   align-items: flex-end;
   flex: 0 0 auto;
+  /*
+    项与项之间。qss 里 PivotItem 左右各 12，两项挨着就是 24 —— 比桌面版实际的窄，
+    那边每个 PivotItem 是个 PushButton，自带最小宽度，量下来两段文字之间约 40。
+    补 16 凑上。
+
+    **间距放容器的 gap 上，不要给项加 margin**：项那一块里有一句 `margin: 0`
+    （用来抹掉 <button> 的浏览器默认值），加在它前面会被盖掉且不报错
+  */
+  gap: 16px;
   /* 指示条占掉底下 3px */
   padding-bottom: 3px;
 }
