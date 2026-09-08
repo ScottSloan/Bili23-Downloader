@@ -59,7 +59,8 @@ class FileNameFormatter:
             return self.__normalize_path(self.rule.format(**safe_variable_data))
         
         except Exception as e:
-            logger.exception(f"格式化文件名时发生错误")
+            logger.exception("格式化文件名时发生错误：type_id=%s attribute=%s rule=%r",
+                             self.type_id, self.attribute, self.rule)
 
             return None
 
@@ -104,11 +105,27 @@ class FileNameFormatter:
         
         return self.rule
         
+    # 认不出类型、或者配置里那一档的默认规则被删了时用它。
+    # 只有标题，谈不上好看，但**总比整个任务建不出来强** —— 规则查不到时
+    # `format()` 会拿 None 去调 `.format()`，异常被吞掉后返回 None，
+    # 调用方拿它构造 Path 直接 TypeError，表现是「点了下载没反应」而界面上毫无提示
+    FALLBACK_RULE = "{leaf_title}"
+
     def get_rule_from_config(self, type_id: int = None):
         # 从命名规则配置中查询到对应的命名规则模板
         for entry in config.get(config.naming_rule_list):
             if entry["type"] == type_id and entry["default"]:
                 return entry["rule"]
+
+        if type_id is None:
+            # 认不出类型说明这条 episode 本身就不对（attribute 缺失或为 0）。
+            # **这时不该回退**：给它编一个文件名等于把脏数据默默收下，
+            # 而现在的行为是这一条建不出来、其余照常，正是想要的
+            return None
+
+        logger.warning("命名规则里没有 type=%s 的默认项，回退到 %s", type_id, self.FALLBACK_RULE)
+
+        return self.FALLBACK_RULE
 
     def get_rule_by_id(self, rule_id: int):
         for entry in config.get(config.naming_rule_list):

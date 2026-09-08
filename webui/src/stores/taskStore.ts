@@ -28,6 +28,16 @@ interface TaskState {
 
 let stream: EventStream | null = null
 
+// 正在建立中的那一次。**没有它就会开出两条流** —— `start()` 里那句
+// `if (stream) return` 挡不住并发调用：它先 await 快照，`stream` 要等 await 回来
+// 之后才赋值，而 App.vue（跟着登录态）与下载页（onActivated）几乎同时调它，
+// 两边都在赋值之前通过了检查。
+//
+// 两条流的后果不只是多一个连接：每条各自维护 cursor，而 `resume()` 只会打到
+// 模块变量指着的那一条上，另一条的 cursor 再也追不上，于是每收到一条都判成
+// 「编号不连续」→ 请求重新同步 → 快照覆盖列表。表现是任务时有时无
+let starting: Promise<void> | null = null
+
 // 重新同步的节流：一串乱序事件可能连着触发好几次，没必要每次都拉一遍全量
 let resyncTimer: number | null = null
 
@@ -96,26 +106,47 @@ export const useTaskStore = defineStore('task', {
         return
       }
 
-      // **先快照再连**，顺序不能反 —— 理由见 api/events.ts
-      const cursor = await this.refresh()
+      // 已经有人在建了就等它建完，不要再建一条
+      if (starting) {
+        return starting
+      }
 
-      stream = new EventStream({
-        onEvent: (event) => this.apply(event),
-        onResync: () => this.scheduleResync(),
-        onOpen: () => {
-          this.live = true
-        },
-        onClose: () => {
-          this.live = false
-        },
-      })
+      starting = (async () => {
+        try {
+          // **先快照再连**，顺序不能反 —— 理由见 api/events.ts
+          const cursor = await this.refresh()
 
-      stream.connect(cursor)
+          // 等快照的这段时间里可能已经被 stop() 了
+          if (starting === null) {
+            return
+          }
+
+          stream = new EventStream({
+            onEvent: (event) => this.apply(event),
+            onResync: () => this.scheduleResync(),
+            onOpen: () => {
+              this.live = true
+            },
+            onClose: () => {
+              this.live = false
+            },
+          })
+
+          stream.connect(cursor)
+        } finally {
+          starting = null
+        }
+      })()
+
+      return starting
     },
 
     stop() {
       stream?.close()
       stream = null
+
+      // 正在建立的那一次也要作废，否则它建完之后又会留下一条没人管的流
+      starting = null
 
       this.live = false
 

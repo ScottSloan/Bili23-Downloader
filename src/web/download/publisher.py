@@ -16,6 +16,7 @@ FFmpeg 线程或后台线程上，往 asyncio 队列里塞东西不会报错，�
 from typing import List
 import logging
 
+from util.common.enum import DownloadStatus
 from util.common.signal_bus import signal_bus
 from util.download.task.info import TaskInfo
 
@@ -69,7 +70,31 @@ class TaskPublisher:
         self.hub.publish(EVENT_TASK_COMPLETED, task_views(task_info_list))
 
     def on_removed(self, task_info: TaskInfo, *args, **kwargs) -> None:
+        """
+        「移出下载中列表」
+
+        **任务下完了也会发这一条**（`Merger.mark_as_completed` 紧跟在
+        `add_to_completed_list` 后面发），那是「从下载中挪到已完成」的意思，
+        不是「这个任务没了」。原样转成 `task.removed` 的话，前端刚把它放进已完成
+        又立刻删掉 —— 表现就是**任务下完一秒后凭空消失，两个列表里都找不到**。
+
+        已完成的那一条这里不发：`task.completed` 已经把移动这件事说清楚了。
+        真正的删除由路由显式调 `publish_removed`
+        """
+        if task_info.Download.status == DownloadStatus.COMPLETED:
+            return
+
         self.hub.publish(EVENT_TASK_REMOVED, {"task_id": task_info.Basic.task_id})
+
+    def publish_removed(self, task_ids: List[str]) -> None:
+        """
+        任务真的被删了
+
+        删已完成的任务走的是 `delete_many`，**它什么事件都不发** —— 不显式补一条的话，
+        别的标签页要等到下次刷新才知道
+        """
+        for task_id in task_ids:
+            self.hub.publish(EVENT_TASK_REMOVED, {"task_id": task_id})
 
     # ---- aria2 ----
 

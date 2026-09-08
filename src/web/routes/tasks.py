@@ -261,14 +261,23 @@ async def delete_tasks(payload: TaskIdsRequest, request: Request,
         return JSONResponse({"detail": "No matching task", "code": "NO_MATCHING_TASK"},
                             status_code = 404)
 
+    task_ids = [task.Basic.task_id for task in task_list]
+
     if completed:
         # 已完成的任务没有临时文件要清，直接删记录
         await _off_loop(task_manager.delete_many, task_list, True)
 
     else:
-        await _stop_streams(request, [task.Basic.task_id for task in task_list])
+        await _stop_streams(request, task_ids)
 
         await _off_loop(task_manager.cancel_many_async, task_list)
+
+    # 显式推一条删除。`delete_many` 什么都不发，`cancel_many_async` 发的那条
+    # 又被发布器按「完成」过滤掉了一部分 —— 两条路径都靠这里兜住
+    publisher = getattr(request.app.state, "publisher", None)
+
+    if publisher is not None:
+        publisher.publish_removed(task_ids)
 
     return {"deleted": len(task_list)}
 
