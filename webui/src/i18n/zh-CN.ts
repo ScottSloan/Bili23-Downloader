@@ -25,6 +25,11 @@ export default {
   },
 
   toast: {
+    // 后端的实时连接断了。**这条不会自己消失** —— 断线时界面上什么都不会动，
+    // 看起来和「没有任务」一模一样，不明说用户根本不知道
+    backendOffline: '与后端的连接已断开',
+    backendOfflineDetail: '正在自动重连。这期间任务状态不会更新，操作也不会生效。',
+    backendOnline: '已重新连接到后端',
     parseFailed: '解析失败',
     saveFailed: '保存失败',
     loadFailed: '加载失败',
@@ -114,6 +119,11 @@ export default {
   user: {
     signedOut: '未登录',
     avatarAlt: '用户头像',
+    // 退的是这个网页的会话，不是 B 站账号 —— 文案必须把这一点说明白
+    logout: '退出登录',
+    logoutTitle: '退出登录',
+    logoutHint: '将退出当前 WebUI 的登录会话，需要重新输入口令才能进入。哔哩哔哩账号不受影响。',
+    logoutConfirm: '退出',
   },
 
   settings: {
@@ -539,7 +549,7 @@ export default {
 
   column: {
     number: '序号',
-    title: '标题名称',
+    title: '标题',
     badge: '备注',
     duration: '时长',
     dyn_time: '发布时间 / 收藏时间 / 上次观看时间',

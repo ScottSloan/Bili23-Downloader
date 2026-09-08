@@ -26,6 +26,12 @@ export default {
   },
 
   toast: {
+    // The live connection to the backend dropped. This one never auto-dismisses —
+    // while it is down nothing on screen moves, which looks exactly like «no tasks»
+    backendOffline: 'Disconnected from the backend',
+    backendOfflineDetail:
+      'Reconnecting. Task status will not update and actions will not take effect until it is back.',
+    backendOnline: 'Reconnected to the backend',
     parseFailed: 'Parse Failed',
     saveFailed: 'Save Failed',
     loadFailed: 'Load Failed',
@@ -118,6 +124,12 @@ export default {
   user: {
     signedOut: 'Not signed in',
     avatarAlt: 'User avatar',
+    // This signs out of the WebUI session, not the Bilibili account — say so plainly
+    logout: 'Sign out',
+    logoutTitle: 'Sign out',
+    logoutHint:
+      'This signs out of the current WebUI session; the password will be required again. Your Bilibili account is unaffected.',
+    logoutConfirm: 'Sign out',
   },
 
   settings: {

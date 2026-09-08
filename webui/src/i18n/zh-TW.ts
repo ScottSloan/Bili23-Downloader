@@ -25,6 +25,11 @@ export default {
   },
 
   toast: {
+    // 後端的即時連線斷了。**這條不會自己消失** —— 斷線時介面上什麼都不會動，
+    // 看起來和「沒有任務」一模一樣，不明說使用者根本不知道
+    backendOffline: '與後端的連線已中斷',
+    backendOfflineDetail: '正在自動重新連線。這期間任務狀態不會更新，操作也不會生效。',
+    backendOnline: '已重新連線到後端',
     parseFailed: '解析失敗',
     saveFailed: '儲存失敗',
     loadFailed: '載入失敗',
@@ -114,6 +119,11 @@ export default {
   user: {
     signedOut: '未登入',
     avatarAlt: '使用者頭像',
+    // 退的是這個網頁的工作階段，不是 B 站帳號 —— 文案必須把這一點說明白
+    logout: '登出',
+    logoutTitle: '登出',
+    logoutHint: '將登出目前 WebUI 的工作階段，需要重新輸入密碼才能進入。嗶哩嗶哩帳號不受影響。',
+    logoutConfirm: '登出',
   },
 
   settings: {
@@ -539,7 +549,7 @@ export default {
 
   column: {
     number: '序號',
-    title: '標題名稱',
+    title: '標題',
     badge: '備註',
     duration: '時長',
     dyn_time: '發佈時間 / 收藏時間 / 上次觀看時間',

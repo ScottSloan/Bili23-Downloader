@@ -1,17 +1,20 @@
 <script setup lang="ts">
-import { onMounted, watch } from 'vue'
+import { onBeforeUnmount, onMounted, watch } from 'vue'
 import MainWindow from '@/MainWindow.vue'
 import LoginView from '@/views/LoginView.vue'
 import { useThemeStore } from '@/stores/themeStore'
 import { useAppStore } from '@/stores/appStore'
 import { useAuthStore } from '@/stores/authStore'
 import { useTaskStore } from '@/stores/taskStore'
+import { useToastStore } from '@/stores/toastStore'
 import { setUnauthorizedHandler } from '@/api'
+import { t } from '@/i18n'
 
 const themeStore = useThemeStore()
 const appStore = useAppStore()
 const authStore = useAuthStore()
 const taskStore = useTaskStore()
+const toast = useToastStore()
 
 // 主题在 index.html 的首屏脚本里已经写过一次，这里补齐主题色色阶并开始监听系统主题
 themeStore.initialize()
@@ -39,6 +42,66 @@ watch(
   },
   { immediate: true },
 )
+
+/**
+ * 后端断了要醒目地说
+ *
+ * 断线时界面上什么都不动：进度条停着、列表不变、按下去的按钮没有反应 ——
+ * 这和「本来就没有任务」「网络有点慢」看起来一模一样，**不明说用户根本不知道**。
+ * 所以用一条**不会自动消失、也关不掉**的气泡，连回来的那一刻它自己走。
+ *
+ * 延迟几秒再报：刚进页面时连接还没建立，重连抖一下也会短暂地断 ——
+ * 一断就弹会让正常使用中不停闪提示。5 秒够一次自动重连跑完（退避从 0.5 秒起）。
+ */
+const OFFLINE_GRACE = 5000
+
+let offlineToastId: number | null = null
+let offlineTimer: ReturnType<typeof setTimeout> | null = null
+
+function clearOfflineTimer() {
+  if (offlineTimer !== null) {
+    clearTimeout(offlineTimer)
+
+    offlineTimer = null
+  }
+}
+
+watch(
+  () => [authStore.authenticated, taskStore.live] as const,
+  ([authenticated, live]) => {
+    clearOfflineTimer()
+
+    // 没登录时本来就不该有连接，那时候报「断开」是误导
+    if (live || !authenticated) {
+      if (offlineToastId !== null) {
+        toast.dismiss(offlineToastId)
+
+        offlineToastId = null
+
+        // 只有真的报过断开，才需要说「回来了」
+        if (live) {
+          toast.success(t('toast.backendOnline'))
+        }
+      }
+
+      return
+    }
+
+    offlineTimer = setTimeout(() => {
+      offlineTimer = null
+
+      // 关不掉、也不会自己消失：它就是「现在这个界面是死的」这件事本身，
+      // 用户把它关掉之后界面看起来又正常了，那比不提示还糟
+      offlineToastId = toast.show('error', t('toast.backendOffline'), t('toast.backendOfflineDetail'), {
+        closable: false,
+        duration: 0,
+      })
+    }, OFFLINE_GRACE)
+  },
+  { immediate: true },
+)
+
+onBeforeUnmount(clearOfflineTimer)
 
 onMounted(() => {
   if (authStore.checking) {

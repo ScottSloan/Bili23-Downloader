@@ -149,7 +149,12 @@ function isMatch(node: { title?: string }): boolean {
 <template>
   <div class="parse-tree">
     <div class="tree-header" :style="{ gridTemplateColumns: gridTemplate }">
-      <div v-for="column in store.visibleColumns" :key="column.key" class="header-cell">
+      <div
+        v-for="column in store.visibleColumns"
+        :key="column.key"
+        class="header-cell"
+        :class="{ 'is-number': column.key === 'number' }"
+      >
         {{ headerName(column.key) }}
       </div>
     </div>
@@ -285,16 +290,17 @@ function isMatch(node: { title?: string }): boolean {
   再加上 19px 的复选框撑起来的内容高。`setUniformRowHeights(True)` 那边行高是齐的，
   这里也写死，顺带让虚拟滚动不必逐行测量
 */
+/*
+  **行不能有左右内边距。** 表头没有，行有了两边的列就错开：这里原先写了
+  `padding: 0 4px`，量出来表头与行的列边界差 4px，中间那根弹性列还被挤掉 8px。
+
+  底色与选中竖条要缩进的那 4px 由伪元素自己的 `left: 4px` 负责，与内容无关 ——
+  Qt 那边也是这样：`_drawBackground` / `_drawIndicator` 各自缩进，列本身从 0 起算
+*/
 .tree-row {
   height: 34px;
-  padding: 0 4px;
   user-select: none;
   cursor: default;
-  /*
-    用 left/right 而不是 width: 100% 来横向铺满：本项目没有全局的
-    box-sizing: border-box，width: 100% 会把 4px 的左右内边距加到外面去，
-    行比容器宽 8px，横向多出一条滚动条
-  */
   position: absolute;
   top: 0;
   left: 0;
@@ -389,11 +395,28 @@ function isMatch(node: { title?: string }): boolean {
   font-size: 13px;
 }
 
-/* 表头文字居中，正文靠左 —— 与桌面版 QHeaderView 的默认对齐一致 */
+/*
+  表头跟着这一列**内容**的对齐方式走，也就是左对齐。
+
+  桌面版这里是居中的（qfluentwidgets 的 `TreeView` 把 header 的 `defaultAlignment`
+  设成了 AlignHCenter，普通 QTreeView 本来是左对齐），而单元格里的文字一律靠左
+  —— 两者本就对不上，只是列窄时不明显。**这是有意偏离**：
+  用户看到的是「备注 / 时长 / 发布时间的表头没对准下面的内容」。
+
+  序号那一列是例外，见下面
+*/
 .header-cell {
-  justify-content: center;
+  justify-content: flex-start;
   /* 每段右边一条竖线，最后一段没有（qss 里的 `section:horizontal:last`） */
   border-right: 1px solid var(--header-stroke);
+}
+
+/*
+  序号列仍然居中：它的单元格里排在最前面的是展开箭头与复选框，数字在后头，
+  左对齐反而会让表头跑到箭头上方。居中恰好落在数字那一带
+*/
+.header-cell.is-number {
+  justify-content: center;
 }
 
 .header-cell:last-child {

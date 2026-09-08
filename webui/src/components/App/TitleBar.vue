@@ -10,21 +10,33 @@
  *   放个一键切换省事得多。设置页那一项仍然保留，两处改的是同一个状态
  * - **有新版本时的提示**。桌面版是启动后自动弹对话框；网页上弹窗打断操作更讨厌，
  *   所以做成标题栏上一个带小圆点的按钮，点了才看详情
+ * - **退出会话**。桌面版没有「登录这个程序」这回事，网页有 —— 而且共用电脑上
+ *   离开时能退出登录是基本需求。**退的是这个网页的会话，不是 B 站账号**
  */
 import { computed, onMounted, ref } from 'vue'
 import IconApp from '@/components/Fluent/icons/IconApp.vue'
 import transparentToolButton from '@/components/Fluent/components/widgets/button/TransparentToolButton.vue'
 import updateDialog from '@/components/App/UpdateDialog.vue'
+import logoutDialog from '@/components/App/LogoutDialog.vue'
 import { useThemeStore } from '@/stores/themeStore'
 import { useUpdateStore } from '@/stores/updateStore'
 import { useToastStore } from '@/stores/toastStore'
+import { useAuthStore } from '@/stores/authStore'
 import { t } from '@/i18n'
 
 const themeStore = useThemeStore()
 const updateStore = useUpdateStore()
 const toast = useToastStore()
+const authStore = useAuthStore()
 
 const updateOpen = ref(false)
+const logoutOpen = ref(false)
+
+async function confirmLogout() {
+  logoutOpen.value = false
+
+  await authStore.logout()
+}
 
 // 浅色 → 深色 → 跟随系统 → 浅色。与设置页那个下拉是同一份状态
 const ORDER = ['light', 'dark', 'auto'] as const
@@ -103,7 +115,11 @@ onMounted(() => {
       @click="cycleTheme"
     />
 
+    <transparentToolButton icon="exit" :label="t('user.logout')" @click="logoutOpen = true" />
+
     <updateDialog :open="updateOpen" @close="updateOpen = false" />
+
+    <logoutDialog :open="logoutOpen" @close="logoutOpen = false" @confirm="confirmLogout" />
   </div>
 </template>
 

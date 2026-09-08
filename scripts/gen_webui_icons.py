@@ -80,6 +80,7 @@ ICONS = {
     "clear":             ":/bili23/icon/light/clear.svg",
     "sort":              ":/bili23/icon/light/sort.svg",
     "retry":             ":/bili23/icon/light/retry.svg",
+    "exit":              ":/bili23/icon/light/exit.svg",
 }
 
 # Toast（InfoBar）左边那四个图标。**它们不能换成 currentColor** —— 信息 / 成功 /

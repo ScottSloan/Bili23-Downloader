@@ -129,6 +129,13 @@ export const useTaskStore = defineStore('task', {
             },
             onClose: () => {
               this.live = false
+
+              // 顺手拉一次快照。**这不是为了数据，是为了让 HTTP 层说话**：
+              // WebSocket 被拒（会话失效，比如后端重启过）时只会一直重连，
+              // 401 拦截器永远等不到一个 HTTP 请求 —— 界面就永远挂着
+              // 「连接已断开」，而用户其实只是需要重新登录一次。
+              // 后端真的没起来时它也会失败，那时那条断线提示本来就该挂着
+              this.scheduleResync()
             },
           })
 
