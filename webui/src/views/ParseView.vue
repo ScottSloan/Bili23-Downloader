@@ -1,15 +1,21 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 import fluentLineEdit from '@/components/Fluent/components/widgets/line_edit/LineEdit.vue'
 import primaryPushButton from '@/components/Fluent/components/widgets/button/PrimaryPushButton.vue'
 import pushButton from '@/components/Fluent/components/widgets/button/PushButton.vue'
+import transparentToolButton from '@/components/Fluent/components/widgets/button/TransparentToolButton.vue'
 import parseTree from '@/components/App/parse_list/ParseTree.vue'
+import searchDialog from '@/components/App/parse_list/SearchDialog.vue'
+import batchSelectDialog from '@/components/App/parse_list/BatchSelectDialog.vue'
+import parseHistoryDialog from '@/components/App/parse_list/ParseHistoryDialog.vue'
 import downloadOptionsDialog from '@/components/App/DownloadOptionsDialog.vue'
 import { useParseStore } from '@/stores/parseStore'
 import { useSettingsStore } from '@/stores/settingsStore'
 import { tasks as tasksApi, ApiError } from '@/api'
 import { t } from '@/i18n'
 
+const router = useRouter()
 const store = useParseStore()
 const settingsStore = useSettingsStore()
 const url = ref('')
@@ -17,6 +23,54 @@ const url = ref('')
 const dialogOpen = ref(false)
 const pendingEpisodes = ref<Record<string, unknown>[]>([])
 const notice = ref('')
+
+// 工具栏那四个按钮各自的对话框。与桌面版 ParseInterface 的 toolbar_layout 一一对应
+const searchOpen = ref(false)
+const batchSelectOpen = ref(false)
+const historyOpen = ref(false)
+
+function onSearch({ keywords, server }: { keywords: string; server: boolean }) {
+  searchOpen.value = false
+
+  if (server) {
+    void store.serverSearch(keywords)
+
+    return
+  }
+
+  const matches = store.searchLocal(keywords)
+
+  notice.value = keywords ? t('parse.search.matches', { count: matches }) : ''
+}
+
+function onBatchSelect(numbers: number[]) {
+  batchSelectOpen.value = false
+
+  notice.value = t('parse.batchSelect.selected', { count: store.batchSelect(numbers) })
+}
+
+/** 历史里点一条：把链接填回输入框并直接解析，省得再点一次 */
+function onPickHistory(picked: string) {
+  historyOpen.value = false
+
+  url.value = picked
+
+  store.parse(picked)
+}
+
+/**
+ * 工具栏上的「下载选项」
+ *
+ * 桌面版那边开的是一个**全局设置编辑器**（媒体设置 / 附加内容 / 下载设置三页，
+ * 直接读写 config），用途是解析之前先把画质、附加内容这些调好。
+ *
+ * Web 端**同名的那个对话框不是一回事** —— 它带着剧集，取媒体信息再建任务。
+ * 全局的那些选项在这边归设置页（画质优先级、弹幕 / 字幕 / 封面几张卡片），
+ * 所以这个按钮做成跳过去的快捷方式，而不是再搭一个内容重复的对话框
+ */
+function openGlobalOptions() {
+  void router.push('/settings')
+}
 
 async function openDownload() {
   notice.value = ''
@@ -101,6 +155,7 @@ void store.loadColumns()
       />
     </div>
 
+    <!-- 与桌面版 toolbar_layout 同一排：左边条目计数，右边四个透明工具按钮 -->
     <div class="status-bar">
       <span v-if="store.error" class="status error">{{ store.error }}</span>
       <span v-else-if="store.mediaError" class="status error">
@@ -115,6 +170,31 @@ void store.loadColumns()
           })
         }}
       </span>
+
+      <span class="flex-stretch" />
+
+      <transparentToolButton
+        icon="search"
+        :label="t('parse.toolbar.search')"
+        :disabled="!store.total"
+        @click="searchOpen = true"
+      />
+      <transparentToolButton
+        icon="history"
+        :label="t('parse.toolbar.history')"
+        @click="historyOpen = true"
+      />
+      <transparentToolButton
+        icon="todo"
+        :label="t('parse.toolbar.batchSelect')"
+        :disabled="!store.total"
+        @click="batchSelectOpen = true"
+      />
+      <transparentToolButton
+        icon="options"
+        :label="t('parse.toolbar.downloadOptions')"
+        @click="openGlobalOptions"
+      />
     </div>
 
     <parseTree />
@@ -137,6 +217,27 @@ void store.loadColumns()
       @close="dialogOpen = false"
       @created="onCreated"
     />
+
+    <searchDialog
+      :open="searchOpen"
+      :server-search-available="store.serverSearchAvailable"
+      :current-keyword="store.currentKeyword"
+      :paginated="store.paginated"
+      @close="searchOpen = false"
+      @search="onSearch"
+    />
+
+    <batchSelectDialog
+      :open="batchSelectOpen"
+      @close="batchSelectOpen = false"
+      @select="onBatchSelect"
+    />
+
+    <parseHistoryDialog
+      :open="historyOpen"
+      @close="historyOpen = false"
+      @pick="onPickHistory"
+    />
   </div>
 </template>
 
@@ -158,9 +259,12 @@ void store.loadColumns()
 }
 
 .status-bar {
-  min-height: 20px;
+  min-height: 28px;
   margin: 8px 0 2px;
   font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .status {

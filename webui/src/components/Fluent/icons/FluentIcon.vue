@@ -2,7 +2,7 @@
 /**
  * 按名字画一个设置页图标
  *
- * 路径数据来自 `settingIcons.ts`（由 scripts/gen_webui_icons.py 从 Qt 资源生成），
+ * 路径数据来自 `fluentIcons.ts`（由 scripts/gen_webui_icons.py 从 Qt 资源生成），
  * 与桌面版设置页用的是同一批图形。导航栏那几个手写的 IconXxx.vue 保持原样 ——
  * 它们只有四个，且各自带着自己的注释。
  *
@@ -10,13 +10,13 @@
  * 顶多是那张卡片左边空一块。
  */
 import { computed } from 'vue'
-import { SETTING_ICONS } from './settingIcons'
+import { FLUENT_ICONS } from './fluentIcons'
 
 const props = defineProps<{
   name?: string
 }>()
 
-const icon = computed(() => (props.name ? SETTING_ICONS[props.name] : undefined))
+const icon = computed(() => (props.name ? FLUENT_ICONS[props.name] : undefined))
 </script>
 
 <template>

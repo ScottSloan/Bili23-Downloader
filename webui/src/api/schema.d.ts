@@ -403,6 +403,41 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/parse/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read History */
+        get: operations["read_history_api_parse_history_get"];
+        put?: never;
+        post?: never;
+        /** Clear History */
+        delete: operations["clear_history_api_parse_history_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/parse/history/{history_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete History */
+        delete: operations["delete_history_api_parse_history__history_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/preview": {
         parameters: {
             query?: never;
@@ -1024,6 +1059,34 @@ export interface components {
             /** Status */
             status: string;
         };
+        /** HistoryDeleteResult */
+        HistoryDeleteResult: {
+            /** Deleted */
+            deleted: number;
+        };
+        /**
+         * HistoryEntry
+         * @description 一条解析历史。字段名与 `util/misc/history.py` 建的表一一对应
+         */
+        HistoryEntry: {
+            /** Created Time */
+            created_time: number;
+            /** History Id */
+            history_id: string;
+            /** Title */
+            title: string;
+            /** Type */
+            type: string;
+            /** Url */
+            url: string;
+        };
+        /** HistoryList */
+        HistoryList: {
+            /** Entries */
+            entries: components["schemas"]["HistoryEntry"][];
+            /** Max Length */
+            max_length: number;
+        };
         /** LoginRequest */
         LoginRequest: {
             /** Password */
@@ -1101,6 +1164,8 @@ export interface components {
         };
         /** ParseRequest */
         ParseRequest: {
+            /** Keyword */
+            keyword?: string | null;
             /**
              * Pn
              * @default 1
@@ -1996,6 +2061,77 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["EpisodeList"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_history_api_parse_history_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HistoryList"];
+                };
+            };
+        };
+    };
+    clear_history_api_parse_history_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HistoryDeleteResult"];
+                };
+            };
+        };
+    };
+    delete_history_api_parse_history__history_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                history_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HistoryDeleteResult"];
                 };
             };
             /** @description Validation Error */

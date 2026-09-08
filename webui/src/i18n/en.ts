@@ -26,6 +26,53 @@ export default {
     createdNone: 'No task was created — they may already exist in the queue.',
     tagDownloaded: 'Downloaded',
     tagNeedsReparse: 'Needs re-parsing',
+
+    // 工具栏那四个按钮。措辞抄桌面版 gui/interface/parse.py 的 setToolTip
+    toolbar: {
+      search: 'Search',
+      history: 'Parsing History',
+      batchSelect: 'Batch Select',
+      downloadOptions: 'Download Options',
+    },
+
+    search: {
+      title: 'Search',
+      placeholder: 'Enter keywords to search',
+      scope: 'Search scope',
+      filterPage: 'Filter the current page only',
+      searchAll: 'Search all pages',
+      paginationTip:
+        'Only the current page can be filtered. To search the full list, parse all pages first.',
+      confirm: 'Search',
+      matches: 'Matched {count} item(s)',
+    },
+
+    batchSelect: {
+      title: 'Batch Selection',
+      placeholder: 'Enter line numbers (e.g. 1,3,5-10)',
+      guide: 'Separate numbers with commas, and use a hyphen for ranges. Already checked items stay checked.',
+      confirm: 'Select',
+      count: '{count} line number(s) entered',
+      empty: 'Please enter line numbers',
+      invalid: 'Invalid line number',
+      selected: 'Selected {count} item(s)',
+    },
+
+    history: {
+      title: 'Parse History',
+      limit: 'Only the latest {count} records are kept. Shared with the desktop app.',
+      clear: 'Clear History',
+      remove: 'Delete',
+      close: 'Close',
+      loading: 'Loading…',
+      empty: 'No history yet.',
+      no: 'No.',
+      name: 'Title',
+      type: 'Type',
+      time: 'Parse Time',
+      actions: 'Actions',
+    },
+
   },
 
   user: {
@@ -110,6 +157,7 @@ export default {
     // 折叠卡片的标题与说明。文案抄自桌面版 gui/component/setting/card.py 的 self.tr(...)，
     // 好让两端说的是同一件事；aria2 与 WebUI 两张卡片桌面版没有，是这边自己写的
     card: {
+      parsing: { title: 'Parsing Settings', desc: 'Configure how parsing behaves' },
       personalization: { title: 'Personalization', desc: 'Customize the app theme, colors, and visual effects' },
       concurrency: { title: 'Download Concurrency', desc: 'Adjust per-task threads, concurrent downloads, and speed limits' },
       priority: { title: 'Video, Audio, and Codec Priority', desc: 'Customize download priority settings' },
@@ -128,6 +176,7 @@ export default {
     },
 
     label: {
+      parse_history: 'Save Parse History',
       language: 'Language',
 
       download_path: 'Download Path',
@@ -190,6 +239,7 @@ export default {
     },
 
     desc: {
+      parse_history: 'Save the history of parsed links. Shared with the desktop app.',
       language: 'Choose the display language of the application',
 
       download_path:

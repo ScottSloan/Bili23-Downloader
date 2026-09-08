@@ -326,3 +326,21 @@ class EpisodeList(BaseModel):
     """`episode` 是 TaskInfo 那套自由字典，原样回传给创建任务的接口即可"""
 
     episodes: List[Dict[str, Any]]
+
+class HistoryEntry(BaseModel):
+    """一条解析历史。字段名与 `util/misc/history.py` 建的表一一对应"""
+
+    history_id: str
+    title: str
+    url: str
+    type: str
+    # 秒级时间戳，交给前端按本地时区格式化
+    created_time: int
+
+class HistoryList(BaseModel):
+    entries: List[HistoryEntry]
+    # 库里只留最新 100 条（`HistoryDatabase.max_length`），前端要把这句提示写出来
+    max_length: int
+
+class HistoryDeleteResult(BaseModel):
+    deleted: int

@@ -1,5 +1,5 @@
 """
-把桌面版设置页用到的图标抽成前端可用的一份数据
+把桌面版用到的图标抽成前端可用的一份数据
 
     .venv/Scripts/python.exe scripts/gen_webui_icons.py
     .venv/Scripts/python.exe scripts/gen_webui_icons.py --check   # 只校验是否为最新
@@ -8,8 +8,8 @@
 
 ## 为什么要生成而不是手抄
 
-设置页每张卡片左边都有一个图标，桌面版用的是 qfluentwidgets 的 FluentIcon 与本项目
-自己的 ExtendedFluentIcon。手抄的话，路径数据动辄几 KB，抄错一个字符就是一个畸形图形，
+设置页每张卡片左边、解析页工具栏上都有图标，桌面版用的是 qfluentwidgets 的 FluentIcon
+与本项目自己的 ExtendedFluentIcon。手抄的话，路径数据动辄几 KB，抄错一个字符就是一个畸形图形，
 而且**换了图标没人会想起来同步**。从两边的 Qt 资源里直接取，改了重新跑一遍即可。
 
 ## 取自 Qt 资源而不是磁盘文件
@@ -36,7 +36,7 @@ sys.path.insert(0, str(ROOT / "src"))
 os.environ.setdefault("BILI23_DATA_DIR", tempfile.mkdtemp(prefix = "bili23-icons-"))
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
-OUTPUT = ROOT / "webui" / "src" / "components" / "Fluent" / "icons" / "settingIcons.ts"
+OUTPUT = ROOT / "webui" / "src" / "components" / "Fluent" / "icons" / "fluentIcons.ts"
 
 # 前端的名字 → 资源路径。左边这些名字会出现在 spec.ts 里
 ICONS = {
@@ -53,12 +53,17 @@ ICONS = {
     "video":             ":/qfluentwidgets/images/icons/Video_black.svg",
     "music":             ":/qfluentwidgets/images/icons/Music_black.svg",
     "code":              ":/qfluentwidgets/images/icons/Code_black.svg",
+    "search":            ":/qfluentwidgets/images/icons/Search_black.svg",
+    "history":           ":/qfluentwidgets/images/icons/History_black.svg",
 
     # 本项目补的（ExtendedFluentIcon）
     "comment":           ":/bili23/icon/light/comment.svg",
     "subtitles":         ":/bili23/icon/light/subtitles.svg",
     "fastDownload":      ":/bili23/icon/light/fast_download.svg",
     "server":            ":/bili23/icon/light/server.svg",
+    "todo":              ":/bili23/icon/light/todo.svg",
+    "options":           ":/bili23/icon/light/options.svg",
+    "clear":             ":/bili23/icon/light/clear.svg",
 }
 
 def read_resource(path: str) -> str:
@@ -108,7 +113,7 @@ def build() -> str:
     lines = [
         "// 由 scripts/gen_webui_icons.py 从 Qt 资源生成，请勿手改",
         "//",
-        "// 桌面版设置页每张卡片左边的那个图标。名字与 spec.ts 里的 `icon` 字段对应。",
+        "// 设置页卡片左边、解析页工具栏上的那些图标。名字与用它的地方写的 `icon` 一致。",
         "// 颜色已换成 currentColor，深浅主题共用一份。",
         "",
         "export interface FluentIconData {",
@@ -116,7 +121,7 @@ def build() -> str:
         "  body: string",
         "}",
         "",
-        "export const SETTING_ICONS: Record<string, FluentIconData> = {",
+        "export const FLUENT_ICONS: Record<string, FluentIconData> = {",
     ]
 
     for name, path in ICONS.items():

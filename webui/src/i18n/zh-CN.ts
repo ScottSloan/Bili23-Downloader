@@ -23,6 +23,52 @@ export default {
     createdNone: '没有创建任务，可能都已经在队列里了。',
     tagDownloaded: '已下载',
     tagNeedsReparse: '需二次解析',
+
+    // 工具栏那四个按钮。措辞抄桌面版 gui/interface/parse.py 的 setToolTip
+    toolbar: {
+      search: '搜索',
+      history: '解析记录',
+      batchSelect: '批量选择',
+      downloadOptions: '下载选项',
+    },
+
+    search: {
+      title: '搜索',
+      placeholder: '请输入关键词',
+      scope: '搜索范围',
+      filterPage: '仅筛选当前页',
+      searchAll: '搜索全部分页',
+      paginationTip: '只能筛选当前页，如需搜索全部内容，请先解析全部分页。',
+      confirm: '搜索',
+      matches: '匹配到 {count} 项',
+    },
+
+    batchSelect: {
+      title: '批量选择',
+      placeholder: '请输入行号，例如：1,3,5-10',
+      guide: '多个序号用逗号分隔，连续区间用连字符。已勾选的项不会被取消。',
+      confirm: '选择',
+      count: '已输入 {count} 个序号',
+      empty: '请输入行号',
+      invalid: '行号格式错误',
+      selected: '已选中 {count} 项',
+    },
+
+    history: {
+      title: '解析记录',
+      limit: '仅保留最近 {count} 条记录，与桌面版共用同一份。',
+      clear: '清除记录',
+      remove: '删除',
+      close: '关闭',
+      loading: '加载中…',
+      empty: '暂无解析记录。',
+      no: '序号',
+      name: '标题',
+      type: '类型',
+      time: '解析时间',
+      actions: '操作',
+    },
+
   },
 
   user: {
@@ -107,6 +153,7 @@ export default {
     // 折叠卡片的标题与说明。文案抄自桌面版 gui/component/setting/card.py 的 self.tr(...)，
     // 好让两端说的是同一件事；aria2 与 WebUI 两张卡片桌面版没有，是这边自己写的
     card: {
+      parsing: { title: '解析设置', desc: '配置解析相关的行为' },
       personalization: { title: '个性化', desc: '自定义应用主题、颜色和视觉效果' },
       concurrency: { title: '下载并发', desc: '调整每任务线程数、并发下载数和速度限制' },
       priority: { title: '画质、音质和编码优先级', desc: '自定义下载的优先级' },
@@ -125,6 +172,7 @@ export default {
     },
 
     label: {
+      parse_history: '保存解析记录',
       language: '语言',
 
       download_path: '下载路径',
@@ -187,6 +235,7 @@ export default {
     },
 
     desc: {
+      parse_history: '保存已解析链接的历史记录，与桌面版共用同一份。',
       language: '选择应用程序的显示语言',
 
       download_path: '下载文件的保存位置。已在队列中的任务仍使用创建时的目录。',

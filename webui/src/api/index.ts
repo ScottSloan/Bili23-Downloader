@@ -3,7 +3,7 @@
 // 每个函数的入参与返回都从 `schema.d.ts` 推出来，**没有一处手写的结构**。
 // 后端改了字段，这里会直接编译不过 —— 那正是要的效果（S3-12 加 `--check` 也是这个目的）。
 
-import { get, post } from './client'
+import { get, post, del } from './client'
 import type { Ok, Body } from './client'
 
 // ---------------- 类型别名 ----------------
@@ -102,8 +102,23 @@ export const login = {
 // ---------------- 解析与预览 ----------------
 
 export const parse = {
-  url: (url: string, pn = 1, signal?: AbortSignal) =>
-    post<ParseResult>('/parse', { url, pn }, undefined, signal),
+  /**
+   * 解析一个链接
+   *
+   * `keyword` 只对接口本身支持搜索的类型有效（个人空间、收藏夹、历史记录、稍后再看）。
+   * 后端会把它写回链接 —— 翻页与解析历史因此都直接复用这条链接，不必再维护搜索状态
+   */
+  url: (url: string, pn = 1, keyword?: string, signal?: AbortSignal) =>
+    post<ParseResult>('/parse', { url, pn, keyword }, undefined, signal),
+
+  history: {
+    list: () => get<Ok<'/api/parse/history', 'get'>>('/parse/history'),
+    remove: (historyId: string) =>
+      del<Ok<'/api/parse/history/{history_id}', 'delete'>>(
+        `/parse/history/${encodeURIComponent(historyId)}`,
+      ),
+    clear: () => del<Ok<'/api/parse/history', 'delete'>>('/parse/history'),
+  },
 
   /** 从解析树里摘出待下载的剧集。规则（树节点不算）只在后端有一份 */
   episodes: (tree: ParseNode, onlyChecked = true) =>

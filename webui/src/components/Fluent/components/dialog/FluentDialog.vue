@@ -179,6 +179,15 @@ onBeforeUnmount(() => {
   flex: 1 1 0;
 }
 
+/*
+  只有一个按钮时占右半边，不铺满整行 —— 桌面版 `hideCancelButton()` 是在按钮前面
+  插了一个 stretch，剩下那个按钮于是只分到一半宽度。6px 是 12 的间距的一半
+*/
+.footer > :deep(button:only-child) {
+  flex: 0 0 calc(50% - 6px);
+  margin-left: auto;
+}
+
 @keyframes fade-in {
   from {
     opacity: 0;

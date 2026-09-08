@@ -30,8 +30,12 @@ class HistoryDatabase(Database):
         """)
 
     def query_all(self):
+        # 按 id 兜底排序：created_time 是**秒级**的，同一秒内写进来的几条时间戳完全相同，
+        # 只按它排的话先后顺序由 SQLite 自己定，列表里谁在前面是不确定的。
+        # 批量解析、或者手快连点两次时就会撞上
         return self.query("""
-            SELECT history_id, title, url, type, created_time FROM history ORDER BY created_time DESC
+            SELECT history_id, title, url, type, created_time FROM history
+            ORDER BY created_time DESC, id DESC
         """)
 
     def add(self, title: str, url: str, type: str):
@@ -51,7 +55,7 @@ class HistoryDatabase(Database):
             ("""
                 DELETE FROM history
                 WHERE id NOT IN (
-                    SELECT id FROM history ORDER BY created_time DESC LIMIT ?
+                    SELECT id FROM history ORDER BY created_time DESC, id DESC LIMIT ?
                 )
             """, (self.max_length,))
         ])

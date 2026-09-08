@@ -96,6 +96,17 @@ interface ParseState {
   checkState: Map<string, CheckState>
   /** 已经下过的行。**服务端会静默跳过它们**，所以必须在列表上标出来 */
   downloaded: Set<string>
+  /** 解析用的链接（后端解析短链后返回的那条），翻页与服务端搜索都复用它 */
+  url: string
+  /**
+   * 后端随解析结果给的附加信息
+   *
+   * 搜索要看其中三样：`server_search`（接口支不支持按关键词搜）、`pagination`
+   * （结果分不分页，决定本地筛选够不够用）、`keyword`（链接里已生效的关键词）
+   */
+  extra: Record<string, unknown>
+  /** 本地筛选的关键词。命中的行标题用主题色显示，与桌面版一致（那边是 ForegroundRole） */
+  searchKeyword: string
   _nodes: Map<string, ParseNode>
   _parents: Map<string, string | null>
 }
@@ -121,12 +132,26 @@ export const useParseStore = defineStore('parse', {
 
     downloaded: new Set(),
 
+    url: '',
+    extra: {},
+    searchKeyword: '',
+
     _nodes: new Map(),
     _parents: new Map(),
   }),
 
   getters: {
     visibleColumns: (state): ParseColumn[] => state.columns.filter((column) => column.show),
+
+    /** 接口本身支持按关键词搜索（个人空间、收藏夹、历史记录、稍后再看） */
+    serverSearchAvailable: (state): boolean => Boolean(state.extra.server_search),
+
+    /** 结果分页。接口不支持搜索时，本地筛选只覆盖当前页，要提示用户 */
+    paginated: (state): boolean => Boolean(state.extra.pagination),
+
+    /** 链接里已生效的搜索关键词，打开搜索框时回显 */
+    currentKeyword: (state): string =>
+      typeof state.extra.keyword === 'string' ? state.extra.keyword : '',
 
     // 按展开状态摊平出实际要渲染的行，附带层级用于缩进
     rows: (state): Row[] => {
@@ -170,6 +195,11 @@ export const useParseStore = defineStore('parse', {
       this.category = payload.category || ''
       this.title = payload.title || ''
       this.current = payload.current ?? null
+      this.url = payload.url || ''
+      this.extra = payload.extra ?? {}
+
+      // 上一次的筛选词跟着结果一起作废：换了一棵树，高亮的还是旧的命中项就成了噪声
+      this.searchKeyword = ''
 
       const { nodes, parents } = indexTree(this.tree)
 
@@ -350,7 +380,7 @@ export const useParseStore = defineStore('parse', {
       this.checkState = next
     },
 
-    async parse(url: string) {
+    async parse(url: string, keyword?: string) {
       if (!url.trim()) {
         return
       }
@@ -359,12 +389,86 @@ export const useParseStore = defineStore('parse', {
       this.error = ''
 
       try {
-        this._load(await parseApi.url(url.trim()))
+        this._load(await parseApi.url(url.trim(), 1, keyword))
       } catch (e) {
         this.error = e instanceof Error ? e.message : String(e)
       } finally {
         this.loading = false
       }
+    },
+
+    /**
+     * 交给服务端搜索：把关键词写回链接重新解析
+     *
+     * 用的是**后端返回的那条链接**而不是输入框里的原文 —— 短链已经跳转过，
+     * 而关键词参数要拼在跳转之后的地址上
+     */
+    async serverSearch(keywords: string) {
+      await this.parse(this.url, keywords)
+    },
+
+    /**
+     * 本地筛选：标出命中的行并把它们的祖先展开
+     *
+     * 只高亮不过滤，与桌面版一致 —— 过滤掉其余行会让用户失去上下文，
+     * 也没法看出命中项在整张列表里的位置。返回命中数量，交给调用方提示
+     */
+    searchLocal(keywords: string): number {
+      this.searchKeyword = keywords
+
+      if (!keywords) {
+        return 0
+      }
+
+      const needle = keywords.toLowerCase()
+      const hits: string[] = []
+
+      for (const [id, node] of this._nodes) {
+        if ((node.title || '').toLowerCase().includes(needle)) {
+          hits.push(id)
+        }
+      }
+
+      // 命中项藏在折叠的分组里就等于没找到，逐级展开它的祖先
+      for (const id of hits) {
+        let parent = this._parents.get(id) ?? null
+
+        while (parent) {
+          this.expanded.add(parent)
+
+          parent = this._parents.get(parent) ?? null
+        }
+      }
+
+      return hits.length
+    },
+
+    /**
+     * 按序号批量勾选
+     *
+     * 判据与桌面版 `batch_select` 一致：节点的 `number` 落在给定的序号表里就勾上。
+     * **不清除已有的勾选** —— 那边也是只加不减，可以分几次把要的都挑齐
+     */
+    batchSelect(numbers: number[]): number {
+      const wanted = new Set(numbers)
+
+      let count = 0
+
+      for (const [id, node] of this._nodes) {
+        if (node.is_node) {
+          continue
+        }
+
+        const value = Number(node.number)
+
+        if (Number.isFinite(value) && wanted.has(value)) {
+          this.setChecked(id, true)
+
+          count += 1
+        }
+      }
+
+      return count
     },
 
     /**

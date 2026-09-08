@@ -115,6 +115,20 @@ function stateOf(id: string): CheckState {
   return store.checkState.get(id) ?? 0
 }
 
+/**
+ * 命中当前的筛选词
+ *
+ * 桌面版是给标题那一列换前景色（`model.py` 的 `_get_highlight_brush`，用的是主题色），
+ * 这里照做 —— 不加底色也不过滤，命中项在整张列表里的位置才看得出来
+ */
+function isMatch(node: { title?: string }): boolean {
+  if (!store.searchKeyword) {
+    return false
+  }
+
+  return (node.title || '').toLowerCase().includes(store.searchKeyword.toLowerCase())
+}
+
 function onToggle(id: string, event: Event) {
   store.setChecked(id, (event.target as HTMLInputElement).checked)
 }
@@ -142,6 +156,7 @@ function onToggle(id: string, event: Event) {
             'is-node': node.is_node,
             'is-reparse': node.attributes.includes('need_parse_bit'),
             'is-downloaded': store.downloaded.has(rowId),
+            'is-match': isMatch(node),
           }"
           :style="{
             gridTemplateColumns: gridTemplate,
@@ -267,6 +282,11 @@ function onToggle(id: string, event: Event) {
    光靠颜色深浅，用户认不出这是「已下载」还是「不可用」 */
 .tree-row.is-downloaded .cell-text {
   color: var(--text-tertiary);
+}
+
+/* 命中筛选词。放在已下载那条之后，两者同时成立时以命中为准 —— 用户正在找它 */
+.tree-row.is-match .cell-text {
+  color: var(--primary-color);
 }
 
 .header-cell,

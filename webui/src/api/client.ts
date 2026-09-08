@@ -176,3 +176,6 @@ export const post = <T>(
   query?: Record<string, unknown>,
   signal?: AbortSignal,
 ) => request<T>('POST', path, { body, query, signal })
+
+export const del = <T>(path: string, query?: Record<string, unknown>, signal?: AbortSignal) =>
+  request<T>('DELETE', path, { query, signal })

@@ -457,6 +457,74 @@
         "title": "HealthInfo",
         "type": "object"
       },
+      "HistoryDeleteResult": {
+        "properties": {
+          "deleted": {
+            "title": "Deleted",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "deleted"
+        ],
+        "title": "HistoryDeleteResult",
+        "type": "object"
+      },
+      "HistoryEntry": {
+        "description": "一条解析历史。字段名与 `util/misc/history.py` 建的表一一对应",
+        "properties": {
+          "created_time": {
+            "title": "Created Time",
+            "type": "integer"
+          },
+          "history_id": {
+            "title": "History Id",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "type": {
+            "title": "Type",
+            "type": "string"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "history_id",
+          "title",
+          "url",
+          "type",
+          "created_time"
+        ],
+        "title": "HistoryEntry",
+        "type": "object"
+      },
+      "HistoryList": {
+        "properties": {
+          "entries": {
+            "items": {
+              "$ref": "#/components/schemas/HistoryEntry"
+            },
+            "title": "Entries",
+            "type": "array"
+          },
+          "max_length": {
+            "title": "Max Length",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "entries",
+          "max_length"
+        ],
+        "title": "HistoryList",
+        "type": "object"
+      },
       "LoginRequest": {
         "properties": {
           "password": {
@@ -660,6 +728,18 @@
       },
       "ParseRequest": {
         "properties": {
+          "keyword": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Keyword"
+          },
           "pn": {
             "default": 1,
             "maximum": 10000.0,
@@ -2100,6 +2180,88 @@
           }
         },
         "summary": "Extract Episodes",
+        "tags": [
+          "parse"
+        ]
+      }
+    },
+    "/api/parse/history": {
+      "delete": {
+        "operationId": "clear_history_api_parse_history_delete",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HistoryDeleteResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Clear History",
+        "tags": [
+          "parse"
+        ]
+      },
+      "get": {
+        "operationId": "read_history_api_parse_history_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HistoryList"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Read History",
+        "tags": [
+          "parse"
+        ]
+      }
+    },
+    "/api/parse/history/{history_id}": {
+      "delete": {
+        "operationId": "delete_history_api_parse_history__history_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "history_id",
+            "required": true,
+            "schema": {
+              "title": "History Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HistoryDeleteResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete History",
         "tags": [
           "parse"
         ]

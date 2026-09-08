@@ -189,6 +189,12 @@ export const SETTING_GROUPS: SettingGroupSpec[] = [
     key: 'behavior',
     items: [
       {
+        key: 'parsing',
+        icon: 'search',
+        items: [{ attr: 'parse_history', described: true }],
+      },
+
+      {
         key: 'downloadHandling',
         icon: 'download',
         items: [
@@ -392,9 +398,12 @@ export const SPEC_BY_ATTR: Record<string, SettingSpec> = Object.fromEntries(
  * 没放进设置页的东西，写在这里备查（省得下次又论证一遍）
  *
  * - **只有桌面链路才读的项**：`preallocate_file_space` 只作用于内置下载器，
- *   而 WebUI 下载走的是 aria2；`auto_select_mode` 与 `parse_history` 的读取点
- *   全在 `gui/interface/parse.py`，Web 端的解析页没有对应实现。
- *   这三项摆出来是**假的开关** —— 用户设了，什么也不会发生
+ *   而 WebUI 下载走的是 aria2；`auto_select_mode` 的读取点全在
+ *   `gui/interface/parse.py`，Web 端的解析页没有对应实现。
+ *   这两项摆出来是**假的开关** —— 用户设了，什么也不会发生
+ *
+ *   （`parse_history` 原本也在这一档，S4 给解析页补上解析记录之后，
+ *   后端的 `/api/parse` 会照着它决定记不记，于是它进了「行为」组）
  * - **窗口行为**（`stay_on_top` / `when_close_window` / `silent_start` /
  *   `remember_window_state` / `window_state` / `show_notification` /
  *   `monitor_clipboard` / `mica_effect` / `display_scaling`）：桌面窗口专用
