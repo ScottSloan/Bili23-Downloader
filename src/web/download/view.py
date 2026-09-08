@@ -38,6 +38,10 @@ def task_view(task_info: TaskInfo) -> dict:
         "task_id": task_info.Basic.task_id,
         "title": task_info.Basic.show_title,
         "cover_id": task_info.Basic.cover_id,
+        # 封面**给地址不给图**：桌面版把它下载成 QPixmap 存进 thumbnail.db，
+        # 而 QPixmap 交不给浏览器。这边直接让浏览器去 B 站图床取，
+        # 页面本来就带 referrer=no-referrer，不会因为缺 Referer 被拒
+        "cover": task_info.Episode.cover,
         "created_time": task_info.Basic.created_time,
         "completed_time": task_info.Basic.completed_time,
 
@@ -56,9 +60,16 @@ def task_view(task_info: TaskInfo) -> dict:
         "download_path": task_info.File.download_path,
         "folder": task_info.File.folder,
 
+        # 这三个是**已经拼成文案**的（供文件命名规则用）。服务端进程里没有 Qt 的
+        # 翻译函数，它们一律是英文，界面上别直接显示 —— 前端按下面那三个 id
+        # 查自己的译文（D12）
         "video_quality": task_info.Episode.video_quality,
         "audio_quality": task_info.Episode.audio_quality,
         "video_codec": task_info.Episode.video_codec,
+
+        "video_quality_id": task_info.Download.video_quality_id,
+        "audio_quality_id": task_info.Download.audio_quality_id,
+        "video_codec_id": task_info.Download.video_codec_id,
         "duration": task_info.Episode.duration,
         "url": task_info.Episode.url,
     }

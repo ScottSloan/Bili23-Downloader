@@ -10,6 +10,7 @@ QtWidgets 或 qfluentwidgets（`test/web_entry.py` 守着这一条）。
 """
 
 from contextlib import asynccontextmanager
+import asyncio
 from typing import Optional
 import logging
 
@@ -17,10 +18,13 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
 from util.common.config import config
+from util.thread import background
 
 from .aria2 import Aria2Client, Aria2Process
 from .dispatch import install as install_dispatcher
-from .download import MergeCoordinator, Reconciler, StreamMonitor, StreamRegistry, TaskPublisher
+from .download import (
+    DownloadDriver, MergeCoordinator, Reconciler, StreamMonitor, StreamRegistry, TaskPublisher,
+)
 from .events import EventHub
 from .security import SessionStore, SESSION_COOKIE, generate_password, hash_password
 from . import static
@@ -108,6 +112,7 @@ async def _aria2_lifespan(app: FastAPI):
     registry = StreamRegistry()
     monitor = StreamMonitor(client, registry)
     merges = MergeCoordinator()
+    driver = DownloadDriver(client, registry, merges)
     reconciler = Reconciler(client, registry, merges)
 
     # aria2 报完最后一路流之后，剩下的（附加内容、合并、重命名）全在业务层。
@@ -119,7 +124,11 @@ async def _aria2_lifespan(app: FastAPI):
 
     monitor.on_task_changed = _on_stream_changed
 
+    # 每次轮询都要把速度与进度写回 TaskInfo，否则前端只有一个不动的进度条
+    monitor.on_task_progress = driver.on_stream_progress
+
     merges.attach()
+    driver.attach()
 
     app.state.aria2_process = process
     app.state.aria2 = client
@@ -127,6 +136,7 @@ async def _aria2_lifespan(app: FastAPI):
     app.state.streams = registry
     app.state.monitor = monitor
     app.state.merges = merges
+    app.state.driver = driver
     app.state.reconciler = reconciler
 
     # aria2 崩溃重启后 gid 全部作废，必须重新对一次账，否则界面上的任务会永远停在
@@ -137,6 +147,9 @@ async def _aria2_lifespan(app: FastAPI):
         app.state.publisher.publish_aria2(True)
 
         await reconciler.run()
+
+        # 断连期间新建的任务退回了排队，重连后要把它们推上路
+        driver.schedule()
 
     client.on_reconnect = _on_reconnect
 
@@ -150,7 +163,13 @@ async def _aria2_lifespan(app: FastAPI):
             # 而 registry 是内存里的，重启后要靠对账重新填起来
             await reconciler.run()
 
+            # 对账只管「还在跑的」，排队中与已暂停的要靠这一步收进登记表 ——
+            # 不收的话，上次没下完的任务重启后再也不会自己开始
+            await asyncio.wrap_future(background.submit(driver.load))
+
             await monitor.start()
+
+            driver.schedule()
 
         except Exception as e:
             app.state.aria2_error = str(e)
@@ -170,6 +189,8 @@ async def _aria2_lifespan(app: FastAPI):
     finally:
         # 顺序有讲究：先停合并（里面的 FFmpeg 子进程不停掉会变成孤儿继续写输出文件），
         # 再停进度轮询，最后才断 aria2 与它的进程
+        driver.detach()
+
         merges.shutdown()
 
         await monitor.stop()

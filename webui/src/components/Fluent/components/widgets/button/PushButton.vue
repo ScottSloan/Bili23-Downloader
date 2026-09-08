@@ -1,11 +1,21 @@
 <script setup lang="ts">
+import fluentIcon from '../../../icons/FluentIcon.vue'
+
 /** 样式变体：push 为普通按钮，primary 为主色按钮 */
 type ButtonVariant = 'push' | 'primary'
 
 withDefaults(
   defineProps<{
     /** 按钮文字。声明成 prop，因此不会落到 <button> 的 title 属性上变成气泡提示 */
-    title: string
+    title?: string
+    /**
+     * 左边的图标，见 icons/fluentIcons.ts
+     *
+     * 桌面版的「全部开始 / 全部暂停 / 全部删除」都是带图标的 PushButton。
+     * qss 里带图标时左内边距是 36（图标 16 画在 x=12），这边用 flex + gap 8
+     * 算出来正好也是 36
+     */
+    icon?: string
     variant?: ButtonVariant
     /** 禁用态。用原生 disabled，浏览器不会给禁用控件派发 click，无需再手动拦截 */
     disabled?: boolean
@@ -18,6 +28,8 @@ withDefaults(
     type?: 'button' | 'submit' | 'reset'
   }>(),
   {
+    title: '',
+    icon: '',
     variant: 'push',
     disabled: false,
     type: 'button',
@@ -32,14 +44,24 @@ withDefaults(
     根元素只有一个，@click / class / style 仍按 attrs fallthrough 落在这里。
   -->
   <button :type="type" class="fluent-button" :class="`is-${variant}`" :disabled="disabled">
-    <span>{{ title }}</span>
+    <fluentIcon v-if="icon" :name="icon" class="button-icon" />
+
+    <!-- 插槽给 ToolButton 那种「只有图标」的用法。有 title 时走默认内容 -->
+    <slot>
+      <span v-if="title">{{ title }}</span>
+    </slot>
   </button>
 </template>
 
 <style scoped>
 .fluent-button {
   text-align: center;
-  display: inline-block;
+  /* inline-flex 而不是 inline-block：带图标时靠 gap 排开，
+     不带图标时 justify-content 顶替原来的 text-align */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   flex: 0 0 auto;
   padding: 5px 12px 6px 12px;
   border-radius: 5px;
@@ -69,6 +91,18 @@ withDefaults(
 :root[data-theme='dark'] .fluent-button {
   border-bottom-color: var(--control-stroke-default);
   border-top-color: var(--control-stroke-accent);
+}
+
+.button-icon {
+  flex: 0 0 auto;
+  width: 16px;
+  height: 16px;
+}
+
+/* 图标跟着按钮的文字颜色走。FluentIcon 自己把 color 写成了 --text-primary，
+   不盖掉的话主色按钮上的图标会是黑的 */
+.fluent-button :deep(.fluent-icon) {
+  color: inherit;
 }
 
 /* 悬停 / 按下都要排除禁用态：各浏览器对禁用控件是否匹配 :hover 的行为并不一致 */

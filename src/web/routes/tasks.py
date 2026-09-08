@@ -25,6 +25,7 @@ from pydantic import BaseModel, Field
 
 from util.common.config import config
 from util.common.enum import DownloadStatus, DuplicateDownloadResolution
+from util.common.signal_bus import signal_bus
 from util.download.task.manager import task_manager
 from util.thread import background
 
@@ -65,11 +66,28 @@ class CheckDuplicatesRequest(BaseModel):
 async def _off_loop(func, *args, **kwargs):
     return await asyncio.wrap_future(background.submit(func, *args, **kwargs))
 
-def _find(task_ids: List[str]) -> List:
+def _live(request: Request):
+    """进程里那份「活的 TaskInfo」登记表。aria2 没起来时为 None"""
+    return getattr(request.app.state, "merges", None)
+
+def _find(task_ids: List[str], live = None) -> List:
+    """
+    按 id 取任务，**优先取内存里那份**
+
+    查库会造一个新的 TaskInfo 实例。下载调度、合并、进度回写手里拿着的是另一份，
+    两边各改各的、谁后写库谁赢 —— 表现是「暂停了又自己跑起来」「进度偶尔倒退」，
+    而两处代码单看都没错。所以先问登记表，问不到才查库，查到的也立刻收进去
+    """
     found = []
 
     for task_id in task_ids:
-        task_info = task_manager.query_by_id(task_id)
+        task_info = live.get(task_id) if live is not None else None
+
+        if task_info is None:
+            task_info = task_manager.query_by_id(task_id)
+
+            if task_info is not None and live is not None:
+                task_info = live.adopt(task_info)
 
         if task_info is not None:
             found.append(task_info)
@@ -226,14 +244,18 @@ async def check_duplicates(payload: CheckDuplicatesRequest):
     return {"duplicates": flags}
 
 @router.post("/tasks/delete", response_model = DeleteResult)
-async def delete_tasks(payload: TaskIdsRequest, completed: bool = Query(default = False)):
+async def delete_tasks(payload: TaskIdsRequest, request: Request,
+                       completed: bool = Query(default = False)):
     """
     删除任务
 
     **同时删掉临时文件**（`cancel_many_async` 负责）。只删记录的话，
-    下载目录里会留下一堆 `video_<task_id>.m4s`，而且再也没人认得它们属于谁
+    下载目录里会留下一堆 `video_<task_id>.m4s`，而且再也没人认得它们属于谁。
+
+    **先让 aria2 停下再删文件**：反过来的话，文件删了而 aria2 还在写，
+    转眼又长出一个没人认得的半截文件
     """
-    task_list = await _off_loop(_find, payload.task_ids)
+    task_list = await _off_loop(_find, payload.task_ids, _live(request))
 
     if not task_list:
         return JSONResponse({"detail": "No matching task", "code": "NO_MATCHING_TASK"},
@@ -244,28 +266,45 @@ async def delete_tasks(payload: TaskIdsRequest, completed: bool = Query(default 
         await _off_loop(task_manager.delete_many, task_list, True)
 
     else:
+        await _stop_streams(request, [task.Basic.task_id for task in task_list])
+
         await _off_loop(task_manager.cancel_many_async, task_list)
 
     return {"deleted": len(task_list)}
 
+async def _stop_streams(request: Request, task_ids: list) -> None:
+    """把这些任务名下的 gid 从 aria2 里撤掉，并把它们从登记表里清出去"""
+    driver = getattr(request.app.state, "driver", None)
+
+    if driver is None:
+        return
+
+    for task_id in task_ids:
+        await driver.forget_task(task_id)
+
 @router.post("/tasks/retry", response_model = RetryResult)
-async def retry_tasks(payload: TaskIdsRequest):
+async def retry_tasks(payload: TaskIdsRequest, request: Request):
     """
     重新下载
 
     先 `reset` 把进度与分片记录清干净再 `recreate` —— 只改状态不清记录的话，
     续传会接着上一次那份已经作废的分片表走
     """
-    task_list = await _off_loop(_find, payload.task_ids)
+    task_list = await _off_loop(_find, payload.task_ids, _live(request))
 
     if not task_list:
         return JSONResponse({"detail": "No matching task", "code": "NO_MATCHING_TASK"},
                             status_code = 404)
 
+    # 旧的 gid 连同它下到一半的文件一起作废。不撤掉的话，新一轮会和它写同一个文件，
+    # 而 aria2 不认为两个下载写同一个文件是错误
+    await _stop_streams(request, [task.Basic.task_id for task in task_list])
+
     for task_info in task_list:
         await _off_loop(task_manager.reset, task_info)
         await _off_loop(task_manager.recreate, task_info)
 
+    # recreate 会发 auto_manage_concurrent_downloads，调度器接着就把它们推上路
     return {"retried": len(task_list)}
 
 @router.post("/tasks/pause", response_model = PauseResult)
@@ -279,7 +318,7 @@ async def resume_tasks(payload: TaskIdsRequest, request: Request):
     return await _set_paused(request, payload.task_ids, paused = False)
 
 async def _set_paused(request: Request, task_ids: List[str], paused: bool):
-    task_list = await _off_loop(_find, task_ids)
+    task_list = await _off_loop(_find, task_ids, _live(request))
 
     if not task_list:
         return JSONResponse({"detail": "No matching task", "code": "NO_MATCHING_TASK"},
@@ -287,18 +326,19 @@ async def _set_paused(request: Request, task_ids: List[str], paused: bool):
 
     registry = getattr(request.app.state, "streams", None)
     client = getattr(request.app.state, "aria2", None)
-
-    status = DownloadStatus.PAUSED if paused else DownloadStatus.QUEUED
+    driver = getattr(request.app.state, "driver", None)
 
     stopped = 0
 
     for task_info in task_list:
         task_id = task_info.Basic.task_id
 
+        gids = registry.gids_of(task_id) if registry is not None else []
+
         # **先动 aria2 再改状态。** 反过来的话，改完状态但 aria2 没停下来，
         # 界面显示「已暂停」而磁盘上文件还在长 —— 这种不一致最难查
-        if registry is not None and client is not None and client.connected:
-            for gid in registry.gids_of(task_id):
+        if gids and client is not None and client.connected:
+            for gid in gids:
                 try:
                     if paused:
                         await client.pause(gid)
@@ -313,9 +353,37 @@ async def _set_paused(request: Request, task_ids: List[str], paused: bool):
                     logger.warning("任务 %s 的 gid %s %s失败：%s",
                                    task_id, gid, "暂停" if paused else "恢复", e)
 
-        task_info.Download.status = status
+        if paused:
+            task_info.Download.status = DownloadStatus.PAUSED
+            task_info.Download.speed = 0
+
+        elif gids:
+            # aria2 那边还认得它，unpause 完就已经在下了。这时置成排队的话，
+            # 界面会显示「等待下载」而文件在涨
+            task_info.Download.status = DownloadStatus.DOWNLOADING
+
+        else:
+            # 还没投递过（新建的、失败重置的、gid 已作废的）。退回排队交给调度器，
+            # **不要就地起** —— 就地起会绕过 download_parallel，
+            # 点一下「全部开始」就是几十个并发
+            task_info.Download.status = DownloadStatus.QUEUED
 
         await _off_loop(task_manager.update, task_info)
+
+        # 状态变了要推给前端。这条链路上没有别人会发：aria2 的事件只在
+        # 它自己动的时候来，而「排队中」这个状态它根本不知道
+        signal_bus.download.update_downloading_item.emit(task_info)
+
+    if not paused and driver is not None:
+        driver.schedule()
+
+    # 报的是**实际落到任务上的**状态：恢复时 aria2 还认得的那些直接就是下载中，
+    # 没投递过的才是排队。统一报「排队」的话，界面上会出现一个「等待下载」而字节在涨的任务
+    if paused:
+        status = DownloadStatus.PAUSED
+
+    else:
+        status = DownloadStatus.DOWNLOADING if stopped else DownloadStatus.QUEUED
 
     return {"updated": len(task_list), "streams_affected": stopped,
             "status": status.name.lower()}

@@ -101,10 +101,33 @@ class MergeCoordinator:
                 logger.exception("停止合并任务失败：%s", task_id)
 
     # ---- 任务登记 ----
+    #
+    # 这张表兼作**整个服务端那份「活的 TaskInfo」登记表**：合并调度要用它，
+    # 下载调度（driver.py）、重启对账、路由也都从这里拿任务。
+    # 名字听着只管合并，实际上是进程里唯一的那份 —— 详见 driver.py 的模块说明
 
     def track(self, task_info: TaskInfo) -> None:
+        """登记（覆盖）。已经有一份实例时用 `adopt`，不要用这个"""
         with self._lock:
             self._tasks[task_info.Basic.task_id] = task_info
+
+    def adopt(self, task_info: TaskInfo) -> TaskInfo:
+        """
+        登记，但已经有一份实例时返回已有的那份
+
+        **同一个任务在内存里只能有一个 TaskInfo。** 两份的话两边各改各的、
+        谁后写库谁赢，表现是「进度偶尔倒退」「暂停了又自己跑起来」——
+        而两处代码单看都没错。路由查库拿到的对象也要先过这里
+        """
+        with self._lock:
+            existing = self._tasks.get(task_info.Basic.task_id)
+
+            if existing is not None:
+                return existing
+
+            self._tasks[task_info.Basic.task_id] = task_info
+
+            return task_info
 
     def forget(self, task_id: str) -> None:
         with self._lock:

@@ -84,6 +84,16 @@ interface ParseState {
   tree: ParseNode[]
   columns: ParseColumn[]
   category: string
+  /**
+   * 时间列这一次显示的是哪一个
+   *
+   * 投稿看发布时间、收藏夹与稍后再看看收藏时间、历史记录看上次观看时间 ——
+   * 桌面版的表头就是这么随类别变的。**由后端挑好**（`dyn_time_attr_key`，
+   * 与桌面版表头同一个函数），这边只负责按它取列名。
+   *
+   * 没解析过时按发布时间，与桌面版 `_category_name` 为空时的结论一致
+   */
+  timeColumn: string
   /** 解析出来的标题，用于历史记录与页面标题 */
   title: string
   /** 链接指向的那一集的定位方式，前端据此高亮 */
@@ -125,6 +135,7 @@ export const useParseStore = defineStore('parse', {
     tree: [],
     columns: DEFAULT_COLUMNS,
     category: '',
+    timeColumn: 'pubtime',
     title: '',
     current: null,
     total: 0,
@@ -204,6 +215,7 @@ export const useParseStore = defineStore('parse', {
       // 后端给的是单个根节点，根本身不可见，渲染的是它的孩子
       this.tree = payload.tree?.children ?? []
       this.category = payload.category || ''
+      this.timeColumn = payload.time_column || 'pubtime'
       this.title = payload.title || ''
       this.current = payload.current ?? null
       this.url = payload.url || ''

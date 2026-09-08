@@ -72,6 +72,13 @@ export interface ParseNode {
 export interface ParseResult {
   title: string
   category: string
+  /**
+   * 时间列这一次显示的是哪一个：`pubtime` / `favtime` / `viewtime`
+   *
+   * 后端按类别挑好（与桌面版表头同一个函数），前端拿它去查列名 ——
+   * 自己在前端按 category 判一遍的话，两边迟早对不上而且都不报错
+   */
+  time_column: string
   parser_type: string
   url: string
   extra: Record<string, unknown>

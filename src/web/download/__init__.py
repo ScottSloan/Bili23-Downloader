@@ -5,6 +5,7 @@ WebUI 的下载编排
 重复下载判定、**多流聚合**、附加内容下载。
 
 - `streams.py`  —— 一个业务任务 ↔ 多个 gid 的映射与进度聚合（纯逻辑）
+- `driver.py`   —— 把排队中的任务推上路，并把 aria2 的进度写回任务
 - `monitor.py`  —— 把 aria2 的事件与进度喂给上面那层
 - `resolver.py` —— CDN 择优（复用 GUI 同一条链路）与 aria2 参数构造
 - `additional.py` —— 附加内容走 httpx，不进 aria2；编排与桌面版同一份
@@ -15,6 +16,7 @@ WebUI 的下载编排
 """
 
 from . import additional
+from .driver import DownloadDriver
 from .merge import MergeCoordinator, MAX_CONCURRENT_MERGES
 from .monitor import StreamMonitor, POLL_INTERVAL
 from .publisher import TaskPublisher
@@ -34,6 +36,7 @@ from .streams import (
 
 __all__ = [
     "additional",
+    "DownloadDriver",
     "MergeCoordinator", "MAX_CONCURRENT_MERGES",
     "StreamMonitor", "POLL_INTERVAL",
     "Reconciler", "TaskPublisher",

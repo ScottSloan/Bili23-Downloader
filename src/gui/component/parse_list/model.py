@@ -10,7 +10,7 @@ from util.common.signal_bus import signal_bus
 from util.common.config import config
 from util.common.enum import CheckState
 
-from util.parse.episode.tree import TreeItem
+from util.parse.episode.tree import TreeItem, dyn_time_attr_key
 
 # data() 是绘制时的最热路径，提前解引用角色常量，避免每次调用都走三层属性查找
 DISPLAY_ROLE = Qt.ItemDataRole.DisplayRole
@@ -333,19 +333,6 @@ class ParseModel(QAbstractItemModel):
         self._category_name = name
 
     def _get_dyn_time_attr_key(self):
-        match self._category_name:
-            case "FAVORITES":
-                # 收藏夹
-                return "favtime"
-            
-            case "WATCH_LATER":
-                # 稍后再看
-                return "favtime"
-            
-            case "HISTORY":
-                # 历史记录
-                return "viewtime"
-            
-            case _:
-                return "pubtime"
+        # 判据收敛到 core，WebUI 的表头走同一个函数
+        return dyn_time_attr_key(self._category_name)
         

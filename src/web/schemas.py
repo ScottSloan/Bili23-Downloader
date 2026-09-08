@@ -90,6 +90,8 @@ class TaskView(BaseModel):
     task_id: str
     title: str
     cover_id: str = ""
+    # 封面地址。浏览器自己去加载，服务端不转发图片
+    cover: str = ""
     created_time: int = 0
     completed_time: int = 0
 
@@ -110,9 +112,16 @@ class TaskView(BaseModel):
     download_path: str = ""
     folder: str = ""
 
+    # 已经拼好的文案，服务端这边是英文，只供文件命名规则用
     video_quality: str = ""
     audio_quality: str = ""
     video_codec: str = ""
+
+    # 界面上显示的画质 / 音质 / 编码由前端按这三个 id 查自己的译文（D12）
+    video_quality_id: int = 0
+    audio_quality_id: int = 0
+    video_codec_id: int = 0
+
     duration: int = 0
     url: str = ""
 

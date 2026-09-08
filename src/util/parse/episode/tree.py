@@ -340,3 +340,19 @@ class TreeItem(TreeItemBase):
 
         return self.pubtime
     
+# 时间列在不同来源下显示的是不同的东西：投稿看发布时间、收藏夹与稍后再看看收藏时间、
+# 历史记录看上次观看时间。**取值**由上面的 `TreeItem.dyn_time` 按 Attribute 位挑，
+# **列名**这边按解析出来的类别挑 —— 两者判据不同（列名只有一个，而一棵树里的节点
+# 可能带着不同的位），所以分成两处，但必须是同一套结论。
+#
+# 桌面版的表头与 WebUI 的表头都从这里取，写成两份的话，同一个收藏夹在两边会显示成
+# 不同的列名，而两边都不报错
+DYN_TIME_ATTR_KEY = {
+    "FAVORITES": "favtime",
+    "WATCH_LATER": "favtime",
+    "HISTORY": "viewtime",
+}
+
+def dyn_time_attr_key(category_name: str) -> str:
+    """时间列这一次该显示哪个字段。认不出的类别一律按发布时间"""
+    return DYN_TIME_ATTR_KEY.get(category_name or "", "pubtime")

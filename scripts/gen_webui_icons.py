@@ -58,6 +58,9 @@ ICONS = {
     "quietHours":        ":/qfluentwidgets/images/icons/QuietHours_black.svg",
     "constract":         ":/qfluentwidgets/images/icons/Constract_black.svg",
     "update":            ":/qfluentwidgets/images/icons/Update_black.svg",
+    "play":              ":/qfluentwidgets/images/icons/Play_black.svg",
+    "pause":             ":/qfluentwidgets/images/icons/Pause_black.svg",
+    "delete":            ":/qfluentwidgets/images/icons/Delete_black.svg",
 
     # 解析列表的复选框里那个勾与横杠。
     #
@@ -75,6 +78,8 @@ ICONS = {
     "todo":              ":/bili23/icon/light/todo.svg",
     "options":           ":/bili23/icon/light/options.svg",
     "clear":             ":/bili23/icon/light/clear.svg",
+    "sort":              ":/bili23/icon/light/sort.svg",
+    "retry":             ":/bili23/icon/light/retry.svg",
 }
 
 # Toast（InfoBar）左边那四个图标。**它们不能换成 currentColor** —— 信息 / 成功 /

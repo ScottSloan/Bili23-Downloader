@@ -699,7 +699,10 @@ export interface paths {
          * @description 删除任务
          *
          *     **同时删掉临时文件**（`cancel_many_async` 负责）。只删记录的话，
-         *     下载目录里会留下一堆 `video_<task_id>.m4s`，而且再也没人认得它们属于谁
+         *     下载目录里会留下一堆 `video_<task_id>.m4s`，而且再也没人认得它们属于谁。
+         *
+         *     **先让 aria2 停下再删文件**：反过来的话，文件删了而 aria2 还在写，
+         *     转眼又长出一个没人认得的半截文件
          */
         post: operations["delete_tasks_api_tasks_delete_post"];
         delete?: never;
@@ -1473,10 +1476,20 @@ export interface components {
              */
             audio_quality: string;
             /**
+             * Audio Quality Id
+             * @default 0
+             */
+            audio_quality_id: number;
+            /**
              * Completed Time
              * @default 0
              */
             completed_time: number;
+            /**
+             * Cover
+             * @default
+             */
+            cover: string;
             /**
              * Cover Id
              * @default
@@ -1556,10 +1569,20 @@ export interface components {
              */
             video_codec: string;
             /**
+             * Video Codec Id
+             * @default 0
+             */
+            video_codec_id: number;
+            /**
              * Video Quality
              * @default
              */
             video_quality: string;
+            /**
+             * Video Quality Id
+             * @default 0
+             */
+            video_quality_id: number;
         };
         /**
          * UpdateInfo

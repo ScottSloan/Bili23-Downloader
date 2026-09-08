@@ -66,6 +66,11 @@ class StreamMonitor:
 
         self.on_task_changed: Optional[Callable[[dict], None]] = None
 
+        # 每次轮询都调，不做变更判定 —— 速度必须走这条：CHANGE_KEYS 刻意不含 speed，
+        # 只挂在 on_task_changed 上的话，界面上的速度要等进度整整跳一个百分点才动一次。
+        # 一秒一条小 JSON × 并发下载数（默认 1），开销可以忽略
+        self.on_task_progress: Optional[Callable[[dict], None]] = None
+
         self._task: Optional[asyncio.Task] = None
         self._last_seen: Dict[str, tuple] = {}
 
@@ -164,10 +169,31 @@ class StreamMonitor:
         for status in active:
             task_id = self.registry.update_from_status(status)
 
-            if task_id and self._notify(task_id):
+            if not task_id:
+                continue
+
+            self._report_progress(task_id)
+
+            if self._notify(task_id):
                 changed.append(task_id)
 
         return changed
+
+    def _report_progress(self, task_id: str) -> None:
+        if self.on_task_progress is None:
+            return
+
+        snapshot = self.registry.snapshot(task_id)
+
+        if snapshot is None:
+            return
+
+        try:
+            self.on_task_progress(snapshot)
+
+        except Exception:
+            # 进度回写出错不该让整个轮询循环停掉
+            logger.exception("任务进度回写失败：%s", task_id)
 
     async def refresh_task(self, task_id: str) -> Optional[dict]:
         """

@@ -1,21 +1,49 @@
 <script setup lang="ts">
-// 下载页
-//
-// 现场由 taskStore 维护：全量快照恢复 + WebSocket 增量（后端 S3-9）。
-// 进入页面时开始订阅，离开时断开 —— 页面不在前台时没必要占着一条连接。
-//
-// **所有操作都不在本地先改状态**，等服务端的事件推回来。本地先改的话，
-// 操作失败时界面已经变了，而用户不会知道。
-
-import { computed, onActivated, watch } from 'vue'
+/**
+ * 下载页
+ *
+ * 布局对着桌面版 `gui/interface/download.py`：
+ *
+ * - 左上角一个 Pivot（正在下载 / 下载完成），右上角一排操作按钮，两者同一行
+ * - 页面四周 `25 15`（`main_layout.setContentsMargins(25, 15, 25, 15)`）
+ * - 「正在下载」那一排：排序、打开目录 | 全部开始、全部暂停、全部删除
+ * - 「下载完成」那一排：排序、打开目录 | 清空
+ *
+ * **两处有意偏离**：
+ *
+ * - 「打开下载目录」在网页上打不开本机的资源管理器，改成显示配置里的下载路径，
+ *   点一下复制。做成一个永远没反应的按钮更糟
+ * - 排序做成下拉，不是浮出面板 —— 只有两个选项（按什么排、正倒序），
+ *   为它搭一层浮层不划算
+ *
+ * 现场由 taskStore 维护：全量快照恢复 + WebSocket 增量（后端 S3-9）。
+ * **所有操作都不在本地先改状态**，等服务端的事件推回来 —— 本地先改的话，
+ * 操作失败时界面已经变了，而用户不会知道。
+ */
+import { computed, onActivated, ref, watch } from 'vue'
 import { useTaskStore } from '@/stores/taskStore'
 import { useToastStore } from '@/stores/toastStore'
+import { useSettingsStore } from '@/stores/settingsStore'
 import { t } from '@/i18n'
+import type { TaskView } from '@/api'
+import fluentPivot from '@/components/Fluent/components/navigation/FluentPivot.vue'
 import pushButton from '@/components/Fluent/components/widgets/button/PushButton.vue'
-import transparentCheckBox from '@/components/Fluent/components/widgets/checkbox/TransparentCheckBox.vue'
+import primaryPushButton from '@/components/Fluent/components/widgets/button/PrimaryPushButton.vue'
+import toolButton from '@/components/Fluent/components/widgets/button/ToolButton.vue'
+import fluentComboBox from '@/components/Fluent/components/widgets/combo_box/ComboBox.vue'
+import downloadItem from '@/components/App/download/DownloadItem.vue'
+import { formatSpeed } from '@/components/App/download/formatters'
 
 const store = useTaskStore()
 const toast = useToastStore()
+const settingsStore = useSettingsStore()
+
+const tab = ref<'downloading' | 'completed'>('downloading')
+
+const tabs = computed(() => [
+  { key: 'downloading', label: t('task.tabDownloading') },
+  { key: 'completed', label: t('task.tabCompleted') },
+])
 
 // 任务列表的错误也走气泡。这一页大部分操作（暂停 / 重试 / 删除）是即发即忘的，
 // 失败了没有别的地方会说
@@ -35,168 +63,303 @@ watch(
 // 用来兜住「连接断了而用户正好切回来」这种情况
 onActivated(() => store.start())
 
-const selectedIds = computed(() => [...store.selected])
-const hasSelection = computed(() => selectedIds.value.length > 0)
+// ---- 排序 ----
+//
+// 键与桌面版 `on_show_downloading_list_sort_flyout` 那份一致
 
-function formatSize(bytes: number): string {
-  if (!bytes) {
-    return '—'
+const SORT_KEYS = {
+  downloading: ['created_time', 'title', 'total_size', 'progress'],
+  completed: ['completed_time', 'title', 'total_size'],
+} as const
+
+const sortBy = ref<Record<string, string>>({
+  downloading: 'created_time',
+  completed: 'completed_time',
+})
+
+const ascending = ref<Record<string, boolean>>({
+  downloading: true,
+  completed: false,
+})
+
+const sortOptions = computed(() =>
+  SORT_KEYS[tab.value].map((key) => ({ value: key, label: t(`task.sortBy.${key}`) })),
+)
+
+const list = computed<TaskView[]>(() => {
+  const source = tab.value === 'downloading' ? store.downloading : store.completed
+
+  const key = sortBy.value[tab.value]
+  const factor = ascending.value[tab.value] ? 1 : -1
+
+  // 拷一份再排：直接排 store 里那个数组会把增量事件的插入顺序也搅乱
+  return [...source].sort((a, b) => {
+    if (key === 'title') {
+      return a.title.localeCompare(b.title) * factor
+    }
+
+    const left = (a as unknown as Record<string, number>)[key] || 0
+    const right = (b as unknown as Record<string, number>)[key] || 0
+
+    return (left - right) * factor
+  })
+})
+
+// ---- 选择 ----
+
+const selectedIds = computed(() => list.value.map((task) => task.task_id).filter((id) => store.selected.has(id)))
+
+// ---- 操作 ----
+
+/**
+ * 一行上那个主按钮
+ *
+ * 与桌面版 `_pressEvent` 同一套分支：完成的打开目录、排队与暂停的开始、
+ * 失败的重来、其余暂停
+ */
+function onItemAction(task: TaskView) {
+  switch (task.status) {
+    case 'completed':
+      showPath(task.download_path, task.folder)
+
+      break
+
+    case 'queued':
+    case 'paused':
+    case 'ffmpeg_queued':
+      store.resume([task.task_id])
+
+      break
+
+    case 'failed':
+    case 'ffmpeg_failed':
+      store.retry([task.task_id])
+
+      break
+
+    default:
+      store.pause([task.task_id])
   }
-
-  const units = ['B', 'KB', 'MB', 'GB', 'TB']
-
-  let value = bytes
-  let index = 0
-
-  while (value >= 1024 && index < units.length - 1) {
-    value /= 1024
-    index += 1
-  }
-
-  return `${value.toFixed(index === 0 ? 0 : 1)} ${units[index]}`
 }
 
-function formatSpeed(bytes: number): string {
-  return bytes > 0 ? `${formatSize(bytes)}/s` : ''
+function onItemRemove(task: TaskView) {
+  store.remove([task.task_id], task.status === 'completed')
 }
 
-function statusText(status: string): string {
-  // 后端发的是状态名（DownloadStatus 的成员名小写），前端按 key 翻译。
-  // 缺翻译时回落到原文，好让界面上一眼看出漏了哪条
-  return t(`task.status.${status}`)
+function batchStart() {
+  store.resume(store.downloading.map((task) => task.task_id))
+}
+
+function batchPause() {
+  store.pause(store.downloading.map((task) => task.task_id))
+}
+
+function batchRemove() {
+  const ids = (tab.value === 'downloading' ? store.downloading : store.completed).map(
+    (task) => task.task_id,
+  )
+
+  if (ids.length) {
+    store.remove(ids, tab.value === 'completed')
+  }
+}
+
+/**
+ * 「打开下载目录」的网页版
+ *
+ * 浏览器里开不了本机的资源管理器（也不该能）。退而求其次：把路径告诉用户并复制到剪贴板
+ */
+async function showPath(path?: string, folder?: string) {
+  const target = [path || String(settingsStore.value('download_path') || ''), folder]
+    .filter(Boolean)
+    .join('\\')
+
+  if (!target) {
+    return
+  }
+
+  try {
+    await navigator.clipboard.writeText(target)
+
+    toast.success(t('task.pathCopied'), target)
+  } catch {
+    // 非 https 或用户拒绝了剪贴板权限。路径本身仍然要说
+    toast.info(t('task.downloadPath'), target)
+  }
 }
 </script>
 
 <template>
   <div class="page-view">
-    <div class="toolbar">
-      <span class="summary">
-        {{ t('task.summary', { active: store.activeCount, total: store.downloading.length }) }}
-        <template v-if="store.totalSpeed">· {{ formatSpeed(store.totalSpeed) }}</template>
-      </span>
-
-      <!-- 断线时明确标出来：不标的话，「没有进度」看起来与「网络很慢」一模一样 -->
-      <span v-if="!store.live" class="offline">{{ t('task.offline') }}</span>
+    <div class="top">
+      <fluentPivot v-model="tab" :items="tabs" />
 
       <span class="flex-stretch" />
 
-      <pushButton
-        :title="t('task.pause')"
-        :disabled="!hasSelection"
-        @click="store.pause(selectedIds)"
-      />
-      <pushButton
-        :title="t('task.resume')"
-        :disabled="!hasSelection"
-        @click="store.resume(selectedIds)"
-      />
-      <pushButton
-        :title="t('task.retry')"
-        :disabled="!hasSelection"
-        @click="store.retry(selectedIds)"
-      />
-      <pushButton
-        :title="t('task.remove')"
-        :disabled="!hasSelection"
-        @click="store.remove(selectedIds)"
-      />
+      <div class="toolbar">
+        <fluentComboBox
+          class="sort-key"
+          :model-value="sortBy[tab]"
+          :options="sortOptions"
+          :label="t('task.sort')"
+          @update:model-value="(value: string | number) => (sortBy[tab] = String(value))"
+        />
+
+        <toolButton
+          icon="sort"
+          :label="ascending[tab] ? t('task.ascending') : t('task.descending')"
+          :class="{ 'is-descending': !ascending[tab] }"
+          @click="ascending[tab] = !ascending[tab]"
+        />
+
+        <toolButton icon="folder" :label="t('task.openFolder')" @click="showPath()" />
+
+        <span class="separator" />
+
+        <template v-if="tab === 'downloading'">
+          <primaryPushButton
+            icon="play"
+            :title="t('task.startAll')"
+            :disabled="!store.downloading.length"
+            @click="batchStart"
+          />
+          <pushButton
+            icon="pause"
+            :title="t('task.pauseAll')"
+            :disabled="!store.downloading.length"
+            @click="batchPause"
+          />
+          <pushButton
+            icon="delete"
+            :title="t('task.deleteAll')"
+            :disabled="!store.downloading.length"
+            @click="batchRemove"
+          />
+        </template>
+
+        <pushButton
+          v-else
+          icon="clear"
+          :title="t('task.clearAll')"
+          :disabled="!store.completed.length"
+          @click="batchRemove"
+        />
+      </div>
     </div>
 
+    <!-- 断线时明确标出来：不标的话，「没有进度」看起来与「网络很慢」一模一样 -->
+    <div v-if="!store.live || selectedIds.length" class="notice">
+      <span v-if="!store.live" class="offline">{{ t('task.offline') }}</span>
+
+      <template v-if="selectedIds.length">
+        <span class="selection">{{ t('task.selected', { count: selectedIds.length }) }}</span>
+
+        <pushButton :title="t('task.pause')" @click="store.pause(selectedIds)" />
+        <pushButton :title="t('task.resume')" @click="store.resume(selectedIds)" />
+        <pushButton :title="t('task.retry')" @click="store.retry(selectedIds)" />
+        <pushButton
+          :title="t('task.remove')"
+          @click="store.remove(selectedIds, tab === 'completed')"
+        />
+      </template>
+
+      <span class="flex-stretch" />
+
+      <span v-if="tab === 'downloading' && store.totalSpeed" class="total-speed">
+        {{ formatSpeed(store.totalSpeed) }}
+      </span>
+    </div>
 
     <div class="task-list">
-      <p v-if="!store.downloading.length && !store.completed.length" class="empty">
-        {{ t('task.empty') }}
+      <p v-if="!list.length" class="empty">
+        {{ tab === 'downloading' ? t('task.emptyDownloading') : t('task.emptyCompleted') }}
       </p>
 
-      <template v-else>
-        <div v-for="task in store.downloading" :key="task.task_id" class="task-row">
-          <transparentCheckBox
-            :checked="store.selected.has(task.task_id)"
-            @update:checked="store.toggleSelected(task.task_id)"
-          />
-
-          <div class="task-main">
-            <div class="task-title" :title="task.title">{{ task.title }}</div>
-
-            <div class="progress-track">
-              <div
-                class="progress-fill"
-                :class="{ 'is-error': task.status === 'failed' || task.status === 'ffmpeg_failed' }"
-                :style="{ width: `${task.progress}%` }"
-              />
-            </div>
-
-            <div class="task-meta">
-              <span>{{ task.status_label || statusText(task.status) }}</span>
-              <span>{{ task.progress }}%</span>
-              <span v-if="task.total_size">
-                {{ formatSize(task.downloaded_size) }} / {{ formatSize(task.total_size) }}
-              </span>
-              <span v-if="task.speed">{{ formatSpeed(task.speed) }}</span>
-              <span v-if="task.info_label" class="tag">{{ task.info_label }}</span>
-            </div>
-          </div>
-        </div>
-
-        <div v-if="store.completed.length" class="section-title">
-          {{ t('task.completedSection', { count: store.completed.length }) }}
-        </div>
-
-        <div v-for="task in store.completed" :key="task.task_id" class="task-row is-done">
-          <transparentCheckBox
-            :checked="store.selected.has(task.task_id)"
-            @update:checked="store.toggleSelected(task.task_id)"
-          />
-
-          <div class="task-main">
-            <div class="task-title" :title="task.title">{{ task.title }}</div>
-
-            <div class="task-meta">
-              <span>{{ statusText(task.status) }}</span>
-              <span v-if="task.total_size">{{ formatSize(task.total_size) }}</span>
-              <span v-if="task.info_label" class="tag">{{ task.info_label }}</span>
-            </div>
-          </div>
-        </div>
-      </template>
+      <downloadItem
+        v-for="task in list"
+        :key="task.task_id"
+        :task="task"
+        :selected="store.selected.has(task.task_id)"
+        @update:selected="store.toggleSelected(task.task_id)"
+        @action="onItemAction(task)"
+        @remove="onItemRemove(task)"
+      />
     </div>
   </div>
 </template>
 
 <style scoped>
 .page-view {
+  /* 与桌面版 main_layout 的 25 / 15 一致 */
   padding: 15px 25px;
   display: flex;
   flex-direction: column;
   gap: 10px;
   min-height: 0;
   height: 100%;
+  box-sizing: border-box;
+}
+
+.top {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+
+.flex-stretch {
+  flex: 1 1 auto;
 }
 
 .toolbar {
   display: flex;
+  flex-direction: row;
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
-.summary {
+.sort-key {
+  min-width: 120px;
+}
+
+/* 倒序时把排序图标翻过来，与桌面版那两个互斥按钮（SORT / SORT_REVERSE）等价 */
+.is-descending :deep(.fluent-icon) {
+  transform: scaleY(-1);
+}
+
+/* 桌面版工具栏里那条竖线：宽 5、上下留 5、alpha 50/255 */
+.separator {
+  flex: 0 0 auto;
+  width: 1px;
+  height: 22px;
+  margin: 0 4px;
+  background-color: rgba(0, 0, 0, 0.196);
+}
+
+:root[data-theme='dark'] .separator {
+  background-color: rgba(255, 255, 255, 0.196);
+}
+
+.notice {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
   font-size: 13px;
   color: var(--text-secondary);
 }
 
 .offline {
-  font-size: 12px;
   padding: 2px 8px;
   border-radius: 10px;
-  color: var(--text-secondary);
   background-color: var(--control-fill-secondary);
 }
 
-.error {
-  margin: 0;
-  font-size: 12px;
-  color: var(--text-danger);
+.total-speed {
+  font-size: 13px;
+  color: var(--text-secondary);
 }
 
 .task-list {
@@ -205,79 +368,13 @@ function statusText(status: string): string {
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  /* 桌面版列表项之间没有间距，行与行是贴着的 */
+  gap: 0;
 }
 
 .empty {
   margin: 24px 0;
   text-align: center;
   color: var(--text-secondary);
-}
-
-.section-title {
-  margin-top: 12px;
-  font-size: 12px;
-  color: var(--text-secondary);
-}
-
-.task-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
-  border-radius: 6px;
-  background-color: var(--control-fill-default);
-  border: 1px solid var(--card-stroke-default);
-}
-
-.task-row.is-done {
-  opacity: 0.75;
-}
-
-.task-main {
-  flex: 1 1 auto;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-
-.task-title {
-  font-size: 13px;
-  color: var(--text-primary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.progress-track {
-  height: 4px;
-  border-radius: 2px;
-  background-color: var(--control-fill-secondary);
-  overflow: hidden;
-}
-
-.progress-fill {
-  height: 100%;
-  background-color: var(--primary-color);
-  transition: width 0.2s ease;
-}
-
-.progress-fill.is-error {
-  background-color: var(--text-danger);
-}
-
-.task-meta {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-  font-size: 11px;
-  color: var(--text-secondary);
-}
-
-.tag {
-  padding: 0 6px;
-  border-radius: 8px;
-  background-color: var(--control-fill-secondary);
 }
 </style>

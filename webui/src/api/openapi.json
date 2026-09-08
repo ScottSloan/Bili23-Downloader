@@ -1369,10 +1369,20 @@
             "title": "Audio Quality",
             "type": "string"
           },
+          "audio_quality_id": {
+            "default": 0,
+            "title": "Audio Quality Id",
+            "type": "integer"
+          },
           "completed_time": {
             "default": 0,
             "title": "Completed Time",
             "type": "integer"
+          },
+          "cover": {
+            "default": "",
+            "title": "Cover",
+            "type": "string"
           },
           "cover_id": {
             "default": "",
@@ -1463,10 +1473,20 @@
             "title": "Video Codec",
             "type": "string"
           },
+          "video_codec_id": {
+            "default": 0,
+            "title": "Video Codec Id",
+            "type": "integer"
+          },
           "video_quality": {
             "default": "",
             "title": "Video Quality",
             "type": "string"
+          },
+          "video_quality_id": {
+            "default": 0,
+            "title": "Video Quality Id",
+            "type": "integer"
           }
         },
         "required": [
@@ -2699,7 +2719,7 @@
     },
     "/api/tasks/delete": {
       "post": {
-        "description": "删除任务\n\n**同时删掉临时文件**（`cancel_many_async` 负责）。只删记录的话，\n下载目录里会留下一堆 `video_<task_id>.m4s`，而且再也没人认得它们属于谁",
+        "description": "删除任务\n\n**同时删掉临时文件**（`cancel_many_async` 负责）。只删记录的话，\n下载目录里会留下一堆 `video_<task_id>.m4s`，而且再也没人认得它们属于谁。\n\n**先让 aria2 停下再删文件**：反过来的话，文件删了而 aria2 还在写，\n转眼又长出一个没人认得的半截文件",
         "operationId": "delete_tasks_api_tasks_delete_post",
         "parameters": [
           {

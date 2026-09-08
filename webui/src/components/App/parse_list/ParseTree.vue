@@ -22,6 +22,19 @@ const settingsStore = useSettingsStore()
 const alternate = computed(() => Boolean(settingsStore.value('parse_list_alternate_row_color')))
 
 
+/**
+ * 表头的列名
+ *
+ * 时间那一列在不同来源下含义不同（投稿看发布时间、收藏夹看收藏时间、
+ * 历史记录看上次观看时间）。桌面版的表头会跟着换成对应的那一个，
+ * 不是把三个名字并排写出来 —— 那样又长又只有一个是对的。
+ *
+ * 该显示哪一个由后端随解析结果给（`time_column`）
+ */
+function headerName(key: string): string {
+  return columnName(key === 'dyn_time' ? store.timeColumn : key)
+}
+
 // 用 CSS grid 列宽复刻 GUI 的列配置：标题列吃掉剩余空间，其余按配置的像素宽度
 const gridTemplate = computed(() =>
   store.visibleColumns
@@ -137,7 +150,7 @@ function isMatch(node: { title?: string }): boolean {
   <div class="parse-tree">
     <div class="tree-header" :style="{ gridTemplateColumns: gridTemplate }">
       <div v-for="column in store.visibleColumns" :key="column.key" class="header-cell">
-        {{ columnName(column.key) }}
+        {{ headerName(column.key) }}
       </div>
     </div>
 

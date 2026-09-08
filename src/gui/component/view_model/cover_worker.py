@@ -4,6 +4,11 @@ from PySide6.QtGui import QImage
 from shiboken6 import isValid
 
 from util.network.request import SyncNetWorkRequest, ResponseType
+
+# 绝对导入。本文件在 S3-4 从 `util/download/cover/worker.py` 搬到了这里，
+# 相对路径的层数跟着变了 —— 写成 `..cover.manager` 会指向根本不存在的
+# `gui.component.cover`，而 run() 的兜底 except 会把 ModuleNotFoundError 吞掉，
+# 表现为封面一张都不显示且日志里只有一行「加载封面失败」
 from util.download.cover.manager import cover_manager
 
 from urllib.parse import urlencode
@@ -41,8 +46,6 @@ class CoverQueryWorker(QRunnable):
             logger.exception("加载封面失败：%s", self.cover_url)
 
     def _run(self):
-        from ..cover.manager import cover_manager
-
         if self.query_param:
             try:
                 self.query_url()
@@ -119,8 +122,6 @@ class CoverQueryWorker(QRunnable):
         return image, base64_data
 
     def query_url(self):
-        from ..cover.manager import cover_manager
-
         api_url = self.query_param.get("api_url")
         params = self.query_param.get("params")
         

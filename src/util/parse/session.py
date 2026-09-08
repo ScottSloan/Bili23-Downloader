@@ -31,7 +31,7 @@ from ..common.signal_bus import signal_bus
 from ..common.translator import Translator
 from ..thread.dispatch import DIRECT
 
-from .episode.tree import Attribute, EpisodeData, TreeItem
+from .episode.tree import Attribute, EpisodeData, TreeItem, dyn_time_attr_key
 
 logger = logging.getLogger(__name__)
 
@@ -157,9 +157,14 @@ class ParseSession(ParserResolver):
             # 调 update_episode_list()，这里把它变成显式失败而不是返回一棵空树
             raise RuntimeError("解析未产出任何结果")
 
+        category_name = captured.get("category_name") or category
+
         return {
             "title": captured.get("title") or "",
-            "category": captured.get("category_name") or category,
+            "category": category_name,
+            # 时间列这一次显示的是哪一个（发布 / 收藏 / 上次观看）。
+            # **由后端挑**：判据与桌面版表头是同一个函数，前端照着它取列名即可
+            "time_column": dyn_time_attr_key(category_name),
             "parser_type": parser_type,
             "url": url,
             "extra": extra,
