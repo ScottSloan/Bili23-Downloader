@@ -1,18 +1,3 @@
-"""
-配置项对象
-
-**这个类的公开形态必须与 qfluentwidgets 的 ConfigItem 逐字对齐**，因为界面侧有 38 个绑定点
-直接吃这套接口：`.value` / `.options` / `.range` / `.valueChanged` / `.restart` / `.group` /
-`.name` / `.key` / `.defaultValue`，另外 `qconfig.get(item)` 就是 `item.value`、
-`qconfig.set(item, v)` 就是给 `item.value` 赋值。只要这些名字都在，
-qfluentwidgets 自带的 SwitchSettingCard / ComboBoxSettingCard 也能继续直接用 —— 
-S2-2 因此没有改动任何一个绑定点，这是刻意换来的低风险。
-
-valueChanged 用 `Event(weak = True)`：原本它是 ConfigItem（QObject）上的 Qt 信号，
-下载选项对话框那类每次打开都重建的控件靠 Qt 的析构自动断开收尾。换成强引用的事件会让
-这些控件永远无法回收，且控件的 C++ 对象销毁后回调还会持续抛 RuntimeError。
-"""
-
 from copy import deepcopy
 from typing import Any
 

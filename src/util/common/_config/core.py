@@ -1,27 +1,3 @@
-"""
-配置对象本体
-
-对外形态与旧的 APPConfig 完全一致，调用方（一百多处）无需改动：
-
-    config.get(config.download_path)        # 持久化项：按项取值
-    config.set(config.download_path, path)  # 按项写值，默认立即落盘
-    config.video_quality_id                 # 运行时状态：直接读写属性
-
-与旧实现的三处关键差异：
-
-1. **配置项是实例属性，不再是类属性。**
-   旧实现把 ConfigItem 写在类体里，于是 `APPConfig()` 建出来的第二个实例与全局 config
-   共享同一批 item 对象 —— 设置界面的「导出配置」正是这么用的，
-   `temp_config.load()` 会把全局配置的取值一并改掉（导出一次，当前设置就被文件里的旧值覆盖）。
-   改成实例属性后这个缺陷自然消失。
-
-2. **写盘走 ConfigStore 的读改写**，磁盘上认不出来的键原样保留（D5）。
-
-3. **不依赖 Qt。** 主题三项（themeMode / themeColor / fontFamilies）与几个 Qt 信号
-   由桌面侧的桥接层注册进来，见 register_external()。WebUI 进程里它们不存在，
-   而 WebUI 本来就不读写主题（D14）。
-"""
-
 from copy import deepcopy
 from pathlib import Path
 from typing import Any

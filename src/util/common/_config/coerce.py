@@ -1,18 +1,3 @@
-"""
-取值纠正与序列化
-
-**语义是「纠正」而不是「拒绝」**，这一条是从 qfluentwidgets 沿用下来的，不是随手定的：
-用户的 config.json 可能被手工改过、可能是旧版本写的、也可能被另一个进程写进了越界值。
-在这些情况下让程序照常起来、把值拉回合法区间，比抛异常拒绝启动更符合一个下载器的定位。
-pydantic 默认是拒绝并抛 ValidationError，所以这一层不能直接交给它。
-
-与旧实现的一处**有意差异**：qfluentwidgets 的 OptionsValidator.correct() 在取值非法时返回
-`options[0]`（第一个可选值），而不是该项的默认值。例如 when_close_window 的默认值是
-ALWAYS_ASK，但 options[0] 是 EXIT —— 配置一旦损坏，关闭窗口的行为会变成直接退出。
-这里一律回落到**该项声明的默认值**，这也是 schema 里写明的语义。
-只有配置损坏或被手工改坏时才会走到这条分支，正常取值不受影响。
-"""
-
 from copy import deepcopy
 from enum import Enum
 from typing import Any

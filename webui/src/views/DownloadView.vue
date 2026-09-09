@@ -243,7 +243,7 @@ function batchRemove() {
     </div>
 
     <div class="task-list">
-      <p v-if="!list.length" class="empty">
+      <p v-if="!list.length" class="empty none-select">
         {{ tab === 'downloading' ? t('task.emptyDownloading') : t('task.emptyCompleted') }}
       </p>
 

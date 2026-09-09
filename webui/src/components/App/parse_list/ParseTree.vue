@@ -149,18 +149,43 @@ function isMatch(node: { title?: string }): boolean {
 <template>
   <div class="parse-tree">
     <div class="tree-header" :style="{ gridTemplateColumns: gridTemplate }">
-      <div
+      <!--
+        表头可点排序，与桌面版一致（那边是 `setSortingEnabled(True)`）。
+        用 <button> 而不是给 div 挂 @click：Tab 走得到、回车能触发，
+        aria-sort 也会念出当前排的是升还是降
+      -->
+      <button
         v-for="column in store.visibleColumns"
         :key="column.key"
+        type="button"
         class="header-cell"
-        :class="{ 'is-number': column.key === 'number' }"
+        :class="{ 'is-sorted': store.sortKey === column.key }"
+        :aria-sort="
+          store.sortKey === column.key
+            ? store.sortOrder === 'asc'
+              ? 'ascending'
+              : 'descending'
+            : 'none'
+        "
+        @click="store.toggleSort(column.key)"
       >
-        {{ headerName(column.key) }}
-      </div>
+        <span class="header-text">{{ headerName(column.key) }}</span>
+
+        <!-- 排序箭头只出现在当前排序的那一列，与 Qt 的 sortIndicator 一致 -->
+        <svg
+          v-if="store.sortKey === column.key"
+          class="sort-arrow"
+          :class="{ 'is-desc': store.sortOrder === 'desc' }"
+          viewBox="0 0 12 12"
+          aria-hidden="true"
+        >
+          <path d="M2.5 7.5 L6 4 L9.5 7.5" fill="none" stroke="currentColor" stroke-width="1.3" />
+        </svg>
+      </button>
     </div>
 
     <div ref="bodyRef" class="tree-body">
-      <p v-if="!store.rows.length" class="empty">{{ t('parse.empty') }}</p>
+      <p v-if="!store.rows.length" class="empty none-select">{{ t('parse.empty') }}</p>
 
       <div v-else class="tree-canvas" :style="{ height: `${totalSize}px` }">
         <div
@@ -365,9 +390,6 @@ function isMatch(node: { title?: string }): boolean {
   color: var(--text-tertiary);
 }
 
-/* 已下过的整行变淡，与桌面版一致（model.py 里给这类行上的是灰色画刷）。
-   除了淡，还挂了一枚标签 —— 网页上没有鼠标悬停解释的余地，
-   光靠颜色深浅，用户认不出这是「已下载」还是「不可用」 */
 .tree-row.is-downloaded .cell-text {
   color: var(--text-tertiary);
 }
@@ -395,32 +417,64 @@ function isMatch(node: { title?: string }): boolean {
   font-size: 13px;
 }
 
-/*
-  表头跟着这一列**内容**的对齐方式走，也就是左对齐。
-
-  桌面版这里是居中的（qfluentwidgets 的 `TreeView` 把 header 的 `defaultAlignment`
-  设成了 AlignHCenter，普通 QTreeView 本来是左对齐），而单元格里的文字一律靠左
-  —— 两者本就对不上，只是列窄时不明显。**这是有意偏离**：
-  用户看到的是「备注 / 时长 / 发布时间的表头没对准下面的内容」。
-
-  序号那一列是例外，见下面
-*/
 .header-cell {
-  justify-content: flex-start;
+  justify-content: center;
   /* 每段右边一条竖线，最后一段没有（qss 里的 `section:horizontal:last`） */
   border-right: 1px solid var(--header-stroke);
+
+  /* 抹掉 <button> 的浏览器默认值，看上去仍是一格表头 */
+  font: inherit;
+  font-size: inherit;
+  color: inherit;
+  margin: 0;
+  appearance: none;
+  border-top: none;
+  border-bottom: none;
+  border-left: none;
+  background: none;
+  cursor: pointer;
 }
 
-/*
-  序号列仍然居中：它的单元格里排在最前面的是展开箭头与复选框，数字在后头，
-  左对齐反而会让表头跑到箭头上方。居中恰好落在数字那一带
-*/
-.header-cell.is-number {
-  justify-content: center;
+.header-cell:hover {
+  background-color: var(--subtle-fill-secondary);
+}
+
+.header-cell:active {
+  background-color: var(--subtle-fill-tertiary);
+}
+
+.header-cell:focus-visible {
+  outline: 2px solid var(--focus-stroke-outer);
+  outline-offset: -2px;
 }
 
 .header-cell:last-child {
   border-right: none;
+}
+
+/* 列名与箭头都挤在这一格里，长列名先让出去 */
+.header-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sort-arrow {
+  flex: 0 0 auto;
+  width: 16px;
+  height: 16px;
+  transition: transform 0.15s ease;
+}
+
+/* 升序朝上、降序朝下 —— 画的是朝上的那个，降序转半圈 */
+.sort-arrow.is-desc {
+  transform: rotate(180deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sort-arrow {
+    transition: none;
+  }
 }
 
 .cell-text {

@@ -1,23 +1,3 @@
-"""
-全局配置单例
-
-这个模块只做「组装」：真正的实现拆在 `_config/` 包里（包名带下划线是因为同名的模块与包
-在 Python 里无法共存，而全仓库一百多处 `from util.common.config import config` 不能动）。
-
-    _config/schema.py    配置项声明清单
-    _config/item.py      配置项对象，形态与 qfluentwidgets 的 ConfigItem 对齐
-    _config/coerce.py    取值纠正与序列化（纠正而非拒绝）
-    _config/store.py     config.json 的读写，含未知字段透传
-    _config/core.py      配置对象本体
-    _config/migrate.py   结构版本迁移
-    _config/runtime.py   不落盘的运行时状态
-    _config/paths.py     用户数据目录
-
-**本模块及其依赖不引入 Qt。** 桌面版所需的主题桥接在 `gui/config_bridge.py`，
-由 main.py 显式安装；WebUI 进程不装它。
-"""
-
-from pathlib import Path
 import logging
 import sys
 
@@ -35,9 +15,6 @@ def isWin11():
 
 config_path = get_config_path()
 
-# 用户数据目录：config.json / task.db / thumbnail.db / history.db / logs / locks 都在这里。
-# 可用环境变量 BILI23_DATA_DIR 覆盖（Docker 把卷挂到那里），因此**不要**再假设它一定是
-# `<AppData>/Bili23 Downloader` 并自行拼路径 —— 那样覆盖之后数据会散到两个目录去
 data_dir = get_data_dir()
 
 config = Config(config_path)

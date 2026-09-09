@@ -54,23 +54,29 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div v-if="open" class="mask" @click.self="closeOnMask && emit('close')">
-    <div class="dialog" role="dialog" aria-modal="true" :style="{ width }">
-      <div class="view">
-        <h2 class="title">{{ title }}</h2>
+  <!--
+    包一层 transition 才有退场动画。`v-if` 配 CSS animation 只管得了进场：
+    元素一旦被移除就当场消失，关对话框会「啪」地断掉
+  -->
+  <transition name="mask">
+    <div v-if="open" class="mask" @click.self="closeOnMask && emit('close')">
+      <div class="dialog" role="dialog" aria-modal="true" :style="{ width }">
+        <div class="view">
+          <h2 class="title">{{ title }}</h2>
 
-        <p v-if="$slots.hint" class="hint"><slot name="hint" /></p>
+          <p v-if="$slots.hint" class="hint"><slot name="hint" /></p>
 
-        <div class="body">
-          <slot />
+          <div class="body">
+            <slot />
+          </div>
+        </div>
+
+        <div v-if="$slots.actions" class="footer">
+          <slot name="actions" />
         </div>
       </div>
-
-      <div v-if="$slots.actions" class="footer">
-        <slot name="actions" />
-      </div>
     </div>
-  </div>
+  </transition>
 </template>
 
 <style scoped>
@@ -82,7 +88,6 @@ onBeforeUnmount(() => {
   justify-content: center;
   background-color: var(--dialog-mask);
   z-index: 100;
-  animation: fade-in 0.2s ease-out;
 }
 
 .dialog {
@@ -96,7 +101,6 @@ onBeforeUnmount(() => {
   background-color: var(--dialog-fill);
   border: 1px solid var(--dialog-stroke);
   box-shadow: 0 10px 60px rgba(0, 0, 0, 0.196);
-  animation: pop-in 0.2s ease-out;
 }
 
 /* ---- 内容区 ---- */
@@ -163,23 +167,45 @@ onBeforeUnmount(() => {
   margin-left: auto;
 }
 
-@keyframes fade-in {
-  from {
-    opacity: 0;
-  }
+/*
+  进场 / 退场
+
+  照桌面版 `MaskDialogBase`：显示是 200ms InSine 的淡入，关闭是 **100ms 淡出**，
+  两边时长不一样是那边就这么写的（showEvent 200 / done 100）—— 关得干脆一点，
+  不会让人等着动画放完。
+
+  面板多一点位移，那是网页这边加的，Qt 那边只有整体透明度。**退场不带位移**：
+  与 Qt 一致，也免得关的时候整个面板往下坠一截，反而更显眼
+*/
+.mask-enter-active {
+  transition: opacity 0.2s cubic-bezier(0.47, 0, 0.745, 0.715);
 }
 
-@keyframes pop-in {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
+.mask-enter-active .dialog {
+  transition: transform 0.2s cubic-bezier(0.47, 0, 0.745, 0.715);
+}
+
+.mask-enter-from {
+  opacity: 0;
+}
+
+.mask-enter-from .dialog {
+  transform: translateY(8px);
+}
+
+.mask-leave-active {
+  transition: opacity 0.1s linear;
+}
+
+.mask-leave-to {
+  opacity: 0;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .mask,
-  .dialog {
-    animation: none;
+  .mask-enter-active,
+  .mask-enter-active .dialog,
+  .mask-leave-active {
+    transition: none;
   }
 }
 </style>

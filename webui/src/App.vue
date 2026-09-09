@@ -134,4 +134,8 @@ onMounted(() => {
   height: 100%;
   background-color: var(--solid-bg-base);
 }
+
+.none-select {
+  user-select: none;
+}
 </style>

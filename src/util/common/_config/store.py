@@ -1,26 +1,3 @@
-"""
-config.json 的读写
-
-三件事必须做对，缺一样都会丢用户数据：
-
-1. **未知字段透传**（D5）。GUI 与 WebUI 共用一份 config.json，一边写盘时不能把另一边的字段
-   抹掉。旧实现丢字段的根因是 `QConfig.toDict()` 用 `dir(cls)` 反射收集所有 ConfigItem，
-   类里没声明的键一律不写回 —— `QFluentWidgets` 段（主题、强调色、字体）也在此列，
-   所以那一段同样要靠透传保住，这与 D5 是同一条要求而不是两条。
-
-2. **原子替换**。就地截断写一旦中途被打断，留下的是残缺文件，用户全部设置随之丢失；
-   而退出流程走的是 os._exit，不会等待仍在写盘的线程。旧实现已经这么做了，照搬。
-
-3. **写盘串行化**。config.set() 默认立即触发写盘，而登录相关的请求回调各自跑在自己的
-   工作线程上（cookie_manager.init_cookie_info 启动时会并发发出三个请求），
-   两个线程同时写同一个文件会写出互相交错的内容。旧实现用线程锁解决，照搬。
-
-透传的实现方式是**保存时重新读盘再合并**，而不是「记住加载时看到的未知字段」。
-这样即使另一个进程在我们运行期间往文件里加了字段，也不会被我们下一次保存抹掉。
-跨进程的并发写本身由单实例锁（S2-7）挡住，两者不冲突：单实例锁保证不会同时跑，
-读改写保证即使真的错开跑了也不丢数据。
-"""
-
 from copy import deepcopy
 from pathlib import Path
 from threading import Lock
@@ -38,17 +15,6 @@ _REPLACE_RETRIES = 10
 _REPLACE_BACKOFF = 0.025
 
 def _replace_with_retry(temp_path: Path, target: Path) -> None:
-    """
-    原子替换，失败时短暂重试
-
-    Windows 上 os.replace 要求目标文件没有被别人打开（除非对方带了 FILE_SHARE_DELETE），
-    否则抛 PermissionError / WinError 5。另一个进程正好在读 config.json 就会撞上 ——
-    GUI 与 WebUI 共用同一份配置（D5）之后，这种同时读写会成为常态。
-
-    这不是数据损坏（临时文件是完整的，目标文件也没被动过），只是这一次保存没落地。
-    但用户的感受是「设置改了没生效」，所以值得重试几次。
-    POSIX 上 rename 没有这个限制，重试逻辑不会被触发
-    """
     for attempt in range(_REPLACE_RETRIES):
         try:
             os.replace(temp_path, target)

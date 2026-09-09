@@ -372,7 +372,7 @@ void store.loadColumns()
 }
 
 .status {
-  color: var(--text-tertiary);
+  color: var(--text-primary);
 }
 
 .status.error {

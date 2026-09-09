@@ -37,6 +37,42 @@ const DEFAULT_COLUMNS: ParseColumn[] = [
   { key: 'dyn_time', width: 130, show: true },
 ]
 
+/**
+ * 按某一列比大小
+ *
+ * 列名直接就是节点上的字段名（number / title / badge / duration），只有时间那一列
+ * 例外：`dyn_time` 该看发布、收藏还是观看时间由后端挑好，存在 `timeColumn` 里。
+ *
+ * 数字与字符串分开处理。**字符串用 `localeCompare`**，这一处与桌面版不同：
+ * Python 的 `sorted` 按码位排，中文标题排出来的顺序对人没有意义
+ */
+function sortComparator(
+  key: string,
+  order: 'asc' | 'desc',
+  timeColumn: string,
+): ((a: ParseNode, b: ParseNode) => number) | null {
+  if (!key) {
+    return null
+  }
+
+  const field = key === 'dyn_time' ? timeColumn : key
+  const sign = order === 'desc' ? -1 : 1
+
+  const valueOf = (node: ParseNode): string | number =>
+    (node as unknown as Record<string, string | number | undefined>)[field] ?? ''
+
+  return (a, b) => {
+    const left = valueOf(a)
+    const right = valueOf(b)
+
+    if (typeof left === 'number' && typeof right === 'number') {
+      return (left - right) * sign
+    }
+
+    return String(left).localeCompare(String(right), undefined, { numeric: true }) * sign
+  }
+}
+
 /** 摊平后待渲染的一行 */
 interface Row {
   node: ParseNode
@@ -83,6 +119,15 @@ function indexTree(tree: ParseNode[]) {
 interface ParseState {
   tree: ParseNode[]
   columns: ParseColumn[]
+  /**
+   * 按哪一列排序。空串表示不排，用后端给的顺序
+   *
+   * 与桌面版一致（那边是 `setSortingEnabled(True)` + `model.sort()`）：
+   * **每一层各自排**，不是把树摊平了排 —— 分 P 只在自己那一组里换位置，
+   * 不会跑到别的剧集下面去
+   */
+  sortKey: string
+  sortOrder: 'asc' | 'desc'
   category: string
   /**
    * 时间列这一次显示的是哪一个
@@ -134,6 +179,8 @@ export const useParseStore = defineStore('parse', {
   state: (): ParseState => ({
     tree: [],
     columns: DEFAULT_COLUMNS,
+    sortKey: '',
+    sortOrder: 'asc',
     category: '',
     timeColumn: 'pubtime',
     title: '',
@@ -179,8 +226,15 @@ export const useParseStore = defineStore('parse', {
     rows: (state): Row[] => {
       const result: Row[] = []
 
+      const compare = sortComparator(state.sortKey, state.sortOrder, state.timeColumn)
+
       const walk = (list: ParseNode[], depth: number) => {
-        for (const node of list) {
+        // 排序**不动 state.tree**：那棵树是身份的来源（id 是位置路径，
+        // checkState / expanded 都挂在上面）。这里只重排渲染出来的顺序，
+        // 每一层单独排一次，与桌面版 `_sort_recursive` 同构
+        const ordered = compare ? [...list].sort(compare) : list
+
+        for (const node of ordered) {
           result.push({ node, depth, id: node.id as string })
 
           if (node.children?.length && state.expanded.has(node.id as string)) {
@@ -223,6 +277,11 @@ export const useParseStore = defineStore('parse', {
 
       // 上一次的筛选词跟着结果一起作废：换了一棵树，高亮的还是旧的命中项就成了噪声
       this.searchKeyword = ''
+
+      // 排序也一起清掉，回到后端给的顺序。**那个顺序本身是有意义的** ——
+      // 分 P、剧集、收藏夹都是按平台的排列给过来的，新解析出来的东西
+      // 不该继续套用上一次为了找某一集而临时点出来的排序
+      this.sortKey = ''
 
       // 选中的行同理 —— id 是位置路径，换棵树之后同一个 id 指的是另一集
       this.selected = ''
@@ -344,6 +403,23 @@ export const useParseStore = defineStore('parse', {
       if (columns.length) {
         this.columns = columns
       }
+    },
+
+    /**
+     * 点表头切换排序
+     *
+     * 与桌面版一样在升序、降序之间来回切，**没有「回到原始顺序」这一档** ——
+     * Qt 的 `setSortingEnabled` 就是这个行为，重新解析一次才会回到后端给的顺序
+     */
+    toggleSort(key: string) {
+      if (this.sortKey === key) {
+        this.sortOrder = this.sortOrder === 'asc' ? 'desc' : 'asc'
+
+        return
+      }
+
+      this.sortKey = key
+      this.sortOrder = 'asc'
     },
 
     toggleExpanded(id: string) {

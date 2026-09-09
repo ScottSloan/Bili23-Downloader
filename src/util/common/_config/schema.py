@@ -1,17 +1,3 @@
-"""
-配置项 schema
-
-S2-2「config 去 qfluentwidgets」的第一步：把原先散落在 APPConfig 类体里的 ConfigItem 声明
-抽成一份与框架无关的声明式清单，运行时再据此构造配置项对象。
-
-设计取舍：
-- 调用方是 `config.get(config.download_path)` 这种「按项取值」的形态，不是 `settings.download_path`
-  的属性形态，所以这里用 ITEMS 清单而非一个巨型模型类。attr 必须与原 APPConfig 的属性名逐字一致。
-- 校验语义是「纠正而非拒绝」：范围超界 clamp 到边界，枚举值不认识则回落默认值。
-  本文件只负责【声明】范围与可选值，具体纠正逻辑不在这里实现。
-- 本文件不引入 Qt 依赖。唯一的例外见下面 language 项的 TODO。
-"""
-
 from dataclasses import dataclass
 from typing import Any, Optional
 from enum import Enum
