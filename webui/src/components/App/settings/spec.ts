@@ -21,8 +21,23 @@
 // Additional / File naming / Advanced，**每组里再由若干张折叠卡片装下具体的项**。
 // 文案也照抄那边的 `self.tr(...)`，好让两边说的是同一件事。
 
-/** 控件类型。不指定则按后端下发的 `type` 推断 */
-export type ControlKind = 'switch' | 'combo' | 'spin' | 'text' | 'password' | 'path' | 'dialog'
+/**
+ * 控件类型。不指定则按后端下发的 `type` 推断
+ *
+ * `action` 是特例：**它在后端没有对应的配置项**，卡片上只有一个按钮，点开一个自己
+ * 负责收尾的对话框。修改 WebUI 口令是唯一一个 —— 口令 hash 属于机密，
+ * `/api/settings` 的白名单里没有它，也不该有
+ */
+export type ControlKind =
+  | 'switch'
+  | 'combo'
+  | 'spin'
+  | 'slider'
+  | 'text'
+  | 'password'
+  | 'path'
+  | 'dialog'
+  | 'action'
 
 /**
  * 结构化配置项的专用编辑器
@@ -38,6 +53,7 @@ export type DialogKind =
   | 'subtitleStyle'
   | 'namingRule'
   | 'userAgent'
+  | 'password'
 
 /** 启用条件：另一项为真，或等于某个值 */
 export interface Condition {
@@ -134,8 +150,9 @@ export const SETTING_GROUPS: SettingGroupSpec[] = [
         key: 'concurrency',
         icon: 'fastDownload',
         items: [
-          { attr: 'download_thread', described: true },
-          { attr: 'download_parallel', described: true },
+          // 桌面版这两项是滑块（`SettingSlider`），不是数字输入框
+          { attr: 'download_thread', kind: 'slider', described: true },
+          { attr: 'download_parallel', kind: 'slider', described: true },
           { attr: 'speed_limit_enabled', described: true },
           {
             attr: 'speed_limit_rate',
@@ -379,7 +396,16 @@ export const SETTING_GROUPS: SettingGroupSpec[] = [
           { attr: 'webui_host', described: true, restart: true },
           { attr: 'webui_port', restart: true },
           { attr: 'webui_username', described: true },
-          { attr: 'webui_session_hours', suffix: 'h', described: true },
+
+          /*
+            改口令。**后端没有这一项配置**（`webui_password_hash` 是机密，
+            不出现在 `/api/settings` 里），所以是个 `action`：卡片上只有一个按钮，
+            对话框自己去调 `/api/auth/password`。
+
+            `webui_session_hours`（登录有效期）撤掉了：单用户自托管场景里几乎没人会去调它，
+            而它摆在这儿会让人以为改完当前会话就跟着变 —— 实际上只对下次登录生效
+          */
+          { attr: 'webui_password', kind: 'action', dialog: 'password', described: true },
           { attr: 'webui_browse_roots', kind: 'dialog', dialog: 'browseRoots', described: true },
         ],
       },

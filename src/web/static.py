@@ -19,6 +19,24 @@
 
 **但 `/api` 开头的绝不能回落**：那样一个拼错的接口地址会返回一份 HTML，
 前端拿去 `JSON.parse` 得到的是「Unexpected token <」，排查起来要绕一大圈。
+
+## 缓存头必须自己设
+
+`StaticFiles` 只给 `last-modified` 与 `etag`，**不给 `Cache-Control`**。少了它，浏览器
+对 `index.html` 走的是**启发式缓存**（拿 `Last-Modified` 的年龄掐一个比例当新鲜期），
+于是：
+
+- `index.html` 里写死了带指纹的 JS 文件名。壳被缓存住，就等于整个前端被钉在旧版本上，
+  **新功能上线后用户看到的仍是旧界面，而且没有任何报错** —— 表现成「这个按钮点了没反应」，
+  查起来会一路怀疑到业务代码上去
+- 反过来 `/assets` 下的文件名本身带内容指纹，改了内容就换名字，
+  完全可以让浏览器永久缓存，却因为没有这个头每次都要回来问一次
+
+所以两边各设各的：壳 `no-cache`，指纹资源 `immutable` 一年。
+
+壳每次导航都会重新取一遍整份（**Starlette 的 `FileResponse` 不处理条件请求 ——
+`If-None-Match` 回 304 的逻辑在 `StaticFiles` 里，这条回落路径用不上它**），
+但那是 2.5 KB，而真正大的 JS / CSS 一年都不用再问一次。这笔账划算得很。
 """
 
 from pathlib import Path
@@ -33,6 +51,23 @@ logger = logging.getLogger(__name__)
 
 # 相对仓库根：src/web/static.py → 上三级是仓库根
 DIST_DIR = Path(__file__).resolve().parent.parent.parent / "webui" / "dist"
+
+# 文件名带内容指纹，改了内容就换名字，可以放心让浏览器一直留着
+IMMUTABLE_CACHE = "public, max-age=31536000, immutable"
+
+# 壳与 dist 根下那些不带指纹的文件（favicon、manifest）：每次都回来问一次。
+# `no-cache` 不是「不缓存」，是「用之前必须先问服务端」
+REVALIDATE_CACHE = "no-cache"
+
+class ImmutableStaticFiles(StaticFiles):
+    """给带指纹的资源补上 Cache-Control，StaticFiles 自己不设这个头"""
+
+    def file_response(self, *args, **kwargs):
+        response = super().file_response(*args, **kwargs)
+
+        response.headers["cache-control"] = IMMUTABLE_CACHE
+
+        return response
 
 def find_dist() -> Optional[Path]:
     """构建产物在哪。没有就返回 None"""
@@ -61,8 +96,8 @@ def mount(app: FastAPI, api_prefix: str = "/api") -> bool:
     assets = dist / "assets"
 
     if assets.is_dir():
-        # 带指纹的静态资源单独挂，交给 StaticFiles 处理 Range、缓存头这些
-        app.mount("/assets", StaticFiles(directory = assets), name = "assets")
+        # 带指纹的静态资源单独挂，Range 交给 StaticFiles，缓存头由子类补
+        app.mount("/assets", ImmutableStaticFiles(directory = assets), name = "assets")
 
     index_file = dist / "index.html"
 
@@ -82,12 +117,13 @@ def mount(app: FastAPI, api_prefix: str = "/api") -> bool:
                 resolved = candidate.resolve()
 
                 if resolved.is_relative_to(dist.resolve()):
-                    return FileResponse(resolved)
+                    return FileResponse(resolved,
+                                        headers = {"cache-control": REVALIDATE_CACHE})
 
             except (OSError, ValueError):
                 pass
 
-        return FileResponse(index_file)
+        return FileResponse(index_file, headers = {"cache-control": REVALIDATE_CACHE})
 
     logger.info("已挂载前端：%s", dist)
 

@@ -6,10 +6,11 @@
  * 位置与尺寸也照 GUI：导航栏底部、设置项之上，64×64 的槽位里放一个直径 38 的圆形头像，
  * 不显示用户名（`NavigationLargeAvatarWidget` 传的 name 就是空串）。
  */
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useAppStore } from '@/stores/appStore'
 import bilibiliLoginDialog from '@/components/App/login/BilibiliLoginDialog.vue'
 import profileCard from '@/components/App/login/ProfileCard.vue'
+import { NOFACE_URL } from '@/components/App/login/noface'
 import { t } from '@/i18n'
 
 const appStore = useAppStore()
@@ -17,6 +18,9 @@ const appStore = useAppStore()
 const root = ref<HTMLElement | null>(null)
 const loginOpen = ref(false)
 const profileOpen = ref(false)
+
+/** 没登录、或登录了但拿不到头像时，都用 B 站那张默认头像 */
+const faceUrl = computed(() => (appStore.loggedIn && appStore.faceUrl) || NOFACE_URL)
 
 function onClick() {
   if (appStore.loggedIn) {
@@ -42,16 +46,14 @@ function onClick() {
     :aria-label="appStore.loggedIn ? appStore.uname : t('login.entry')"
     @click="onClick"
   >
+    <!-- 未登录时是 B 站那张 noface.jpg，与桌面版同一张图（见 login/noface.ts） -->
     <img
-      v-if="appStore.loggedIn && appStore.faceUrl"
       class="avatar"
-      :src="appStore.faceUrl"
+      :src="faceUrl"
       :alt="t('user.avatarAlt')"
       referrerpolicy="no-referrer"
       draggable="false"
     />
-    <!-- 未登录时的占位。GUI 用的是 noface.jpg，Web 端不必为此多带一张图 -->
-    <span v-else class="avatar avatar-placeholder" aria-hidden="true"></span>
   </button>
 
   <bilibiliLoginDialog :open="loginOpen" @close="loginOpen = false" />
@@ -96,7 +98,4 @@ function onClick() {
   border-radius: 8px;
 }
 
-.avatar-placeholder {
-  background-color: var(--control-fill-default);
-}
 </style>

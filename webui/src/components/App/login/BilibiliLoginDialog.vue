@@ -145,7 +145,6 @@ const sendLabel = computed(() =>
 )
 
 function startCountdown() {
-  // 与桌面版 SMSInfo.countdown 一致：60 秒
   countdown.value = 60
 
   countdownTimer = setInterval(() => {
@@ -331,13 +330,12 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <fluentDialog :open="open" :title="t('login.title')" width="760px" @close="emit('close')">
-    <div class="login">
+  <fluentDialog :open="open" :title="''" width="760px" @close="emit('close')">
+    <div class="login" style="margin: 20px 0px">
       <!-- 左：扫码 -->
       <section class="pane qrcode-pane">
         <h3 class="section-title">{{ t('login.qrcode.title') }}</h3>
 
-        <!-- 白底是必须的：二维码是纯黑路径，深色主题下直接贴上去扫不出来 -->
         <div class="qrcode" :class="{ 'is-expired': qrStatus === 'expired' }">
           <!-- eslint-disable-next-line vue/no-v-html -->
           <div v-if="qrSvg" class="qrcode-image" v-html="qrSvg" />
@@ -358,7 +356,7 @@ onBeforeUnmount(() => {
 
       <!-- 右：短信 -->
       <section class="pane sms-pane">
-        <h3 class="section-title">{{ t('login.sms.title') }}</h3>
+        <h3 class="section-title" style="margin-bottom: 8px;">{{ t('login.sms.title') }}</h3>
 
         <div class="row">
           <fluentComboBox

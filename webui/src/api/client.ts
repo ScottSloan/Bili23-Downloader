@@ -49,8 +49,11 @@ export function setUnauthorizedHandler(handler: (() => void) | null) {
 }
 
 // 登录、查会话、健康检查本身不需要会话，它们返回 401 时不该触发「跳登录」——
-// 否则在登录页输错密码会打断当前这一次交互
-const NO_REDIRECT = new Set(['/auth/login', '/auth/session', '/health'])
+// 否则在登录页输错密码会打断当前这一次交互。
+//
+// 改口令也在这里：它的 401 意思是「你填的旧口令不对」，会话本身是好的。
+// 漏掉这一条的话，在设置页把旧口令敲错一次就会被踢回登录页
+const NO_REDIRECT = new Set(['/auth/login', '/auth/session', '/auth/password', '/health'])
 
 function buildUrl(path: string, query?: Record<string, unknown>): string {
   const url = `/api${path}`

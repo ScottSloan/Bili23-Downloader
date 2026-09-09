@@ -32,6 +32,7 @@ import pathListDialog from '@/components/App/settings/PathListDialog.vue'
 import styleDialog from '@/components/App/settings/StyleDialog.vue'
 import namingRuleDialog from '@/components/App/settings/NamingRuleDialog.vue'
 import userAgentDialog from '@/components/App/settings/UserAgentDialog.vue'
+import passwordDialog from '@/components/App/settings/PasswordDialog.vue'
 import type { NamingRule } from '@/components/App/settings/NamingRuleDialog.vue'
 import settingCardGroup from '@/components/Fluent/components/settings/SettingCardGroup.vue'
 import expandSettingCard from '@/components/Fluent/components/settings/ExpandSettingCard.vue'
@@ -346,6 +347,10 @@ function summaryOf(spec: SettingSpec): string | undefined {
       @close="openAttr = null"
       @save="save"
     />
+
+    <!-- 改口令不经过 store：那一项在 /api/settings 里根本不存在，
+         对话框自己去调 /api/auth/password，所以没有 @save -->
+    <passwordDialog :open="openSpec?.dialog === 'password'" @close="openAttr = null" />
   </div>
 </template>
 

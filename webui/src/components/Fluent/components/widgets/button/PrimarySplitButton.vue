@@ -3,8 +3,9 @@
  * 主色拆分按钮：左边是主操作，右边一个箭头拉出菜单
  *
  * 对应桌面版解析页那个「解析 ▾」（`IndeterminateProgressSplitPushButton` +
- * `RoundMenu`）。qss 里两半是这样拼的：主体的右侧圆角归零、右边一条
- * `--ThemeColorLight3` 的分隔线，箭头那半的左侧圆角归零、没有左边框。
+ * `RoundMenu`）。qss 里两半是这样拼的：主体的右侧圆角归零、右边一条分隔线
+ * （浅色 `--ThemeColorLight3`、深色 `--ThemeColorDark3`），箭头那半的左侧圆角归零、
+ * 没有左边框。
  *
  * 菜单本身刻意做得最小：一层绝对定位的浮层，点外面或按 Esc 收起。**不做键盘上下选择**
  * —— 目前只有一项，为它实现一整套 roving tabindex 不划算；菜单项本身是原生 button，
@@ -115,8 +116,18 @@ defineExpose({ closeMenu })
      桌面版那个是 PushButton 的默认最小宽度（qfluentwidgets 给 96），这里跟它 */
   min-width: 80px;
   border-radius: 5px 0 0 5px;
-  /* 两半之间那条线。qss 里是 --ThemeColorLight3 */
+  /*
+    两半之间那条线。**深浅两套 qss 用的不是同一个色阶**：
+    浅色是 `--ThemeColorLight3`，深色换成了 `--ThemeColorDark3`。
+
+    照搬浅色那一档到深色下会看不见 —— 深色主题里 light3 只是把饱和度降到 0.65、
+    明度仍然拉满，压在同样亮的主题色上几乎同色。分隔线必须往暗处走
+  */
   border-right: 1px solid var(--primary-color-light-3);
+}
+
+:root[data-theme='dark'] .main {
+  border-right-color: var(--primary-color-dark-3);
 }
 
 .drop {

@@ -18,9 +18,17 @@ withDefaults(
     icon: string
     /** 无障碍名称，同时作为鼠标悬停的气泡提示 */
     label: string
+    /**
+     * 图标右边跟一行字，按钮相应变宽
+     *
+     * 对应 `CommandBar.setToolButtonStyle(ToolButtonTextBesideIcon)` —— 桌面版
+     * 解析记录对话框右上角那个「清除记录」就是这个形态：有图标有字，但没有底色没有边框
+     */
+    text?: string
     disabled?: boolean
   }>(),
   {
+    text: '',
     disabled: false,
   },
 )
@@ -30,11 +38,13 @@ withDefaults(
   <button
     type="button"
     class="transparent-tool-button"
+    :class="{ 'has-text': text }"
     :disabled="disabled"
     :aria-label="label"
     :title="label"
   >
     <fluentIcon :name="icon" />
+    <span v-if="text">{{ text }}</span>
   </button>
 </template>
 
@@ -57,6 +67,14 @@ withDefaults(
   background-color: transparent;
   color: var(--text-primary);
   transition: background-color 0.1s ease;
+}
+
+/* 带文字时宽度由内容定，图标与字之间 6（CommandBar 里那个也是这个观感） */
+.transparent-tool-button.has-text {
+  width: auto;
+  gap: 6px;
+  padding: 0 10px;
+  font-size: 14px;
 }
 
 .transparent-tool-button:not(:disabled):hover {

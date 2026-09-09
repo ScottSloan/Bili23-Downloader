@@ -16,6 +16,7 @@ import { onBeforeUnmount, onMounted, ref } from 'vue'
 import { useAppStore } from '@/stores/appStore'
 import { useToastStore } from '@/stores/toastStore'
 import { login } from '@/api'
+import { NOFACE_URL } from './noface'
 import { t } from '@/i18n'
 
 const props = defineProps<{
@@ -113,14 +114,13 @@ async function confirmLogout() {
       :style="{ left: `${position.left}px`, top: `${position.top}px` }"
     >
       <template v-if="!confirming">
+        <!-- 拿不到头像时用 B 站那张默认的，与导航栏那枚同源 -->
         <img
-          v-if="appStore.faceUrl"
           class="face"
-          :src="appStore.faceUrl"
+          :src="appStore.faceUrl || NOFACE_URL"
           :alt="t('user.avatarAlt')"
           referrerpolicy="no-referrer"
         />
-        <span v-else class="face face-placeholder" aria-hidden="true" />
 
         <div class="info">
           <div class="uname" :title="appStore.uname">{{ appStore.uname }}</div>
@@ -183,9 +183,6 @@ async function confirmLogout() {
   object-fit: cover;
 }
 
-.face-placeholder {
-  background-color: var(--control-fill-default);
-}
 
 .info {
   flex: 1 1 auto;

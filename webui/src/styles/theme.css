@@ -36,3 +36,18 @@ body,
   color: var(--text-primary);
   background-color: var(--solid-bg-base);
 }
+
+/*
+  换主题的那两帧：全局关掉过渡
+
+  不关的话，凡是带 `transition` 的控件在切完主题后颜色不会更新 —— 浏览器为
+  「值来自 var()、而 var 在祖先上被改掉」的属性起了一次终点是旧值的过渡，然后停在原地，
+  非刷新页面不可。详见 stores/themeStore.ts 里 suppressTransitions() 的说明。
+
+  `*` 加两个伪元素都要盖到：选中行的底色、开关的滑块、导航栏的指示条都画在伪元素上
+*/
+:root.theme-switching *,
+:root.theme-switching *::before,
+:root.theme-switching *::after {
+  transition: none !important;
+}

@@ -88,6 +88,7 @@ export default {
       limit: '僅保留最近 {count} 條記錄，與桌面版共用同一份。',
       clear: '清除記錄',
       remove: '刪除',
+      reparse: '重新解析',
       close: '關閉',
       loading: '載入中…',
       empty: '尚無解析記錄。',
@@ -194,9 +195,29 @@ export default {
     localOnly: '僅儲存於目前瀏覽器',
     customize: '自訂…',
 
+    // action 行按钮上的字。没配的回落到 customize
+    actionLabel: {
+      webui_password: '修改口令',
+    },
+
     dialog: {
       save: '儲存',
       cancel: '取消',
+    },
+
+    password: {
+      title: '修改登入口令',
+      hint: '改完之後其他裝置上的登入會全部失效，目前這台不用重新登入。',
+      current: '目前口令',
+      new: '新口令',
+      repeat: '確認新口令',
+      empty: '請把目前口令與新口令都填上。',
+      tooShort: '新口令至少 {count} 位。',
+      mismatch: '兩次輸入的新口令不一致。',
+      submitting: '正在修改…',
+      failed: '修改失敗。',
+      done: '口令已修改',
+      doneDetail: '其他裝置上的登入已全部失效。',
     },
 
     priority: {
@@ -339,7 +360,7 @@ export default {
       webui_host: '監聽位址',
       webui_port: '連接埠',
       webui_username: '使用者名稱',
-      webui_session_hours: '登入有效期',
+      webui_password: '登入口令',
     },
 
     desc: {
@@ -388,7 +409,7 @@ export default {
 
       webui_host: '填 127.0.0.1 只接受本機連線，填 0.0.0.0 則接受來自網路的連線',
       webui_username: '登入本頁面所用的帳號',
-      webui_session_hours: '一次登入的有效時長',
+      webui_password: '修改登入本頁面所用的口令',
     },
 
     option: {
@@ -462,7 +483,6 @@ export default {
 
     userAgent: {
       title: '自訂 User-Agent',
-      hint: '用於向嗶哩嗶哩發起請求。沒有明確理由不建議變更。',
       placeholder: '請輸入 User-Agent',
       reset: '還原預設',
       empty: 'User-Agent 不能為空',
@@ -693,6 +713,8 @@ export default {
       NOT_AUTHENTICATED: '尚未登入。',
       INVALID_CREDENTIALS: '使用者名稱或口令不正確。',
       TOO_MANY_ATTEMPTS: '失敗次數過多，請稍後再試。',
+      INVALID_PASSWORD: '目前口令不正確。',
+      PASSWORD_UNCHANGED: '新口令不能與目前口令相同。',
       PARSE_BUSY: '同時解析的請求過多，請等一個完成。',
       TASK_NOT_FOUND: '該任務已不存在。',
       NO_MATCHING_TASK: '沒有符合的任務。',

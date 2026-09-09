@@ -94,6 +94,13 @@ export const auth = {
   login: (username: string, password: string) =>
     post<Ok<'/api/auth/login', 'post'>>('/auth/login', { username, password }),
   logout: () => post<Ok<'/api/auth/logout', 'post'>>('/auth/logout'),
+
+  /** 改登录口令。成功后后端会清掉所有会话并给当前这台机器发一个新的 */
+  changePassword: (currentPassword: string, newPassword: string) =>
+    post<Ok<'/api/auth/password', 'post'>>('/auth/password', {
+      current_password: currentPassword,
+      new_password: newPassword,
+    }),
 }
 
 // ---------------- B 站账号 ----------------

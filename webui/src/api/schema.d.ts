@@ -61,6 +61,33 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/auth/password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Change Password
+         * @description 改登录口令
+         *
+         *     这条路由**不在 `EXEMPT_PATHS` 里**，也就是说中间件已经要求过会话了。
+         *     仍然要再验一次旧口令：会话可能是别人在这台机器上留下的（浏览器没关、cookie 还在），
+         *     不验的话拿到一个活会话就等于能永久接管。
+         *
+         *     改完把**所有**会话清掉再给调用方发一个新的：改口令的常见动机就是「怀疑别人也登着」，
+         *     只留下当前这一个才对得上这个动机。代价是其他设备上要重新登录一次。
+         */
+        post: operations["change_password_api_auth_password_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/auth/session": {
         parameters: {
             query?: never;
@@ -1202,6 +1229,13 @@ export interface components {
             /** Url */
             url: string;
         };
+        /** PasswordChangeRequest */
+        PasswordChangeRequest: {
+            /** Current Password */
+            current_password: string;
+            /** New Password */
+            new_password: string;
+        };
         /** PauseResult */
         PauseResult: {
             /** Status */
@@ -1744,6 +1778,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["LogoutResult"];
+                };
+            };
+        };
+    };
+    change_password_api_auth_password_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PasswordChangeRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionInfo"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

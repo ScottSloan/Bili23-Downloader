@@ -49,14 +49,33 @@ export const useAppStore = defineStore('app', {
       await this.fetchLanguage()
     },
 
-    /** 不传 refresh 时只读配置里的状态，不打 B 站接口 */
+    /**
+     * 不传 refresh 时只读配置里的状态，不打 B 站接口
+     *
+     * ## 「已登录但 UID 是 0」要当成没登录
+     *
+     * 后端的 `logged_in` 来自持久化的 `is_login`，而昵称 / UID / 头像是**运行时状态**，
+     * 进程一重启就空了。后端启动时会去补一次，但那要打一次 B 站，可能还没回来、
+     * 也可能失败（网络不通、Cookie 过期）。
+     *
+     * 这中间的状态自相矛盾：说是已登录，却拿不出是谁。照单全收的话，点头像弹出的是
+     * 一张写着「UID: 0」的空卡片，而用户根本没法从那儿去登录。
+     *
+     * 所以：这种情况主动要一次带 refresh 的，还是拿不到就按未登录算 —— 至少点头像
+     * 能弹出登录对话框。`expired`（Cookie 过期）同理，桌面版判断登录态时也是
+     * `is_login and not is_expired`
+     */
     async fetchAccount(refresh = false) {
       try {
-        const info = await login.status(refresh)
+        let info = await login.status(refresh)
 
-        this.loggedIn = Boolean(info.logged_in)
+        if (info.logged_in && !info.uid && !refresh) {
+          info = await login.status(true)
+        }
+
+        this.loggedIn = Boolean(info.logged_in) && !info.expired && Boolean(info.uid)
         this.uname = info.uname || ''
-        this.uid = String(info.uid ?? '')
+        this.uid = info.uid ? String(info.uid) : ''
         this.faceUrl = info.face || ''
       } catch {
         this.loggedIn = false

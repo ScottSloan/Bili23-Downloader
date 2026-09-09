@@ -760,6 +760,28 @@
         "title": "ParseRequest",
         "type": "object"
       },
+      "PasswordChangeRequest": {
+        "properties": {
+          "current_password": {
+            "maxLength": 1024,
+            "minLength": 1,
+            "title": "Current Password",
+            "type": "string"
+          },
+          "new_password": {
+            "maxLength": 1024,
+            "minLength": 8,
+            "title": "New Password",
+            "type": "string"
+          }
+        },
+        "required": [
+          "current_password",
+          "new_password"
+        ],
+        "title": "PasswordChangeRequest",
+        "type": "object"
+      },
       "PauseResult": {
         "properties": {
           "status": {
@@ -1696,6 +1718,48 @@
           }
         },
         "summary": "Logout",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/auth/password": {
+      "post": {
+        "description": "改登录口令\n\n这条路由**不在 `EXEMPT_PATHS` 里**，也就是说中间件已经要求过会话了。\n仍然要再验一次旧口令：会话可能是别人在这台机器上留下的（浏览器没关、cookie 还在），\n不验的话拿到一个活会话就等于能永久接管。\n\n改完把**所有**会话清掉再给调用方发一个新的：改口令的常见动机就是「怀疑别人也登着」，\n只留下当前这一个才对得上这个动机。代价是其他设备上要重新登录一次。",
+        "operationId": "change_password_api_auth_password_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PasswordChangeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionInfo"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Change Password",
         "tags": [
           "auth"
         ]

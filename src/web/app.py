@@ -69,6 +69,38 @@ def ensure_password_configured() -> Optional[str]:
 
     return password
 
+async def _warm_up_user_info() -> None:
+    """
+    启动时把 B 站用户信息取回来
+
+    **`is_login` 是持久化的，而 `user_uname` / `user_uid` / `user_face_url` 是纯运行时属性**
+    （见 `_config/runtime.py`）。进程一重启，前者还是 True，后三个全空 —— 于是
+    `/api/login/status` 会回一个「已登录、但 UID 是 0、名字是空」的自相矛盾的状态，
+    界面上点头像弹出的是一张写着「UID: 0」的用户卡片，而不是登录对话框。
+
+    桌面版没这个问题：`main.py` 在网络栈预热完之后会去取一次。服务端一直缺这一步。
+
+    失败不影响启动 —— 网络不通、Cookie 过期都可能，那时状态里的 uid 仍是 0，
+    前端会自己再要一次（见 appStore.fetchAccount）。`fetch_user_info` 是阻塞的，
+    丢线程里跑，别占着事件循环
+    """
+    if not config.get(config.is_login):
+        return
+
+    from util.auth.session import LoginSession
+
+    try:
+        info = await asyncio.to_thread(LoginSession().fetch_user_info)
+
+        if info.get("logged_in"):
+            logger.info("已恢复 B 站登录态：%s", info.get("uname"))
+        else:
+            logger.info("配置里记着已登录，但 Cookie 已失效")
+
+    except Exception as e:
+        # 只是拿不到昵称头像，服务照常跑
+        logger.warning("启动时获取 B 站用户信息失败：%s", e)
+
 @asynccontextmanager
 async def _base_lifespan(app: FastAPI):
     """
@@ -85,6 +117,9 @@ async def _base_lifespan(app: FastAPI):
     app.state.events = hub
     app.state.publisher = publisher
 
+    # 不 await：取用户信息要打一次 B 站，网络慢的时候会把启动拖住几秒
+    app.state.user_info_task = asyncio.create_task(_warm_up_user_info())
+
     try:
         yield
 
@@ -92,6 +127,9 @@ async def _base_lifespan(app: FastAPI):
         # 订阅一定要解开：signal_bus 持的是强引用，不解开的话这个 hub 会一直收事件，
         # 往一个再也没人读的队列里塞，直到进程结束
         publisher.detach()
+
+        # 关服时那次预热可能还挂在网络请求上，取消掉，别让它拖住退出
+        app.state.user_info_task.cancel()
 
 @asynccontextmanager
 async def _aria2_lifespan(app: FastAPI):

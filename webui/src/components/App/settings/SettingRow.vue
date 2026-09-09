@@ -14,6 +14,7 @@ import settingGroupRow from '@/components/Fluent/components/settings/SettingGrou
 import switchButton from '@/components/Fluent/components/widgets/switch_button/SwitchButton.vue'
 import comboBox from '@/components/Fluent/components/widgets/combo_box/ComboBox.vue'
 import spinBox from '@/components/Fluent/components/widgets/spin_box/SpinBox.vue'
+import fluentSlider from '@/components/Fluent/components/widgets/slider/FluentSlider.vue'
 import lineEdit from '@/components/Fluent/components/widgets/line_edit/LineEdit.vue'
 import pushButton from '@/components/Fluent/components/widgets/button/PushButton.vue'
 import directoryPickerDialog from './DirectoryPickerDialog.vue'
@@ -95,6 +96,16 @@ const description = computed(() =>
   props.spec.described ? translate(`settings.desc.${props.spec.attr}`, '') : '',
 )
 
+/**
+ * action 那一行按钮上的字
+ *
+ * 「自定义…」是给结构化项用的（那些确实是在自定义一张表），放在「登录口令」旁边
+ * 不知所云。所以按 attr 单配一条，没配的回落到「自定义…」
+ */
+const actionLabel = computed(() =>
+  translate(`settings.actionLabel.${props.spec.attr}`, t('settings.customize')),
+)
+
 /** t() 取不到时会原样返回 key，这里换成给定的兜底值 */
 function translate(key: string, fallback: string): string {
   const text = t(key)
@@ -155,10 +166,15 @@ function update(value: unknown) {
 </script>
 
 <template>
-  <!-- 后端没有这一项就整张卡片不出现。后端可能是旧版本，界面上少一项好过报错 -->
+  <!--
+    后端没有这一项就整张卡片不出现。后端可能是旧版本，界面上少一项好过报错。
+
+    `action` 是例外：它本来就没有对应的配置项（见 spec.ts 里 ControlKind 的说明）。
+    因为这个 v-if 不再能把 item 收窄成非空，下面一律用 `item?.`
+  -->
   <component
     :is="shell"
-    v-if="item"
+    v-if="item || kind === 'action'"
     :title="label"
     :icon="spec.icon ?? ''"
     :description="description"
@@ -168,7 +184,7 @@ function update(value: unknown) {
   >
     <switchButton
       v-if="kind === 'switch'"
-      :model-value="Boolean(item.value)"
+      :model-value="Boolean(item?.value)"
       :disabled="!enabled"
       :label="label"
       :on-text="t('settings.switch.on')"
@@ -187,15 +203,36 @@ function update(value: unknown) {
 
     <spinBox
       v-else-if="kind === 'spin'"
-      :model-value="Number(item.value)"
+      :model-value="Number(item?.value)"
       :min="range.min"
       :max="range.max"
       :step="spec.step ?? 1"
-      :decimals="spec.decimals ?? (item.type === 'float' ? 1 : 0)"
+      :decimals="spec.decimals ?? (item?.type === 'float' ? 1 : 0)"
       :suffix="spec.suffix ?? ''"
       :disabled="!enabled"
       :label="label"
       @update:model-value="update"
+    />
+
+    <fluentSlider
+      v-else-if="kind === 'slider'"
+      :model-value="Number(item?.value)"
+      :min="range.min"
+      :max="range.max"
+      :step="spec.step ?? 1"
+      :disabled="!enabled"
+      :label="label"
+      @update:model-value="update"
+    />
+
+    <!--
+      后端没有对应配置项的一行，只有一个按钮，收尾归对话框自己。
+      放在 dialog 之前：两者都要开对话框，但这一支不读 store 里的值
+    -->
+    <pushButton
+      v-else-if="kind === 'action'"
+      :title="actionLabel"
+      @click="emit('openDialog', spec.attr)"
     />
 
     <template v-else-if="kind === 'dialog'">
@@ -208,12 +245,12 @@ function update(value: unknown) {
     </template>
 
     <template v-else-if="kind === 'path'">
-      <span class="path-value" :title="String(item.value)">{{ item.value || '—' }}</span>
+      <span class="path-value" :title="String(item?.value)">{{ item?.value || '—' }}</span>
       <pushButton :title="t('settings.picker.title')" @click="pickerOpen = true" />
 
       <directoryPickerDialog
         :open="pickerOpen"
-        :current="String(item.value ?? '')"
+        :current="String(item?.value ?? '')"
         @close="pickerOpen = false"
         @select="
           (chosen) => {
@@ -227,7 +264,7 @@ function update(value: unknown) {
     <lineEdit
       v-else
       class="text-value"
-      :model-value="String(item.value ?? '')"
+      :model-value="String(item?.value ?? '')"
       :type="kind === 'password' ? 'password' : 'text'"
       :disabled="!enabled"
       :aria-label="label"

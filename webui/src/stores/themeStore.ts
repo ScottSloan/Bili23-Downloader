@@ -228,6 +228,44 @@ function paletteToCssVariables(palette: Palette): Record<string, string> {
   }
 }
 
+/**
+ * 换主题时把过渡整体关掉一小会儿
+ *
+ * ## 不关会怎样
+ *
+ * **切完主题，凡是带 `transition` 的控件颜色都不更新，非刷新页面不可。**
+ * 实测：切到深色后 `:root` 上的 `--primary-color` 已经是新值，元素也确实继承到了新值，
+ * 但它自己的 `background-color` 仍然算成旧的那一个；把该元素的 `transition` 摘掉再读，
+ * 立刻跳回正确值。
+ *
+ * 原因是浏览器为「值来自 var() 而 var 在祖先上被改掉」的属性起了一次过渡，
+ * 而那次过渡的终点是旧值，于是就永远停在原地。**这一条静默且到处都是** ——
+ * 按钮、输入框、开关、卡片……凡是为了手感加了 transition 的地方全中招。
+ *
+ * ## 顺带的好处
+ *
+ * 就算没这个问题，整页颜色一起做 200ms 渐变本来也不好看：深浅之间每个控件各渐各的，
+ * 中途会闪过一堆不属于任何一套主题的中间色。换主题就该是一帧切过去。
+ *
+ * 关两帧再放开：一帧用来让「无过渡」生效，另一帧用来让新颜色以无过渡的方式画上去。
+ *
+ * **不能只靠 rAF 放开**：标签页切到后台时浏览器根本不跑 rAF，那两个回调会一直排着，
+ * 类就永久留在根节点上 —— 回到这一页时全站过渡都是死的，而且看不出是谁干的
+ * （实测过，`document.visibilityState` 一 hidden 就复现）。所以再挂一个定时器兜底，
+ * 谁先到算谁的。
+ */
+function suppressTransitions() {
+  const root = document.documentElement
+
+  root.classList.add('theme-switching')
+
+  const release = () => root.classList.remove('theme-switching')
+
+  requestAnimationFrame(() => requestAnimationFrame(release))
+
+  setTimeout(release, 120)
+}
+
 function applyThemeVariables(theme: ThemeName, primaryColor: string) {
   if (typeof document === 'undefined') {
     return
@@ -236,12 +274,18 @@ function applyThemeVariables(theme: ThemeName, primaryColor: string) {
   const root = document.documentElement
   const variables = paletteToCssVariables(generateThemePalette(primaryColor, theme === 'dark'))
 
+  suppressTransitions()
+
   root.dataset.theme = theme
   root.style.setProperty('--theme-mode', theme)
 
   for (const [name, value] of Object.entries(variables)) {
     root.style.setProperty(name, value)
   }
+
+  // 强制同步一次样式计算：新值必须在「过渡还关着」的这一帧里落定，
+  // 否则浏览器会把变量更新与去掉 theme-switching 合并到同一帧，等于没关
+  void root.offsetHeight
 }
 
 // localStorage 读写一律包 try/catch：隐私模式、或浏览器禁用了站点数据时，

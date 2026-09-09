@@ -8,7 +8,8 @@
  * - 外圈四周 6、圆角 6、1px 描边，底色按分类换（信息灰 / 成功绿 / 警告黄 / 错误红）
  * - 图标占 36×36 的方格，文字区上下 8、左 1，标题与正文间距 5（横排时再加 7）
  * - 标题 14px 粗体，正文 14px，都是纯黑 / 纯白（**不跟着底色变**）
- * - 关闭按钮 36×36，与文字之间隔 12
+ * - 文字区右边固定留 12，关闭按钮 36×36（那 12 在 Qt 里是按钮前的 `addSpacing`，
+ *   按钮隐藏时也照样占位）
  *
  * 图标保留自己的颜色，深浅主题各一份 —— 那正是这个控件的语义，
  * 换成 currentColor 就全变成一个色了。
@@ -106,6 +107,15 @@ const icon = computed(() => {
   /* 标题与正文之间 5 + 横排时额外的 7 */
   gap: 12px;
   padding: 8px 0 8px 1px;
+  /*
+    文字与右边缘之间的 12 —— Qt 那边是 `hBoxLayout.addSpacing(12)`，
+    **加在关闭按钮之前，且无条件**：按钮 `setVisible(False)` 时布局里没了按钮，
+    这段间距仍然在。
+
+    原先把它写成关闭按钮的 margin-left，于是不可关闭的那些气泡（解析失败、
+    保存失败……）右边只剩外层那 6px，文字几乎贴着边
+  */
+  margin-right: 12px;
 }
 
 .info-bar.is-vertical .text {
@@ -137,7 +147,6 @@ const icon = computed(() => {
   flex: 0 0 auto;
   width: 36px;
   height: 36px;
-  margin-left: 12px;
   display: flex;
   align-items: center;
   justify-content: center;

@@ -15,7 +15,7 @@ from pydantic import BaseModel, Field
 from util.common.config import config
 
 from ..schemas import LogoutResult, SessionInfo
-from ..security import SESSION_COOKIE, verify_password
+from ..security import SESSION_COOKIE, hash_password, verify_password
 
 logger = logging.getLogger(__name__)
 
@@ -29,9 +29,16 @@ LOCKOUT_SECONDS = 300
 
 _failures: dict[str, list[float]] = {}
 
+# 口令长度下限。上限只是防着有人往里灌几兆的正文，PBKDF2 本身不在乎长度
+MIN_PASSWORD_LENGTH = 8
+
 class LoginRequest(BaseModel):
     username: str = Field(min_length = 1, max_length = 128)
     password: str = Field(min_length = 1, max_length = 1024)
+
+class PasswordChangeRequest(BaseModel):
+    current_password: str = Field(min_length = 1, max_length = 1024)
+    new_password: str = Field(min_length = MIN_PASSWORD_LENGTH, max_length = 1024)
 
 def _client_key(request: Request) -> str:
     return request.client.host if request.client else "unknown"
@@ -107,6 +114,66 @@ async def logout(request: Request, response: Response):
     response.delete_cookie(SESSION_COOKIE)
 
     return {"authenticated": False}
+
+@router.post("/password", response_model = SessionInfo)
+async def change_password(payload: PasswordChangeRequest, request: Request, response: Response):
+    """
+    改登录口令
+
+    这条路由**不在 `EXEMPT_PATHS` 里**，也就是说中间件已经要求过会话了。
+    仍然要再验一次旧口令：会话可能是别人在这台机器上留下的（浏览器没关、cookie 还在），
+    不验的话拿到一个活会话就等于能永久接管。
+
+    改完把**所有**会话清掉再给调用方发一个新的：改口令的常见动机就是「怀疑别人也登着」，
+    只留下当前这一个才对得上这个动机。代价是其他设备上要重新登录一次。
+    """
+    key = _client_key(request)
+
+    if _locked_out(key):
+        return JSONResponse(
+            {"detail": "Too many failed attempts. Try again later.",
+             "code": "TOO_MANY_ATTEMPTS"}, status_code = 429)
+
+    password_hash = config.get(config.webui_password_hash)
+
+    # 与登录同理：PBKDF2 是刻意慢的，放线程池里算，别卡住事件循环
+    ok = await asyncio.to_thread(verify_password, payload.current_password, password_hash)
+
+    if not ok:
+        _record_failure(key)
+
+        logger.warning("修改口令失败，旧口令不正确：%s", key)
+
+        return JSONResponse({"detail": "Current password is incorrect",
+                             "code": "INVALID_PASSWORD"}, status_code = 401)
+
+    if payload.new_password == payload.current_password:
+        return JSONResponse({"detail": "New password must differ from the current one",
+                             "code": "PASSWORD_UNCHANGED"}, status_code = 400)
+
+    _failures.pop(key, None)
+
+    encoded = await asyncio.to_thread(hash_password, payload.new_password)
+
+    config.set(config.webui_password_hash, encoded)
+
+    sessions = request.app.state.sessions
+
+    sessions.clear()
+
+    session = sessions.create()
+
+    response.set_cookie(
+        SESSION_COOKIE,
+        session.token,
+        httponly = True,
+        samesite = "lax",
+        max_age = int(session.expires_at - session.created_at),
+    )
+
+    logger.info("登录口令已修改，其余会话全部失效：%s", key)
+
+    return {"authenticated": True, "username": config.get(config.webui_username)}
 
 @router.get("/session", response_model = SessionInfo)
 async def session_state(request: Request):

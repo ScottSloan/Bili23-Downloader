@@ -59,8 +59,6 @@ function submit() {
     width="640px"
     @close="emit('close')"
   >
-    <template #hint>{{ t('settings.userAgent.hint') }}</template>
-
     <lineEdit
       v-model="draft"
       :placeholder="t('settings.userAgent.placeholder')"

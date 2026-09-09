@@ -93,6 +93,7 @@ export default {
       limit: 'Only the latest {count} records are kept. Shared with the desktop app.',
       clear: 'Clear History',
       remove: 'Delete',
+      reparse: 'Parse Again',
       close: 'Close',
       loading: 'Loading…',
       empty: 'No history yet.',
@@ -201,9 +202,29 @@ export default {
     localOnly: 'Stored in this browser only',
     customize: 'Customize…',
 
+    // action 行按钮上的字。没配的回落到 customize
+    actionLabel: {
+      webui_password: 'Change…',
+    },
+
     dialog: {
       save: 'Save',
       cancel: 'Cancel',
+    },
+
+    password: {
+      title: 'Change Password',
+      hint: 'Sign-ins on other devices are all revoked. This one stays signed in.',
+      current: 'Current password',
+      new: 'New password',
+      repeat: 'Confirm new password',
+      empty: 'Fill in both the current and the new password.',
+      tooShort: 'The new password must be at least {count} characters.',
+      mismatch: 'The two new passwords do not match.',
+      submitting: 'Saving…',
+      failed: 'Could not change the password.',
+      done: 'Password changed',
+      doneDetail: 'Sign-ins on other devices have been revoked.',
     },
 
     priority: {
@@ -346,7 +367,7 @@ export default {
       webui_host: 'Listen Address',
       webui_port: 'Port',
       webui_username: 'Username',
-      webui_session_hours: 'Session Lifetime',
+      webui_password: 'Password',
     },
 
     desc: {
@@ -407,7 +428,7 @@ export default {
       webui_host:
         'Use 127.0.0.1 to accept connections from this machine only, or 0.0.0.0 to accept them from the network',
       webui_username: 'The account used to sign in to this page',
-      webui_session_hours: 'How long a sign-in stays valid',
+      webui_password: 'Change the password used to sign in to this page',
     },
 
     // 枚举的选项名。文件格式（ass / mp4 / nfo…）不在这里 —— 它们直接大写显示，
@@ -483,7 +504,6 @@ export default {
 
     userAgent: {
       title: 'Customize User-Agent',
-      hint: 'Used for requests to Bilibili. Leave it alone unless you know why you are changing it.',
       placeholder: 'Please enter a User-Agent',
       reset: 'Restore default',
       empty: 'User-Agent cannot be empty',
@@ -734,6 +754,8 @@ export default {
       NOT_AUTHENTICATED: 'Not signed in.',
       INVALID_CREDENTIALS: 'Incorrect username or password.',
       TOO_MANY_ATTEMPTS: 'Too many failed attempts. Try again later.',
+      INVALID_PASSWORD: 'The current password is incorrect.',
+      PASSWORD_UNCHANGED: 'The new password must differ from the current one.',
       PARSE_BUSY: 'Too many parses running. Wait for one to finish.',
       TASK_NOT_FOUND: 'This task no longer exists.',
       NO_MATCHING_TASK: 'No matching task.',
