@@ -1,18 +1,4 @@
 <script setup lang="ts">
-/**
- * 标题栏
- *
- * 桌面版这里只有图标与应用名（窗口按钮由系统画）。Web 端右侧多两样，
- * 都是**桌面版没有的**：
- *
- * - **主题快捷切换**。桌面版切主题要进设置页的「个性化」，那边窗口就在眼前、
- *   切一次是低频操作；网页上主题只存在浏览器本地（D14），换设备就得重设一次，
- *   放个一键切换省事得多。设置页那一项仍然保留，两处改的是同一个状态
- * - **有新版本时的提示**。桌面版是启动后自动弹对话框；网页上弹窗打断操作更讨厌，
- *   所以做成标题栏上一个带小圆点的按钮，点了才看详情
- * - **退出会话**。桌面版没有「登录这个程序」这回事，网页有 —— 而且共用电脑上
- *   离开时能退出登录是基本需求。**退的是这个网页的会话，不是 B 站账号**
- */
 import { computed, onMounted, ref } from 'vue'
 import IconApp from '@/components/Fluent/icons/IconApp.vue'
 import transparentToolButton from '@/components/Fluent/components/widgets/button/TransparentToolButton.vue'

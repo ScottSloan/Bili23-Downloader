@@ -1,18 +1,4 @@
 <script setup lang="ts">
-/**
- * 顶部的分段切换
- *
- * 对应 qfluentwidgets 的 `Pivot`（桌面版下载页「正在下载 / 下载完成」那一排）。
- * 度量照 `pivot.py` 与 `pivot.qss` 抄：
- *
- * - 项：padding `10px 12px`，字号由调用方给（本项目定的是 15）
- * - 指示条：**长 16、高 3、圆角 1.5**，贴在底边，按项的中心对齐 ——
- *   注意它不是「和项一样宽的下划线」，而是短短一截居中的横条
- * - 未选中与选中的文字颜色一样，靠指示条区分；悬停 / 按下才变淡
- *
- * 指示条用一个绝对定位的元素平移，而不是给每个项加 border-bottom ——
- * 桌面版那条是**滑过去的**（`ScaleSlideAnimation`），逐项开关边框没有过渡。
- */
 import { computed, onMounted, onBeforeUnmount, ref, watch, nextTick } from 'vue'
 
 interface PivotItem {

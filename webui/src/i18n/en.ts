@@ -1,18 +1,34 @@
-// 英文源串 —— 与 GUI 一致，英文是源语言，其余语言由译文文件覆盖（D12）
-//
-// 措辞尽量照抄 GUI 里对应的 self.tr(...) / Translator，这样译文可以直接从
-// src/res/i18n/bili23.*.ts 里取，不用重新斟酌。但**不共用**那套表：
-// 那是 Qt 的翻译体系，服务端不该被拖进来。
-
 export default {
   nav: {
     parse: 'Parser',
     download: 'Download',
+    about: 'About',
     settings: 'Settings',
   },
 
-  // 气泡提示的标题。桌面版每条 InfoBar 都有标题 + 正文两段，标题写「发生了什么」
-  // 新版本提示。桌面版是启动后自动弹对话框，Web 端做成标题栏上的一个按钮
+  about: {
+    title: 'About {app}',
+    version: 'Version {version}',
+    stack: 'Interface powered by Vue {vue}',
+    license:
+      'This software is free and open-source, licensed under the GNU General Public License v3 (GPLv3).',
+    copyright: 'Copyright © 2022-{year} Scott Sloan. All Rights Reserved.',
+    sponsor:
+      "If this project saved you time or solved your problem, consider buying the author a coffee! Don't forget to star the repository on GitHub to support open-source development.",
+    terms: 'Terms of Use',
+    documentation: 'Documentation',
+    sponsorAction: 'Sponsor',
+  },
+
+  terms: {
+    title: 'Terms of Use',
+    p1: 'This software is intended solely for personal learning and research purposes. Any content downloaded through this project <b>is strictly limited to personal, non-commercial use and must not be used for any commercial purpose, public distribution, sharing, resale, or unlawful profit.</b>',
+    p2: "This software operates exclusively based on the user's own legitimate account access rights and <b>does not bypass any paywalls, membership restrictions, or technical protection measures.</b> You may only download content that you are authorized to access through your normal login on the target platform. If your account does not have permission to access certain content, this software must not be used to obtain it.",
+    p3: '<b>Do not use this software for bulk scraping, unauthorized redistribution of content, or any activity that violates the terms of service of the target platform.</b> You assume full responsibility for any consequences arising from your use, including but not limited to account suspension, copyright disputes, or other legal issues.',
+    p4: 'Under no circumstances shall the developer be liable for any direct, indirect, incidental, or consequential damages resulting from the use of or inability to use this software. By using this software, you acknowledge that you fully understand the above risks and voluntarily accept all associated responsibilities.',
+    p5: '<b>Continuing to use this software indicates that you have read, understood, and agreed to comply with all the terms stated above.</b>',
+  },
+
   update: {
     title: 'New version {version} is available',
     from: 'Current {current} → Latest {latest}',
@@ -26,11 +42,8 @@ export default {
   },
 
   toast: {
-    // The live connection to the backend dropped. This one never auto-dismisses —
-    // while it is down nothing on screen moves, which looks exactly like «no tasks»
     backendOffline: 'Disconnected from the backend',
-    backendOfflineDetail:
-      'Reconnecting. Task status will not update and actions will not take effect until it is back.',
+    backendOfflineDetail:'Attempting to reconnect...',
     backendOnline: 'Reconnected to the backend',
     parseFailed: 'Parse Failed',
     saveFailed: 'Save Failed',
@@ -44,9 +57,7 @@ export default {
     submit: 'Parse',
     submitting: 'Parsing',
     empty: 'The parse list is empty',
-    // GUI 的原串是 "{category_name} ({total_count} total)"，Web 端多显示一个已选数
     summary: '{category} ({total} total, {checked} selected)',
-    // 一条都没勾时用它 —— 「已选 0 项」是纯噪声
     summaryPlain: '{category} ({total} total)',
     mediaUnavailable:
       'Media information is unavailable ({reason}), downloads cannot be created yet.',
@@ -57,7 +68,6 @@ export default {
     tagDownloaded: 'Downloaded',
     tagNeedsReparse: 'Needs re-parsing',
 
-    // 工具栏那四个按钮。措辞抄桌面版 gui/interface/parse.py 的 setToolTip
     toolbar: {
       search: 'Search',
       history: 'Parsing History',
@@ -90,7 +100,7 @@ export default {
 
     history: {
       title: 'Parse History',
-      limit: 'Only the latest {count} records are kept. Shared with the desktop app.',
+      limit: 'Only the latest {count} records are kept.',
       clear: 'Clear History',
       remove: 'Delete',
       reparse: 'Parse Again',
@@ -122,7 +132,6 @@ export default {
 
   },
 
-  // Signing in to the Bilibili account. Not the same as the WebUI password (see auth)
   login: {
     entry: 'Log in to Bilibili',
     title: 'Log In',
@@ -184,12 +193,10 @@ export default {
   user: {
     signedOut: 'Not signed in',
     avatarAlt: 'User avatar',
-    // This signs out of the WebUI session, not the Bilibili account — say so plainly
     logout: 'Sign out',
     logoutTitle: 'Sign out',
-    logoutHint:
-      'This signs out of the current WebUI session; the password will be required again. Your Bilibili account is unaffected.',
-    logoutConfirm: 'Sign out',
+    logoutHint: 'Are you sure you want to sign out of the current WebUI session?',
+    logoutConfirm: 'OK',
   },
 
   settings: {
@@ -202,13 +209,13 @@ export default {
     localOnly: 'Stored in this browser only',
     customize: 'Customize…',
 
-    // action 行按钮上的字。没配的回落到 customize
     actionLabel: {
       webui_password: 'Change…',
     },
 
     dialog: {
       save: 'Save',
+      ok: 'OK',
       cancel: 'Cancel',
     },
 
@@ -228,7 +235,7 @@ export default {
     },
 
     priority: {
-      hint: 'The topmost entry is preferred. If a video does not offer it, the next one is tried.',
+      hint: 'Drag items to reorder. Higher items have higher priority. If a video does not offer one, the next is tried.',
       summary: 'Prefers {first}',
       moveUp: 'Move up',
       moveDown: 'Move down',
@@ -270,8 +277,6 @@ export default {
       reset: 'Reset',
     },
 
-    // 开关左边那两个字。桌面版的 SwitchSettingCard 一律带着它，
-    // 译文取自 qfluentwidgets 自带的翻译（不是本项目的 .ts）
     switch: {
       on: 'On',
       off: 'Off',
@@ -286,8 +291,6 @@ export default {
       naming: 'File naming',
     },
 
-    // 折叠卡片的标题与说明。文案抄自桌面版 gui/component/setting/card.py 的 self.tr(...)，
-    // 好让两端说的是同一件事；aria2 与 WebUI 两张卡片桌面版没有，是这边自己写的
     card: {
       parsing: { title: 'Parsing Settings', desc: 'Configure how parsing behaves' },
       personalization: { title: 'Personalization', desc: 'Customize the app theme, colors, and visual effects' },
@@ -431,8 +434,6 @@ export default {
       webui_password: 'Change the password used to sign in to this page',
     },
 
-    // 枚举的选项名。文件格式（ass / mp4 / nfo…）不在这里 —— 它们直接大写显示，
-    // 三种语言下都一样，列出来只是徒增 40 条要维护的串
     option: {
       language: {
         zh_CN: '简体中文',
@@ -562,19 +563,6 @@ export default {
     },
   },
 
-  // 后端下发的数据标签在这里翻译（D12：不与 Qt 那套共用）
-  //
-  // 服务端进程里没装 Qt 的翻译函数，`Translator` 返回的一律是英文源串 ——
-  // 照搬的话，中文界面上会出现 `8K UHD`、`Single Video` 这种英文标签。
-  //
-  // 键是**后端给的稳定取值**（画质 id、规则类型编号），不是英文串：
-  // 那些数字是 B 站的协议，比英文措辞稳定得多。
-  //
-  // 这里认不出的值会回落到后端给的 label —— B 站加一档新画质时，
-  // 至少还能显示它的英文名，而不是一个裸数字。
-  //
-  // **字幕语言（158 条）不在这里**：那是 B 站自己的语言表，源数据只有中文名，
-  // 桌面版也是直接显示它。翻一遍不现实，也没有第二份可抄
   media: {
     video_quality: {
       200: 'Auto (by priority)',
@@ -637,9 +625,6 @@ export default {
     },
   },
 
-  // 键与后端 parse_list_column 的 attr_key 一一对应
-  // Parse category. Keys are the stable values the backend sends (EPISODE_TYPE),
-  // not English strings — the server process has no Qt translator (D12)
   episodeType: {
     USER_UPLOADS: 'User Uploads',
     INTERACTIVE_VIDEO: 'Interactive Video',
@@ -742,11 +727,6 @@ export default {
   },
 
   error: {
-    // 后端固定错误的文案。**键是后端给的 code，不是它给的英文句子**
-    //
-    // 服务端进程里没装 Qt 的翻译函数（D12），后端写出来的 detail 一律是英文。
-    // 这里按码查前端自己的译文，查不到才回落到 detail —— 那既包括后端加了新码
-    // 而这里还没配，也包括 str(e) 那类透传（内容来自 B 站接口，前端翻不了）
     code: {
       COOKIE_FORMAT_INVALID: 'Could not parse the cookies',
       COOKIE_MISSING_SESSDATA: 'SESSDATA is missing from the cookies',
@@ -772,7 +752,7 @@ export default {
       NOT_FOUND: 'Not found.',
     },
 
-    backendUnreachable: 'Cannot reach the backend. Start it with: python src/main.py --web-ui',
+    backendUnreachable: 'Cannot reach the backend.',
     requestFailed: 'Request failed (HTTP {status})',
   },
 }

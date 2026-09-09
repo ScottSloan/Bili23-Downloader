@@ -82,11 +82,6 @@ import os
 
 # --------- Logging Configuration ---------
 
-# 数据目录统一由 util/common/_config/paths.py 决定（可用 BILI23_DATA_DIR 覆盖），
-# 不要在这里另算一份 —— 原先用的是 QStandardPaths.AppDataLocation，
-# 它**在没有 QApplication 实例时**返回裸目录、有实例时会自动拼上 applicationName，
-# 于是这段代码的正确性依赖「它排在 QApplication 构造之前」这个隐式时序。
-# 该模块只依赖 platformdirs，不牵扯 Qt，也就没有这个时序问题
 from util.common._config.paths import get_data_dir
 from util.common.logging_setup import setup_logging
 
@@ -96,10 +91,6 @@ log_path = setup_logging("app.log")
 
 # --------- Crash Handler ---------
 
-# Qt 内部的访问违例、qFatal 等原生崩溃不经过 Python 异常机制，进程会被直接终止，
-# app.log 里不会留下任何痕迹，表现为"无预兆退出"。faulthandler 在收到 SIGSEGV /
-# EXCEPTION_ACCESS_VIOLATION 等信号时，直接通过文件描述符写出所有线程的 Python 栈，
-# 不依赖仍然可用的解释器状态，是这类崩溃唯一能拿到的现场。
 import faulthandler
 import threading
 import atexit
@@ -156,9 +147,6 @@ def handle_uncaught_thread_exception(args):
 sys.excepthook = handle_uncaught_exception
 threading.excepthook = handle_uncaught_thread_exception
 
-# 进程退出阶段 Qt 与解释器都在拆各自的状态，此时冒出来的线程警告没有诊断价值 ——
-# 进程马上就结束了，不会再演变成访问违例。置位后不再记录这类警告，
-# 以免每次正常退出都往崩溃日志里灌一份无用的栈，并盖过"进程正常退出"这行标记
 _shutting_down = False
 
 def _on_normal_exit():
@@ -168,25 +156,9 @@ def _on_normal_exit():
 
     write_crash_log("进程正常退出")
 
-# 正常退出会留下这条记录。崩溃日志末尾若没有它，说明进程是被强行终止的，
-# 据此可以区分"硬崩溃"与"意外走到了正常退出流程"
 atexit.register(_on_normal_exit)
 
 def shutdown_process(exit_code: int = 0):
-    """
-    结束进程，跳过解释器的清理流程
-
-    QThread 若在仍然运行时被析构，Qt 会直接 qFatal 中止进程，在 Windows 上表现为
-    0xC0000409（FAST_FAIL_FATAL_APP_EXIT），日志里只留下一行
-    "QThread: Destroyed while thread is still running"，没有任何 Python 栈。
-
-    退出时总有一些线程停不下来：卡在尚未超时的网络请求里的 worker、仍在转码的 FFmpeg、
-    阻塞在注册表通知上的系统主题监听。它们的 QThread 由 Python 侧持有所有权，
-    解释器清理模块全局变量时会连带析构，于是"正常退出"变成了崩溃。
-    shiboken 的 invalidate() 拦不住这一步（实测 isValid 仍为 True），
-    唯一可靠的办法是不给解释器清理的机会 —— 落盘工作在调用本函数之前均已完成，
-    剩下的线程交给操作系统随进程一起回收。
-    """
     global _shutting_down
 
     # 本函数走 os._exit()，atexit 不会执行，因此在这里置位
@@ -212,12 +184,6 @@ def shutdown_process(exit_code: int = 0):
 # --------- Disable PySide6 Warnings ---------
 from PySide6.QtCore import QtMsgType, qInstallMessageHandler
 
-# 这类警告意味着 Qt 的内部状态已经被破坏，紧随其后往往就是访问违例。
-#
-# 崩溃真正发生时，主线程通常已经停在 app.exec() 里，faulthandler 打出来的栈上
-# 没有任何业务代码的线索（只能看到 _main 一帧）。而警告发出的这一刻，做出跨线程
-# 操作的那个线程还在栈上，此时记录全部线程的 Python 栈，比事后从崩溃现场倒推
-# 有效得多 —— 它能直接指出是谁在什么位置动了不属于自己线程的对象。
 THREAD_SAFETY_WARNINGS = (
     "Cannot create children for a parent that is in a different thread",
     "Cannot send events to objects owned by a different thread",
@@ -227,9 +193,6 @@ THREAD_SAFETY_WARNINGS = (
     "QThreadStorage",
 )
 
-# 同一类警告可能在短时间内反复出现，每次都 dump 会把 crash.log 撑爆，
-# 而重复的栈并不会带来新信息，因此每个标记只记录首次。
-# 多线程并发命中时最多多写一份，不影响判断，无需加锁
 _dumped_thread_warnings = set()
 
 def qt_message_handler(mode, context, message):
@@ -288,19 +251,13 @@ from util.common.translator import set_translate_function
 from gui.config_bridge import install as install_config_bridge
 import res.resources_rc
 
-# 主题、强调色、字体仍由 qfluentwidgets 的全局 qconfig 提供（图标与样式表都从它读），
-# 必须在任何界面代码取用主题之前接好这座桥，详见 gui/config_bridge.py
 install_config_bridge()
 
-# util/common/translator.py 默认返回英文原文（它被解析、下载链路引用，而 WebUI 进程里没有 Qt），
-# 桌面版在这里换上 Qt 的实现。必须早于任何 Translator.XXX() 取值
 set_translate_function(QCoreApplication.translate)
 
 INSTANCE_SERVER_NAME = "bili23_downloader_single_instance"
 APP_MUTEX_NAME = "B096F0C1-D105-4EF9-86E1-5E87DA884EA4"
 
-# 唤醒已有实例时携带的命令字。activate 会把窗口拉到前台，ensure-running 只是
-# 确认进程存在（MCP 桥接脚本用它拉起程序，此时弹出窗口只会打断用户手头的事）
 INSTANCE_COMMAND_ACTIVATE = b"activate"
 INSTANCE_COMMAND_ENSURE_RUNNING = b"ensure-running"
 
@@ -332,9 +289,6 @@ class Application(QApplication):
             self.app_mutex_handle = self._msw_create_mutex(APP_MUTEX_NAME)
 
     def init_single_instance(self):
-        # 与 WebUI 抢同一把锁（见 util/common/single_instance.py）。
-        # 锁由内核持有，进程一死立即释放，不再需要 QLockFile 那套 10 秒 stale 判定 ——
-        # 崩溃后可以立刻重开，也不会因为 PID 被复用而误判
         self.instance_lock = InstanceLock(appdata_path / "locks" / INSTANCE_LOCK_NAME, MODE_GUI)
 
         if self.instance_lock.acquire():
@@ -347,8 +301,6 @@ class Application(QApplication):
         if self.wake_existing_instance(command):
             sys.exit(0)
 
-        # 唤醒失败：锁被占着但对方没在监听。最常见的情形是 WebUI 正占着锁 ——
-        # 那边没有窗口可以唤醒，如果只写日志，用户双击程序会毫无反应
         description = self.instance_lock.describe_holder()
 
         logger.warning("无法获取实例锁，%s", description)
@@ -419,9 +371,6 @@ class Application(QApplication):
             if socket is None:
                 continue
 
-            # 读出命令字再决定是否抢焦点。第二个实例总是先写命令再断开，
-            # 因此这里只需等一小段时间；读不到内容时按旧行为激活窗口，
-            # 保证与不发送命令字的旧版本兼容
             command = INSTANCE_COMMAND_ACTIVATE
 
             if socket.waitForReadyRead(200):
@@ -464,9 +413,6 @@ class Application(QApplication):
             self.activate_existing_instance()
 
     def cleanup_instance_state(self):
-        # MCP 的监听线程必须在这里收敛。它由 Python 侧持有，若留到解释器清理
-        # 全局变量时才被析构，"正常退出"就会变成崩溃 —— 与 shutdown_process()
-        # 注释里描述的是同一类问题
         self.stop_mcp_server()
 
         if hasattr(self, "instance_lock"):
@@ -492,13 +438,6 @@ class Application(QApplication):
     def setup_app(self):
         self.setAttribute(Qt.ApplicationAttribute.AA_DontCreateNativeWidgetSiblings)
 
-        # Qt 默认从 argv[0] 推导应用名与 X11 的 WM_CLASS。打包后入口是 _pystand_static.int，
-        # 桌面环境据此无法把窗口与 bili23-downloader.desktop 关联，任务栏里的图标和名称都不对。
-        # desktop_file_name 同时决定 Wayland 下的 app_id。
-        #
-        # 注意：Qt 的 AppDataLocation 会拼接 application_name。本程序的数据目录已改由
-        # platformdirs 决定（见 util/common/_config/paths.py），不再受这里的调用时机影响，
-        # 但 qfluentwidgets 等第三方库仍可能读 QStandardPaths，顺序照旧不要提前。
         self.setApplicationName("Bili23 Downloader")
         self.setApplicationDisplayName("Bili23 Downloader")
         self.setDesktopFileName("bili23-downloader")
@@ -510,8 +449,6 @@ class Application(QApplication):
 
         self.setFont(self.default_font)
 
-        # 加载翻译文件。Language 的取值是 BCP-47 语言标签，AUTO 对应默认构造的
-        # QLocale（跟随系统）—— 枚举值本身不再是 QLocale 对象，见 util/common/enum.py
         language = config.get(config.language)
 
         locale = QLocale() if language == Language.AUTO else QLocale(language.value)
@@ -530,11 +467,6 @@ class Application(QApplication):
         self.start_mcp_server()
 
     def start_mcp_server(self):
-        # 默认关闭，未启用时连模块都不导入 —— http.server 与整条解析、下载链路
-        # 都不应该出现在启动路径上（test/smoke_startup.py 对此有断言）。
-        #
-        # 这里已经晚于 init_single_instance()，非主实例早在 __init__ 里就退出了，
-        # 因此不必再判断自己是不是主实例
         if not config.get(config.mcp_enabled):
             return
 
@@ -548,9 +480,6 @@ class Application(QApplication):
             logger.exception("启动 MCP 服务器失败")
 
     def warmup_network_stack(self):
-        # 导入 httpx 需要连带加载 httpcore 等一系列模块（约 0.3 秒），首次构建 SSL 上下文
-        # 需要加载完整的 CA 证书列表（约 0.5 秒）。两者都放到后台线程完成，避免在 GUI 线程
-        # 上付出这笔开销。
         from threading import Thread
 
         def warmup():
@@ -597,28 +526,12 @@ def _main():
         os.environ["QT_SCALE_FACTOR"] = scaling_value
 
     if sys.platform == "linux":
-        # Qt 只要检测到 WAYLAND_DISPLAY 就优先选用 wayland 平台插件。而 Wayland 下窗口装饰
-        # 归客户端负责，qframelesswindow 的 LinuxWindowEffect.addShadowEffect() 在 Linux 上
-        # 又是空实现，无边框窗口不会有任何阴影；走 xcb（Wayland 会话下经由 Xwayland）则由
-        # mutter / kwin 绘制服务端阴影。
-        #
-        # 这里用分号分隔的候选列表而不是写死 xcb：xcb 插件自 Qt 6.5 起依赖 libxcb-cursor0，
-        # 便携版没有包管理器的依赖声明兜底，缺库时 xcb 会初始化失败。列成 "xcb;wayland" 后
-        # Qt 会自动退到 wayland，代价只是没有阴影，而不是整个程序起不来。
         if "QT_QPA_PLATFORM" not in os.environ:
             os.environ["QT_QPA_PLATFORM"] = "xcb;wayland"
 
-        # WM_CLASS 的实例名部分，Qt 优先取 RESOURCE_NAME，其次是 argv[0] 的文件名。打包后
-        # argv[0] 是 _pystand_static.int，桌面环境据此无法把窗口关联到 bili23-downloader.desktop，
-        # 任务栏中的图标和名称都会回退成默认值。
         if "RESOURCE_NAME" not in os.environ:
             os.environ["RESOURCE_NAME"] = "bili23-downloader"
 
-    # Qt 需要在 QApplication 构造时读取平台参数。仅对特殊的 Windows 7
-    # 兼容版自动添加参数，同时尊重用户显式传入的 -platform 选项。
-    #
-    # --ensure-running 是本程序自己的开关（见 Application.ensure_running_mode），
-    # 不传给 Qt，避免它对未知参数发出警告
     app_args = [arg for arg in sys.argv if arg != ENSURE_RUNNING_FLAG]
 
     if qt_win7_compatible and not any(arg == "-platform" or arg.startswith("-platform=") for arg in app_args):
@@ -627,9 +540,6 @@ def _main():
     app = Application(app_args)
     app.setup_app()
 
-    # 把 core 的回调调度器换成「投递回 GUI 线程」的实现。必须赶在业务模块导入之前 ——
-    # 订阅是在那些模块里建立的，晚一步建立的订阅就会带着错误的调度器。
-    # 见 util/thread/dispatch.py 开头的说明
     from util.thread.dispatcher import install_qt_dispatcher
 
     install_qt_dispatcher()
@@ -643,8 +553,6 @@ def _main():
 
     exit_code = app.exec()
 
-    # 事件循环退出时 aboutToQuit 已经触发，实例锁与数据库写入均已收尾，
-    # 此处不再让解释器去清理那些可能仍在运行的线程对象
     shutdown_process(exit_code)
 
 if __name__ == "__main__":

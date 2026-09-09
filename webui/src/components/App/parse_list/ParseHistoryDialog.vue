@@ -1,27 +1,7 @@
 <script setup lang="ts">
-/**
- * 解析历史
- *
- * 对应桌面版 `gui/dialog/misc/parse_history.py`。历史存在 `history.db` 里
- * （`util/misc/history.py`，不依赖 Qt），**两端共用同一个库** —— 桌面版解析过的链接
- * 在这里也看得到，反之亦然。
- *
- * 只保留最新 100 条，这是库那边定的（`HistoryDatabase.max_length`），
- * 由接口一并下发，不在前端写死。
- *
- * ## 表格的形状照桌面版
- *
- * 那边是 `ColumnTreeWidget`（qfluentwidgets 的 `TreeWidget`），不是一张 HTML 表格：
- * 列宽 60 / 280 拉伸 / 120 / 150 / 75，表头高 33、每段右边一条竖线，行高 40、
- * 行与行之间**没有横线**，悬停时整行一块淡底色。操作列里是两个透明工具按钮 ——
- * 放大镜「重新解析」与垃圾桶「删除」。
- *
- * 之前这里是 `<table>` 加满格线、行高按内容撑，与桌面版一眼就是两个东西。
- * 度量与 `ParseTree` 同源，那边有更详细的注释
- */
 import { ref, watch } from 'vue'
 import fluentDialog from '@/components/Fluent/components/dialog/FluentDialog.vue'
-import pushButton from '@/components/Fluent/components/widgets/button/PushButton.vue'
+import primaryPushButton from '@/components/Fluent/components/widgets/button/PrimaryPushButton.vue'
 import transparentToolButton from '@/components/Fluent/components/widgets/button/TransparentToolButton.vue'
 import { parse as parseApi, ApiError } from '@/api'
 import { t, episodeTypeName } from '@/i18n'
@@ -34,7 +14,6 @@ interface HistoryEntry {
   created_time: number
 }
 
-/** 列宽与桌面版 `setColumnHeaders` 的第二个参数一一对应，标题那列拉伸 */
 const GRID_TEMPLATE = '60px minmax(0, 1fr) 120px 150px 75px'
 
 const props = defineProps<{
@@ -78,8 +57,6 @@ watch(
 )
 
 async function remove(entry: HistoryEntry) {
-  // 先从列表里拿掉再发请求：删一条历史失败了也没什么可挽回的，
-  // 而等一个来回才消失会让人以为没点中
   entries.value = entries.value.filter((item) => item.history_id !== entry.history_id)
 
   try {
@@ -110,7 +87,6 @@ function formatTime(seconds: number): string {
   return new Date(seconds * 1000).toLocaleString()
 }
 
-/** 没有标题的条目用类型名占位，与桌面版一致 */
 function displayTitle(entry: HistoryEntry): string {
   return entry.title || episodeTypeName(entry.type)
 }
@@ -123,12 +99,10 @@ function displayTitle(entry: HistoryEntry): string {
     width="750px"
     @close="emit('close')"
   >
-    <template #hint>{{ t('parse.history.limit', { count: maxLength }) }}</template>
+    <!-- 「清除记录」跟提示挤在同一行的右端：单开一行的话左边空一大片 -->
+    <template #hint>
+      {{ t('parse.history.limit', { count: maxLength }) }}
 
-    <div class="bar">
-      <span v-if="error" class="error" role="alert">{{ error }}</span>
-      <span class="stretch" />
-      <!-- 桌面版这里是个 CommandBar：有图标有字，没有底色没有边框 -->
       <transparentToolButton
         icon="clear"
         :label="t('parse.history.clear')"
@@ -136,7 +110,9 @@ function displayTitle(entry: HistoryEntry): string {
         :disabled="!entries.length"
         @click="clearAll"
       />
-    </div>
+    </template>
+
+    <p v-if="error" class="error" role="alert">{{ error }}</p>
 
     <div class="history-list">
       <div class="tree-header" :style="{ gridTemplateColumns: GRID_TEMPLATE }">
@@ -186,22 +162,12 @@ function displayTitle(entry: HistoryEntry): string {
     </div>
 
     <template #actions>
-      <pushButton :title="t('parse.history.close')" @click="emit('close')" />
+      <primaryPushButton :title="t('settings.dialog.ok')" @click="emit('close')" />
     </template>
   </fluentDialog>
 </template>
 
 <style scoped>
-.bar {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.stretch {
-  flex: 1 1 auto;
-}
-
 .history-list {
   flex: 1 1 auto;
   display: flex;
@@ -332,6 +298,7 @@ function displayTitle(entry: HistoryEntry): string {
 }
 
 .error {
+  margin: 0;
   font-size: 12px;
   color: var(--text-danger);
 }

@@ -7,8 +7,17 @@
 // 候选项来自后端的 `/api/settings/choices`，不在前端抄一份 —— B 站加一档新画质时，
 // 抄的那份不会知道，而且不报错，只是那一档在这个列表里凭空消失。
 //
-// **与 GUI 的一处差异**：桌面版是拖拽排序，这里用上下按钮。HTML5 的拖放在触摸屏上
-// 基本不可用，而键盘用户根本够不着；按钮两样都能用。
+// 排序方式与桌面版一致：**按住某一项直接拖**（那边是 `DragListWidget`）。
+//
+// 用 pointer 事件自己实现，不用 HTML5 的 draggable：后者在触摸屏上基本不工作，
+// 而且拖动时的样式几乎不可控（浏览器会自己截一张半透明的图跟着走）。
+//
+// 上下按钮保留着，它们不是替代品而是补充：
+//
+// - 行上是 `touch-action: pan-y`，触屏上纵向手势要留给列表滚动，拖不动
+// - 键盘用户根本发不出指针事件
+//
+// 也就是说鼠标用拖的（与桌面版同一个手感），触屏与键盘用按钮。
 
 import { computed, ref, watch } from 'vue'
 import { t } from '@/i18n'
@@ -79,6 +88,86 @@ function move(index: number, delta: number) {
 
   order.value = next
 }
+
+// ---- 拖拽排序 ----
+
+/** 正在拖的那一项**当前**在第几位。-1 表示没在拖 */
+const dragIndex = ref(-1)
+/** 被拖那一行相对它自己位置的视觉偏移 */
+const dragOffset = ref(0)
+
+let startY = 0
+let startIndex = -1
+let rowHeight = 0
+
+function onPointerDown(event: PointerEvent, index: number) {
+  // 只认主键。点在上下按钮上的不算拖拽，否则按一下按钮就被当成起手
+  if (event.button !== 0 || (event.target as HTMLElement).closest('button')) {
+    return
+  }
+
+  const row = event.currentTarget as HTMLElement
+
+  rowHeight = row.getBoundingClientRect().height
+  startY = event.clientY
+  startIndex = index
+
+  dragIndex.value = index
+  dragOffset.value = 0
+
+  /*
+    捕获指针：之后的 move / up **一律派发到这一行上**，哪怕光标已经移出了列表。
+    不捕获的话，稍微拖快一点光标就跑到别的行上，事件跟着断掉，
+    表现是「拖到一半自己松手了」
+  */
+  row.setPointerCapture(event.pointerId)
+}
+
+function onPointerMove(event: PointerEvent) {
+  if (dragIndex.value < 0) {
+    return
+  }
+
+  const delta = event.clientY - startY
+
+  const target = Math.min(
+    Math.max(0, startIndex + Math.round(delta / rowHeight)),
+    order.value.length - 1,
+  )
+
+  if (target !== dragIndex.value) {
+    const next = [...order.value]
+
+    next.splice(target, 0, ...next.splice(dragIndex.value, 1))
+
+    order.value = next
+    dragIndex.value = target
+  }
+
+  /*
+    位移要**减掉已经换过去的那几行**
+
+    列表是边拖边重排的，被拖那一行的落脚点跟着变；直接用光标位移当 transform，
+    每换一位就会多算一行的高度，行会越拖越偏离光标
+  */
+  dragOffset.value = delta - (dragIndex.value - startIndex) * rowHeight
+}
+
+function onPointerUp(event: PointerEvent) {
+  if (dragIndex.value < 0) {
+    return
+  }
+
+  const row = event.currentTarget as HTMLElement
+
+  if (row.hasPointerCapture(event.pointerId)) {
+    row.releasePointerCapture(event.pointerId)
+  }
+
+  dragIndex.value = -1
+  dragOffset.value = 0
+  startIndex = -1
+}
 </script>
 
 <template>
@@ -86,7 +175,16 @@ function move(index: number, delta: number) {
     <template #hint>{{ t('settings.priority.hint') }}</template>
 
     <ul class="list">
-      <li v-for="(entry, index) in order" :key="String(entry)">
+      <li
+        v-for="(entry, index) in order"
+        :key="String(entry)"
+        :class="{ 'is-dragging': index === dragIndex }"
+        :style="index === dragIndex ? { transform: `translateY(${dragOffset}px)` } : undefined"
+        @pointerdown="onPointerDown($event, index)"
+        @pointermove="onPointerMove"
+        @pointerup="onPointerUp"
+        @pointercancel="onPointerUp"
+      >
         <span class="rank">{{ index + 1 }}</span>
         <span class="label">{{ labels.get(entry) ?? entry }}</span>
 
@@ -141,11 +239,37 @@ function move(index: number, delta: number) {
   gap: 8px;
   padding: 6px 8px;
   border-radius: 4px;
+  cursor: grab;
+  /* 拖动时别把整行的文字选中 */
+  user-select: none;
+  /*
+    纵向手势留给列表滚动 —— 触屏上这一列可能比屏幕长，拖不动没关系，
+    那种场景用右边的上下按钮。鼠标不受这个属性影响，照样能拖
+  */
+  touch-action: pan-y;
 }
 
 .list li:hover {
   background-color: var(--subtle-fill-secondary);
 }
+
+/* 被拖起来的那一行：压在别人上面，加一点底色和投影，看得出是「拿起来了」 */
+.list li.is-dragging {
+  position: relative;
+  z-index: 1;
+  cursor: grabbing;
+  background-color: var(--control-fill-secondary);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/*
+  让位的那几行是直接跳过去的，没有补间
+
+  它们的位移来自 DOM 顺序变化引起的重排，**不是 transform**，给它们加
+  `transition: transform` 一点用都没有（试过，纯属自我安慰）。要让它们滑过去
+  得上 TransitionGroup 的 FLIP，而拖动时每隔几像素就重排一次，
+  move 动画会不停打断重来，反而更糊。跳过去干脆，也看得清换到哪儿了
+*/
 
 .rank {
   width: 20px;

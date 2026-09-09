@@ -1,33 +1,14 @@
-// 前端自建的 i18n
-//
-// 与 GUI 一致的部分：**英文是源语言**，其余语言由译文覆盖，缺失的键回落到英文；
-// 支持的语言与 GUI 相同（en_US / zh_CN / zh_TW + 跟随系统）。
-//
-// 与 GUI 不同的部分：不共用翻译表。GUI 走 QCoreApplication.translate + .ts / .qm，
-// 那属于桌面端，不该跟着 WebUI 进服务端（D12）。共有的串照抄 GUI 的措辞即可，
-// 译文可以直接从 src/res/i18n/bili23.*.ts 里取。
-//
-// 键用的是语义化路径（'parse.submit'）而不是 Qt 那样拿英文源串当键：
-// 源串当键在「同一个词不同语境」时会撞车（Qt 靠 context 参数化解），
-// 语义化路径没这个问题，代价是与 .ts 对照时要人工找对应。
-//
-// 实现保持在最小规模，调用形态 t('a.b', { name }) 与 vue-i18n 一致，
-// 将来真要换库，调用方不用改。
-
 import { reactive } from 'vue'
 import en from './en'
 import zhCN from './zh-CN'
 import zhTW from './zh-TW'
 
-/** 以英文文件的结构为准 */
 export type Messages = typeof en
 
-/** 译文允许不完整，缺的键回落到英文 */
 type Translations = {
   [K in keyof Messages]?: Partial<Messages[K]>
 }
 
-// 源语言，同时也是回落语言
 const SOURCE_LOCALE = 'en'
 
 const messages: Record<string, Messages | Translations> = {
@@ -36,14 +17,12 @@ const messages: Record<string, Messages | Translations> = {
   'zh-TW': zhTW,
 }
 
-// 桌面版 config.json 里 language 的取值（见 util/common/serializer.py 的 LanguageSerializer）
 const CONFIG_LOCALE_MAP: Record<string, string> = {
   en_US: 'en',
   zh_CN: 'zh-CN',
   zh_TW: 'zh-TW',
 }
 
-// 用 reactive 而非普通变量：切换语言后模板里的 t(...) 要重新求值
 const state = reactive({ locale: SOURCE_LOCALE })
 
 function matchBrowserLocale(): string {
@@ -54,7 +33,6 @@ function matchBrowserLocale(): string {
 
     const lower = tag.toLowerCase()
 
-    // zh-Hant / zh-HK / zh-MO 都归繁体，其余 zh-* 归简体
     if (lower.startsWith('zh')) {
       return /hant|tw|hk|mo/.test(lower) ? 'zh-TW' : 'zh-CN'
     }
@@ -77,12 +55,6 @@ export function availableLocales(): string[] {
   return Object.keys(messages)
 }
 
-/**
- * 设置界面语言
- *
- * 传桌面版配置里的值（'Auto' / 'zh_CN' / 'zh_TW' / 'en_US'）或前端的 locale 标签均可，
- * 'Auto' 与无法识别的值都跟随浏览器语言
- */
 export function setLocale(value?: string | null): string {
   if (!value || value === 'Auto') {
     state.locale = matchBrowserLocale()
@@ -106,10 +78,6 @@ function lookup(bundle: object | undefined, path: string): unknown {
     )
 }
 
-/**
- * 取一条翻译。当前语言缺失时回落到英文源串，仍取不到则原样返回 key，
- * 好让界面上一眼看出漏了哪条
- */
 export function t(path: string, params?: Record<string, string | number>): string {
   const text = lookup(messages[state.locale], path) ?? lookup(messages[SOURCE_LOCALE], path)
 
@@ -126,23 +94,11 @@ export function t(path: string, params?: Record<string, string | number>): strin
   )
 }
 
-/**
- * 解析列表的列名。后端只给 attr_key，列名在前端维护
- */
+
 export function columnName(key: string): string {
   return t(`column.${key}`)
 }
 
-/**
- * 解析类型的名字
- *
- * 后端下发的是 `USER_UPLOADS`、`ANIME` 这样的**稳定键**（`Translator.EPISODE_TYPE`
- * 的键），不是译好的文案 —— 服务端进程里没有 Qt 的翻译函数，那边拿到的一律是英文源串
- * （D12）。所以翻译在这边做，键用它给的那个：那些键是内部枚举，比英文措辞稳定得多。
- *
- * 认不出来就原样显示。B 站加了新分类时，看到一个大写的键至少还知道是哪一类，
- * 比显示空白强
- */
 export function episodeTypeName(key: string): string {
   if (!key) {
     return ''
@@ -153,19 +109,7 @@ export function episodeTypeName(key: string): string {
   return text === `episodeType.${key}` ? key : text
 }
 
-/**
- * 数据标签（画质 / 音质 / 编码 / 字幕对齐 / 命名规则类型）
- *
- * **不用后端给的 label。** 服务端进程里没装 Qt 的翻译函数（D12：那套是桌面版的），
- * `Translator` 返回的一律是英文源串 —— 直接显示的话，中文界面上会出现
- * `8K UHD`、`Single Video` 这种英文标签。
- *
- * 键是后端给的稳定取值（画质 id、类型编号），不是英文串：那些数字是 B 站的协议，
- * 比英文措辞稳定得多。
- *
- * `fallback` 传后端给的 label：**这张表认不出的值要靠它**。B 站加一档新画质时，
- * 前端还不认得它，那时显示英文名也好过显示一个裸数字
- */
+
 export function mediaLabel(group: string, value: string | number, fallback = ''): string {
   const key = `media.${group}.${value}`
   const text = t(key)
@@ -177,5 +121,4 @@ export function mediaLabel(group: string, value: string | number, fallback = '')
   return fallback || String(value)
 }
 
-// 首屏先按浏览器语言渲染，拿到桌面版配置后再由 App 调 setLocale 校正
 setLocale('Auto')

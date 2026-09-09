@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import type { Component, PropType } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
+import fluentIcon from '../../icons/FluentIcon.vue'
 
 const route = useRoute()
 
@@ -11,10 +12,16 @@ const props = defineProps({
     default: '',
   },
 
-  // 图标传的是组件本身（见 @/components/Fluent/icons），不是 svg 路径字符串。
-  // 函数式组件也是合法取值，故运行期类型写成 [Object, Function]
+  /**
+   * 图标。两种传法：
+   *
+   * - **组件本身**（见 @/components/Fluent/icons）—— 手抄进 IconXxx.vue 的那几个。
+   *   函数式组件也合法，故运行期类型写成 [Object, Function]
+   * - **名字字符串** —— 从 Qt 资源抽出来、集中放在 fluentIcons.ts 里的那批。
+   *   那些路径数据动辄几 KB，再手抄一份进 IconXxx.vue 不值当
+   */
   icon: {
-    type: [Object, Function] as PropType<Component | null>,
+    type: [Object, Function, String] as PropType<Component | string | null>,
     default: null,
   },
 
@@ -48,19 +55,25 @@ const isActive = computed(() => props.active || (props.to ? route.path === props
 <template>
   <RouterLink v-if="to" :to="to" custom v-slot="{ navigate, href }">
     <a class="navigation-bar-button" :class="{ active: isActive }" :href="href" @click="navigate">
-      <component :is="icon" v-if="icon" />
+      <fluentIcon v-if="typeof icon === 'string'" :name="icon" />
+      <component :is="icon" v-else-if="icon" />
 
       <span>{{ title }}</span>
       <span v-if="badge > 0" class="badge">{{ badgeText }}</span>
     </a>
   </RouterLink>
 
-  <div v-else class="navigation-bar-button" :class="{ active: isActive }">
-    <component :is="icon" v-if="icon" />
+  <!--
+    不指向某一页的那种（桌面版里「关于」就是 `selectable = False` 加一个 onClick）。
+    用 <button> 而不是 <div>：Tab 走得到、回车与空格能触发，读屏软件也知道它可以点
+  -->
+  <button v-else type="button" class="navigation-bar-button" :class="{ active: isActive }">
+    <fluentIcon v-if="typeof icon === 'string'" :name="icon" />
+    <component :is="icon" v-else-if="icon" />
 
     <span>{{ title }}</span>
     <span v-if="badge > 0" class="badge">{{ badgeText }}</span>
-  </div>
+  </button>
 </template>
 
 <style scoped>
@@ -81,6 +94,17 @@ const isActive = computed(() => props.active || (props.to ? route.path === props
     color 0.2s ease;
 
   color: var(--text-secondary);
+  /* 抹掉 <button> 那一支自带的浏览器默认值，让两支长得一模一样 */
+  font: inherit;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+
+.navigation-bar-button:focus-visible {
+  outline: 2px solid var(--focus-stroke-outer);
+  outline-offset: -2px;
 }
 
 .navigation-bar-button svg {

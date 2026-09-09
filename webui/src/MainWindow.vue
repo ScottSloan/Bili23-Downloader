@@ -6,7 +6,8 @@ import navigationPanel from './components/Fluent/components/navigation/Navigatio
 import navigationBarButton from './components/Fluent/components/navigation/NavigationBarButton.vue'
 import navigationBarStretch from '@/components/Fluent/components/navigation/NavigationBarStretch.vue'
 import navigationBarAvatar from '@/components/Fluent/components/navigation/NavigationBarAvatar.vue'
-import { computed } from 'vue'
+import aboutDialog from '@/components/App/AboutDialog.vue'
+import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { useTaskStore } from '@/stores/taskStore'
 import { t } from '@/i18n'
@@ -15,11 +16,21 @@ import { IconDownload, IconSearch, IconSettings } from '@/components/Fluent/icon
 const route = useRoute()
 const taskStore = useTaskStore()
 
+const aboutOpen = ref(false)
+
+/**
+ * 高亮条落在第几个按钮上
+ *
+ * **数的是 `.navigation-bar-button` 的顺序，不是路由的个数**：中间那个「关于」
+ * 不指向任何一页，但它同样是一个按钮，占掉一位。漏算它的话，指示条会停在
+ * 「关于」上而当前其实在设置页 —— 不报错，只是指错了
+ */
 const activeNavIndex = computed(() => {
   const map: Record<string, number> = {
     '/parse': 0,
     '/download': 1,
-    '/settings': 2,
+    // 2 是「关于」，它没有对应的路由
+    '/settings': 3,
   }
 
   return map[route.path] ?? 0
@@ -41,6 +52,13 @@ const activeNavIndex = computed(() => {
           to="/download"
           :badge="taskStore.pendingCount"
         />
+        <!--
+          「关于」不是一页，是个弹对话框的项 —— 桌面版那边同样是
+          `selectable = False` 加一个 onClick，见 main_window.py 的 about_btn。
+          位置也照它：在下载与收藏之后、顶部这一组的末尾
+        -->
+        <navigationBarButton :title="t('nav.about')" icon="info" @click="aboutOpen = true" />
+
         <navigationBarStretch />
         <!-- 头像在设置项之上，与 GUI 的导航栏顺序一致 -->
         <navigationBarAvatar />
@@ -56,6 +74,8 @@ const activeNavIndex = computed(() => {
         </router-view>
       </navigationPanel>
     </div>
+
+    <aboutDialog :open="aboutOpen" @close="aboutOpen = false" />
   </div>
 </template>
 

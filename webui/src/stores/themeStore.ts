@@ -266,6 +266,42 @@ function suppressTransitions() {
   setTimeout(release, 120)
 }
 
+/** 首屏那次不做过场：一进页面就看见一次淡入淡出很奇怪 */
+let themeApplied = false
+
+type StartViewTransition = (callback: () => void) => unknown
+
+/**
+ * 换主题时整页交叉淡化
+ *
+ * **不能靠各控件自己的 `transition` 来做渐变**：根节点上的自定义属性变了之后，
+ * 带过渡的属性会卡在旧值上不更新（见 suppressTransitions 的说明），
+ * 所以那条路是先把过渡全关掉、瞬间切过去的。
+ *
+ * 要渐变就换一层做：View Transitions 把切换前的画面截成一张图，与切换后的画面
+ * 在合成层交叉淡化。它**不关心颜色是怎么算出来的**，自然也就不受那个坑影响，
+ * 而且整页一起淡，不会出现各控件各渐各的、中途闪过一堆中间色。
+ *
+ * 浏览器不支持（Chromium 111 以前、以及一些别的内核）就直接切，
+ * 跟着系统「减少动态效果」的设置也直接切
+ */
+function withViewTransition(commit: () => void) {
+  const start = (document as Document & { startViewTransition?: StartViewTransition })
+    .startViewTransition
+
+  const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+
+  if (!themeApplied || reduced || typeof start !== 'function') {
+    themeApplied = true
+
+    commit()
+
+    return
+  }
+
+  start.call(document, commit)
+}
+
 function applyThemeVariables(theme: ThemeName, primaryColor: string) {
   if (typeof document === 'undefined') {
     return
@@ -274,18 +310,20 @@ function applyThemeVariables(theme: ThemeName, primaryColor: string) {
   const root = document.documentElement
   const variables = paletteToCssVariables(generateThemePalette(primaryColor, theme === 'dark'))
 
-  suppressTransitions()
+  withViewTransition(() => {
+    suppressTransitions()
 
-  root.dataset.theme = theme
-  root.style.setProperty('--theme-mode', theme)
+    root.dataset.theme = theme
+    root.style.setProperty('--theme-mode', theme)
 
-  for (const [name, value] of Object.entries(variables)) {
-    root.style.setProperty(name, value)
-  }
+    for (const [name, value] of Object.entries(variables)) {
+      root.style.setProperty(name, value)
+    }
 
-  // 强制同步一次样式计算：新值必须在「过渡还关着」的这一帧里落定，
-  // 否则浏览器会把变量更新与去掉 theme-switching 合并到同一帧，等于没关
-  void root.offsetHeight
+    // 强制同步一次样式计算：新值必须在「过渡还关着」的这一帧里落定，
+    // 否则浏览器会把变量更新与去掉 theme-switching 合并到同一帧，等于没关
+    void root.offsetHeight
+  })
 }
 
 // localStorage 读写一律包 try/catch：隐私模式、或浏览器禁用了站点数据时，

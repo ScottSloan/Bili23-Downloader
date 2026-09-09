@@ -11,6 +11,10 @@
  * 浮层贴着头像右边弹出（桌面版是 `FlyoutAnimationType.SLIDE_RIGHT`）。
  * 位置在挂载时按目标元素算一次，然后 teleport 到 body ——
  * 留在导航栏里会被它的 `overflow` 裁掉。
+ *
+ * 进场动画照 `SlideRightFlyoutAnimationManager`：位置与透明度两条并行动画，
+ * **187ms、OutQuad**，从终点左边 8px 处滑过来，同时 0 → 1 淡入。
+ * 退场那边没有动画（Flyout 是直接 close 的），这里也不做。
  */
 import { onBeforeUnmount, onMounted, ref } from 'vue'
 import { useAppStore } from '@/stores/appStore'
@@ -173,6 +177,26 @@ async function confirmLogout() {
   background-color: var(--flyout-fill);
   border: 1px solid var(--flyout-stroke);
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18);
+
+  /* 向右滑出 + 淡入，187ms OutQuad，见文件开头 */
+  animation: flyout-slide-right 187ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/*
+  只写 from：to 就是元素自己的静止状态。这样位置由 :style 的 left/top 定，
+  动画只负责那 8px 的位移，两者不会打架
+*/
+@keyframes flyout-slide-right {
+  from {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .profile-card {
+    animation: none;
+  }
 }
 
 .face {

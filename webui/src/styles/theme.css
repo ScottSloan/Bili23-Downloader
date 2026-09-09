@@ -1,9 +1,5 @@
 @import './tokens.css';
 
-/*
-  主题色的默认值。运行时 themeStore 会按用户配置重新生成并写到根节点上，
-  这里的值只在首屏 JS 尚未执行时兜底
-*/
 :root {
   --primary-color: #009faa;
   --primary-color-dark-1: #007f8a;
@@ -30,24 +26,29 @@ body,
 
 #app {
   font-family: 'Segoe UI', 'Microsoft YaHei', 'PingFang SC';
-  /* qfluentwidgets 的正文是 14px（common/font.py 的 getFont 默认值）。
-     用 px 而不是 pt：那边全套度量都是像素，混用会整体偏大约 5% */
   font-size: 14px;
   color: var(--text-primary);
   background-color: var(--solid-bg-base);
 }
 
-/*
-  换主题的那两帧：全局关掉过渡
-
-  不关的话，凡是带 `transition` 的控件在切完主题后颜色不会更新 —— 浏览器为
-  「值来自 var()、而 var 在祖先上被改掉」的属性起了一次终点是旧值的过渡，然后停在原地，
-  非刷新页面不可。详见 stores/themeStore.ts 里 suppressTransitions() 的说明。
-
-  `*` 加两个伪元素都要盖到：选中行的底色、开关的滑块、导航栏的指示条都画在伪元素上
-*/
 :root.theme-switching *,
 :root.theme-switching *::before,
 :root.theme-switching *::after {
   transition: none !important;
+}
+
+/*
+  换主题的整页交叉淡化（View Transitions）
+
+  各控件自己的 transition 在这里用不了 —— 根节点上的自定义属性一变，带过渡的属性
+  就卡在旧值上不更新，所以那条路是全关掉、瞬间切。渐变改在合成层做：浏览器把切换前的
+  画面截成一张图，与切换后的画面淡入淡出，不关心颜色是怎么算出来的。
+
+  时长与曲线对齐 qfluentwidgets 的观感（OutQuad）。不支持这套 API 的浏览器
+  会直接切过去，这几条规则对它们无效也无害
+*/
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 220ms;
+  animation-timing-function: cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }

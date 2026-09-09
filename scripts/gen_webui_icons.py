@@ -62,6 +62,12 @@ ICONS = {
     "pause":             ":/qfluentwidgets/images/icons/Pause_black.svg",
     "delete":            ":/qfluentwidgets/images/icons/Delete_black.svg",
 
+    # 关于：导航项与对话框里那四个按钮
+    "info":              ":/qfluentwidgets/images/icons/Info_black.svg",
+    "help":              ":/qfluentwidgets/images/icons/Help_black.svg",
+    "github":            ":/qfluentwidgets/images/icons/GitHub_black.svg",
+    "heart":             ":/qfluentwidgets/images/icons/Heart_black.svg",
+
     # 解析列表的复选框里那个勾与横杠。
     #
     # 树的展开箭头没有取过来：资源里那两个的图形只占了 6000 单位视口的一小角，
@@ -119,10 +125,20 @@ def extract(source: str, recolor: bool = True) -> tuple:
     view_box = re.search(r'viewBox\s*=\s*"([^"]+)"', attributes)
 
     if not view_box:
-        raise ValueError("svg 上没有 viewBox")
+        # 没有 viewBox 的（GitHub 那个图标就是），拿 width / height 拼一个出来。
+        # 少了这一步整张图会按默认视口缩放，画出来是一小角
+        width = re.search(r'\bwidth\s*=\s*"([\d.]+)', attributes)
+        height = re.search(r'\bheight\s*=\s*"([\d.]+)', attributes)
+
+        if not (width and height):
+            raise ValueError("svg 上既没有 viewBox 也没有 width / height")
+
+        raw = f"0 0 {width.group(1)} {height.group(1)}"
+    else:
+        raw = view_box.group(1)
 
     # 逗号分隔的 viewBox（本项目的图标是这种写法）浏览器也认，但统一成空格更保险
-    box = view_box.group(1).replace(",", " ")
+    box = raw.replace(",", " ")
     box = re.sub(r"\s+", " ", box).strip()
 
     if recolor:

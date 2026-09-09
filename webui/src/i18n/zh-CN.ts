@@ -1,17 +1,33 @@
-// 简体中文
-//
-// 与 GUI 共有的串直接取自 src/res/i18n/bili23.zh_CN.ts，措辞保持一致。
-// 缺失的键会回落到 en.js 的英文源串。
-
 export default {
   nav: {
     parse: '解析',
     download: '下载',
+    about: '关于',
     settings: '设置',
   },
 
-  // 气泡提示的标题。桌面版每条 InfoBar 都有标题 + 正文两段，标题写「发生了什么」
-  // 新版本提示。桌面版是启动后自动弹对话框，Web 端做成标题栏上的一个按钮
+  about: {
+    title: '关于 {app}',
+    version: '版本 {version}',
+    stack: '界面由 Vue {vue} 驱动',
+    license: '本软件为自由开源软件，基于 GNU 通用公共许可证第三版（GPLv3）发布。',
+    copyright: 'Copyright © 2022-{year} Scott Sloan. All Rights Reserved.',
+    sponsor:
+      '如果这个项目为你省下了时间、或者解决了你的问题，可以请作者喝杯咖啡！也别忘了去 GitHub 点个 Star，那是对开源最实在的支持。',
+    terms: '使用条款',
+    documentation: '文档',
+    sponsorAction: '赞助',
+  },
+
+  terms: {
+    title: '使用条款',
+    p1: '本软件仅供个人学习与研究用途，任何通过本项目下载的内容<b>仅限于个人非商业使用，严禁用于任何形式的商业目的、公开传播、分发、转售或非法牟利。</b>',
+    p2: '本软件仅基于用户自身账号的合法访问权限进行操作，<b>不会绕过任何付费墙、会员限制或技术保护措施。</b>您所下载的内容，必须是您通过正常登录账号后可在目标平台上公开访问或拥有使用权的部分。若您的账号无权访问某内容，则本软件无法也不应被用于获取该内容。',
+    p3: '<b>请勿将本软件用于批量抓取、未经授权的内容分发或任何违反目标平台服务条款的行为。</b>若您的使用行为导致账号封禁、版权纠纷或其他法律问题，开发者概不负责。',
+    p4: '在任何情况下，开发者均不对因使用或无法使用本软件所导致的任何直接、间接、附带或后果性损害承担责任。您理解并同意，使用本软件即代表您已充分了解上述风险，并自愿承担全部后果。',
+    p5: '<b>继续使用本软件即表示您已阅读、理解并同意遵守上述所有条款。</b>',
+  },
+
   update: {
     title: '发现新版本 {version}',
     from: '当前 {current} → 最新 {latest}',
@@ -25,10 +41,8 @@ export default {
   },
 
   toast: {
-    // 后端的实时连接断了。**这条不会自己消失** —— 断线时界面上什么都不会动，
-    // 看起来和「没有任务」一模一样，不明说用户根本不知道
     backendOffline: '与后端的连接已断开',
-    backendOfflineDetail: '正在自动重连。这期间任务状态不会更新，操作也不会生效。',
+    backendOfflineDetail: '正在尝试重新连接中...',
     backendOnline: '已重新连接到后端',
     parseFailed: '解析失败',
     saveFailed: '保存失败',
@@ -43,7 +57,6 @@ export default {
     submitting: '解析中',
     empty: '解析列表为空',
     summary: '{category}（共 {total} 项，已选 {checked} 项）',
-    // 一条都没勾时用它 —— 「已选 0 项」是纯噪声
     summaryPlain: '{category}（共 {total} 项）',
     mediaUnavailable: '媒体信息不可用（{reason}），暂时无法下载',
     download: '下载选中项',
@@ -53,7 +66,6 @@ export default {
     tagDownloaded: '已下载',
     tagNeedsReparse: '需二次解析',
 
-    // 工具栏那四个按钮。措辞抄桌面版 gui/interface/parse.py 的 setToolTip
     toolbar: {
       search: '搜索',
       history: '解析记录',
@@ -85,7 +97,7 @@ export default {
 
     history: {
       title: '解析记录',
-      limit: '仅保留最近 {count} 条记录，与桌面版共用同一份。',
+      limit: '仅保留最近 {count} 条记录。',
       clear: '清除记录',
       remove: '删除',
       reparse: '重新解析',
@@ -117,7 +129,6 @@ export default {
 
   },
 
-  // 哔哩哔哩账号的登录。**与 WebUI 自身的口令登录是两回事**，那个在 auth 段
   login: {
     entry: '登录哔哩哔哩账号',
     title: '登录',
@@ -178,11 +189,10 @@ export default {
   user: {
     signedOut: '未登录',
     avatarAlt: '用户头像',
-    // 退的是这个网页的会话，不是 B 站账号 —— 文案必须把这一点说明白
     logout: '退出登录',
-    logoutTitle: '退出登录',
-    logoutHint: '将退出当前 WebUI 的登录会话，需要重新输入口令才能进入。哔哩哔哩账号不受影响。',
-    logoutConfirm: '退出',
+    logoutTitle: '退出会话',
+    logoutHint: '确定要退出当前 WebUI 的登录会话吗？',
+    logoutConfirm: '确定',
   },
 
   settings: {
@@ -195,13 +205,13 @@ export default {
     localOnly: '仅保存在当前浏览器',
     customize: '自定义…',
 
-    // action 行按钮上的字。没配的回落到 customize
     actionLabel: {
       webui_password: '修改口令',
     },
 
     dialog: {
       save: '保存',
+      ok: '确认',
       cancel: '取消',
     },
 
@@ -221,7 +231,7 @@ export default {
     },
 
     priority: {
-      hint: '越靠前越优先。视频没有该档位时，依次尝试下一个。',
+      hint: '拖拽列表项目进行排序，越靠上优先级越高。视频没有该档位时，依次尝试下一个。',
       summary: '优先 {first}',
       moveUp: '上移',
       moveDown: '下移',
@@ -263,8 +273,6 @@ export default {
       reset: '恢复默认',
     },
 
-    // 开关左边那两个字。桌面版的 SwitchSettingCard 一律带着它，
-    // 译文取自 qfluentwidgets 自带的翻译（不是本项目的 .ts）
     switch: {
       on: '开',
       off: '关',
@@ -279,8 +287,6 @@ export default {
       naming: '文件命名',
     },
 
-    // 折叠卡片的标题与说明。文案抄自桌面版 gui/component/setting/card.py 的 self.tr(...)，
-    // 好让两端说的是同一件事；aria2 与 WebUI 两张卡片桌面版没有，是这边自己写的
     card: {
       parsing: { title: '解析设置', desc: '配置解析相关的行为' },
       personalization: { title: '个性化', desc: '自定义应用主题、颜色和视觉效果' },
@@ -312,7 +318,7 @@ export default {
       video_container: '输出容器格式',
       m4a_to_mp3: '将 M4A 转换为 MP3',
 
-      video_quality_priority: '视频清晰度优先级',
+      video_quality_priority: '画质优先级',
       audio_quality_priority: '音质优先级',
       video_codec_priority: '编码优先级',
       subtitle_language: '字幕语言',
@@ -374,7 +380,7 @@ export default {
       video_container: '选择最终输出视频文件的容器格式',
       m4a_to_mp3: '仅在下载纯音频流时有效',
 
-      video_quality_priority: '视频有多个清晰度可选时，优先选择哪一个',
+      video_quality_priority: '视频有多个画质可选时，优先选择哪一个',
       audio_quality_priority: '有多种音质可选时，优先选择哪一个',
       video_codec_priority: '有多种编码可选时，优先选择哪一个',
       subtitle_language: '下载全部字幕，还是只下你指定的语言',
@@ -602,9 +608,6 @@ export default {
     },
   },
 
-  // 解析类型。**键是后端给的稳定取值**（`EPISODE_TYPE` 的键），不是英文串 ——
-  // 服务端进程里没有 Qt 的翻译函数，它下发的一律是 `USER_UPLOADS` 这样的裸键（D12）。
-  // 译文抄自 src/res/i18n/bili23.zh_CN.ts 的 EPISODE_TYPE 段
   episodeType: {
     USER_UPLOADS: '投稿视频',
     INTERACTIVE_VIDEO: '互动视频',
@@ -639,8 +642,8 @@ export default {
   download: {
     title: '下载 {count} 项',
     loading: '正在获取媒体信息…',
-    fallback: '首选的视频无法获取媒体信息，以下清晰度来自「{title}」。',
-    videoQuality: '视频清晰度',
+    fallback: '首选的视频无法获取媒体信息，以下画质来自「{title}」。',
+    videoQuality: '画质',
     videoCodec: '视频编码',
     audioQuality: '音质',
     extras: '同时下载',
@@ -731,7 +734,7 @@ export default {
       NOT_FOUND: '未找到。',
     },
 
-    backendUnreachable: '无法连接到后端，请先运行：python src/main.py --web-ui',
+    backendUnreachable: '无法连接到后端。',
     requestFailed: '请求失败（HTTP {status}）',
   },
 }

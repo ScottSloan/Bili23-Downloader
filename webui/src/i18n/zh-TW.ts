@@ -1,17 +1,33 @@
-// 繁體中文
-//
-// 與 GUI 共有的字串直接取自 src/res/i18n/bili23.zh_TW.ts，措辭保持一致。
-// 缺失的鍵會回落到 en.js 的英文原文。
-
 export default {
   nav: {
     parse: '解析',
     download: '下載',
+    about: '關於',
     settings: '設定',
   },
 
-  // 气泡提示的标题。桌面版每条 InfoBar 都有标题 + 正文两段，标题写「发生了什么」
-  // 新版本提示。桌面版是启动后自动弹对话框，Web 端做成标题栏上的一个按钮
+  about: {
+    title: '關於 {app}',
+    version: '版本 {version}',
+    stack: '介面由 Vue {vue} 驅動',
+    license: '本軟體為自由開源軟體，基於 GNU 通用公共授權條款第三版（GPLv3）發布。',
+    copyright: 'Copyright © 2022-{year} Scott Sloan. All Rights Reserved.',
+    sponsor:
+      '如果這個專案為你省下了時間、或者解決了你的問題，可以請作者喝杯咖啡！也別忘了去 GitHub 點個 Star，那是對開源最實在的支持。',
+    terms: '使用條款',
+    documentation: '文件',
+    sponsorAction: '贊助',
+  },
+
+  terms: {
+    title: '使用條款',
+    p1: '本軟體僅供個人學習與研究用途，任何透過本專案下載之內容<b>僅限於個人非商業使用，嚴禁用於任何形式之商業目的、公開傳播、散發、轉售或非法牟利。</b>',
+    p2: '本軟體僅基於使用者自身帳號之合法存取權限進行操作，<b>不會繞過任何付費牆、會員限制或技術保護措施。</b>您所下載之內容，必須是您透過正常登入帳號後，於目標平台上可公開存取或擁有使用權之部分。若您的帳號無權存取某內容，則本軟體無法亦不應被用於取得該內容。',
+    p3: '<b>請勿將本軟體用於大量抓取、未經授權之內容散發，或任何違反目標平台服務條款之行為。</b>若因您的使用行為導致帳號遭封鎖、著作權爭議或其他法律問題，開發者概不負責。',
+    p4: '在任何情況下，開發者均不對因使用或無法使用本軟體所導致之任何直接、間接、附帶或衍生性損害承擔責任。您理解並同意，使用本軟體即代表您已充分知悉上述風險，並自願承擔全部後果。',
+    p5: '<b>繼續使用本軟體即表示您已閱讀、理解並同意遵守上述所有條款。</b>',
+  },
+
   update: {
     title: '發現新版本 {version}',
     from: '目前 {current} → 最新 {latest}',
@@ -25,10 +41,8 @@ export default {
   },
 
   toast: {
-    // 後端的即時連線斷了。**這條不會自己消失** —— 斷線時介面上什麼都不會動，
-    // 看起來和「沒有任務」一模一樣，不明說使用者根本不知道
     backendOffline: '與後端的連線已中斷',
-    backendOfflineDetail: '正在自動重新連線。這期間任務狀態不會更新，操作也不會生效。',
+    backendOfflineDetail: '正在嘗試重新連線中...',
     backendOnline: '已重新連線到後端',
     parseFailed: '解析失敗',
     saveFailed: '儲存失敗',
@@ -43,7 +57,6 @@ export default {
     submitting: '解析中',
     empty: '解析清單為空',
     summary: '{category}（共 {total} 項，已選 {checked} 項）',
-    // 一条都没勾时用它 —— 「已选 0 项」是纯噪声
     summaryPlain: '{category}（共 {total} 項）',
     mediaUnavailable: '媒體資訊無法取得（{reason}），暫時無法下載',
     download: '下載選取項',
@@ -53,7 +66,6 @@ export default {
     tagDownloaded: '已下載',
     tagNeedsReparse: '需二次解析',
 
-    // 工具栏那四个按钮。措辞抄桌面版 gui/interface/parse.py 的 setToolTip
     toolbar: {
       search: '搜尋',
       history: '解析記錄',
@@ -85,7 +97,7 @@ export default {
 
     history: {
       title: '解析記錄',
-      limit: '僅保留最近 {count} 條記錄，與桌面版共用同一份。',
+      limit: '僅保留最近 {count} 條記錄。',
       clear: '清除記錄',
       remove: '刪除',
       reparse: '重新解析',
@@ -117,7 +129,6 @@ export default {
 
   },
 
-  // 嗶哩嗶哩帳號的登入。**與 WebUI 自身的密碼登入是兩回事**，那個在 auth 段
   login: {
     entry: '登入嗶哩嗶哩帳號',
     title: '登入',
@@ -178,11 +189,10 @@ export default {
   user: {
     signedOut: '未登入',
     avatarAlt: '使用者頭像',
-    // 退的是這個網頁的工作階段，不是 B 站帳號 —— 文案必須把這一點說明白
     logout: '登出',
     logoutTitle: '登出',
-    logoutHint: '將登出目前 WebUI 的工作階段，需要重新輸入密碼才能進入。嗶哩嗶哩帳號不受影響。',
-    logoutConfirm: '登出',
+    logoutHint: '確定要登出目前 WebUI 的登入階段嗎？',
+    logoutConfirm: '確認',
   },
 
   settings: {
@@ -195,13 +205,13 @@ export default {
     localOnly: '僅儲存於目前瀏覽器',
     customize: '自訂…',
 
-    // action 行按钮上的字。没配的回落到 customize
     actionLabel: {
       webui_password: '修改口令',
     },
 
     dialog: {
       save: '儲存',
+      ok: '確認',
       cancel: '取消',
     },
 
@@ -221,7 +231,7 @@ export default {
     },
 
     priority: {
-      hint: '越靠前越優先。影片沒有該檔位時，依序嘗試下一個。',
+      hint: '拖曳列表項目進行排序，越靠上優先順序越高。影片沒有該檔位時，依序嘗試下一個。',
       summary: '優先 {first}',
       moveUp: '上移',
       moveDown: '下移',
@@ -263,8 +273,6 @@ export default {
       reset: '恢復預設',
     },
 
-    // 开关左边那两个字。桌面版的 SwitchSettingCard 一律带着它，
-    // 译文取自 qfluentwidgets 自带的翻译（不是本项目的 .ts）
     switch: {
       on: '開',
       off: '關',
@@ -279,8 +287,6 @@ export default {
       naming: '檔案命名',
     },
 
-    // 折叠卡片的标题与说明。文案抄自桌面版 gui/component/setting/card.py 的 self.tr(...)，
-    // 好让两端说的是同一件事；aria2 与 WebUI 两张卡片桌面版没有，是这边自己写的
     card: {
       parsing: { title: '解析設定', desc: '配置解析相關的行為' },
       personalization: { title: '個人化', desc: '自訂應用程式佈景主題、色彩與視覺效果' },
@@ -312,7 +318,7 @@ export default {
       video_container: '輸出容器格式',
       m4a_to_mp3: '將 M4A 轉換為 MP3',
 
-      video_quality_priority: '影片清晰度優先順序',
+      video_quality_priority: '畫質優先順序',
       audio_quality_priority: '音質優先順序',
       video_codec_priority: '編碼優先順序',
       subtitle_language: '字幕語言',
@@ -374,7 +380,7 @@ export default {
       video_container: '選擇最終輸出影片檔案的容器格式',
       m4a_to_mp3: '僅於下載純音訊串流時有效',
 
-      video_quality_priority: '影片有多個清晰度可選時，優先選擇哪一個',
+      video_quality_priority: '影片有多個畫質可選時，優先選擇哪一個',
       audio_quality_priority: '有多種音質可選時，優先選擇哪一個',
       video_codec_priority: '有多種編碼可選時，優先選擇哪一個',
       subtitle_language: '下載全部字幕，或僅下載你指定的語言',
@@ -602,9 +608,6 @@ export default {
     },
   },
 
-  // 解析類型。**鍵是後端給的穩定取值**（`EPISODE_TYPE` 的鍵），不是英文串 ——
-  // 伺服器行程裡沒有 Qt 的翻譯函式，它下發的一律是 `USER_UPLOADS` 這樣的裸鍵（D12）。
-  // 譯文抄自 src/res/i18n/bili23.zh_TW.ts 的 EPISODE_TYPE 段
   episodeType: {
     USER_UPLOADS: '投稿影片',
     INTERACTIVE_VIDEO: '互動影片',
@@ -640,7 +643,7 @@ export default {
     title: '下載 {count} 項',
     loading: '正在取得媒體資訊…',
     fallback: '首選的影片無法取得媒體資訊，以下畫質來自「{title}」。',
-    videoQuality: '影片畫質',
+    videoQuality: '畫質',
     videoCodec: '影片編碼',
     audioQuality: '音質',
     extras: '同時下載',
@@ -731,7 +734,7 @@ export default {
       NOT_FOUND: '找不到。',
     },
 
-    backendUnreachable: '無法連線到後端，請先執行：python src/main.py --web-ui',
+    backendUnreachable: '無法連線到後端。',
     requestFailed: '請求失敗（HTTP {status}）',
   },
 }
