@@ -116,6 +116,64 @@ export default {
 
   },
 
+  // 嗶哩嗶哩帳號的登入。**與 WebUI 自身的密碼登入是兩回事**，那個在 auth 段
+  login: {
+    entry: '登入嗶哩嗶哩帳號',
+    title: '登入',
+    profile: '個人空間',
+
+    qrcode: {
+      title: '掃描 QR Code 登入',
+      loading: '正在取得 QR Code…',
+      waiting_for_scan: '請使用嗶哩嗶哩用戶端掃碼登入',
+      waiting_for_confirmation: '請在裝置上確認登入',
+      unknown: '狀態未知，請稍候或重新整理 QR Code',
+      expired: 'QR Code 已失效',
+      failed: 'QR Code 取得失敗',
+      refresh: '點擊重新整理',
+      success: '掃碼登入成功',
+    },
+
+    sms: {
+      title: '簡訊登入',
+      region: '國家或地區',
+      tel: '請輸入手機號碼',
+      code: '請輸入驗證碼',
+      send: '取得驗證碼',
+      resend: '重新取得（{seconds}）',
+      sent: '驗證碼已傳送',
+      sendFailed: '驗證碼傳送失敗',
+      captchaFailed: '驗證失敗',
+      captchaFailedDetail: '無法載入極驗驗證碼，請檢查網路後重試，或改用掃碼 / Cookie 登入。',
+      submit: '登入',
+      submitting: '登入中',
+      success: '簡訊登入成功',
+      failed: '登入失敗',
+      telEmpty: '手機號碼不能為空',
+      codeEmpty: '驗證碼不能為空',
+      needSend: '請先取得驗證碼',
+    },
+
+    cookie: {
+      entry: '使用 Cookie 登入',
+      title: '使用 Cookie 登入',
+      hint: '支援 JSON 格式與分號分隔格式',
+      confirm: '登入',
+      submitting: '驗證中',
+      success: 'Cookie 登入成功',
+      empty: 'Cookie 不能為空',
+      failed: 'Cookie 無效',
+    },
+
+    logout: {
+      entry: '登出',
+      confirm: '確定要登出嗎？本機儲存的 Cookie 也會一併清除。',
+      yes: '登出',
+      done: '已登出',
+      failed: '登出失敗',
+    },
+  },
+
   user: {
     signedOut: '未登入',
     avatarAlt: '使用者頭像',
@@ -618,7 +676,6 @@ export default {
 
   auth: {
     title: '登入',
-    hint: '口令在首次啟動時印到主控台，只顯示一次，且不會寫入日誌檔案。',
     username: '使用者名稱',
     password: '口令',
     submit: '登入',
@@ -630,6 +687,9 @@ export default {
 
   error: {
     code: {
+      COOKIE_FORMAT_INVALID: 'Cookie 格式無法辨識',
+      COOKIE_MISSING_SESSDATA: 'Cookie 裡缺少 SESSDATA',
+      COOKIE_INVALID: 'Cookie 已失效或不正確',
       NOT_AUTHENTICATED: '尚未登入。',
       INVALID_CREDENTIALS: '使用者名稱或口令不正確。',
       TOO_MANY_ATTEMPTS: '失敗次數過多，請稍後再試。',

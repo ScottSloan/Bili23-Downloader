@@ -46,10 +46,16 @@ class BilibiliStatus(BaseModel):
     level: int = 0
 
 class QRCodeInfo(BaseModel):
-    """`url` 交给前端渲染成二维码，服务端不出图"""
+    """
+    `svg` 是渲染好的二维码，前端直接贴；`url` 也照发 —— 「用 App 打开」这类用法要它
+
+    出图放在服务端是因为 `qrcode` 本来就是基础依赖、且出 SVG 不沾 Qt。
+    前端为此单独装一个二维码库换不来什么
+    """
 
     url: str
     key: str
+    svg: str = ""
 
 class QRCodeStatus(BaseModel):
     code: int
@@ -71,7 +77,10 @@ class SMSSendResult(BaseModel):
 
 class Region(BaseModel):
     code: str | int
-    # 区号表里除 code 外还有别的字段，原样透传
+    # 地区名。前端下拉里显示「中国大陆 +86」，光有区号认不出是哪儿 ——
+    # 桌面版的 CidComboBox 只显示 `+86` 是因为那个下拉窄
+    name: str = ""
+    # 区号表里除这两个外还有别的字段（id 等），原样透传
     model_config = {"extra": "allow"}
 
 class RegionList(BaseModel):

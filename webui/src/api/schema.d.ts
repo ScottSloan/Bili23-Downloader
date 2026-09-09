@@ -1270,11 +1270,19 @@ export interface components {
         };
         /**
          * QRCodeInfo
-         * @description `url` 交给前端渲染成二维码，服务端不出图
+         * @description `svg` 是渲染好的二维码，前端直接贴；`url` 也照发 —— 「用 App 打开」这类用法要它
+         *
+         *     出图放在服务端是因为 `qrcode` 本来就是基础依赖、且出 SVG 不沾 Qt。
+         *     前端为此单独装一个二维码库换不来什么
          */
         QRCodeInfo: {
             /** Key */
             key: string;
+            /**
+             * Svg
+             * @default
+             */
+            svg: string;
             /** Url */
             url: string;
         };
@@ -1294,6 +1302,11 @@ export interface components {
         Region: {
             /** Code */
             code: string | number;
+            /**
+             * Name
+             * @default
+             */
+            name: string;
         } & {
             [key: string]: unknown;
         };

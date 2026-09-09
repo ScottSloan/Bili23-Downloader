@@ -42,16 +42,15 @@ async function submit() {
 <template>
   <div class="login-view">
     <form class="card" @submit.prevent="submit">
-      <h1 class="title">{{ t('auth.title') }}</h1>
-      <p class="hint">{{ t('auth.hint') }}</p>
+      <h1 class="title" style="margin-bottom: 10px;">{{ t('auth.title') }}</h1>
 
       <label class="field">
-        <span>{{ t('auth.username') }}</span>
+        <span style="margin-bottom: 4px;">{{ t('auth.username') }}</span>
         <lineEdit v-model="username" autocomplete="username" />
       </label>
 
       <label class="field">
-        <span>{{ t('auth.password') }}</span>
+        <span style="margin-bottom: 4px;">{{ t('auth.password') }}</span>
         <lineEdit
           ref="passwordInput"
           v-model="password"
@@ -66,6 +65,7 @@ async function submit() {
         :title="authStore.submitting ? t('auth.submitting') : t('auth.submit')"
         type="submit"
         :disabled="authStore.submitting || !password"
+        style="margin-top: 10px;"
       />
     </form>
   </div>
@@ -97,13 +97,6 @@ async function submit() {
   font-size: 20px;
   font-weight: 600;
   color: var(--text-primary);
-}
-
-.hint {
-  margin: 0;
-  font-size: 12px;
-  line-height: 1.6;
-  color: var(--text-secondary);
 }
 
 .field {

@@ -5,10 +5,14 @@
 WebUI 三样都用不了 ——
 
 - **QTimer 在没有 Qt 事件循环的进程里静默失效**（D16），轮询根本不会跑
-- **二维码图片就不该由服务端画**。前端拿到 URL 自己渲染即可，省掉一次图片传输，
-  也省掉容器里的 QtGui 依赖
+- **QPixmap 出图那一套用不了**，那是 QtGui
 
-所以这里只留三样东西：拼 URL、校验响应、成功后把 Cookie 写回配置。
+所以这里只留四样东西：拼 URL、出一张 SVG 二维码、校验响应、成功后把 Cookie 写回配置。
+
+出图这件事原先写着「不该由服务端做，前端拿 URL 自己渲染」—— 理由是不想把 QtGui
+拖进容器。用 `qrcode` 出 SVG 不沾 Qt，而它本来就是基础依赖（`requirements.txt`），
+于是这条理由不成立了：前端为此单独装一个二维码库，换来的只是同一张图在别处生成。
+`url` 仍然照发，那是「用 App 打开」这类用法要的。
 桌面侧的 `qrcode.py` 复用它们，仍旧用自己的 QTimer 与 NetworkRequestWorker 保持异步。
 
 ## 轮询的节奏由调用方定
@@ -40,6 +44,46 @@ def generate_url() -> str:
 def poll_url(qrcode_key: str) -> str:
     return ("https://passport.bilibili.com/x/passport-login/web/qrcode/poll?qrcode_key="
             + str(qrcode_key))
+
+def render_svg(data: str) -> str:
+    """
+    把一段文本渲染成 SVG 二维码
+
+    纠错等级取 `L`，与桌面版 `qrcode.py` 的 `_build_qrcode_pixmap` 一致 ——
+    换一档会改变模块数，两边扫出来的图案就不是同一张了。
+
+    输出去掉 XML 声明并把尺寸换成 `viewBox` + 100%：**带 `width="33mm"` 的话，
+    浏览器里它就是 33 毫米，跟容器多大没关系**，缩不到 160×160 的框里
+    """
+    import io as _io
+    import re
+
+    import qrcode
+    from qrcode.image.svg import SvgPathImage
+
+    maker = qrcode.QRCode(
+        version = None,
+        error_correction = qrcode.constants.ERROR_CORRECT_L,
+        box_size = 10,
+        border = 2,
+    )
+
+    maker.add_data(data)
+    maker.make(fit = True)
+
+    buffer = _io.BytesIO()
+
+    maker.make_image(image_factory = SvgPathImage).save(buffer)
+
+    svg = buffer.getvalue().decode("utf-8")
+
+    # 只留 <svg> 那一段，去掉 <?xml ...?>
+    svg = svg[svg.index("<svg"):]
+
+    svg = re.sub(r'\swidth="[^"]*"', ' width="100%"', svg, count = 1)
+    svg = re.sub(r'\sheight="[^"]*"', ' height="100%"', svg, count = 1)
+
+    return svg
 
 class QRCodeSession(AuthBase):
     """

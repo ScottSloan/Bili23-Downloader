@@ -116,6 +116,64 @@ export default {
 
   },
 
+  // 哔哩哔哩账号的登录。**与 WebUI 自身的口令登录是两回事**，那个在 auth 段
+  login: {
+    entry: '登录哔哩哔哩账号',
+    title: '登录',
+    profile: '个人空间',
+
+    qrcode: {
+      title: '扫描二维码登录',
+      loading: '正在获取二维码…',
+      waiting_for_scan: '请使用哔哩哔哩客户端扫码登录',
+      waiting_for_confirmation: '请在设备上确认登录',
+      unknown: '状态未知，请稍候或刷新二维码',
+      expired: '二维码已失效',
+      failed: '二维码获取失败',
+      refresh: '点击刷新',
+      success: '扫码登录成功',
+    },
+
+    sms: {
+      title: '短信登录',
+      region: '国家或地区',
+      tel: '请输入手机号',
+      code: '请输入验证码',
+      send: '获取验证码',
+      resend: '重新获取（{seconds}）',
+      sent: '验证码已发送',
+      sendFailed: '验证码发送失败',
+      captchaFailed: '验证失败',
+      captchaFailedDetail: '无法加载极验验证码，请检查网络后重试，或改用扫码 / Cookie 登录。',
+      submit: '登录',
+      submitting: '登录中',
+      success: '短信登录成功',
+      failed: '登录失败',
+      telEmpty: '手机号不能为空',
+      codeEmpty: '验证码不能为空',
+      needSend: '请先获取验证码',
+    },
+
+    cookie: {
+      entry: '使用 Cookie 登录',
+      title: '使用 Cookie 登录',
+      hint: '支持 JSON 格式与分号分隔格式',
+      confirm: '登录',
+      submitting: '验证中',
+      success: 'Cookie 登录成功',
+      empty: 'Cookie 不能为空',
+      failed: 'Cookie 无效',
+    },
+
+    logout: {
+      entry: '退出登录',
+      confirm: '确定要退出登录吗？本地保存的 Cookie 也会一并清除。',
+      yes: '退出',
+      done: '已退出登录',
+      failed: '退出登录失败',
+    },
+  },
+
   user: {
     signedOut: '未登录',
     avatarAlt: '用户头像',
@@ -618,7 +676,6 @@ export default {
 
   auth: {
     title: '登录',
-    hint: '口令在首次启动时打印到控制台，只显示一次，且不会写入日志文件。',
     username: '用户名',
     password: '口令',
     submit: '登录',
@@ -630,6 +687,9 @@ export default {
 
   error: {
     code: {
+      COOKIE_FORMAT_INVALID: 'Cookie 格式无法识别',
+      COOKIE_MISSING_SESSDATA: 'Cookie 里缺少 SESSDATA',
+      COOKIE_INVALID: 'Cookie 已失效或不正确',
       NOT_AUTHENTICATED: '尚未登录。',
       INVALID_CREDENTIALS: '用户名或口令不正确。',
       TOO_MANY_ATTEMPTS: '失败次数过多，请稍后再试。',

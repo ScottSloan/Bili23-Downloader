@@ -121,6 +121,65 @@ export default {
 
   },
 
+  // Signing in to the Bilibili account. Not the same as the WebUI password (see auth)
+  login: {
+    entry: 'Log in to Bilibili',
+    title: 'Log In',
+    profile: 'Profile',
+
+    qrcode: {
+      title: 'Scan QR Code to Log In',
+      loading: 'Requesting QR code…',
+      waiting_for_scan: 'Scan with the Bilibili app to log in',
+      waiting_for_confirmation: 'Confirm login on your device',
+      unknown: 'Unknown status; wait a moment or refresh the QR code',
+      expired: 'QR code has expired',
+      failed: 'Failed to get a QR code',
+      refresh: 'Refresh',
+      success: 'Successfully logged in via QR code',
+    },
+
+    sms: {
+      title: 'SMS Login',
+      region: 'Country or region',
+      tel: 'Enter phone number',
+      code: 'Enter verification code',
+      send: 'Get Code',
+      resend: 'Resend ({seconds})',
+      sent: 'Verification code sent',
+      sendFailed: 'Failed to send the verification code',
+      captchaFailed: 'Verification failed',
+      captchaFailedDetail:
+        'Could not load the Geetest captcha. Check your network and retry, or use QR code / cookie login instead.',
+      submit: 'Log In',
+      submitting: 'Logging in',
+      success: 'Successfully logged in via SMS',
+      failed: 'Login failed',
+      telEmpty: 'Phone number cannot be empty',
+      codeEmpty: 'Verification code cannot be empty',
+      needSend: 'Request a verification code first',
+    },
+
+    cookie: {
+      entry: 'Log in with Cookies',
+      title: 'Log in with Cookies',
+      hint: 'Supports JSON format and semicolon-separated format',
+      confirm: 'Log In',
+      submitting: 'Verifying',
+      success: 'Successfully logged in via cookies',
+      empty: 'Cookies cannot be empty',
+      failed: 'Invalid cookies',
+    },
+
+    logout: {
+      entry: 'Log Out',
+      confirm: 'Log out? Locally stored cookies will be cleared as well.',
+      yes: 'Log Out',
+      done: 'Successfully logged out',
+      failed: 'Failed to log out',
+    },
+  },
+
   user: {
     signedOut: 'Not signed in',
     avatarAlt: 'User avatar',
@@ -653,7 +712,6 @@ export default {
 
   auth: {
     title: 'Sign in',
-    hint: 'The password was printed to the console on first launch. It is shown only once and is not written to the log file.',
     username: 'Username',
     password: 'Password',
     submit: 'Sign in',
@@ -670,6 +728,9 @@ export default {
     // 这里按码查前端自己的译文，查不到才回落到 detail —— 那既包括后端加了新码
     // 而这里还没配，也包括 str(e) 那类透传（内容来自 B 站接口，前端翻不了）
     code: {
+      COOKIE_FORMAT_INVALID: 'Could not parse the cookies',
+      COOKIE_MISSING_SESSDATA: 'SESSDATA is missing from the cookies',
+      COOKIE_INVALID: 'The cookies are invalid or expired',
       NOT_AUTHENTICATED: 'Not signed in.',
       INVALID_CREDENTIALS: 'Incorrect username or password.',
       TOO_MANY_ATTEMPTS: 'Too many failed attempts. Try again later.',

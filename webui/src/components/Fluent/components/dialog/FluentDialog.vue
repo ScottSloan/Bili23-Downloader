@@ -89,7 +89,9 @@ onBeforeUnmount(() => {
         </div>
       </div>
 
-      <div class="footer">
+      <!-- 没有 actions 就不画底部那条带子。登录对话框是这么用的 ——
+           桌面版那边同样是 `buttonGroup.hide()` + 点遮罩关闭 -->
+      <div v-if="$slots.actions" class="footer">
         <slot name="actions" />
       </div>
     </div>

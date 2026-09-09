@@ -8,10 +8,10 @@ B 站账号登录（S3-11）
 逻辑全在 `util/auth/qrcode_session.py` 与 `util/auth/session.py` 里，与桌面版共用。
 这一层只负责把阻塞调用丢出事件循环，以及把异常翻译成 HTTP 状态码。
 
-## 二维码图片不在服务端画
+## 二维码
 
-桌面版用 QPainter 画一张 QPixmap，那是因为它要往 QLabel 上贴。前端拿到 URL 自己渲染
-即可 —— 省掉一次图片传输，也省掉容器里的 QtGui 依赖。
+出 SVG 交给前端贴（`qrcode_session.render_svg`）。桌面版画的是 QPixmap，那是给 QLabel
+用的；这里不碰 Qt，`qrcode` 本身就是基础依赖。`url` 仍然一起发。
 
 ## 轮询由前端发起
 
@@ -45,7 +45,7 @@ from fastapi import APIRouter, Query
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
-from util.auth.qrcode_session import QRCodeSession
+from util.auth.qrcode_session import QRCodeSession, render_svg
 from util.auth.session import LoginSession
 from util.auth.sms_session import SMSSession
 from util.common.config import config
@@ -62,6 +62,13 @@ router = APIRouter(tags = ["login"])
 # 这些操作都要发网络请求，阻塞几百毫秒到几秒不等，绝不能在事件循环里直接跑
 async def _off_loop(func, *args):
     return await asyncio.wrap_future(background.submit(func, *args))
+
+# `util/auth/session.py` 的 `login_with_cookie` 抛的那几个 ValueError，内容就是错误码本身。
+#
+# **显式列出来，不按形状去猜**：同一个函数将来可能抛一句 B 站返回的原话，
+# 那种是给人看的，不该被当成码丢给前端去查表（查不到会回落到原文，但那时
+# 「多余的错误码文案」这类守卫就失去意义了）
+COOKIE_ERROR_CODES = ("COOKIE_FORMAT_INVALID", "COOKIE_MISSING_SESSDATA", "COOKIE_INVALID")
 
 class CookieLoginRequest(BaseModel):
     # 粘贴的 Cookie 可能是一整段 JSON，给足长度
@@ -120,12 +127,17 @@ async def create_qrcode():
     session = QRCodeSession()
 
     try:
-        return await _off_loop(session.generate)
+        info = await _off_loop(session.generate)
 
     except Exception as e:
         logger.warning("申请登录二维码失败：%s", e)
 
         return JSONResponse({"detail": str(e)}, status_code = 502)
+
+    # 出图也丢到后台线程：一张二维码几毫秒，但事件循环里能不做的就不做
+    info["svg"] = await _off_loop(render_svg, info["url"])
+
+    return info
 
 @router.get("/login/qrcode/poll", response_model = QRCodeStatus)
 async def poll_qrcode(key: str = Query(min_length = 1, max_length = 256)):
@@ -154,8 +166,19 @@ async def login_with_cookie(payload: CookieLoginRequest):
         return await _off_loop(session.login_with_cookie, payload.text)
 
     except ValueError as e:
-        # 格式不对、缺 SESSDATA、验证不通过 —— 都是用户输入的问题，400 而不是 502
-        return JSONResponse({"detail": str(e)}, status_code = 400)
+        # 格式不对、缺 SESSDATA、验证不通过 —— 都是用户输入的问题，400 而不是 502。
+        #
+        # **core 抛出来的就是错误码本身**（`COOKIE_INVALID` 这样的），要放进 `code`
+        # 而不是只塞进 `detail`：前端按 `code` 查自己的文案（D12），只发 detail 的话
+        # 界面上会直接印出那个大写的常量名
+        code = str(e)
+
+        body = {"detail": code}
+
+        if code in COOKIE_ERROR_CODES:
+            body["code"] = code
+
+        return JSONResponse(body, status_code = 400)
 
     except Exception as e:
         logger.warning("Cookie 登录失败：%s", e)

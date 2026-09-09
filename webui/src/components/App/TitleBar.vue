@@ -99,23 +99,26 @@ onMounted(() => {
 
     <span class="stretch" />
 
-    <!-- 有新版本时才出现。没有的话标题栏上多一个永远没反应的按钮只是噪声 -->
-    <div v-if="updateStore.available" class="with-dot">
+    <div style="display: flex; gap: 8px; padding-right: 16px">
+      <!-- 有新版本时才出现。没有的话标题栏上多一个永远没反应的按钮只是噪声 -->
+      <div v-if="updateStore.available" class="with-dot">
+        <transparentToolButton
+          icon="update"
+          :label="t('update.available', { version: updateStore.version })"
+          @click="checkUpdate"
+        />
+        <span class="dot"></span>
+      </div>
+
       <transparentToolButton
-        icon="update"
-        :label="t('update.available', { version: updateStore.version })"
-        @click="checkUpdate"
+        :icon="themeIcon"
+        :label="t('settings.theme.label') + '：' + themeLabel"
+        @click="cycleTheme"
       />
-      <span class="dot"></span>
+
+      <transparentToolButton icon="exit" :label="t('user.logout')" @click="logoutOpen = true" />
+
     </div>
-
-    <transparentToolButton
-      :icon="themeIcon"
-      :label="t('settings.theme.label') + '：' + themeLabel"
-      @click="cycleTheme"
-    />
-
-    <transparentToolButton icon="exit" :label="t('user.logout')" @click="logoutOpen = true" />
 
     <updateDialog :open="updateOpen" @close="updateOpen = false" />
 

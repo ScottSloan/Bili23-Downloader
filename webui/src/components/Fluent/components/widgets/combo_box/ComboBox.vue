@@ -414,7 +414,12 @@ onBeforeUnmount(() => {
 /* ---- 浮层。度量来自 menu.qss 的 MenuActionListWidget ---- */
 .flyout {
   position: fixed;
-  z-index: 60;
+  /*
+    **必须高于对话框的 100。** 浮层 teleport 到了 body，与对话框是兄弟节点，
+    层级低就会被对话框盖住 —— 表现是「点了下拉没反应」，而其实它在下面画着。
+    全局的顺序：对话框 100 < 浮层 150 < 气泡 200
+  */
+  z-index: 150;
   max-height: 320px;
   overflow-y: auto;
   box-sizing: border-box;
