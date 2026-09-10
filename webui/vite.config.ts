@@ -51,6 +51,30 @@ export default defineConfig({
     },
   },
 
+  build: {
+    rolldownOptions: {
+      output: {
+        /*
+          切几个独立 chunk
+
+          不切的话所有东西都进一个 500 KB 的入口文件，Vite 会为此警告。
+          但真正的理由不是那条警告，而是**缓存**：图标数据（12 KB 路径 × 40 个）
+          与 Vue 运行时几乎不变，业务代码天天改。混在一起的话，改一行界面代码
+          就让用户把 160 KB 重新下一遍。
+
+          语言包不用在这里列 —— 它们是动态 import 的，打包器自己会切开
+        */
+        codeSplitting: {
+          groups: [
+            // 从 Qt 资源生成的那份图标数据，改了才会变（scripts/gen_webui_icons.py）
+            { name: 'icons', test: /icons[\/]fluentIcons\.ts$/ },
+            { name: 'vendor', test: /node_modules/ },
+          ],
+        },
+      },
+    },
+  },
+
   server: {
     proxy: {
       '/api': {
