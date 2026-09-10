@@ -1095,10 +1095,7 @@ export interface components {
             episodes: {
                 [key: string]: unknown;
             }[];
-            /** Options */
-            options?: {
-                [key: string]: unknown;
-            } | null;
+            options?: components["schemas"]["DownloadOptions"] | null;
         };
         /** DeleteResult */
         DeleteResult: {
@@ -1151,6 +1148,92 @@ export interface components {
              * @default 0
              */
             used: number;
+        };
+        /**
+         * DownloadOptions
+         * @description 本次下载的选项覆盖，不给的项一律回落到全局设置
+         *
+         *     ## 为什么要建模，而不是继续用裸 dict
+         *
+         *     `TaskManager` 那边取值走的是 `pick_option(options, key, 全局默认值)` ——
+         *     **键名写错时它找不到，于是安静地用全局设置**。前端要传的是十几个键，
+         *     把 `download_video_stream` 拼成 `download_video`，界面上一切正常、
+         *     下载出来的东西却不是用户选的，而且没有任何一处会报错。
+         *
+         *     所以这里 `extra = "forbid"`：认不出的键当场 422，把一个静默的行为偏差
+         *     换成一条看得见的错误。字段名与 `options.py` 的 `_OPTION_SPEC`、
+         *     `manager.py` 里那些 `pick_option` 调用一字不差，改任一处都要同步。
+         *
+         *     全部字段可选，且**默认值一律是 None** —— `pick_option` 用 `is not None` 判定，
+         *     给 False 当默认值会让「用户显式关掉某一项」与「没提这一项」变成同一件事
+         */
+        DownloadOptions: {
+            /** Attach Cover */
+            attach_cover?: boolean | null;
+            /** Audio Quality Id */
+            audio_quality_id?: number | null;
+            /** Cover Type */
+            cover_type?: number | null;
+            /** Danmaku Type */
+            danmaku_type?: number | null;
+            /** Delete Cover After Attach */
+            delete_cover_after_attach?: boolean | null;
+            /** Delete Danmaku After Embed */
+            delete_danmaku_after_embed?: boolean | null;
+            /** Delete Subtitle After Embed */
+            delete_subtitle_after_embed?: boolean | null;
+            /** Download Audio Stream */
+            download_audio_stream?: boolean | null;
+            /** Download Cover */
+            download_cover?: boolean | null;
+            /** Download Danmaku */
+            download_danmaku?: boolean | null;
+            /** Download Metadata */
+            download_metadata?: boolean | null;
+            /** Download Path */
+            download_path?: string | null;
+            /** Download Subtitle */
+            download_subtitle?: boolean | null;
+            /** Download Video Stream */
+            download_video_stream?: boolean | null;
+            /** Duplicate Resolution */
+            duplicate_resolution?: number | null;
+            /** Embed Chapter */
+            embed_chapter?: boolean | null;
+            /** Embed Danmaku */
+            embed_danmaku?: boolean | null;
+            /** Embed Subtitle */
+            embed_subtitle?: boolean | null;
+            /** Keep Original Files */
+            keep_original_files?: boolean | null;
+            /** Keep Original Files Type */
+            keep_original_files_type?: number | null;
+            /** M4A To Mp3 */
+            m4a_to_mp3?: boolean | null;
+            /** Merge Video Audio */
+            merge_video_audio?: boolean | null;
+            /** Metadata Type */
+            metadata_type?: number | null;
+            /** Numbering Batch Id */
+            numbering_batch_id?: string | null;
+            /** Numbering Type */
+            numbering_type?: number | null;
+            /** Starting Number */
+            starting_number?: number | null;
+            /** Subtitle Language */
+            subtitle_language?: {
+                [key: string]: unknown;
+            } | null;
+            /** Subtitle Type */
+            subtitle_type?: number | null;
+            /** Target Naming Rule Id */
+            target_naming_rule_id?: string | null;
+            /** Video Codec Id */
+            video_codec_id?: number | null;
+            /** Video Container */
+            video_container?: string | null;
+            /** Video Quality Id */
+            video_quality_id?: number | null;
         };
         /**
          * DuplicateCheck
@@ -1402,6 +1485,11 @@ export interface components {
              * @default
              */
             bvid: string;
+            /**
+             * Candidate Index
+             * @default 0
+             */
+            candidate_index: number;
             /**
              * Cid
              * @default 0
@@ -1682,6 +1770,11 @@ export interface components {
              * @default
              */
             bvid: string;
+            /**
+             * Candidate Index
+             * @default 0
+             */
+            candidate_index: number;
             /**
              * Cid
              * @default 0

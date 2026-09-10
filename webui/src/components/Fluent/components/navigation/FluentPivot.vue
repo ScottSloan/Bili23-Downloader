@@ -1,9 +1,12 @@
 <script setup lang="ts">
 import { computed, onMounted, onBeforeUnmount, ref, watch, nextTick } from 'vue'
+import fluentIcon from '../../icons/FluentIcon.vue'
 
 interface PivotItem {
   key: string
   label: string
+  /** 可选的行首图标。桌面版的下载选项对话框三个页签都带图标，设置页那些不带 */
+  icon?: string
 }
 
 const props = defineProps<{
@@ -122,7 +125,8 @@ function onKeydown(event: KeyboardEvent) {
       :tabindex="item.key === modelValue ? 0 : -1"
       @click="emit('update:modelValue', item.key)"
     >
-      {{ item.label }}
+      <fluentIcon v-if="item.icon" :name="item.icon" class="pivot-icon" />
+      <span>{{ item.label }}</span>
     </button>
 
     <span
@@ -146,6 +150,10 @@ function onKeydown(event: KeyboardEvent) {
 }
 
 .pivot-item {
+  display: flex;
+  align-items: center;
+  /* 图标与文字 8px，与 qfluentwidgets 的 PivotItem 一致 */
+  gap: 8px;
   padding: 10px 12px;
   font: inherit;
   font-size: 15px;
@@ -174,6 +182,12 @@ function onKeydown(event: KeyboardEvent) {
   outline: 2px solid var(--focus-stroke-outer);
   outline-offset: -2px;
   border-radius: 5px;
+}
+
+.pivot-icon {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
 }
 
 .indicator {

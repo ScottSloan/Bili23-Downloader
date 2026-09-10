@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import { useRouter } from 'vue-router'
 import fluentLineEdit from '@/components/Fluent/components/widgets/line_edit/LineEdit.vue'
 import primarySplitButton from '@/components/Fluent/components/widgets/button/PrimarySplitButton.vue'
 import pushButton from '@/components/Fluent/components/widgets/button/PushButton.vue'
@@ -11,14 +10,13 @@ import batchSelectDialog from '@/components/App/parse_list/BatchSelectDialog.vue
 import parseHistoryDialog from '@/components/App/parse_list/ParseHistoryDialog.vue'
 import batchParseDialog from '@/components/App/parse_list/BatchParseDialog.vue'
 import fluentIcon from '@/components/Fluent/icons/FluentIcon.vue'
-import downloadOptionsDialog from '@/components/App/DownloadOptionsDialog.vue'
+import downloadOptionsDialog from '@/components/App/download_options/DownloadOptionsDialog.vue'
 import { useParseStore } from '@/stores/parseStore'
 import { useSettingsStore } from '@/stores/settingsStore'
 import { useToastStore } from '@/stores/toastStore'
 import { tasks as tasksApi, ApiError } from '@/api'
 import { t, episodeTypeName } from '@/i18n'
 
-const router = useRouter()
 const store = useParseStore()
 const settingsStore = useSettingsStore()
 const toast = useToastStore()
@@ -36,6 +34,14 @@ watch(
 )
 
 const dialogOpen = ref(false)
+/**
+ * 对话框以哪种模式打开
+ *
+ * download：点「下载」弹出，确定后建任务。
+ * configure：工具栏那个按钮，确定后只保存设置 —— 用途是下载之前先把选项调好，
+ * 与桌面版 parse_interface 里那个入口一致
+ */
+const dialogMode = ref<'download' | 'configure'>('download')
 const pendingEpisodes = ref<Record<string, unknown>[]>([])
 
 // 工具栏那四个按钮各自的对话框。与桌面版 ParseInterface 的 toolbar_layout 一一对应
@@ -136,15 +142,17 @@ function onPickHistory(picked: string) {
 /**
  * 工具栏上的「下载选项」
  *
- * 桌面版那边开的是一个**全局设置编辑器**（媒体设置 / 附加内容 / 下载设置三页，
- * 直接读写 config），用途是解析之前先把画质、附加内容这些调好。
+ * 与桌面版同一个对话框，只是以「仅配置」模式打开：确定之后**不建任务**，
+ * 只把设置存下来，用途是下载之前先把画质、附加内容、命名规则这些调好。
  *
- * Web 端**同名的那个对话框不是一回事** —— 它带着剧集，取媒体信息再建任务。
- * 全局的那些选项在这边归设置页（画质优先级、弹幕 / 字幕 / 封面几张卡片），
- * 所以这个按钮做成跳过去的快捷方式，而不是再搭一个内容重复的对话框
+ * 在此之前这个按钮是直接跳去设置页的，理由是「全局选项归设置页」。那个理由不成立：
+ * 这三页里有一半的项**只对这一次下载生效**（画质、编码、命名规则），
+ * 设置页里根本没有它们的位置
  */
-function openGlobalOptions() {
-  void router.push('/settings')
+function openOptions() {
+  pendingEpisodes.value = []
+  dialogMode.value = 'configure'
+  dialogOpen.value = true
 }
 
 async function openDownload() {
@@ -158,6 +166,7 @@ async function openDownload() {
   }
 
   pendingEpisodes.value = episodes
+  dialogMode.value = 'download'
 
   // 「下载时显示选项对话框」关掉时直接建任务，全部沿用全局设置 —— 与桌面版一致
   // （gui/interface/parse.py 里也是这么分的一条岔路）。
@@ -292,7 +301,7 @@ void store.loadColumns()
       <transparentToolButton
         icon="options"
         :label="t('parse.toolbar.downloadOptions')"
-        @click="openGlobalOptions"
+        @click="openOptions"
       />
     </div>
 
@@ -311,8 +320,10 @@ void store.loadColumns()
     <downloadOptionsDialog
       :open="dialogOpen"
       :episodes="pendingEpisodes"
+      :mode="dialogMode"
       @close="dialogOpen = false"
       @created="onCreated"
+      @saved="toast.success(t('toast.done'), t('downloadOptions.saved'))"
     />
 
     <searchDialog

@@ -321,6 +321,19 @@ export const SETTING_GROUPS: SettingGroupSpec[] = [
         icon: 'document',
         described: true,
       },
+
+      /*
+        编号方式（桌面版设置页的 NumberSettingCard）。
+
+        它此前被排除在外，理由是 FROM_SPECIFIED 档要配合一个**进程级的起始编号游标**，
+        WebUI 下会串号。S4-3 把那个游标改成了请求作用域（按 numbering_batch_id 分批），
+        于是这一项可以放出来了。
+
+        桌面版那张卡片上还有一行「全局顺序起始编号 当前：N」，这里没有：
+        它读写的 `config.global_starting_number` 是纯运行时属性，不在 `/api/settings` 里，
+        也没有持久化的家。本次下载的起始编号改在下载选项对话框里给（随 options 传）
+      */
+      { attr: 'numbering_type', icon: 'numbers', described: true },
     ],
   },
 
@@ -452,8 +465,35 @@ export const SPEC_BY_ATTR: Record<string, SettingSpec> = Object.fromEntries(
  *   （`prefer_cdn_server_provider` 开关已覆盖多数场景，自定义 CDN 属于排障手段）、
  *   `auto_select_conditions`（跟 `auto_select_mode` 一起，Web 端还没有对应实现）
  *
- * `numbering_type` 单独说一句：它的 FROM_SPECIFIED 档要配合起始序号，而那是个
- * **进程级的运行时游标**（见 PROGRESS.md 待解决第 2 条），WebUI 是另一个进程、
- * 另一套并发模型，在那条改造做完之前不要在这里开放它
+ * `numbering_type` 曾经也在这一档（它的 FROM_SPECIFIED 要配合一个进程级的起始编号
+ * 游标，WebUI 并发提交下会串号）。S4-3 把那个游标改成按 `numbering_batch_id` 分批之后
+ * 已经放出来了，见上面 naming 组
  */
 export const OMITTED = true
+
+/**
+ * 按 key 取出一张折叠卡片的定义
+ *
+ * 下载选项对话框的「附加内容」页与设置页展示的是**同一批配置项**（弹幕 / 字幕 /
+ * 封面 / 章节 / 元数据），桌面版那边也是直接复用同一批 SettingCard。
+ * 在那边另写一份定义的话，两处迟早分叉 —— 加了新的字幕选项只在设置页看得见，
+ * 而对话框里没有，且不报错。
+ *
+ * 找不到就返回 undefined，由调用方跳过：与「后端没有这一项就不画这张卡片」同一个态度
+ */
+export function expandCard(key: string): ExpandCardSpec | undefined {
+  for (const group of SETTING_GROUPS) {
+    for (const entry of group.items) {
+      if (isExpandCard(entry) && entry.key === key) {
+        return entry
+      }
+    }
+  }
+
+  return undefined
+}
+
+/** 按 attr 取出一项独立卡片的定义，用途同 expandCard */
+export function settingSpec(attr: string): SettingSpec | undefined {
+  return SPEC_BY_ATTR[attr]
+}

@@ -35,8 +35,8 @@ from ..paths import PathNotAllowed, resolve_within_roots
 from ..download.view import task_views
 
 from ..schemas import (
-    CreateResult, DeleteResult, DuplicateCheck, PauseResult, RetryResult, TaskCount, TaskList,
-    TaskView,
+    CreateResult, DeleteResult, DownloadOptions, DuplicateCheck, PauseResult, RetryResult,
+    TaskCount, TaskList, TaskView,
 )
 
 logger = logging.getLogger(__name__)
@@ -56,8 +56,9 @@ SORT_KEYS = {
 class CreateTasksRequest(BaseModel):
     # 解析结果里叶子节点的 episode，前端原样回传
     episodes: List[dict] = Field(min_length = 1, max_length = 2000)
-    # 本次任务的下载选项覆盖，不传表示全部沿用全局设置
-    options: Optional[dict] = None
+    # 本次任务的下载选项覆盖，不传表示全部沿用全局设置。
+    # 认不出的键会被模型当场拒掉（422），不会安静地回落成全局设置 —— 理由见 DownloadOptions
+    options: Optional[DownloadOptions] = None
 
 class TaskIdsRequest(BaseModel):
     task_ids: List[str] = Field(min_length = 1, max_length = 2000)
@@ -243,8 +244,12 @@ async def create_tasks(payload: CreateTasksRequest):
     所以实际建出来的可能比传进来的少 —— 返回里如实给出两个数字，
     不然前端会以为「点了没反应」
     """
+    # exclude_none：没提到的项不能出现在 dict 里。`pick_option` 用 `is not None` 判定，
+    # 带着一堆 None 传下去与不传等价，但会让 `options.setdefault` 之类的判断变得别扭
+    given = payload.options.model_dump(exclude_none = True) if payload.options else None
+
     try:
-        options = _resolve_path_option(_resolve_duplicate_option(payload.options))
+        options = _resolve_path_option(_resolve_duplicate_option(given))
 
     except PathNotAllowed as e:
         # 403 而不是 400：路径不在白名单根目录内是权限问题，与 files 那边一致

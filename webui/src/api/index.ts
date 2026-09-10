@@ -14,6 +14,11 @@ import type { Ok, Body } from './client'
 export type TaskView = Ok<'/api/tasks/list', 'get'>['tasks'][number]
 export type TaskSnapshot = Ok<'/api/tasks', 'get'>
 export type PreviewResult = Ok<'/api/preview', 'post'>
+export type StreamPreviewResult = Ok<'/api/preview/stream', 'post'>
+export type StreamInfo = NonNullable<StreamPreviewResult['video']>
+export type NamingRuleOption = NonNullable<
+  Ok<'/api/settings/naming-rule/available', 'get'>['rules']
+>[number]
 export type SettingsPayload = Ok<'/api/settings', 'get'>
 export type SettingItem = SettingsPayload['items'][number]
 export type SettingChoices = Ok<'/api/settings/choices', 'get'>
@@ -157,6 +162,18 @@ export const preview = {
   /** 候选按顺序尝试，首选没权限时后端会自动换下一个并置 from_fallback */
   media: (candidates: Record<string, unknown>[], signal?: AbortSignal) =>
     post<PreviewResult>('/preview', { candidates }, undefined, signal),
+
+  /**
+   * 选定档位下两路流的详情（帧率 / 码率 / 文件大小）
+   *
+   * 只收一个 episode，不是候选列表：这一步是「用户正看着某一集、刚换了画质」，
+   * 换成别的视频的信息毫无意义。候选回退发生在上一步的 media()
+   */
+  stream: (
+    episode: Record<string, unknown>,
+    quality: { video_quality_id: number; video_codec_id: number; audio_quality_id: number },
+    signal?: AbortSignal,
+  ) => post<StreamPreviewResult>('/preview/stream', { episode, ...quality }, undefined, signal),
 }
 
 // ---------------- 任务 ----------------
@@ -211,6 +228,17 @@ export const settings = {
   /** 服务端装了哪些字体。ASS 在服务端生成，要的是那台机器上的字体 */
   fonts: () => get<Ok<'/api/settings/fonts', 'get'>>('/settings/fonts'),
 
+  /**
+   * 这种媒体类型能用哪些命名规则
+   *
+   * 传解析结果里那一集的 attribute 位标志。返回空列表表示该类型不支持自定义命名规则
+   * （与桌面版 NamingConventionCard 一致，那时下拉框整个禁用）
+   */
+  namingRuleAvailable: (attribute: number) =>
+    get<Ok<'/api/settings/naming-rule/available', 'get'>>('/settings/naming-rule/available', {
+      attribute,
+    }),
+
   namingRuleTypes: () =>
     get<Ok<'/api/settings/naming-rule/types', 'get'>>('/settings/naming-rule/types'),
 
@@ -241,6 +269,9 @@ export const files = {
     get<Ok<'/api/files/list', 'get'>>('/files/list', { path, dirs_only: dirsOnly }),
   mkdir: (path: string, name: string) =>
     post<Ok<'/api/files/mkdir', 'post'>>('/files/mkdir', { path, name }),
+
+  /** 目标目录所在磁盘还剩多少。裸字节，格式化归前端（D12） */
+  space: (path: string) => get<Ok<'/api/files/space', 'get'>>('/files/space', { path }),
 }
 
 export { ApiError, setUnauthorizedHandler } from './client'

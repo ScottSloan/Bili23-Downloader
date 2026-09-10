@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { onBeforeUnmount, watch } from 'vue'
+import { acquire, release } from './scrollLock'
 
 const props = withDefaults(
   defineProps<{
@@ -24,18 +25,33 @@ function onKeydown(event: KeyboardEvent) {
   }
 }
 
-function lockScroll(locked: boolean) {
-  if (typeof document === 'undefined') {
+/**
+ * 这个实例有没有加过锁
+ *
+ * 锁本身是计数的（见 scrollLock.ts），这里只保证**自己加过才解**：
+ * 对话框绝大多数时候是关着的，`immediate` 的那一次以及卸载时的那一次都会走到
+ * 「解锁」这条路上，配对不好就会把别人的锁解掉
+ */
+let holding = false
+
+function setLock(next: boolean) {
+  if (next === holding) {
     return
   }
 
-  document.body.style.overflow = locked ? 'hidden' : ''
+  holding = next
+
+  if (next) {
+    acquire()
+  } else {
+    release()
+  }
 }
 
 watch(
   () => props.open,
   (open) => {
-    lockScroll(open)
+    setLock(open)
 
     if (open) {
       window.addEventListener('keydown', onKeydown)
@@ -49,7 +65,7 @@ watch(
 onBeforeUnmount(() => {
   window.removeEventListener('keydown', onKeydown)
 
-  lockScroll(false)
+  setLock(false)
 })
 </script>
 

@@ -225,14 +225,12 @@
           "options": {
             "anyOf": [
               {
-                "additionalProperties": true,
-                "type": "object"
+                "$ref": "#/components/schemas/DownloadOptions"
               },
               {
                 "type": "null"
               }
-            ],
-            "title": "Options"
+            ]
           }
         },
         "required": [
@@ -332,6 +330,367 @@
           }
         },
         "title": "DiskSpace",
+        "type": "object"
+      },
+      "DownloadOptions": {
+        "additionalProperties": false,
+        "description": "本次下载的选项覆盖，不给的项一律回落到全局设置\n\n## 为什么要建模，而不是继续用裸 dict\n\n`TaskManager` 那边取值走的是 `pick_option(options, key, 全局默认值)` ——\n**键名写错时它找不到，于是安静地用全局设置**。前端要传的是十几个键，\n把 `download_video_stream` 拼成 `download_video`，界面上一切正常、\n下载出来的东西却不是用户选的，而且没有任何一处会报错。\n\n所以这里 `extra = \"forbid\"`：认不出的键当场 422，把一个静默的行为偏差\n换成一条看得见的错误。字段名与 `options.py` 的 `_OPTION_SPEC`、\n`manager.py` 里那些 `pick_option` 调用一字不差，改任一处都要同步。\n\n全部字段可选，且**默认值一律是 None** —— `pick_option` 用 `is not None` 判定，\n给 False 当默认值会让「用户显式关掉某一项」与「没提这一项」变成同一件事",
+        "properties": {
+          "attach_cover": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Attach Cover"
+          },
+          "audio_quality_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Audio Quality Id"
+          },
+          "cover_type": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cover Type"
+          },
+          "danmaku_type": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Danmaku Type"
+          },
+          "delete_cover_after_attach": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delete Cover After Attach"
+          },
+          "delete_danmaku_after_embed": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delete Danmaku After Embed"
+          },
+          "delete_subtitle_after_embed": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delete Subtitle After Embed"
+          },
+          "download_audio_stream": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Download Audio Stream"
+          },
+          "download_cover": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Download Cover"
+          },
+          "download_danmaku": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Download Danmaku"
+          },
+          "download_metadata": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Download Metadata"
+          },
+          "download_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Download Path"
+          },
+          "download_subtitle": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Download Subtitle"
+          },
+          "download_video_stream": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Download Video Stream"
+          },
+          "duplicate_resolution": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duplicate Resolution"
+          },
+          "embed_chapter": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Embed Chapter"
+          },
+          "embed_danmaku": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Embed Danmaku"
+          },
+          "embed_subtitle": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Embed Subtitle"
+          },
+          "keep_original_files": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Keep Original Files"
+          },
+          "keep_original_files_type": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Keep Original Files Type"
+          },
+          "m4a_to_mp3": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "M4A To Mp3"
+          },
+          "merge_video_audio": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Merge Video Audio"
+          },
+          "metadata_type": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Metadata Type"
+          },
+          "numbering_batch_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Numbering Batch Id"
+          },
+          "numbering_type": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Numbering Type"
+          },
+          "starting_number": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Starting Number"
+          },
+          "subtitle_language": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subtitle Language"
+          },
+          "subtitle_type": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subtitle Type"
+          },
+          "target_naming_rule_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Naming Rule Id"
+          },
+          "video_codec_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Video Codec Id"
+          },
+          "video_container": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Video Container"
+          },
+          "video_quality_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Video Quality Id"
+          }
+        },
+        "title": "DownloadOptions",
         "type": "object"
       },
       "DuplicateCheck": {
@@ -928,6 +1287,11 @@
             "title": "Bvid",
             "type": "string"
           },
+          "candidate_index": {
+            "default": 0,
+            "title": "Candidate Index",
+            "type": "integer"
+          },
           "cid": {
             "default": 0,
             "title": "Cid",
@@ -1452,6 +1816,11 @@
             "default": "",
             "title": "Bvid",
             "type": "string"
+          },
+          "candidate_index": {
+            "default": 0,
+            "title": "Candidate Index",
+            "type": "integer"
           },
           "cid": {
             "default": 0,

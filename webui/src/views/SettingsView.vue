@@ -17,23 +17,16 @@ import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useSettingsStore } from '@/stores/settingsStore'
 import { useThemeStore } from '@/stores/themeStore'
 import { useToastStore } from '@/stores/toastStore'
-import { t, setLocale, mediaLabel } from '@/i18n'
+import { t, setLocale } from '@/i18n'
 import {
   SETTING_GROUPS,
   INTERFACE_ITEMS,
-  SPEC_BY_ATTR,
   isExpandCard,
   type SettingSpec,
 } from '@/components/App/settings/spec'
 import settingRow from '@/components/App/settings/SettingRow.vue'
-import priorityDialog from '@/components/App/settings/PriorityDialog.vue'
-import subtitleLanguageDialog from '@/components/App/settings/SubtitleLanguageDialog.vue'
-import pathListDialog from '@/components/App/settings/PathListDialog.vue'
-import styleDialog from '@/components/App/settings/StyleDialog.vue'
-import namingRuleDialog from '@/components/App/settings/NamingRuleDialog.vue'
-import userAgentDialog from '@/components/App/settings/UserAgentDialog.vue'
-import passwordDialog from '@/components/App/settings/PasswordDialog.vue'
-import type { NamingRule } from '@/components/App/settings/NamingRuleDialog.vue'
+import settingDialogHost from '@/components/App/settings/SettingDialogHost.vue'
+import { settingSummary } from '@/components/App/settings/summary'
 import settingCardGroup from '@/components/Fluent/components/settings/SettingCardGroup.vue'
 import expandSettingCard from '@/components/Fluent/components/settings/ExpandSettingCard.vue'
 import settingGroupRow from '@/components/Fluent/components/settings/SettingGroupRow.vue'
@@ -57,10 +50,6 @@ watch(
 
 /** 当前打开的是哪一项的对话框。null 表示没开 */
 const openAttr = ref<string | null>(null)
-
-const openSpec = computed<SettingSpec | null>(() =>
-  openAttr.value ? (SPEC_BY_ATTR[openAttr.value] ?? null) : null,
-)
 
 const themeOptions = computed(() => [
   { value: 'light', label: t('settings.theme.light') },
@@ -103,111 +92,16 @@ async function onOpenDialog(attr: string) {
   openAttr.value = attr
 }
 
-function save(value: unknown) {
-  if (openAttr.value) {
-    store.set(openAttr.value, value as never, Boolean(SPEC_BY_ATTR[openAttr.value]?.restart))
-  }
-
+/** 编辑器存完之后的收尾。目前只有关掉自己，留着钩子是因为宿主已经把 attr 带回来了 */
+function onSaved(_attr: string, _value: unknown) {
   openAttr.value = null
 }
 
-/**
- * 对话框要用的候选表
- *
- * 两件事：
- *
- * 1. 后端那边 `Choice.value` 是 `Any`（画质是整数、字幕语言是字符串代码），生成的类型
- *    因此是 `unknown`。**收窄放在这一处**，而不是让每个对话框都去处理 unknown
- * 2. **标签用前端自己那份翻译**（D12）。后端给的 label 只当兜底 —— 服务端没装 Qt 的
- *    翻译函数，它给出来的一律是英文
- *
- * 字幕语言是例外：那 158 条是 B 站自己的语言表，源数据只有中文名，前端没有第二份
- * 可抄，所以直接用后端给的（`mediaLabel` 认不出就回落到它）
- */
-function choicesOf(spec: SettingSpec | null): { value: string | number; label: string }[] {
-  if (!spec?.choices || !store.choices) {
-    return []
-  }
-
-  return (store.choices[spec.choices] ?? []).map((choice) => ({
-    value: choice.value as string | number,
-    label: mediaLabel(spec.choices as string, choice.value as string | number, choice.label),
-  }))
-}
-
-/** 字幕对齐：标签后面跟上 ASS 的编号，与桌面版一致（光看数字认不出是哪个角） */
-const alignmentOptions = computed(() =>
-  (store.choices?.subtitle_alignment ?? []).map((entry) => ({
-    value: entry.value as string | number,
-    label: `${mediaLabel('subtitle_alignment', entry.value as string | number, entry.label)} (${entry.value})`,
-  })),
-)
-
-/**
- * 卡片右侧那句摘要
- *
- * 结构化项在卡片上看不到内容，不给一句摘要的话，用户每次都得点开才知道现在设的是什么
- */
+/** 卡片右侧那句摘要。实现在 settings/summary.ts，与下载选项对话框共用一份 */
 function summaryOf(spec: SettingSpec): string | undefined {
-  if (spec.kind !== 'dialog') {
-    return undefined
-  }
-
-  const value = store.value(spec.attr)
-
-  if (spec.dialog === 'priority') {
-    // 首选的那一档最有信息量 —— 这个列表回答的就是「优先要哪个」
-    const first = Array.isArray(value) ? value[0] : undefined
-
-    if (first === undefined) {
-      return undefined
-    }
-
-    const label = choicesOf(spec).find((choice) => choice.value === first)?.label
-
-    return t('settings.priority.summary', { first: label ?? String(first) })
-  }
-
-  if (spec.dialog === 'subtitleLanguage') {
-    const detail = (value ?? {}) as { download_specified?: boolean; specified_language?: string[] }
-
-    return detail.download_specified
-      ? t('settings.subtitleLanguage.summarySome', {
-          count: detail.specified_language?.length ?? 0,
-        })
-      : t('settings.subtitleLanguage.summaryAll')
-  }
-
-  if (spec.dialog === 'browseRoots') {
-    const count = Array.isArray(value) ? value.length : 0
-
-    return count
-      ? t('settings.browseRoots.summary', { count })
-      : t('settings.browseRoots.summaryEmpty')
-  }
-
-  if (spec.dialog === 'danmakuStyle' || spec.dialog === 'subtitleStyle') {
-    // 字体名 + 字号最能说明当前设的是什么
-    const font = (value as { font?: { name?: string; size?: number } } | null)?.font
-
-    return font?.name ? `${font.name} · ${font.size ?? ''}` : undefined
-  }
-
-  if (spec.dialog === 'namingRule') {
-    const count = Array.isArray(value) ? value.length : 0
-
-    return t('settings.namingRule.summary', { count })
-  }
-
-  if (spec.dialog === 'userAgent') {
-    // UA 很长，卡片上放不下。截一段让用户认得出改没改过就够了
-    const text = String(value ?? '')
-
-    return text.length > 40 ? `${text.slice(0, 40)}…` : text
-  }
-
-  return undefined
+  return settingSummary(spec, store)
 }
+
 </script>
 
 <template>
@@ -299,58 +193,13 @@ function summaryOf(spec: SettingSpec): string | undefined {
       </template>
     </settingCardGroup>
 
-    <priorityDialog
-      :open="openSpec?.dialog === 'priority'"
-      :title="openAttr ? t(`settings.label.${openAttr}`) : ''"
-      :choices="choicesOf(openSpec)"
-      :value="(store.value(openAttr ?? '') as (number | string)[]) ?? []"
-      @close="openAttr = null"
-      @save="save"
-    />
+    <!--
+      结构化项的编辑器统一挂在这里。**不要放进 SettingRow** ——
+      那样每一行都会带着一堆自己永远用不到的对话框。
 
-    <subtitleLanguageDialog
-      :open="openSpec?.dialog === 'subtitleLanguage'"
-      :choices="choicesOf(openSpec)"
-      :value="(store.value('subtitle_language') as Record<string, never>) ?? null"
-      @close="openAttr = null"
-      @save="save"
-    />
-
-    <pathListDialog
-      :open="openSpec?.dialog === 'browseRoots'"
-      :value="(store.value('webui_browse_roots') as string[]) ?? []"
-      @close="openAttr = null"
-      @save="save"
-    />
-
-    <styleDialog
-      :open="openSpec?.dialog === 'danmakuStyle' || openSpec?.dialog === 'subtitleStyle'"
-      :kind="openSpec?.dialog === 'subtitleStyle' ? 'subtitle' : 'danmaku'"
-      :value="(store.value(openAttr ?? '') as Record<string, unknown>) ?? null"
-      :fonts="store.fonts"
-      :alignments="alignmentOptions"
-      @close="openAttr = null"
-      @save="save"
-    />
-
-    <namingRuleDialog
-      :open="openSpec?.dialog === 'namingRule'"
-      :value="(store.value('naming_rule_list') as NamingRule[]) ?? []"
-      @close="openAttr = null"
-      @save="save"
-    />
-
-    <userAgentDialog
-      :open="openSpec?.dialog === 'userAgent'"
-      :value="String(store.value('user_agent') ?? '')"
-      :default-value="String(store.item('user_agent')?.default ?? '')"
-      @close="openAttr = null"
-      @save="save"
-    />
-
-    <!-- 改口令不经过 store：那一项在 /api/settings 里根本不存在，
-         对话框自己去调 /api/auth/password，所以没有 @save -->
-    <passwordDialog :open="openSpec?.dialog === 'password'" @close="openAttr = null" />
+      接线本身在 SettingDialogHost 里，下载选项对话框的「附加内容」页用的是同一个
+    -->
+    <settingDialogHost :attr="openAttr" @close="openAttr = null" @saved="onSaved" />
   </div>
 </template>
 

@@ -14,16 +14,32 @@
  *
  * 代价是浏览器门槛：Chrome 117 / Firefox 120 / Safari 16.4（均为 2023 年）。
  * 更老的浏览器上动画不生效，展开收起变成瞬间切换 —— 功能不受影响。
+ *
+ * ## 头部为什么不是一个 button
+ *
+ * 桌面版把「关于…」那个说明链接放在**头部、说明文字的后面**
+ * （`GuideSettingCardBase.showHyperLinkLabel`）。头部整块若是一个 `<button>`，
+ * 链接就得嵌在按钮里 —— 那是无效的 HTML，浏览器行为不一，而且点链接会连带把卡片折叠掉。
+ *
+ * 所以头部是个容器，里面盖一个铺满整块的透明按钮负责点击与键盘，
+ * 链接放在按钮**之上**（z-index + pointer-events）。这样点哪儿都能展开、
+ * Tab 能到、`aria-expanded` 读屏软件认得，而链接仍然是链接。
  */
-import { ref } from 'vue'
+import { ref, useId } from 'vue'
 import fluentIcon from '../../icons/FluentIcon.vue'
 
-withDefaults(
+const props = withDefaults(
   defineProps<{
     title: string
     icon?: string
     description?: string
-    /** 首屏是否展开。桌面版一律收起，这里跟着来 */
+    /**
+     * 首屏是否展开
+     *
+     * 逐页对着桌面版来，**不是一律展开**：下载选项对话框里，媒体设置页只展开
+     * 「媒体信息」（`media.py` 只对那一张调了 toggleExpand），附加内容页五张全展开
+     * （`additional.py` 的 expand_all），下载设置页一张都不展开。设置页则一律收起
+     */
     defaultExpanded?: boolean
   }>(),
   {
@@ -33,28 +49,32 @@ withDefaults(
   },
 )
 
-const expanded = ref(false)
+// 只作为初值：之后归用户点击控制，父组件再改 prop 不会把用户展开的卡片合上
+const expanded = ref(props.defaultExpanded)
+
+// 盖在头部的那个按钮没有文字，得指到标题上，否则读屏软件念出来是空的
+const titleId = useId()
 </script>
 
 <template>
   <div class="expand-card" :class="{ 'is-expanded': expanded }">
-    <!--
-      整个头部都可点，与桌面版一致（那边给 card 装了事件过滤器，点哪儿都会触发展开）。
-      用原生 button 而不是加 @click 的 div：Tab 可达、回车与空格触发、
-      aria-expanded 读屏软件认得，这几样手搓都要重写一遍
-    -->
-    <button
-      type="button"
-      class="header"
-      :class="{ 'has-description': description }"
-      :aria-expanded="expanded"
-      @click="expanded = !expanded"
-    >
+    <div class="header" :class="{ 'has-description': description || $slots.link }">
+      <button
+        type="button"
+        class="hit"
+        :aria-expanded="expanded"
+        :aria-labelledby="titleId"
+        @click="expanded = !expanded"
+      />
+
       <fluentIcon v-if="icon" :name="icon" class="icon" />
 
       <div class="text">
-        <div class="title">{{ title }}</div>
-        <div v-if="description" class="description">{{ description }}</div>
+        <div :id="titleId" class="title">{{ title }}</div>
+        <div v-if="description || $slots.link" class="description">
+          <span v-if="description">{{ description }}</span>
+          <slot name="link" />
+        </div>
       </div>
 
       <span class="chevron">
@@ -62,7 +82,7 @@ const expanded = ref(false)
           <path d="M2 4.5 L6 8.5 L10 4.5" fill="none" stroke="currentColor" stroke-width="1.1" />
         </svg>
       </span>
-    </button>
+    </div>
 
     <div class="body">
       <div class="view">
@@ -82,7 +102,7 @@ const expanded = ref(false)
 
 /* ---- 头部 ---- */
 .header {
-  width: 100%;
+  position: relative;
   display: flex;
   align-items: center;
   gap: 16px;
@@ -91,12 +111,6 @@ const expanded = ref(false)
   padding: 0 16px;
   cursor: pointer;
   text-align: left;
-
-  /* 抹掉浏览器给 button 的默认外观 */
-  font: inherit;
-  margin: 0;
-  appearance: none;
-  border: none;
   background-color: var(--card-fill-default);
 }
 
@@ -106,14 +120,39 @@ const expanded = ref(false)
   padding-bottom: 10px;
 }
 
-.header:focus-visible {
-  outline: 2px solid var(--focus-stroke-outer);
+/*
+  铺满头部的点击目标。它在 DOM 里排最前，而后面的兄弟会画在它上面 ——
+  所以那些兄弟一律不吃指针事件，让点击穿透到这里；唯独说明里的链接自己收回来
+*/
+.hit {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  font: inherit;
+  margin: 0;
+  padding: 0;
+  appearance: none;
+  border: none;
+  background: none;
+  cursor: inherit;
+}
+
+.hit:focus-visible {
   /* 焦点环画在里面：卡片外面被 overflow: hidden 裁掉了，画外面等于看不见 */
+  outline: 2px solid var(--focus-stroke-outer);
   outline-offset: -3px;
   box-shadow: inset 0 0 0 1px var(--focus-stroke-inner);
+  border-radius: 5px;
+}
+
+.header > .icon,
+.header > .text,
+.header > .chevron {
+  pointer-events: none;
 }
 
 .text {
+  position: relative;
   flex: 1 1 auto;
   min-width: 0;
 }
@@ -128,6 +167,16 @@ const expanded = ref(false)
   font-size: 11px;
   color: var(--card-description);
   line-height: 1.35;
+  display: flex;
+  align-items: baseline;
+  /* 说明与「关于…」链接同一行，中间留一个空档 —— 桌面版就是这么排的 */
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* 链接要浮在点击层之上，否则点它只会把卡片折叠掉 */
+.description > :deep(*) {
+  pointer-events: auto;
 }
 
 /* ---- 展开箭头 ---- */

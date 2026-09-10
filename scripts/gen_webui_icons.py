@@ -51,6 +51,9 @@ ICONS = {
     "bookShelf":         ":/qfluentwidgets/images/icons/BookShelf_black.svg",
     "cloudDownload":     ":/qfluentwidgets/images/icons/CloudDownload_black.svg",
     "video":             ":/qfluentwidgets/images/icons/Video_black.svg",
+    # 下载选项对话框：媒体设置页签与「来源视频」那一行
+    "media":             ":/qfluentwidgets/images/icons/Media_black.svg",
+    "movie":             ":/qfluentwidgets/images/icons/Movie_black.svg",
     "music":             ":/qfluentwidgets/images/icons/Music_black.svg",
     "code":              ":/qfluentwidgets/images/icons/Code_black.svg",
     "search":            ":/qfluentwidgets/images/icons/Search_black.svg",
@@ -83,6 +86,7 @@ ICONS = {
     "server":            ":/bili23/icon/light/server.svg",
     "todo":              ":/bili23/icon/light/todo.svg",
     "options":           ":/bili23/icon/light/options.svg",
+    "numbers":           ":/bili23/icon/light/numbers.svg",
     "clear":             ":/bili23/icon/light/clear.svg",
     "sort":              ":/bili23/icon/light/sort.svg",
     "retry":             ":/bili23/icon/light/retry.svg",

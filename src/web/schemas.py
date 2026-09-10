@@ -22,7 +22,7 @@ FastAPI 只有在路由声明了 `response_model` 时才会把响应结构写进
 """
 
 from typing import Any, Dict, List, Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 # ---------------- WebUI 自身的会话 ----------------
 
@@ -154,6 +154,73 @@ class TaskList(BaseModel):
 class TaskCount(BaseModel):
     downloading: int
     completed: int
+
+class DownloadOptions(BaseModel):
+    """
+    本次下载的选项覆盖，不给的项一律回落到全局设置
+
+    ## 为什么要建模，而不是继续用裸 dict
+
+    `TaskManager` 那边取值走的是 `pick_option(options, key, 全局默认值)` ——
+    **键名写错时它找不到，于是安静地用全局设置**。前端要传的是十几个键，
+    把 `download_video_stream` 拼成 `download_video`，界面上一切正常、
+    下载出来的东西却不是用户选的，而且没有任何一处会报错。
+
+    所以这里 `extra = "forbid"`：认不出的键当场 422，把一个静默的行为偏差
+    换成一条看得见的错误。字段名与 `options.py` 的 `_OPTION_SPEC`、
+    `manager.py` 里那些 `pick_option` 调用一字不差，改任一处都要同步。
+
+    全部字段可选，且**默认值一律是 None** —— `pick_option` 用 `is not None` 判定，
+    给 False 当默认值会让「用户显式关掉某一项」与「没提这一项」变成同一件事
+    """
+
+    model_config = ConfigDict(extra = "forbid")
+
+    # 媒体档位。200 / 20 / 30300 分别是三者的「自动」
+    video_quality_id: Optional[int] = None
+    video_codec_id: Optional[int] = None
+    audio_quality_id: Optional[int] = None
+
+    # 下载哪几路内容
+    download_video_stream: Optional[bool] = None
+    download_audio_stream: Optional[bool] = None
+    download_danmaku: Optional[bool] = None
+    download_subtitle: Optional[bool] = None
+    download_cover: Optional[bool] = None
+    download_metadata: Optional[bool] = None
+    embed_chapter: Optional[bool] = None
+
+    # 合并与原始文件
+    merge_video_audio: Optional[bool] = None
+    keep_original_files: Optional[bool] = None
+    keep_original_files_type: Optional[int] = None
+
+    # 附加内容的形态。给的是枚举的 value，core 那边用 pick_enum 换回成员
+    video_container: Optional[str] = None
+    danmaku_type: Optional[int] = None
+    embed_danmaku: Optional[bool] = None
+    delete_danmaku_after_embed: Optional[bool] = None
+    subtitle_type: Optional[int] = None
+    embed_subtitle: Optional[bool] = None
+    delete_subtitle_after_embed: Optional[bool] = None
+    subtitle_language: Optional[Dict[str, Any]] = None
+    cover_type: Optional[int] = None
+    attach_cover: Optional[bool] = None
+    delete_cover_after_attach: Optional[bool] = None
+    metadata_type: Optional[int] = None
+    m4a_to_mp3: Optional[bool] = None
+
+    # 落盘。download_path 还要过 resolve_within_roots()，见 routes/tasks.py
+    download_path: Optional[str] = None
+    target_naming_rule_id: Optional[str] = None
+
+    # 编号。batch_id 不给的话由路由补一个 uuid，见 create_tasks
+    numbering_type: Optional[int] = None
+    numbering_batch_id: Optional[str] = None
+    starting_number: Optional[int] = None
+
+    # 已经下载过的怎么办。**不给时路由会兜底**，绝不能落到「每次询问」
+    duplicate_resolution: Optional[int] = None
 
 class CreateResult(BaseModel):
     """实际建出来的可能比请求的少：重复下载与需要二次解析的会被拦掉"""
@@ -359,6 +426,12 @@ class PreviewResult(BaseModel):
     # 首选取不到时自动换了下一个候选 —— **前端必须显示这一点**，
     # 否则用户看到的清晰度其实属于另一个视频
     from_fallback: bool = False
+    # 信息实际取自 candidates 里的第几个。
+    #
+    # **前端要靠它才能接着查流详情**：/api/preview/stream 只收一个 episode，
+    # 而回退发生时用第一个候选去查，拿到的是另一个视频的码率与文件大小 ——
+    # 界面上完全看不出来。只给 from_fallback 的话前端只知道"换了"，不知道"换成了哪个"
+    candidate_index: int = 0
     media_type: str = "unknown"
     need_parse: bool = True
     # 显示名 → 档位 id

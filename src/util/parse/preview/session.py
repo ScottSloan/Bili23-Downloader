@@ -192,7 +192,8 @@ class PreviewSession:
 
             for index, episode in enumerate(candidates):
                 try:
-                    return self._preview_one(episode, from_fallback = index > 0)
+                    return self._preview_one(episode, from_fallback = index > 0,
+                                             candidate_index = index)
 
                 except Exception as e:
                     logger.info("预览候选 %s 失败：%s", episode.get("title", ""), e)
@@ -247,7 +248,8 @@ class PreviewSession:
 
             return None
 
-    def _preview_one(self, episode: dict, from_fallback: bool) -> dict:
+    def _preview_one(self, episode: dict, from_fallback: bool,
+                     candidate_index: int = 0) -> dict:
         request = build_request(episode)
 
         PreviewerInfo.attribute = episode.get("attribute", 0)
@@ -267,7 +269,8 @@ class PreviewSession:
             PreviewerInfo.bvid = ""
             PreviewerInfo.cid = 0
 
-            return self._result(episode, from_fallback, need_parse = False)
+            return self._result(episode, from_fallback, need_parse = False,
+                                candidate_index = candidate_index)
 
         response = SyncNetWorkRequest(
             request["url"],
@@ -297,9 +300,11 @@ class PreviewSession:
         PreviewerInfo.error_occurred = False
         PreviewerInfo.error_message = ""
 
-        return self._result(episode, from_fallback, need_parse = True)
+        return self._result(episode, from_fallback, need_parse = True,
+                            candidate_index = candidate_index)
 
-    def _result(self, episode: dict, from_fallback: bool, need_parse: bool) -> dict:
+    def _result(self, episode: dict, from_fallback: bool, need_parse: bool,
+                candidate_index: int = 0) -> dict:
         media_type = PreviewerInfo.media_type
 
         return {
@@ -307,6 +312,8 @@ class PreviewSession:
             "episode_number": episode.get("number", ""),
             # 首选项没权限时会自动换一个，前端要提示「信息来自另一个视频」
             "from_fallback": from_fallback,
+            # 取自候选列表里的第几个。前端接着查流详情时要用同一个 episode
+            "candidate_index": candidate_index,
             "media_type": media_type.name.lower() if media_type else "unknown",
             "need_parse": need_parse,
             "video_quality": dict(PreviewerInfo.video_quality_choice_data),
