@@ -18,6 +18,7 @@
 from typing import List, Literal, Optional
 import asyncio
 import logging
+from uuid import uuid4
 
 from fastapi import APIRouter, Query, Request
 from fastapi.responses import JSONResponse
@@ -28,6 +29,8 @@ from util.common.enum import DownloadStatus, DuplicateDownloadResolution
 from util.common.signal_bus import signal_bus
 from util.download.task.manager import task_manager
 from util.thread import background
+
+from ..paths import PathNotAllowed, resolve_within_roots
 
 from ..download.view import task_views
 
@@ -181,6 +184,28 @@ def _as_resolution(value) -> DuplicateDownloadResolution:
 
     return DuplicateDownloadResolution.SKIP if member == DuplicateDownloadResolution.ALWAYS_ASK else member
 
+def _resolve_path_option(options: dict) -> dict:
+    """
+    校验并规范化本次任务的下载目录
+
+    **越界判定必须在这里做**：`TaskManager` 那边只兜「空串 / 相对路径」这种会把文件
+    写进进程工作目录的取值，而「不许写到白名单根目录之外」是 WebUI 独有的安全边界。
+
+    并且要把 `resolve_within_roots()` 的**返回值**传下去 —— 拿请求里的原始字符串
+    去落盘，等于这道检查白做（`routes/files.py` 顶上那段说明同理）
+    """
+    given = options.get("download_path")
+
+    if given is None:
+        return options
+
+    if not isinstance(given, str) or not given.strip():
+        raise ValueError("download_path must be a non-empty string")
+
+    options["download_path"] = str(resolve_within_roots(given.strip()))
+
+    return options
+
 def _create_and_collect(episodes: List[dict], options: Optional[dict]) -> List[dict]:
     """
     创建任务并把实际建出来的那些收集回来
@@ -218,8 +243,22 @@ async def create_tasks(payload: CreateTasksRequest):
     所以实际建出来的可能比传进来的少 —— 返回里如实给出两个数字，
     不然前端会以为「点了没反应」
     """
-    created = await _off_loop(_create_and_collect, payload.episodes,
-                              _resolve_duplicate_option(payload.options))
+    try:
+        options = _resolve_path_option(_resolve_duplicate_option(payload.options))
+
+    except PathNotAllowed as e:
+        # 403 而不是 400：路径不在白名单根目录内是权限问题，与 files 那边一致
+        return JSONResponse({"detail": str(e), "code": "PATH_NOT_ALLOWED"}, status_code = 403)
+
+    except ValueError as e:
+        return JSONResponse({"detail": str(e), "code": "INVALID_OPTIONS"}, status_code = 400)
+
+    # 「每批从 1 开始」的编号以**一次 HTTP 请求**为一批。不给这个 id 的话
+    # TaskManager 会退到「从 1 开始」，两个标签页同时提交就会各自从 1 数、算出同名文件。
+    # setdefault 而不是覆盖：调用方想把多次请求算作同一批时可以自己传
+    options.setdefault("numbering_batch_id", uuid4().hex)
+
+    created = await _off_loop(_create_and_collect, payload.episodes, options)
 
     return {
         "requested": len(payload.episodes),

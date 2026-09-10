@@ -18,6 +18,7 @@ from util.parse.episode.tree import TreeItem, Attribute
 
 from typing import List
 from collections import deque
+from uuid import uuid4
 import webbrowser
 
 class ParseTreeView(TreeView):
@@ -647,7 +648,11 @@ class ParseTreeView(TreeView):
 
         item.set_attribute(Attribute.DOWNLOAD_AS_SINGLE_VIDEO_BIT)
 
-        signal_bus.download.create_task.emit([item.to_dict()], True, None)
+        # 单独发一批。**这里原先传的是 None**，而它前面没有任何地方重置过编号游标 ——
+        # 「每批从 1 开始」档下冷启动点这一项会 None + 1 抛 TypeError，
+        # 被 create() 吞成一句「创建下载任务失败」
+        signal_bus.download.create_task.emit(
+            [item.to_dict()], True, {"numbering_batch_id": uuid4().hex})
 
     def search_keywords(self, keywords: str = None):
         if not keywords:

@@ -222,6 +222,36 @@ class SettingChoices(BaseModel):
     subtitle_language: List[Choice]
     subtitle_alignment: List[Choice]
 
+class NamingRuleOption(BaseModel):
+    """一条可选的命名规则。`name` 对内置规则是待翻译的键，前端按 D12 自己查表"""
+
+    id: str
+    name: str
+    type: int
+    rule: str
+    default: bool = False
+
+class NamingRuleOptions(BaseModel):
+    # 该 attribute 对应的规则类型。取不到（这一类不支持自定义命名）时为 null
+    type: Optional[int] = None
+    rules: List[NamingRuleOption] = Field(default_factory = list)
+
+class DiskSpace(BaseModel):
+    """
+    目标目录所在磁盘的空间
+
+    **给裸字节，不给格式化好的字符串**：服务端没有 Qt 的翻译函数，
+    单位与千分位由前端按自己的语言拼（D12）。取不到时三项为 0、available 为 false
+    """
+
+    available: bool = False
+    total: int = 0
+    used: int = 0
+    free: int = 0
+    # 文件系统类型（NTFS / exFAT / ext4…）。取不到为空串。
+    # FAT 系不支持稀疏文件，前端据此提醒用户关掉预分配
+    filesystem: str = ""
+
 class NamingVariable(BaseModel):
     variable: str
     description: str
@@ -337,6 +367,32 @@ class PreviewResult(BaseModel):
     audio_quality: Dict[str, int] = Field(default_factory = dict)
     bvid: str = ""
     cid: int = 0
+
+class StreamInfo(BaseModel):
+    """
+    一路流的详情
+
+    **一律是裸数值**，格式化交给前端：服务端进程里没有 Qt 的翻译函数，
+    在这里拼好「1080P 高清, 60fps, 5.2 Mbps」下发的话，中文界面上会冒出英文（D12）
+    """
+
+    quality_id: int = 0
+    # 视频流才有
+    codec_id: int = 0
+    frame_rate: str = ""
+    # mp4 / flv 的响应可能只给试看片段
+    is_full_video: bool = True
+    # 音频流才有
+    codec: str = ""
+
+    bitrate: int = 0
+    file_size: int = 0
+
+class StreamPreviewResult(PreviewResult):
+    """预览结果 + 选定档位下两路流的详情。取不到的那一路为 null"""
+
+    video: Optional[StreamInfo] = None
+    audio: Optional[StreamInfo] = None
 
 # ---------------- 解析 ----------------
 

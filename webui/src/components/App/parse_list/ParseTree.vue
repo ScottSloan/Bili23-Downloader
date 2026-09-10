@@ -419,10 +419,7 @@ function isMatch(node: { title?: string }): boolean {
 
 .header-cell {
   justify-content: center;
-  /* 每段右边一条竖线，最后一段没有（qss 里的 `section:horizontal:last`） */
   border-right: 1px solid var(--header-stroke);
-
-  /* 抹掉 <button> 的浏览器默认值，看上去仍是一格表头 */
   font: inherit;
   font-size: inherit;
   color: inherit;
@@ -433,14 +430,16 @@ function isMatch(node: { title?: string }): boolean {
   border-left: none;
   background: none;
   cursor: pointer;
+  transition:
+    color 0.2s ease;
 }
 
 .header-cell:hover {
-  background-color: var(--subtle-fill-secondary);
+  color: var(--text-primary);
 }
 
 .header-cell:active {
-  background-color: var(--subtle-fill-tertiary);
+  color: var(--text-primary);
 }
 
 .header-cell:focus-visible {

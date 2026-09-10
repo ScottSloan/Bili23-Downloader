@@ -734,6 +734,8 @@ export default {
       NOT_AUTHENTICATED: 'Not signed in.',
       INVALID_CREDENTIALS: 'Incorrect username or password.',
       TOO_MANY_ATTEMPTS: 'Too many failed attempts. Try again later.',
+      PATH_NOT_ALLOWED: 'That folder is outside the allowed download locations.',
+      INVALID_OPTIONS: 'Invalid download options.',
       INVALID_PASSWORD: 'The current password is incorrect.',
       PASSWORD_UNCHANGED: 'The new password must differ from the current one.',
       PARSE_BUSY: 'Too many parses running. Wait for one to finish.',

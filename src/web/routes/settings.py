@@ -31,6 +31,7 @@ from util.common.config import config
 from util.thread import background
 
 from ..schemas import (
+    NamingRuleOptions,
     FontFamilies, NamingRulePreview, NamingRuleTypes, NamingRuleVariables, SettingChoices,
     SettingsPayload, SettingsUpdateResult, UpdateInfo,
 )
@@ -204,6 +205,31 @@ async def read_naming_rule_types():
             for name, value in convention_type_map.items()
         ]
     }
+
+@router.get("/settings/naming-rule/available", response_model = NamingRuleOptions)
+async def read_available_naming_rules(attribute: int = Query(...)):
+    """
+    这一类媒体能用哪几条命名规则
+
+    对应桌面版下载选项对话框里的 `NamingConventionCard` —— 它按当前剧集的 attribute
+    过滤规则列表，查不到就把下拉禁用掉并说明「这一类不支持自定义命名规则」。
+
+    **`attribute → type_id` 的映射不下发、也不让前端自己算**：那张表在
+    `FileNameFormatter.get_type_id_from_attribute()` 里，抄一份到前端迟早分叉，
+    而分叉的表现是「某一类的规则列表莫名其妙是空的」
+    """
+    from copy import deepcopy
+    from util.format.file_name import FileNameFormatter
+
+    formatter = FileNameFormatter()
+
+    type_id = formatter.get_type_id_from_attribute(attribute)
+
+    # **必须深拷贝**：get_rule_list_from_attribute 返回的是 config 里那些 dict 的引用，
+    # 桌面版就地改过 entry["name"]（card.py 那段），已经在污染内存里的配置了
+    rules = deepcopy(formatter.get_rule_list_from_attribute(attribute))
+
+    return {"type": int(type_id) if type_id is not None else None, "rules": rules}
 
 @router.get("/settings/naming-rule/variables", response_model = NamingRuleVariables)
 async def read_naming_rule_variables(type: int = Query(...)):

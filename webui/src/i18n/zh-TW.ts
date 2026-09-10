@@ -13,14 +13,14 @@ export default {
     license: '本軟體為自由開源軟體，基於 GNU 通用公共授權條款第三版（GPLv3）發布。',
     copyright: 'Copyright © 2022-{year} Scott Sloan. All Rights Reserved.',
     sponsor:
-      '如果這個專案為你省下了時間、或者解決了你的問題，可以請作者喝杯咖啡！也別忘了去 GitHub 點個 Star，那是對開源最實在的支持。',
-    terms: '使用條款',
-    documentation: '文件',
-    sponsorAction: '贊助',
+      '若此專案為您節省時間或解決問題，歡迎贊助作者一杯咖啡，也別忘了在 GitHub 上點個 Star 支援開源！',
+    terms: '使用協議',
+    documentation: '幫助文件',
+    sponsorAction: '贊助作者',
   },
 
   terms: {
-    title: '使用條款',
+    title: '使用協議',
     p1: '本軟體僅供個人學習與研究用途，任何透過本專案下載之內容<b>僅限於個人非商業使用，嚴禁用於任何形式之商業目的、公開傳播、散發、轉售或非法牟利。</b>',
     p2: '本軟體僅基於使用者自身帳號之合法存取權限進行操作，<b>不會繞過任何付費牆、會員限制或技術保護措施。</b>您所下載之內容，必須是您透過正常登入帳號後，於目標平台上可公開存取或擁有使用權之部分。若您的帳號無權存取某內容，則本軟體無法亦不應被用於取得該內容。',
     p3: '<b>請勿將本軟體用於大量抓取、未經授權之內容散發，或任何違反目標平台服務條款之行為。</b>若因您的使用行為導致帳號遭封鎖、著作權爭議或其他法律問題，開發者概不負責。',
@@ -716,6 +716,8 @@ export default {
       NOT_AUTHENTICATED: '尚未登入。',
       INVALID_CREDENTIALS: '使用者名稱或口令不正確。',
       TOO_MANY_ATTEMPTS: '失敗次數過多，請稍後再試。',
+      PATH_NOT_ALLOWED: '該目錄不在允許的下載範圍內。',
+      INVALID_OPTIONS: '下載選項有誤。',
       INVALID_PASSWORD: '目前口令不正確。',
       PASSWORD_UNCHANGED: '新口令不能與目前口令相同。',
       PARSE_BUSY: '同時解析的請求過多，請等一個完成。',

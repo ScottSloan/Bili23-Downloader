@@ -12,14 +12,6 @@ const props = defineProps({
     default: '',
   },
 
-  /**
-   * 图标。两种传法：
-   *
-   * - **组件本身**（见 @/components/Fluent/icons）—— 手抄进 IconXxx.vue 的那几个。
-   *   函数式组件也合法，故运行期类型写成 [Object, Function]
-   * - **名字字符串** —— 从 Qt 资源抽出来、集中放在 fluentIcons.ts 里的那批。
-   *   那些路径数据动辄几 KB，再手抄一份进 IconXxx.vue 不值当
-   */
   icon: {
     type: [Object, Function, String] as PropType<Component | string | null>,
     default: null,
@@ -63,10 +55,6 @@ const isActive = computed(() => props.active || (props.to ? route.path === props
     </a>
   </RouterLink>
 
-  <!--
-    不指向某一页的那种（桌面版里「关于」就是 `selectable = False` 加一个 onClick）。
-    用 <button> 而不是 <div>：Tab 走得到、回车与空格能触发，读屏软件也知道它可以点
-  -->
   <button v-else type="button" class="navigation-bar-button" :class="{ active: isActive }">
     <fluentIcon v-if="typeof icon === 'string'" :name="icon" />
     <component :is="icon" v-else-if="icon" />

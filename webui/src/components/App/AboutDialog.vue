@@ -1,16 +1,4 @@
 <script setup lang="ts">
-/**
- * 关于
- *
- * 对应桌面版 `gui/dialog/main_window/about.py`。**在 GUI 里它也不是一个页面**，
- * 而是导航栏上一个 `selectable = False` 的项，点了弹这个对话框 —— 这边照做。
- *
- * 版本号来自 `/api/status`（appStore 启动时已经取过），不在前端写死：
- * 写死的那份升级时没人会想起来改，而且不报错，只是一直显示旧版本。
- *
- * 桌面版那一行印的是 Qt 与 QFluentWidgets 的版本。这里换成 Vue ——
- * **WebUI 这个进程里根本没有 Qt**（D16），照抄过来是句假话。
- */
 import { computed, ref } from 'vue'
 import { version as vueVersion } from 'vue'
 import { useAppStore } from '@/stores/appStore'
@@ -128,7 +116,7 @@ function openLink(url: string) {
   margin: 30px 0 0 0;
   font-size: 14px;
   line-height: 1.7;
-  color: var(--text-secondary);
+  color: var(--text-primary);
 }
 
 .links {

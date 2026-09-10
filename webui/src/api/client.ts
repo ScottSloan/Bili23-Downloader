@@ -1,12 +1,3 @@
-// 后端请求的统一入口
-//
-// 鉴权是 **session cookie**（D6）：登录接口种下 cookie，之后浏览器自己带，
-// 前端不持有也不该持有任何令牌。S0 那套「vite 代理注入 Bearer」已经随垫片一起删掉。
-//
-// 类型全部来自 `schema.d.ts` —— 那是 `scripts/gen_api_types.py` 从后端 OpenAPI 生成的。
-// **不要在这里手写接口结构**：手写的那份迟早与后端对不上，而 TypeScript 会信以为真，
-// 错要到运行时才暴露。改了后端接口就重新生成一次。
-
 import { t } from '@/i18n'
 import type { paths } from './schema'
 
@@ -126,21 +117,6 @@ export async function request<T>(
   return payload as T
 }
 
-/**
- * 从错误响应里取一句能给用户看的话
- *
- * FastAPI 的错误体是 `{"detail": ...}`；422 时 detail 是一个数组（pydantic 的逐字段报错），
- * 直接 String() 会得到 `[object Object]`，所以要分开处理。
- *
- * ## 固定的错误按 `code` 查前端自己的文案
- *
- * 服务端进程里没装 Qt 的翻译函数（D12：那套是桌面版的），后端写出来的 `detail`
- * 一律是英文。所以后端在固定的错误上带一个 `code`，这里按码查前端的译文。
- *
- * **查不到就用 `detail`**，两种情况都会走到：一是后端加了新码而前端还没配文案，
- * 二是 `str(e)` 那类透传 —— 那些话来自 B 站的接口或底层库，内容是动态的，
- * 前端无从翻译，原样显示比换成一句笼统的「操作失败」有用得多
- */
 function errorMessage(payload: unknown, status: number): string {
   const body = payload as { detail?: unknown; code?: unknown } | null
 

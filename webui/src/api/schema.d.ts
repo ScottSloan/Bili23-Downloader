@@ -172,6 +172,32 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/files/space": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read Disk Space
+         * @description 目标目录所在磁盘还剩多少
+         *
+         *     对应桌面版下载路径卡片上那行「可用空间 / 文件系统类型」。
+         *
+         *     **仍然要过 resolve_within_roots()**：这是个能探测路径是否存在的接口 ——
+         *     不限制的话，`/etc/xxx` 返回 available=false 而 `/etc` 返回 true，
+         *     就成了一个免费的文件系统探针（本模块顶上那段说明同理）
+         */
+        get: operations["read_disk_space_api_files_space_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/health": {
         parameters: {
             query?: never;
@@ -485,6 +511,32 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/preview/stream": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Preview Stream
+         * @description 选定档位下这两路流有多大、什么码率
+         *
+         *     对应桌面版下载选项对话框里「媒体信息」那张卡片的描述文字
+         *     （`gui/dialog/download_options/card.py` 的 `update_video_quality_description`）。
+         *
+         *     **两路流分开对待**：音频取不到是常态（无声视频，或音轨已经并在视频流里），
+         *     那一路给 null 即可，不该让整个请求失败 —— 前端按 `media_type` 说明原因。
+         */
+        post: operations["preview_stream_api_preview_stream_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/settings": {
         parameters: {
             query?: never;
@@ -572,6 +624,33 @@ export interface paths {
          *     宽度会有偏差。那属于 D16 已经接受的近似（见 PROGRESS 的待解决第 4 条）
          */
         get: operations["read_fonts_api_settings_fonts_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/settings/naming-rule/available": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read Available Naming Rules
+         * @description 这一类媒体能用哪几条命名规则
+         *
+         *     对应桌面版下载选项对话框里的 `NamingConventionCard` —— 它按当前剧集的 attribute
+         *     过滤规则列表，查不到就把下拉禁用掉并说明「这一类不支持自定义命名规则」。
+         *
+         *     **`attribute → type_id` 的映射不下发、也不让前端自己算**：那张表在
+         *     `FileNameFormatter.get_type_id_from_attribute()` 里，抄一份到前端迟早分叉，
+         *     而分叉的表现是「某一类的规则列表莫名其妙是空的」
+         */
+        get: operations["read_available_naming_rules_api_settings_naming_rule_available_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1040,6 +1119,40 @@ export interface components {
             truncated: boolean;
         };
         /**
+         * DiskSpace
+         * @description 目标目录所在磁盘的空间
+         *
+         *     **给裸字节，不给格式化好的字符串**：服务端没有 Qt 的翻译函数，
+         *     单位与千分位由前端按自己的语言拼（D12）。取不到时三项为 0、available 为 false
+         */
+        DiskSpace: {
+            /**
+             * Available
+             * @default false
+             */
+            available: boolean;
+            /**
+             * Filesystem
+             * @default
+             */
+            filesystem: string;
+            /**
+             * Free
+             * @default 0
+             */
+            free: number;
+            /**
+             * Total
+             * @default 0
+             */
+            total: number;
+            /**
+             * Used
+             * @default 0
+             */
+            used: number;
+        };
+        /**
          * DuplicateCheck
          * @description 每一条是否已经下载过，**与请求里的 episodes 一一对应、顺序一致**
          *
@@ -1170,6 +1283,32 @@ export interface components {
             name: string;
             /** Path */
             path: string;
+        };
+        /**
+         * NamingRuleOption
+         * @description 一条可选的命名规则。`name` 对内置规则是待翻译的键，前端按 D12 自己查表
+         */
+        NamingRuleOption: {
+            /**
+             * Default
+             * @default false
+             */
+            default: boolean;
+            /** Id */
+            id: string;
+            /** Name */
+            name: string;
+            /** Rule */
+            rule: string;
+            /** Type */
+            type: number;
+        };
+        /** NamingRuleOptions */
+        NamingRuleOptions: {
+            /** Rules */
+            rules?: components["schemas"]["NamingRuleOption"][];
+            /** Type */
+            type?: number | null;
         };
         /**
          * NamingRulePreview
@@ -1454,6 +1593,133 @@ export interface components {
             /** Values */
             values: {
                 [key: string]: unknown;
+            };
+        };
+        /**
+         * StreamInfo
+         * @description 一路流的详情
+         *
+         *     **一律是裸数值**，格式化交给前端：服务端进程里没有 Qt 的翻译函数，
+         *     在这里拼好「1080P 高清, 60fps, 5.2 Mbps」下发的话，中文界面上会冒出英文（D12）
+         */
+        StreamInfo: {
+            /**
+             * Bitrate
+             * @default 0
+             */
+            bitrate: number;
+            /**
+             * Codec
+             * @default
+             */
+            codec: string;
+            /**
+             * Codec Id
+             * @default 0
+             */
+            codec_id: number;
+            /**
+             * File Size
+             * @default 0
+             */
+            file_size: number;
+            /**
+             * Frame Rate
+             * @default
+             */
+            frame_rate: string;
+            /**
+             * Is Full Video
+             * @default true
+             */
+            is_full_video: boolean;
+            /**
+             * Quality Id
+             * @default 0
+             */
+            quality_id: number;
+        };
+        /**
+         * StreamPreviewRequest
+         * @description 查某一集在指定档位下的流详情
+         *
+         *     只收**一个** episode，不是候选列表：这一步是「用户已经在对话框里看着某一集、
+         *     刚换了画质」，换成别的视频的信息毫无意义。候选回退发生在上一步的 /api/preview
+         */
+        StreamPreviewRequest: {
+            /**
+             * Audio Quality Id
+             * @default 30300
+             */
+            audio_quality_id: number;
+            /** Episode */
+            episode: {
+                [key: string]: unknown;
+            };
+            /**
+             * Video Codec Id
+             * @default 20
+             */
+            video_codec_id: number;
+            /**
+             * Video Quality Id
+             * @default 200
+             */
+            video_quality_id: number;
+        };
+        /**
+         * StreamPreviewResult
+         * @description 预览结果 + 选定档位下两路流的详情。取不到的那一路为 null
+         */
+        StreamPreviewResult: {
+            audio?: components["schemas"]["StreamInfo"] | null;
+            /** Audio Quality */
+            audio_quality?: {
+                [key: string]: number;
+            };
+            /**
+             * Bvid
+             * @default
+             */
+            bvid: string;
+            /**
+             * Cid
+             * @default 0
+             */
+            cid: number;
+            /**
+             * Episode Number
+             * @default
+             */
+            episode_number: string | number;
+            /**
+             * Episode Title
+             * @default
+             */
+            episode_title: string;
+            /**
+             * From Fallback
+             * @default false
+             */
+            from_fallback: boolean;
+            /**
+             * Media Type
+             * @default unknown
+             */
+            media_type: string;
+            /**
+             * Need Parse
+             * @default true
+             */
+            need_parse: boolean;
+            video?: components["schemas"]["StreamInfo"] | null;
+            /** Video Codec */
+            video_codec?: {
+                [key: string]: number;
+            };
+            /** Video Quality */
+            video_quality?: {
+                [key: string]: number;
             };
         };
         /** SystemStatus */
@@ -1920,6 +2186,37 @@ export interface operations {
             };
         };
     };
+    read_disk_space_api_files_space_get: {
+        parameters: {
+            query: {
+                path: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DiskSpace"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     health_api_health_get: {
         parameters: {
             query?: never;
@@ -2355,6 +2652,39 @@ export interface operations {
             };
         };
     };
+    preview_stream_api_preview_stream_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StreamPreviewRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StreamPreviewResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     read_settings_api_settings_get: {
         parameters: {
             query?: never;
@@ -2444,6 +2774,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["FontFamilies"];
+                };
+            };
+        };
+    };
+    read_available_naming_rules_api_settings_naming_rule_available_get: {
+        parameters: {
+            query: {
+                attribute: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NamingRuleOptions"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

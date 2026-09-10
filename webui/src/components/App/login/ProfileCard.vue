@@ -1,21 +1,4 @@
 <script setup lang="ts">
-/**
- * 已登录时点头像弹出的那张卡片
- *
- * 对应桌面版 `gui/component/profile.py` 的 `ProfileCard`（一个 Flyout）：
- * 头像、用户名、UID，下面两个链接 ——「个人空间」与「退出登录」。
- * 尺寸也照它：260×90，头像直径 48（`setRadius(24)`）。
- *
- * **退出前要确认**，桌面版那边是一个 MessageBox，措辞里点明「会清除本地保存的 Cookie」。
- *
- * 浮层贴着头像右边弹出（桌面版是 `FlyoutAnimationType.SLIDE_RIGHT`）。
- * 位置在挂载时按目标元素算一次，然后 teleport 到 body ——
- * 留在导航栏里会被它的 `overflow` 裁掉。
- *
- * 进场动画照 `SlideRightFlyoutAnimationManager`：位置与透明度两条并行动画，
- * **187ms、OutQuad**，从终点左边 8px 处滑过来，同时 0 → 1 淡入。
- * 退场那边没有动画（Flyout 是直接 close 的），这里也不做。
- */
 import { onBeforeUnmount, onMounted, ref } from 'vue'
 import { useAppStore } from '@/stores/appStore'
 import { useToastStore } from '@/stores/toastStore'
@@ -228,7 +211,7 @@ async function confirmLogout() {
 .links {
   display: flex;
   flex-direction: row;
-  gap: 4px;
+  gap: 16px;
   margin-top: 2px;
 }
 
@@ -246,7 +229,7 @@ async function confirmLogout() {
   font: inherit;
   font-size: 13px;
   margin: 0;
-  padding: 2px 4px;
+  padding: 0;
   border: none;
   background: none;
   cursor: pointer;

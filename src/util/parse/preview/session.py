@@ -37,6 +37,7 @@ from ..parser.base import build_video_info_url
 from ..parser.lesson import LESSON_PLAY_DETAIL_URL, build_lesson_media_info, build_lesson_play_payload
 
 from .info import PreviewerInfo
+from .stream_info import audio_stream_info, video_stream_info
 from .quality_base import AudioQualityBase, VideoQualityBase
 
 logger = logging.getLogger(__name__)
@@ -199,6 +200,52 @@ class PreviewSession:
                     errors.append(str(e))
 
             raise RuntimeError(errors[0] if errors else "获取媒体信息失败")
+
+    def preview_stream(self, episode: dict, video_quality_id: int,
+                       video_codec_id: int, audio_quality_id: int) -> dict:
+        """
+        取一次媒体信息，顺便算出选定档位下这两路流的详情
+
+        **要和 preview() 一样在锁里重走一遍 `_preview_one`**：档位映射表在 self 上，
+        而 `info_data` / `media_type` / `bvid` / `cid` 在全局的 `PreviewerInfo` 上 ——
+        两者必须描述同一个视频。不重走的话，用户切一次画质，拿到的就可能是
+        上一个视频的流信息，而且完全看不出来。
+
+        代价是每次切换档位多打一次 playurl。桌面版那边也是每次切换都重新查，
+        只是它有一层缓存；这里换来的是「没有需要小心维护的跨请求状态」
+        """
+        ensure_wbi_keys()
+
+        with _preview_lock:
+            result = self._preview_one(episode, from_fallback = False)
+
+            if result.get("need_parse") is False:
+                # 这一类没有媒体信息可查（需要二次解析的节点）
+                return {**result, "video": None, "audio": None}
+
+            result["video"] = self._safe_stream(
+                video_stream_info, self, video_quality_id, video_codec_id)
+
+            result["audio"] = self._safe_stream(
+                audio_stream_info, self, audio_quality_id)
+
+            return result
+
+    def _safe_stream(self, func, *args):
+        """
+        一路流查不到不该让整个请求失败
+
+        画质与音质是分开查的：音频流取不到（无声视频、音轨已并进视频流）是常态，
+        视频流那边偶尔也会碰上补取失败。任一路失败时把这一路给成 None，
+        另一路照常返回 —— 前端据此显示「按优先级自动选择」之类的说明
+        """
+        try:
+            return func(*args)
+
+        except Exception as e:
+            logger.info("获取流详情失败：%s", e)
+
+            return None
 
     def _preview_one(self, episode: dict, from_fallback: bool) -> dict:
         request = build_request(episode)

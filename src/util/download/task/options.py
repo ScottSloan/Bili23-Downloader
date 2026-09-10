@@ -35,7 +35,29 @@ _OPTION_SPEC = {
     # keep_original_files 早就固化在 DownloadInfo 里了，唯独它一直是在合并阶段
     # 才去读全局状态，放在这里是为了沿用「缺失即回落全局设置」的兼容处理
     "keep_original_files_type": None,
+
+    # 目标命名规则的 id（naming_rule_list 里的 uuid 字符串），None 表示按媒体类型取默认规则。
+    #
+    # **它必须固化**：`TaskManager.__update_file_name_info()` 在下载真正开始时还会被
+    # 调用第二次（`_update_media_info()` 补齐画质变量之后重算文件名），那一刻本次下载的
+    # options 早就不在了。不固化就只能去读进程级的 `config.target_naming_rule_id`，
+    # 而用户只要重新解析一条链接，`previewer.py` 的 clear_cache 就把它清成 None ——
+    # 表现是**下载列表里显示的文件名与磁盘上真正的文件名不一样**，且毫无提示
+    "target_naming_rule_id": None,
 }
+
+# 只在 options 里过一趟、不进任务快照的键
+#
+# 它们在建任务当场就被消费掉了：下载目录落进 `TaskInfo.File.download_path`，
+# 编号物化成 `TaskInfo.Episode.number`，重复处理方式当场判完即弃。
+# 再往 Options 里存一份就是第二个真相源，迟早与正主分叉
+_TRANSIENT_KEYS = frozenset({
+    "download_path",
+    "duplicate_resolution",
+    "numbering_type",
+    "numbering_batch_id",
+    "starting_number",
+})
 
 def pick_option(options: dict, key: str, fallback):
     """
@@ -47,6 +69,29 @@ def pick_option(options: dict, key: str, fallback):
         return options[key]
 
     return fallback
+
+def pick_enum(options: dict, key: str, fallback, enum_cls):
+    """
+    取一个枚举型选项，允许调用方传枚举的 value —— HTTP / JSON 过来的就是它
+
+    **不能把 `pick_option` 的结果直接丢进 match**：`NumberingType` 这类是普通 `Enum`
+    不是 `IntEnum`，JSON 里的 `0` 与 `NumberingType.FROM_SPECIFIED` **既不相等也不报错**，
+    会一声不响地落到 `case _` 上（与 CLAUDE.md 里 `Qt.CheckState` 那条同一个陷阱）。
+
+    认不出来时回落给定的默认值并记一条日志，不抛 —— 与本模块「纠正而非拒绝」的语义一致
+    """
+    value = pick_option(options, key, fallback)
+
+    if isinstance(value, enum_cls):
+        return value
+
+    try:
+        return enum_cls(value)
+
+    except (ValueError, KeyError):
+        logger.warning("下载选项 %s 的取值 %r 无法识别，已改用 %r", key, value, fallback)
+
+        return fallback
 
 def _global_value(key: str):
     item = getattr(config, key)

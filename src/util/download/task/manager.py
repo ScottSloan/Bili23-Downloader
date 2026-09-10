@@ -13,12 +13,13 @@ from ...thread import background
 
 from ..cover.manager import cover_manager
 from .reparse_worker import ReparseWorker
-from .options import pick_option, snapshot
+from .options import pick_option, pick_enum, snapshot, resolve
 from .hash_id import calc_hash_id
 from .db import TaskDatabase
 from .info import TaskInfo
 
 from threading import Event, Lock, Timer
+from collections import OrderedDict
 from pathlib import Path
 from typing import List
 from uuid import uuid4
@@ -29,6 +30,10 @@ import re
 logger = logging.getLogger(__name__)
 
 class TaskManager:
+    # 最多同时记住多少批的编号游标。二次解析可能在几秒后才带着同一个 batch id 绕回来，
+    # 留宽一点；超出后丢最旧的那一批
+    _NUMBERING_CURSOR_LIMIT = 64
+
     def __init__(self):
         self.db_manager = TaskDatabase()
         self._add_to_queue_toast_shown = False
@@ -37,6 +42,9 @@ class TaskManager:
         # 自动解析、二次解析会让多个线程池线程同时进入 create()，
         # 编号的「取值 + 自增」必须是一个原子操作，否则会分配出重复的序号
         self._numbering_lock = Lock()
+        # 「每批从 1 开始」的编号游标，按调用方给的 numbering_batch_id 分开存。
+        # 读写一律在 _numbering_lock 内
+        self._numbering_cursors = OrderedDict()
         self._pending_updates = {}
         self._update_flush_scheduled = False
         # 所有对 task.db 的写入都在这一个线程上串行执行：既保证了顺序，
@@ -97,16 +105,50 @@ class TaskManager:
 
         # OptionsInfo
         # 弹幕格式、输出容器等原先要到下载过程中才读全局设置，任务在队列里排队
-        # 期间用户改了设置就会波及它。与下载目录一样，在这里一并固化下来
+        # 期间用户改了设置就会波及它。与下载目录一样，在这里一并固化下来。
+        #
+        # **这一句必须排在 __update_file_name_info() 之前**：那边的命名规则是用
+        # resolve() 从 task_info.Options 里取的，顺序调换会读到一组全是 None 的选项，
+        # 然后静默回落到全局设置
         task_info.Options.from_dict(snapshot(options))
 
         # FileNameInfo
         # 下载目录在生成 TaskInfo 时就确定，后续即便修改了下载目录的设置，也不会影响已生成的 TaskInfo 中的下载目录，避免下载过程中下载目录发生变化导致的问题
-        task_info.File.download_path = config.get(config.download_path)
+        task_info.File.download_path = self.__resolve_download_path(options)
 
         self.__update_file_name_info(task_info)
 
         return task_info
+
+    def __resolve_download_path(self, options: dict = None):
+        """
+        本次任务的下载目录
+
+        **回落的是持久化配置 `config.download_path`，不是运行时属性** —— 桌面版的下载
+        选项对话框走的是「先 `config.set(config.download_path, ...)` 再建任务」，
+        那条路径上 options 里根本没有这个键，因此行为与改造前逐字节一致。
+
+        **越界判定不在这里**：那是 WebUI 独有的安全边界（`web/paths.py` 的
+        `resolve_within_roots()`），必须在路由层做完再把它的返回值传进来。
+        这里只兜住两种会把文件写进进程工作目录的取值 —— `pick_option` 用的是
+        `is not None`（这是它的正确设计），空串会被当成「指定了」，而
+        `Path("", folder)` 是相对路径
+        """
+        fallback = config.get(config.download_path)
+
+        path = pick_option(options, "download_path", fallback)
+
+        if not isinstance(path, str) or not path.strip():
+            return fallback
+
+        path = path.strip()
+
+        if not Path(path).is_absolute():
+            logger.warning("指定的下载目录 %r 不是绝对路径，已改用全局设置", path)
+
+            return fallback
+
+        return path
 
     def __trim_download_type(self, task_info: TaskInfo):
         if task_info.Episode.attribute & Attribute.LESSON_BIT:
@@ -163,8 +205,25 @@ class TaskManager:
         formatter = FileNameFormatter()
         formatter.set_variable_data(task_info)
 
-        if config.target_naming_rule_id is not None:
-            formatter.set_rule(formatter.get_rule_by_id(config.target_naming_rule_id))
+        # 命名规则从任务自己身上取，不再读进程级的 config.target_naming_rule_id。
+        #
+        # **本函数会被调用两次**：一次在建任务时，一次在下载真正开始时
+        # （`_update_media_info()` 补齐画质变量后重算文件名）。第二次那里没有 options
+        # 可传，只有固化在任务里的取值两次都拿得到。读全局的话，用户中途重新解析一条
+        # 链接（预览器会把它清成 None）就会让队列里的任务落盘时换成默认规则，
+        # 与下载列表上显示的文件名对不上
+        rule_id = resolve(task_info, "target_naming_rule_id")
+
+        if rule_id is not None:
+            rule = formatter.get_rule_by_id(rule_id)
+
+            if rule is None:
+                # 规则被用户删掉了，或调用方传来的 id 根本不存在。不把 None 交给
+                # set_rule()：那会一声不响地退回默认规则，用户只觉得「选了没用」
+                logger.warning("命名规则 %r 不存在，本次回退到该类型的默认规则", rule_id)
+
+            else:
+                formatter.set_rule(rule)
 
         path = Path(formatter.format())
 
@@ -201,22 +260,87 @@ class TaskManager:
                 # 过滤文件系统非法字符
                 episode_info[title] = re.sub(r'[\/\\\:\*\?\"\<\>\|]', '_', episode_info.get(title, ""))
 
-    def __get_number(self, episode_info: dict = None):
+    def __allocate_number(self, episode_info: dict, options: dict = None):
+        """
+        取一个编号
+
+        取号与自增必须在同一把锁内完成，否则并发创建任务时会分配出重复的编号。
+        锁改到这里面加（原先在 create() 里），调用方不会再有「忘了持锁」的机会
+        """
+        with self._numbering_lock:
+            number = self.__get_number(episode_info, options)
+
+            # 全局起始编号自增。**无论用哪种编号方式都要走这一步** ——
+            # 设置页那句「全局顺序起始编号 当前：N」读的就是它，
+            # 改成只在 CONTINUOUS 档自增会让用户看到的数字与改造前对不上
+            config.global_starting_number += 1
+
+            return number
+
+    def __get_number(self, episode_info: dict = None, options: dict = None):
         # 调用方已持有 _numbering_lock
-        match config.get(config.numbering_type):
+        match pick_enum(options, "numbering_type", config.get(config.numbering_type), NumberingType):
             case NumberingType.CONTINUOUS:
-                # 全局顺序编号
+                # 全局顺序编号：语义就是「一个进程会话内跨批次连续累加」，
+                # 它本来就不是请求作用域的东西，保持全局
                 return config.global_starting_number
 
             case NumberingType.FROM_SPECIFIED:
-                # 返回 current_starting_number，然后自增
-                _current = config.current_starting_number
-                config.current_starting_number += 1
-
-                return _current
+                return self.__next_batch_number(options)
 
             case _:
                 return episode_info.get("number", "")
+
+    def __next_batch_number(self, options: dict = None):
+        """
+        「每批从 1 开始」的取号。调用方已持有 _numbering_lock
+
+        「一批」= 用户的一次下载动作。这个游标原先是个进程级全局变量，靠各个下载入口
+        在发起前把它置 1 来划批 —— 那要求**同一时刻只有一批在建任务**，桌面版单窗口
+        勉强成立，WebUI 是多标签页并发提交，两批会互相推进对方的号。
+
+        改由调用方给一个 numbering_batch_id，游标按它分开存。二次解析（ReparseWorker）
+        会带着同一份 options 绕回 create()，batch id 跟着回来，所以收藏夹、个人空间
+        那种「一批里混着要二次解析的条目」仍然是一条连续、不重号的序列
+        """
+        batch_id = pick_option(options, "numbering_batch_id", None)
+
+        if batch_id is None:
+            # 没给 batch id 的调用方（旧代码路径）退回从 1 开始。
+            #
+            # 原先这里读写的是 config.current_starting_number，而它的初值是 None ——
+            # 只要某个入口没在发起前重置过（右键「下载为单个视频」就没有），
+            # 就是 None + 1 抛 TypeError，被 create() 的 except 吞成一句
+            # 「创建下载任务失败」，看不出跟编号有关
+            return self.__starting_number(options)
+
+        cursors = self._numbering_cursors
+
+        if batch_id in cursors:
+            cursors.move_to_end(batch_id)
+
+        else:
+            cursors[batch_id] = self.__starting_number(options)
+
+            while len(cursors) > self._NUMBERING_CURSOR_LIMIT:
+                cursors.popitem(last = False)
+
+        number = cursors[batch_id]
+        cursors[batch_id] = number + 1
+
+        return number
+
+    def __starting_number(self, options: dict = None):
+        """本批从几开始。调用方已持有 _numbering_lock"""
+        value = pick_option(options, "starting_number", 1)
+
+        try:
+            return int(value)
+
+        except (TypeError, ValueError):
+            logger.warning("起始编号 %r 不是整数，已改用 1", value)
+
+            return 1
 
     def create(self, episode_info_list: List[dict], show_toast: bool = False, options: dict = None):
         task_info_list = []
@@ -231,13 +355,8 @@ class TaskManager:
                 if self._check_duplicate(episode_info, options):
                     continue
 
-                # 先判断重复下载，再分配编号。
-                # 取号与自增必须在同一把锁内完成，否则并发创建任务时会分配出重复的编号
-                with self._numbering_lock:
-                    number = self.__get_number(episode_info)
-
-                    # 全局起始编号自增
-                    config.global_starting_number += 1
+                # 先判断重复下载，再分配编号
+                number = self.__allocate_number(episode_info, options)
 
                 task_info = self.__episode_info_to_task_info(episode_info, number, options)
 

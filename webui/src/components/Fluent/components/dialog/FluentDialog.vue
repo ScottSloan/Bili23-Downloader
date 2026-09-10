@@ -62,7 +62,7 @@ onBeforeUnmount(() => {
     <div v-if="open" class="mask" @click.self="closeOnMask && emit('close')">
       <div class="dialog" role="dialog" aria-modal="true" :style="{ width }">
         <div class="view">
-          <h2 class="title">{{ title }}</h2>
+          <h2 class="title none-select">{{ title }}</h2>
 
           <p v-if="$slots.hint" class="hint"><slot name="hint" /></p>
 

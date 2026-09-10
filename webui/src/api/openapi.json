@@ -302,6 +302,38 @@
         "title": "DirectoryListing",
         "type": "object"
       },
+      "DiskSpace": {
+        "description": "目标目录所在磁盘的空间\n\n**给裸字节，不给格式化好的字符串**：服务端没有 Qt 的翻译函数，\n单位与千分位由前端按自己的语言拼（D12）。取不到时三项为 0、available 为 false",
+        "properties": {
+          "available": {
+            "default": false,
+            "title": "Available",
+            "type": "boolean"
+          },
+          "filesystem": {
+            "default": "",
+            "title": "Filesystem",
+            "type": "string"
+          },
+          "free": {
+            "default": 0,
+            "title": "Free",
+            "type": "integer"
+          },
+          "total": {
+            "default": 0,
+            "title": "Total",
+            "type": "integer"
+          },
+          "used": {
+            "default": 0,
+            "title": "Used",
+            "type": "integer"
+          }
+        },
+        "title": "DiskSpace",
+        "type": "object"
+      },
       "DuplicateCheck": {
         "description": "每一条是否已经下载过，**与请求里的 episodes 一一对应、顺序一致**\n\n不用「已重复的下标列表」是因为那要求两边对「下标从哪算」有一致理解，\n而等长的布尔列表没有这个歧义",
         "properties": {
@@ -602,6 +634,64 @@
           "name"
         ],
         "title": "MkdirRequest",
+        "type": "object"
+      },
+      "NamingRuleOption": {
+        "description": "一条可选的命名规则。`name` 对内置规则是待翻译的键，前端按 D12 自己查表",
+        "properties": {
+          "default": {
+            "default": false,
+            "title": "Default",
+            "type": "boolean"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "rule": {
+            "title": "Rule",
+            "type": "string"
+          },
+          "type": {
+            "title": "Type",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "type",
+          "rule"
+        ],
+        "title": "NamingRuleOption",
+        "type": "object"
+      },
+      "NamingRuleOptions": {
+        "properties": {
+          "rules": {
+            "items": {
+              "$ref": "#/components/schemas/NamingRuleOption"
+            },
+            "title": "Rules",
+            "type": "array"
+          },
+          "type": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Type"
+          }
+        },
+        "title": "NamingRuleOptions",
         "type": "object"
       },
       "NamingRulePreview": {
@@ -1266,6 +1356,168 @@
         "title": "SettingsUpdateResult",
         "type": "object"
       },
+      "StreamInfo": {
+        "description": "一路流的详情\n\n**一律是裸数值**，格式化交给前端：服务端进程里没有 Qt 的翻译函数，\n在这里拼好「1080P 高清, 60fps, 5.2 Mbps」下发的话，中文界面上会冒出英文（D12）",
+        "properties": {
+          "bitrate": {
+            "default": 0,
+            "title": "Bitrate",
+            "type": "integer"
+          },
+          "codec": {
+            "default": "",
+            "title": "Codec",
+            "type": "string"
+          },
+          "codec_id": {
+            "default": 0,
+            "title": "Codec Id",
+            "type": "integer"
+          },
+          "file_size": {
+            "default": 0,
+            "title": "File Size",
+            "type": "integer"
+          },
+          "frame_rate": {
+            "default": "",
+            "title": "Frame Rate",
+            "type": "string"
+          },
+          "is_full_video": {
+            "default": true,
+            "title": "Is Full Video",
+            "type": "boolean"
+          },
+          "quality_id": {
+            "default": 0,
+            "title": "Quality Id",
+            "type": "integer"
+          }
+        },
+        "title": "StreamInfo",
+        "type": "object"
+      },
+      "StreamPreviewRequest": {
+        "description": "查某一集在指定档位下的流详情\n\n只收**一个** episode，不是候选列表：这一步是「用户已经在对话框里看着某一集、\n刚换了画质」，换成别的视频的信息毫无意义。候选回退发生在上一步的 /api/preview",
+        "properties": {
+          "audio_quality_id": {
+            "default": 30300,
+            "title": "Audio Quality Id",
+            "type": "integer"
+          },
+          "episode": {
+            "additionalProperties": true,
+            "title": "Episode",
+            "type": "object"
+          },
+          "video_codec_id": {
+            "default": 20,
+            "title": "Video Codec Id",
+            "type": "integer"
+          },
+          "video_quality_id": {
+            "default": 200,
+            "title": "Video Quality Id",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "episode"
+        ],
+        "title": "StreamPreviewRequest",
+        "type": "object"
+      },
+      "StreamPreviewResult": {
+        "description": "预览结果 + 选定档位下两路流的详情。取不到的那一路为 null",
+        "properties": {
+          "audio": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/StreamInfo"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "audio_quality": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Audio Quality",
+            "type": "object"
+          },
+          "bvid": {
+            "default": "",
+            "title": "Bvid",
+            "type": "string"
+          },
+          "cid": {
+            "default": 0,
+            "title": "Cid",
+            "type": "integer"
+          },
+          "episode_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              }
+            ],
+            "default": "",
+            "title": "Episode Number"
+          },
+          "episode_title": {
+            "default": "",
+            "title": "Episode Title",
+            "type": "string"
+          },
+          "from_fallback": {
+            "default": false,
+            "title": "From Fallback",
+            "type": "boolean"
+          },
+          "media_type": {
+            "default": "unknown",
+            "title": "Media Type",
+            "type": "string"
+          },
+          "need_parse": {
+            "default": true,
+            "title": "Need Parse",
+            "type": "boolean"
+          },
+          "video": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/StreamInfo"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "video_codec": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Video Codec",
+            "type": "object"
+          },
+          "video_quality": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Video Quality",
+            "type": "object"
+          }
+        },
+        "title": "StreamPreviewResult",
+        "type": "object"
+      },
       "SystemStatus": {
         "properties": {
           "logged_in_bilibili": {
@@ -1905,6 +2157,49 @@
         ]
       }
     },
+    "/api/files/space": {
+      "get": {
+        "description": "目标目录所在磁盘还剩多少\n\n对应桌面版下载路径卡片上那行「可用空间 / 文件系统类型」。\n\n**仍然要过 resolve_within_roots()**：这是个能探测路径是否存在的接口 ——\n不限制的话，`/etc/xxx` 返回 available=false 而 `/etc` 返回 true，\n就成了一个免费的文件系统探针（本模块顶上那段说明同理）",
+        "operationId": "read_disk_space_api_files_space_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "path",
+            "required": true,
+            "schema": {
+              "title": "Path",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DiskSpace"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Read Disk Space",
+        "tags": [
+          "files"
+        ]
+      }
+    },
     "/api/health": {
       "get": {
         "description": "健康检查。**不需要登录** —— 反向代理与容器编排要靠它判断存活，\n因此这里也不能泄漏任何有意义的信息",
@@ -2450,6 +2745,48 @@
         ]
       }
     },
+    "/api/preview/stream": {
+      "post": {
+        "description": "选定档位下这两路流有多大、什么码率\n\n对应桌面版下载选项对话框里「媒体信息」那张卡片的描述文字\n（`gui/dialog/download_options/card.py` 的 `update_video_quality_description`）。\n\n**两路流分开对待**：音频取不到是常态（无声视频，或音轨已经并在视频流里），\n那一路给 null 即可，不该让整个请求失败 —— 前端按 `media_type` 说明原因。",
+        "operationId": "preview_stream_api_preview_stream_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StreamPreviewRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StreamPreviewResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Preview Stream",
+        "tags": [
+          "preview"
+        ]
+      }
+    },
     "/api/settings": {
       "get": {
         "description": "读配置\n\n附带每一项的类型、默认值、取值范围与可选值 —— 前端据此把设置界面画出来，\n不必自己维护一份与 schema 平行的表（那份表迟早对不上）",
@@ -2551,6 +2888,49 @@
           }
         },
         "summary": "Read Fonts",
+        "tags": [
+          "settings"
+        ]
+      }
+    },
+    "/api/settings/naming-rule/available": {
+      "get": {
+        "description": "这一类媒体能用哪几条命名规则\n\n对应桌面版下载选项对话框里的 `NamingConventionCard` —— 它按当前剧集的 attribute\n过滤规则列表，查不到就把下拉禁用掉并说明「这一类不支持自定义命名规则」。\n\n**`attribute → type_id` 的映射不下发、也不让前端自己算**：那张表在\n`FileNameFormatter.get_type_id_from_attribute()` 里，抄一份到前端迟早分叉，\n而分叉的表现是「某一类的规则列表莫名其妙是空的」",
+        "operationId": "read_available_naming_rules_api_settings_naming_rule_available_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "attribute",
+            "required": true,
+            "schema": {
+              "title": "Attribute",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NamingRuleOptions"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Read Available Naming Rules",
         "tags": [
           "settings"
         ]

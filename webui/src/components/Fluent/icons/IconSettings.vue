@@ -1,7 +1,4 @@
 <script setup lang="ts">
-// 设置图标 —— 对应 GUI 导航栏的 FluentIcon.SETTING
-// 尺寸默认 1em（随字号走），调用方可用 CSS 的 width / height 覆盖；
-// 颜色取 currentColor，深浅主题共用一份，不必像 GUI 那样准备 light / dark 两套文件
 </script>
 
 <template>
@@ -15,7 +12,6 @@
     aria-hidden="true"
     focusable="false"
   >
-    <!-- 两层 transform 是原始素材的坐标变换，路径按 48 单位绘制，逐层放大并裁切到 256 视口 -->
     <g transform="translate(-19.2,-19.2) scale(1.15,1.15)">
       <g transform="scale(5.33333,5.33333)">
         <path

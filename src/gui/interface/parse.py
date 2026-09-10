@@ -31,6 +31,7 @@ from util.thread.pool import GlobalThreadPoolTask
 
 from collections import deque
 from threading import Event
+from uuid import uuid4
 import logging
 
 logger = logging.getLogger(__name__)
@@ -226,8 +227,6 @@ class ParseBase(QFrame):
             # 开始解析前，隐藏分页组件
             self.segmented_widget.hide_pager()
 
-            config.current_starting_number = 1
-            
             self.start_progress_parse_worker(dialog.payload)
 
     def show_auto_parse_teaching_tip(self: "ParseInterface"):
@@ -324,8 +323,6 @@ class ParseBase(QFrame):
         if dialog.exec():
             # 开始解析前，隐藏分页组件
             self.segmented_widget.hide_pager()
-
-            config.current_starting_number = 1
 
             self.start_progress_parse_worker(dialog.payload)
 
@@ -539,10 +536,11 @@ class ParseInterface(ParseBase):
         # 获取选中的下载项    
         checked_episodes_list = self.parse_list.get_checked_items(to_dict = True, mark_as_downloaded = True)
 
-        config.current_starting_number = 1
-
-        # 添加到下载队列
-        signal_bus.download.create_task.emit(checked_episodes_list, True, None)
+        # 添加到下载队列。
+        # 「每批从 1 开始」的编号按这个 id 分批，二次解析出的条目会带着同一份
+        # options 绕回来，因而与本批连成一条不重号的序列
+        signal_bus.download.create_task.emit(
+            checked_episodes_list, True, {"numbering_batch_id": uuid4().hex})
 
         QTimer.singleShot(0, self.parse_list.update_check_state)
 

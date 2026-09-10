@@ -1,9 +1,4 @@
 <script setup lang="ts">
-// 应用图标，与 GUI 的 src/res/icon/app.svg 为同一份素材
-// 图标来自 Simple Icons（作者 Simple Icons Collaborators），许可见
-// https://github.com/simple-icons/simple-icons/blob/develop/LICENSE.md
-//
-// 这里的 #00a1d6 是 B 站的品牌色，不随主题变化，因此**有意**不使用 currentColor 或主题变量
 </script>
 
 <template>

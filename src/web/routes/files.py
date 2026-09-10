@@ -12,6 +12,7 @@
 
 from pathlib import Path
 from typing import Optional
+import asyncio
 import logging
 import os
 
@@ -21,7 +22,7 @@ from pydantic import BaseModel, Field
 
 from ..paths import PathNotAllowed, browse_roots, relative_label, resolve_within_roots
 
-from ..schemas import DirectoryListing, FileRoots, MakeDirResult
+from ..schemas import DirectoryListing, DiskSpace, FileRoots, MakeDirResult
 
 logger = logging.getLogger(__name__)
 
@@ -186,4 +187,55 @@ def _parent_within(target: Path, roots) -> Optional[str]:
         return str(resolve_within_roots(str(parent), roots))
 
     except PathNotAllowed:
+        return None
+
+@router.get("/files/space", response_model = DiskSpace)
+async def read_disk_space(path: str = Query(...)):
+    """
+    目标目录所在磁盘还剩多少
+
+    对应桌面版下载路径卡片上那行「可用空间 / 文件系统类型」。
+
+    **仍然要过 resolve_within_roots()**：这是个能探测路径是否存在的接口 ——
+    不限制的话，`/etc/xxx` 返回 available=false 而 `/etc` 返回 true，
+    就成了一个免费的文件系统探针（本模块顶上那段说明同理）
+    """
+    try:
+        target = resolve_within_roots(path)
+
+    except PathNotAllowed as e:
+        return _denied(e)
+
+    from util.common.io.directory import Directory
+
+    space = await asyncio.to_thread(_disk_usage, str(target))
+
+    if space is None:
+        return {"available": False}
+
+    filesystem = await asyncio.to_thread(Directory.get_filesystem_type, str(target))
+
+    return {
+        "available": True,
+        "total": space[0],
+        "used": space[1],
+        "free": space[2],
+        "filesystem": filesystem or "",
+    }
+
+def _disk_usage(target: str):
+    """
+    裸字节。**不用 Directory.calc_disk_space()** —— 那个返回的是格式化好的字符串
+    （「1.2 GB」），给前端的话就等于把单位与千分位的翻译定死在服务端（D12）
+    """
+    from shutil import disk_usage
+
+    try:
+        usage = disk_usage(target)
+
+        return usage.total, usage.used, usage.free
+
+    except (OSError, ValueError):
+        logger.info("取不到 %s 的磁盘空间", target)
+
         return None

@@ -12,6 +12,7 @@ from . import text_result, error_result
 from .parse import get_parse_interface, build_item_index, _media_info_error
 
 from threading import Event, Lock
+from uuid import uuid4
 import logging
 
 logger = logging.getLogger(__name__)
@@ -289,8 +290,8 @@ def _split_duplicates(found: list, found_ids: list):
 
     return fresh, fresh_ids, duplicates
 
-# 创建任务同样要互斥：中途会改 config.current_starting_number 这个全局编号，
-# 并且依赖"解析列表此刻的内容"，两个请求交叠会算错序号、取错条目
+# 创建任务同样要互斥：它依赖"解析列表此刻的内容"，两个请求交叠会取错条目。
+# （编号已改成按 numbering_batch_id 分批，不再是这把锁要保护的东西）
 _create_lock = Lock()
 
 def tool_create_download(arguments: dict) -> dict:
@@ -405,8 +406,10 @@ def _create_download_locked(arguments: dict) -> dict:
                 if item := index.get(item_id):
                     item.downloaded = True
 
-        # 起始编号跟着界面的下载入口走，否则文件名里的序号会从上次的位置续下去
-        config.current_starting_number = 1
+        # 起始编号跟着界面的下载入口走，否则文件名里的序号会从上次的位置续下去。
+        # setdefault 而不是覆盖：调用方想把多次调用算作同一批时可以自己传
+        options = dict(options or {})
+        options.setdefault("numbering_batch_id", uuid4().hex)
 
         signal_bus.download.create_task.emit(found, True, options)
 

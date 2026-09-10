@@ -47,8 +47,15 @@ class RuntimeState:
     mcp_last_error = ""
 
     # ---- 杂项 ----
+    # 下载选项对话框里选中的命名规则。**它只是个默认值**：建任务时会被
+    # snapshot() 固化进 TaskInfo.Options，之后一律读那一份 ——
+    # 否则用户中途重新解析一条链接（预览器会把这里清成 None），
+    # 队列里还没开始的任务落盘时就换成默认规则了
     target_naming_rule_id = None
+
+    # 「全局顺序编号」的计数器。语义就是一个进程会话内跨批次连续累加，
+    # 因此它保持全局；「每批从 1 开始」那一档已改成按 numbering_batch_id 分批，
+    # 原先那个 current_starting_number 全局游标随之删除
     global_starting_number = 1
-    current_starting_number = None
 
     main_window_ready = False

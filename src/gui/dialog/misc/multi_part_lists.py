@@ -13,6 +13,8 @@ from util.parse.episode.tree import TreeItem, Attribute, EpisodeData
 from util.common.signal_bus import signal_bus
 from util.thread.async_ import AsyncTask
 from util.common.config import config
+
+from uuid import uuid4
 from util.format.units import Units
 
 class ParseWorker(QObject):
@@ -138,9 +140,8 @@ class MultiPartListsDialog(DialogBase):
         if not checked_episodes_list:
             return
 
-        config.current_starting_number = 1
-
-        # 添加到下载队列
-        signal_bus.download.create_task.emit(checked_episodes_list, True, None)
+        # 添加到下载队列。「每批从 1 开始」的编号按这个 id 分批
+        signal_bus.download.create_task.emit(
+            checked_episodes_list, True, {"numbering_batch_id": uuid4().hex})
 
         return super().accept()

@@ -174,6 +174,13 @@ class OptionsInfo(InfoBase):
 
     keep_original_files_type: int = None
 
+    # naming_rule_list 里的 uuid 字符串。None 表示按媒体类型取默认规则
+    #
+    # **这里的字段名必须与 `_OPTION_SPEC` 的键一一对应**：`InfoBase.from_dict()` 按
+    # 字段名过滤，规格里有而这里没有的键会被**默默丢掉**，`resolve()` 随后拿到 None
+    # 又回落全局设置 —— 表现是「选了完全不生效」，日志干净得很
+    target_naming_rule_id: str = None
+
 @dataclass
 class TaskInfo:
     Basic: BasicInfo = field(default_factory = BasicInfo)
