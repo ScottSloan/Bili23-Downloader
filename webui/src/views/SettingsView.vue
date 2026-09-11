@@ -122,7 +122,7 @@ function summaryOf(spec: SettingSpec): string | undefined {
       >
         <settingGroupRow
           :title="t('settings.theme.label')"
-          :description="`${t('settings.theme.description')}（${t('settings.localOnly')}）`"
+          :description="t('settings.theme.description')"
         >
           <comboBox
             :model-value="themeStore.mode"
@@ -134,7 +134,7 @@ function summaryOf(spec: SettingSpec): string | undefined {
 
         <settingGroupRow
           :title="t('settings.accent.label')"
-          :description="`${t('settings.accent.description')}（${t('settings.localOnly')}）`"
+          :description="t('settings.accent.description')"
         >
           <!-- 原生取色器：各平台自带的那个，比自己搭一个色轮可靠得多 -->
           <input

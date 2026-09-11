@@ -43,6 +43,13 @@ export interface ParseNode {
   id?: string
   title: string
   number: string | number
+  /**
+   * 序号那一列显示的是剧集类型时，这里是它的键（`ANIME` / `FAVORITES` …）
+   *
+   * 后端的 `number` 已经是翻过的字面量，而服务端进程里没有 Qt 的翻译函数，
+   * 拿到的一律是英文。前端按这个键自己查表（D12）。不是类型名的行没有这个字段
+   */
+  number_key?: string | null
   badge: string
   cover: string
   duration: number

@@ -47,10 +47,20 @@ const props = withDefaults(
     open: boolean
     /** 已勾选的剧集，原样来自解析结果的叶子。configure 模式下为空 */
     episodes?: Record<string, unknown>[]
+    /**
+     * 媒体信息预览用哪几集
+     *
+     * **与 episodes 分开**，这一点与桌面版一致：那边预览的是「链接指向的那一集，
+     * 否则列表第一个」，与勾选无关，所以两个入口（下载 / 仅配置）看到的媒体信息
+     * 是同一份。此前 Web 端把勾选项直接当候选，于是不勾就没有画质可选，
+     * 工具栏那个入口更是压根没有媒体信息
+     */
+    candidates?: Record<string, unknown>[]
     mode?: 'download' | 'configure'
   }>(),
   {
     episodes: () => [],
+    candidates: () => [],
     mode: 'download',
   },
 )
@@ -79,9 +89,15 @@ const tabs = computed(() => [
   { key: 'download', label: t('downloadOptions.tab.download'), icon: 'download' },
 ])
 
-/** 媒体信息取自哪一集，命名规则要按它的位标志筛选 */
+/**
+ * 命名规则按哪一类媒体筛选
+ *
+ * 取自**预览的那一集**而不是勾选的第一项 —— 与桌面版一致（那边读的是
+ * `PreviewerInfo.attribute`，也就是刚预览过的那个）。两者同属一棵解析树，
+ * 位标志本来就一样；但「仅配置」模式下没有勾选项，只有候选
+ */
 const attribute = computed(() => {
-  const first = props.episodes[0] as { attribute?: number } | undefined
+  const first = props.candidates[0] as { attribute?: number } | undefined
 
   return typeof first?.attribute === 'number' ? first.attribute : undefined
 })
@@ -258,7 +274,12 @@ function cancel() {
         三页都常驻，用 v-show 切换而不是 v-if：媒体页那边有现查的档位与流详情，
         每切一次页签就重新拉一遍既慢又会把用户选好的档位重置掉
       -->
-      <mediaPage v-show="tab === 'media'" ref="media" :episodes="episodes" @preview-changed="refreshPreview" />
+      <mediaPage
+        v-show="tab === 'media'"
+        ref="media"
+        :candidates="candidates"
+        @preview-changed="refreshPreview"
+      />
 
       <additionalPage v-show="tab === 'additional'" ref="additional" @preview-changed="refreshPreview" />
 

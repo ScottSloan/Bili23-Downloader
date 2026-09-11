@@ -300,12 +300,12 @@ export const useParseStore = defineStore('parse', {
         [...nodes].map(([id, node]) => [id, node.checked ? CHECKED : UNCHECKED]),
       )
 
-      // 默认只展开第一层。这是 Web 端有意偏离 GUI（GUI 默认全展开）的一处，见 D13。
-      // 列表本身已经虚拟滚动，全展开不再是渲染压力，但千级条目一次铺开在网页上
-      // 依然难以浏览，所以这条决策保留
-      this.expanded = new Set(
-        this.tree.filter((node) => node.children?.length).map((node) => node.id as string),
-      )
+      // 与桌面版一致：**整棵树递归展开**（那边是 tree_view.py 的 _schedule_expand_all）。
+      //
+      // 之前只展开第一层，理由是「千级条目一次铺开难以浏览」。那个理由站不住：
+      // 剧集的「正片 / 章节 / PV」这些分支收起来之后，用户看到的是几个空壳标题，
+      // 要点开才知道里面有什么 —— 而列表本来就是虚拟滚动的，展开不增加渲染成本
+      this.expanded = new Set(this._nodeIds(this.tree))
 
       // 上一次解析的标记必须先清掉：id 是位置路径，换了一棵树之后同一个 id
       // 指的完全是另一集
@@ -325,6 +325,25 @@ export const useParseStore = defineStore('parse', {
      * 这里没有改走后端的 `/api/parse/episodes`，是因为**那个接口只返回 episode 列表，
      * 认不出哪一条属于哪一行**；而标记要落到具体的行上，必须有 id ↔ episode 的配对
      */
+    /** 所有有子节点的行 id，用于一次性全展开 */
+    _nodeIds(list: ParseNode[]): string[] {
+      const found: string[] = []
+
+      const walk = (nodes: ParseNode[]) => {
+        for (const node of nodes) {
+          if (node.children?.length) {
+            found.push(node.id as string)
+
+            walk(node.children)
+          }
+        }
+      }
+
+      walk(list)
+
+      return found
+    },
+
     _leaves(): { id: string; episode: Record<string, unknown> }[] {
       const found: { id: string; episode: Record<string, unknown> }[] = []
 
@@ -345,6 +364,57 @@ export const useParseStore = defineStore('parse', {
       walk(this.tree)
 
       return found
+    },
+
+    /**
+     * 媒体信息预览用哪几集
+     *
+     * **与勾选无关**，这一点与桌面版一致（`tree_view.get_preview_candidates`）：
+     *
+     * - 首选**链接指向的那一集**（后端给的 `current` 是「按哪个字段找、找什么值」——
+     *   番剧按 ep_id、分P 按 cid，各自不同，所以传的是字段名而不是某个固定的键）
+     * - 链接没指向具体某一集时退回列表里的第一个
+     * - 其余作为备选，**带备注的排到最后** —— 那多半是充电专属、付费之类取不到
+     *   媒体信息的项，拿它当首选会让整个解析结果显示成「不可下载」
+     *
+     * 在此之前 Web 端是拿「已勾选的那些」去预览的，于是不勾就看不到画质，
+     * 工具栏那个入口更是压根没有媒体信息。那是两件事被当成一件：
+     * **预览看的是这批内容长什么样，下载的才是勾选的那些**
+     */
+    previewCandidates(limit = 3): Record<string, unknown>[] {
+      const leaves = this._leaves()
+
+      if (!leaves.length) {
+        return []
+      }
+
+      const primaryIndex = this._currentIndex(leaves)
+      const primary = leaves[primaryIndex]
+
+      const backups = leaves
+        .filter((_, index) => index !== primaryIndex)
+        .sort((a, b) => Number(Boolean(a.episode.badge)) - Number(Boolean(b.episode.badge)))
+
+      return [primary, ...backups.slice(0, Math.max(0, limit - 1))].map((leaf) => leaf.episode)
+    },
+
+    /** 链接指向的那一集在叶子里的下标，找不到给 0（退回第一个） */
+    _currentIndex(leaves: { episode: Record<string, unknown> }[]): number {
+      const locator = this.current
+
+      if (!locator) {
+        return 0
+      }
+
+      // 后端给的 value 与 episode 里的取值可能一个是数字一个是字符串，
+      // 按字符串比 —— 严格相等会让定位静默失败，表现是「预览的总是第一集」
+      const wanted = String(locator.value)
+
+      const index = leaves.findIndex(
+        (leaf) => String(leaf.episode[locator.field] ?? '') === wanted,
+      )
+
+      return index >= 0 ? index : 0
     },
 
     /** 问后端这批条目里哪些已经下过，标到行上 */

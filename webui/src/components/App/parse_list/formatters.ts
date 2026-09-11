@@ -1,3 +1,4 @@
+import { episodeTypeName } from '@/i18n'
 import type { ParseNode } from '@/api'
 
 // 列的显示格式，与 GUI 的 gui/component/parse_list/header.py 保持一致
@@ -44,6 +45,14 @@ export function formatDate(timestamp: number): string {
 
 export function cellText(node: ParseNode, key: string): string {
   switch (key) {
+    // 分组行的序号列显示的是剧集类型（番剧 / 收藏夹 / 个人空间…）。
+    // 后端给的 `number` 是翻过的字面量，但服务端没装 Qt 的翻译函数，那是英文；
+    // 它同时给了稳定的键，前端自己查表（D12）
+    case 'number':
+      return node.number_key
+        ? episodeTypeName(node.number_key)
+        : String(node.number ?? '')
+
     case 'duration':
       return formatDuration(node.duration)
 

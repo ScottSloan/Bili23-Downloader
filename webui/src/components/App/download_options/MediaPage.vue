@@ -40,8 +40,14 @@ import cardGuideLink from './CardGuideLink.vue'
 import guideDialog from './GuideDialog.vue'
 
 const props = defineProps<{
-  /** 候选剧集。后端按顺序试，首选没权限时自动换下一个 */
-  episodes: Record<string, unknown>[]
+  /**
+   * 媒体信息取自哪几集，按顺序试，首选取不到时后端自动换下一个
+   *
+   * **与「要下载哪些」是两回事**：这里是「这批内容长什么样」，
+   * 由解析结果决定（链接指向的那一集，或列表第一个），与勾选无关 ——
+   * 与桌面版 `tree_view.get_preview_candidates()` 同一套规则
+   */
+  candidates: Record<string, unknown>[]
 }>()
 
 const emit = defineEmits<{
@@ -122,7 +128,7 @@ const streamLoading = ref(false)
 let streamAbort: AbortController | null = null
 
 /** 信息实际取自哪一集。回退发生时不是 episodes[0]，查流详情必须用同一个 */
-const sourceEpisode = computed(() => props.episodes[info.value?.candidate_index ?? 0])
+const sourceEpisode = computed(() => props.candidates[info.value?.candidate_index ?? 0])
 
 async function load() {
   loading.value = true
@@ -133,16 +139,16 @@ async function load() {
 
   state.value = readStored()
 
-  // 「仅配置」模式下没有剧集可预览。档位是随视频变的，凭空列一份出来只会误导 ——
+  // 还没解析过，没有东西可预览。档位是随视频变的，凭空列一份出来只会误导 ——
   // 这时三个下拉留空并禁用，下面那几个媒体选项照常能改（它们与视频无关）
-  if (!props.episodes.length) {
+  if (!props.candidates.length) {
     loading.value = false
 
     return
   }
 
   try {
-    const result = await previewApi.media(props.episodes.slice(0, 20))
+    const result = await previewApi.media(props.candidates.slice(0, 20))
 
     info.value = result
 
@@ -275,7 +281,7 @@ const sourceDescription = computed(() => {
     return error.value
   }
 
-  if (!props.episodes.length) {
+  if (!props.candidates.length) {
     return t('downloadOptions.media.noEpisodes')
   }
 

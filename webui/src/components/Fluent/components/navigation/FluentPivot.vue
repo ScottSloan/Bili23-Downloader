@@ -144,7 +144,7 @@ function onKeydown(event: KeyboardEvent) {
   flex-direction: row;
   align-items: flex-end;
   flex: 0 0 auto;
-  gap: 24px;
+  gap: 8px;
   /* 指示条占掉底下 3px */
   padding-bottom: 3px;
 }

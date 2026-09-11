@@ -61,7 +61,7 @@ export default {
     summaryPlain: '{category} ({total} total)',
     mediaUnavailable:
       'Media information is unavailable ({reason}), downloads cannot be created yet.',
-    download: 'Download selected',
+    download: 'Download Selected Items',
     nothingChecked: 'Nothing selected.',
     created: 'Created {count} of {requested} task(s).',
     createdNone: 'No task was created — they may already exist in the queue.',
@@ -206,7 +206,6 @@ export default {
     saveFailed: 'Could not save: {message}',
     restartBadge: 'Restart required',
     restartNotice: 'Restart the backend for these to take effect: {items}',
-    localOnly: 'Stored in this browser only',
     customize: 'Customize…',
 
     actionLabel: {

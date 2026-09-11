@@ -166,9 +166,11 @@ function batchRemove() {
 <template>
   <div class="page-view">
     <div class="top">
-      <fluentPivot v-model="tab" :items="tabs" />
+      <fluentPivot v-model="tab" :items="tabs" style="gap: 24px;"/>
 
-      <span class="flex-stretch" />
+      <span v-if="!store.live" class="offline none-select">{{ t('task.offline') }}</span>
+
+      <span class="flex-stretch"></span>
 
       <div class="toolbar">
         <fluentComboBox
@@ -219,10 +221,7 @@ function batchRemove() {
       </div>
     </div>
 
-    <!-- 断线时明确标出来：不标的话，「没有进度」看起来与「网络很慢」一模一样 -->
     <div v-if="!store.live || selectedIds.length" class="notice">
-      <span v-if="!store.live" class="offline">{{ t('task.offline') }}</span>
-
       <template v-if="selectedIds.length">
         <span class="selection">{{ t('task.selected', { count: selectedIds.length }) }}</span>
 

@@ -10,7 +10,7 @@ export default {
     title: '关于 {app}',
     version: '版本 {version}',
     stack: '界面由 Vue {vue} 驱动',
-    license: '本软件为自由开源软件，基于 GNU 通用公共许可证第三版（GPLv3）发布。',
+    license: '本软件为免费开源软件，使用 GNU 通用公共许可证第三版（GPLv3）授权。',
     copyright: 'Copyright © 2022-{year} Scott Sloan. All Rights Reserved.',
     sponsor:
       '如果这个项目节省了你的时间或解决了你的问题，欢迎通过赞助请作者喝杯咖啡，也别忘了在 GitHub 上点个 Star 支持开源！',
@@ -59,7 +59,7 @@ export default {
     summary: '{category}（共 {total} 项，已选 {checked} 项）',
     summaryPlain: '{category}（共 {total} 项）',
     mediaUnavailable: '媒体信息不可用（{reason}），暂时无法下载',
-    download: '下载选中项',
+    download: '下载所选项目',
     nothingChecked: '没有勾选任何内容。',
     created: '已创建 {count} 个任务（共勾选 {requested} 项）。',
     createdNone: '没有创建任务，可能都已经在队列里了。',
@@ -202,7 +202,6 @@ export default {
     saveFailed: '保存失败：{message}',
     restartBadge: '需重启',
     restartNotice: '以下设置需要重启后端后生效：{items}',
-    localOnly: '仅保存在当前浏览器',
     customize: '自定义…',
 
     actionLabel: {

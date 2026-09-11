@@ -3,6 +3,7 @@ import { ref, watch } from 'vue'
 import fluentLineEdit from '@/components/Fluent/components/widgets/line_edit/LineEdit.vue'
 import primarySplitButton from '@/components/Fluent/components/widgets/button/PrimarySplitButton.vue'
 import pushButton from '@/components/Fluent/components/widgets/button/PushButton.vue'
+import primaryPushButton from '@/components/Fluent/components/widgets/button/PrimaryPushButton.vue'
 import transparentToolButton from '@/components/Fluent/components/widgets/button/TransparentToolButton.vue'
 import parseTree from '@/components/App/parse_list/ParseTree.vue'
 import searchDialog from '@/components/App/parse_list/SearchDialog.vue'
@@ -43,6 +44,15 @@ const dialogOpen = ref(false)
  */
 const dialogMode = ref<'download' | 'configure'>('download')
 const pendingEpisodes = ref<Record<string, unknown>[]>([])
+
+/**
+ * 媒体信息预览用哪几集
+ *
+ * 与「要下载哪些」分开算：预览看的是这批内容长什么样（链接指向的那一集，
+ * 或列表第一个），与勾选无关 —— 两个入口因此看到的是同一份媒体信息，
+ * 与桌面版一致
+ */
+const previewCandidates = ref<Record<string, unknown>[]>([])
 
 // 工具栏那四个按钮各自的对话框。与桌面版 ParseInterface 的 toolbar_layout 一一对应
 const searchOpen = ref(false)
@@ -151,6 +161,7 @@ function onPickHistory(picked: string) {
  */
 function openOptions() {
   pendingEpisodes.value = []
+  previewCandidates.value = store.previewCandidates()
   dialogMode.value = 'configure'
   dialogOpen.value = true
 }
@@ -166,6 +177,7 @@ async function openDownload() {
   }
 
   pendingEpisodes.value = episodes
+  previewCandidates.value = store.previewCandidates()
   dialogMode.value = 'download'
 
   // 「下载时显示选项对话框」关掉时直接建任务，全部沿用全局设置 —— 与桌面版一致
@@ -298,9 +310,11 @@ void store.loadColumns()
         :disabled="!store.total"
         @click="batchSelectOpen = true"
       />
+      <!-- 没解析过就没有媒体信息可看，也没有命名规则可挑 —— 与旁边几个工具按钮同一个判据 -->
       <transparentToolButton
         icon="options"
         :label="t('parse.toolbar.downloadOptions')"
+        :disabled="!store.total"
         @click="openOptions"
       />
     </div>
@@ -310,7 +324,9 @@ void store.loadColumns()
     <div v-if="store.total" class="actions">
       <span class="flex-stretch" />
 
-      <pushButton
+      <!-- 桌面版这里是 PrimaryPushButton（parse.py 的 download_btn），最小宽 120 -->
+      <primaryPushButton
+        class="download-btn"
         :title="t('parse.download')"
         :disabled="!store.checkedCount"
         @click="openDownload"
@@ -320,6 +336,7 @@ void store.loadColumns()
     <downloadOptionsDialog
       :open="dialogOpen"
       :episodes="pendingEpisodes"
+      :candidates="previewCandidates"
       :mode="dialogMode"
       @close="dialogOpen = false"
       @created="onCreated"
@@ -357,6 +374,11 @@ void store.loadColumns()
 </template>
 
 <style scoped>
+/* 桌面版 download_btn.setMinimumWidth(120) */
+.download-btn {
+  min-width: 120px;
+}
+
 .page-view {
   padding: 15px 25px;
   display: flex;

@@ -20,6 +20,7 @@
    一把锁解决，单用户场景下也不需要更复杂的东西。
 """
 
+from functools import lru_cache
 from threading import Lock
 from typing import List, Optional
 import logging
@@ -181,6 +182,28 @@ def attribute_names(attribute: int) -> List[str]:
     """
     return [flag.name.lower() for flag in Attribute if attribute & flag != 0]
 
+@lru_cache(maxsize = 1)
+def _episode_type_names() -> dict:
+    """
+    翻译后的剧集类型 → 键
+
+    **反查表在本进程里现算**，不手抄一份：抄的那份在 `Translator.EPISODE_TYPE`
+    加一类时不会知道，而表现只是那一类的序号列退回英文，没有任何报错。
+
+    缓存是因为 `EPISODE_TYPE()` 每次调用都重建一个 17 项的 dict，而这个函数
+    在每个节点上都会走一遍（一部长番上千个节点）
+    """
+    from ..common.translator import Translator
+
+    return {value: key for key, value in Translator.EPISODE_TYPE().items()}
+
+def _episode_type_key(number) -> Optional[str]:
+    """这一行的序号是不是某个剧集类型的名字。不是则返回 None，前端照原样显示"""
+    if not isinstance(number, str):
+        return None
+
+    return _episode_type_names().get(number)
+
 def serialize_node(node: TreeItem) -> dict:
     """
     把一棵解析树转成嵌套字典
@@ -191,6 +214,13 @@ def serialize_node(node: TreeItem) -> dict:
     data = {
         "title": node.title,
         "number": node.number,
+        # 分组节点那一行的「序号」显示的是剧集类型（番剧 / 收藏夹 / 个人空间…），
+        # 而它在 TreeItem 上已经是 `Translator.EPISODE_TYPE()` 翻过的**字面量**。
+        #
+        # 服务端进程里没装 Qt 的翻译函数，那句翻译原样返回英文源串 —— 于是中文界面上
+        # 的序号列会冒出「Anime」。按 D12，这种地方应该给前端一个稳定的取值，
+        # 由前端自己查表。这里把它认回去（`_episode_type_key`）
+        "number_key": _episode_type_key(node.number),
         "badge": node.badge,
         "cover": node.cover,
         "duration": node.duration,

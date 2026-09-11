@@ -10,7 +10,7 @@ export default {
     title: '關於 {app}',
     version: '版本 {version}',
     stack: '介面由 Vue {vue} 驅動',
-    license: '本軟體為自由開源軟體，基於 GNU 通用公共授權條款第三版（GPLv3）發布。',
+    license: '本軟體為免費開源軟體，採用 GNU 通用公眾授權條款第三版（GPLv3）授權。',
     copyright: 'Copyright © 2022-{year} Scott Sloan. All Rights Reserved.',
     sponsor:
       '若此專案為您節省時間或解決問題，歡迎贊助作者一杯咖啡，也別忘了在 GitHub 上點個 Star 支援開源！',
@@ -59,7 +59,7 @@ export default {
     summary: '{category}（共 {total} 項，已選 {checked} 項）',
     summaryPlain: '{category}（共 {total} 項）',
     mediaUnavailable: '媒體資訊無法取得（{reason}），暫時無法下載',
-    download: '下載選取項',
+    download: '下載所選項目',
     nothingChecked: '沒有勾選任何內容。',
     created: '已建立 {count} 個任務（共勾選 {requested} 項）。',
     createdNone: '沒有建立任務，可能都已經在佇列中了。',
@@ -202,7 +202,6 @@ export default {
     saveFailed: '儲存失敗：{message}',
     restartBadge: '需重新啟動',
     restartNotice: '以下設定需要重新啟動後端後生效：{items}',
-    localOnly: '僅儲存於目前瀏覽器',
     customize: '自訂…',
 
     actionLabel: {
