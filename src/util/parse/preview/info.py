@@ -1,7 +1,8 @@
 from ...common.enum import MediaType
+from typing import ClassVar
 
 class PreviewerInfo:
-    info_data = {}
+    info_data: ClassVar[dict] = {}
     media_type = MediaType.UNKNOWN
     attribute = 0
 
@@ -23,11 +24,11 @@ class PreviewerInfo:
     error_occurred = True
     error_message = ""
 
-    video_quality_choice_data = {}
-    audio_quality_choice_data = {}
-    video_codec_choice_data = {}
+    video_quality_choice_data: ClassVar[dict] = {}
+    audio_quality_choice_data: ClassVar[dict] = {}
+    video_codec_choice_data: ClassVar[dict] = {}
 
-    cache = {
+    cache: ClassVar[dict] = {
         "video": {},
         "audio": {}
     }

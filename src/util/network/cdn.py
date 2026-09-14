@@ -6,6 +6,7 @@ from threading import Lock
 from copy import deepcopy
 import logging
 import time
+from typing import ClassVar
 
 logger = logging.getLogger(__name__)
 
@@ -20,8 +21,8 @@ HOST_COOLDOWN = 180
 class HostHealth:
     # 节点健康状态，跨任务共享。解析任务跑在全局线程池上，读写一律加锁
     _lock = Lock()
-    _failures: dict[str, int] = {}
-    _cooldown_until: dict[str, float] = {}
+    _failures: ClassVar[dict[str, int]] = {}
+    _cooldown_until: ClassVar[dict[str, float]] = {}
 
     @classmethod
     def report_success(cls, host: str):

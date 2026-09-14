@@ -1,7 +1,7 @@
 from PySide6.QtGui import QPixmap
 
-from typing import Dict
+from typing import ClassVar
 
 class CoverCache:
-    cache: Dict[str, QPixmap] = {}
+    cache: ClassVar[dict[str, QPixmap]] = {}
     

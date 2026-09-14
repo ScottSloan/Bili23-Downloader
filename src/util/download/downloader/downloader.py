@@ -80,18 +80,10 @@ class ChunkWorker(QRunnable):
     # 每写满这么多字节就 flush 一次并记录断点。进程崩溃时 Python 缓冲区里的数据会丢，
     # flush 之后数据已交给操作系统，即便进程被强杀也仍在磁盘上，断点因此是可信的。
     flush_interval = 1024 * 1024
-    retryable_status_codes = {408, 429, 500, 502, 503, 504}
-    permanent_status_codes = {400, 401, 403, 404, 405, 410, 416}
-    permanent_errnos = {
-        errno.EACCES,
-        errno.EPERM,
-        errno.ENOENT,
-        errno.ENOSPC,
-        errno.EROFS,
-        errno.EISDIR,
-        errno.ENOTDIR,
-    }
-    retryable_errnos = {
+    # 只做成员判断，用 frozenset 让不可变成为强制约束而非约定
+    retryable_status_codes = frozenset({408, 429, 500, 502, 503, 504})
+    permanent_status_codes = frozenset({400, 401, 403, 404, 405, 410, 416})
+    retryable_errnos = frozenset({
         errno.EAGAIN,
         errno.EWOULDBLOCK,
         errno.EINTR,
@@ -103,7 +95,7 @@ class ChunkWorker(QRunnable):
         errno.ENETUNREACH,
         errno.EHOSTUNREACH,
         errno.EPIPE,
-    }
+    })
 
     def __init__(self, session: httpx.Client, file_key: str, chunk_index: int, chunk_range: tuple[int, int], file_path: Path, url: str, referer: str, task_info: TaskInfo, stop_event: Event, lock: Lock, token_bucket: TokenBucket, generation: int, parent=None, on_chunk_start=None, on_chunk_end=None):
         super().__init__()

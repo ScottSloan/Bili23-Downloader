@@ -14,6 +14,7 @@ from .enum import (
 from ._json import json_loads
 
 from threading import Lock
+from typing import ClassVar
 from pathlib import Path
 import logging
 import json
@@ -26,7 +27,7 @@ def isWin11():
     return sys.platform == "win32" and sys.getwindowsversion().build >= 22000
 
 class DefaultValue:
-    parse_list_column = [
+    parse_list_column: ClassVar = [
         {
             "attr_key": "number",
             "width": 160,
@@ -54,14 +55,14 @@ class DefaultValue:
         }
     ]
 
-    auto_select_conditions = {
+    auto_select_conditions: ClassVar = {
         "user_uploads": 0,
         "bangumi": 0,
         "other": 0
     }
 
     # width 为 0 表示尚无有效记录，此时窗口按默认尺寸居中显示
-    window_state = {
+    window_state: ClassVar = {
         "x": 0,
         "y": 0,
         "width": 0,
@@ -69,7 +70,7 @@ class DefaultValue:
         "maximized": False
     }
 
-    video_quality_priority = [
+    video_quality_priority: ClassVar = [
         127,
         126,
         125,
@@ -84,7 +85,7 @@ class DefaultValue:
         16
     ]
 
-    audio_quality_priority = [
+    audio_quality_priority: ClassVar = [
         30251,
         30250,
         30280,
@@ -92,13 +93,13 @@ class DefaultValue:
         30216
     ]
     
-    video_codec_priority = [
+    video_codec_priority: ClassVar = [
         7,
         12,
         13
     ]
 
-    danmaku_style = {
+    danmaku_style: ClassVar = {
         "font": {
             "name": "黑体",
             "size": 36,
@@ -124,12 +125,12 @@ class DefaultValue:
         }
     }
     
-    subtitle_language = {
+    subtitle_language: ClassVar = {
         "download_specified": False,
         "specified_language": []
     }
 
-    subtitle_style = {
+    subtitle_style: ClassVar = {
         "font": {
             "name": "黑体",
             "size": 36,
@@ -161,7 +162,7 @@ class DefaultValue:
 
     }
 
-    naming_rule_list = [
+    naming_rule_list: ClassVar = [
         {
             "id": "a024c20c-5826-4e65-a1f5-802e3e2dbe4f",
             "name": "DEFAULT_FOR_NORMAL",
@@ -256,7 +257,7 @@ class DefaultValue:
     ]
 
     # 国内 CDN 服务器列表
-    cn_cdn_server_list = [
+    cn_cdn_server_list: ClassVar = [
         {
             "host": "upos-sz-mirror08c.bilivideo.com",
             "provider": "HUAWEI"
@@ -292,7 +293,7 @@ class DefaultValue:
     ]
     
     # 海外 CDN 服务器列表
-    ov_cdn_server_list = [
+    ov_cdn_server_list: ClassVar = [
         {
             "host": "upos-hz-mirrorakam.akamaized.net",
             "provider": "AKAMAI"

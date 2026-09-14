@@ -6,9 +6,10 @@ from .base import ParserBase
 
 from urllib.parse import urlparse
 import math
+from typing import ClassVar
 
 class Data:
-    uname_map: dict[int, str] = {}
+    uname_map: ClassVar[dict[int, str]] = {}
 
 class SpaceParser(ParserBase):
     def __init__(self):

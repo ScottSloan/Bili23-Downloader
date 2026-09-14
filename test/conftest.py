@@ -41,3 +41,43 @@ assert "qttest" in _TEST_APPDATA.as_posix(), (
 # 每轮测试从干净状态开始：上一轮遗留的配置会让「首次启动」「版本迁移」这类
 # 用例的结果取决于执行顺序
 shutil.rmtree(_TEST_APPDATA / "Bili23 Downloader", ignore_errors = True)
+
+
+# --------------------------------------------------------------------------
+# DefaultValue 完整性检查
+# --------------------------------------------------------------------------
+
+# qfluentwidgets 的 ConfigItem 直接持有默认值对象，config.get() 返回的就是
+# DefaultValue 上那个 list / dict 本身而非副本。任何一处「取到后就地修改」
+# 都会永久污染进程内的默认值，且没有任何报错。
+#
+# 这个检查必须在**整场测试结束时**执行：放进普通用例只能覆盖到它自己之前
+# 发生的修改，而污染往往来自后面某个用例走过的业务代码路径。
+
+_defaults_snapshot = {}
+
+
+def pytest_sessionstart(session):
+    import copy
+
+    from util.common.config import DefaultValue
+
+    for name, value in vars(DefaultValue).items():
+        if not name.startswith("_"):
+            _defaults_snapshot[name] = copy.deepcopy(value)
+
+
+def pytest_sessionfinish(session, exitstatus):
+    from util.common.config import DefaultValue
+
+    polluted = [
+        name for name, pristine in _defaults_snapshot.items()
+        if getattr(DefaultValue, name) != pristine
+    ]
+
+    if polluted:
+        raise AssertionError(
+            f"config.DefaultValue 中以下默认值在测试过程中被就地修改：{polluted}\n"
+            "config.get() 返回的是默认值对象本身而非副本，改动它会污染整个进程。\n"
+            "修改前请先 copy.deepcopy()（嵌套结构用 .copy() 浅拷贝挡不住）。"
+        )
