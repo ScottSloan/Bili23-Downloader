@@ -1,0 +1,75 @@
+name: Quality
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: quality-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"   # 与 requires-python 的下限一致
+
+      - name: Install ruff
+        run: pip install ruff==0.16.7
+
+      # 门禁：只包含无歧义的破坏性错误，当前为 0，不允许新增
+      - name: Lint (gate)
+        run: ruff check src test
+
+      # 报告层：阶段 1 的清理清单，先可见、不阻塞。
+      # 清理完成后把对应规则移入 pyproject 的 select，本步骤随之收缩
+      - name: Lint (advisory)
+        continue-on-error: true
+        run: ruff check src test --select F401,F811,F841,F522,I001 --statistics
+
+  test:
+    name: Test (${{ matrix.os }} / py${{ matrix.python-version }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: ["3.10", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      # PySide6 在无头 Linux 上需要这些系统库才能完成导入，
+      # 缺失时 libEGL.so.1 找不到，测试会在 import 阶段就失败
+      - name: Install system dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libegl1 libgl1 libxkbcommon-x11-0 \
+            libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 \
+            libxcb-render-util0 libxcb-shape0 libxcb-xinerama0 libxcb-cursor0
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest==9.1.1
+
+      # 测试只导入模块、不创建窗口，但 PySide6 在 Linux 上仍要求有可用的平台插件
+      - name: Run tests
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: python -m pytest
