@@ -1,5 +1,4 @@
 from PySide6.QtCore import QStandardPaths
-from PySide6.QtGui import QPixmap
 
 from qfluentwidgets import (
     QConfig, RangeConfigItem, RangeValidator, OptionsValidator, OptionsConfigItem, BoolValidator,
@@ -439,45 +438,12 @@ class APPConfig(QConfig):
     buvid_expires = ConfigItem("Cookie", "buvid_expires", 0)
 
     is_login = ConfigItem("Cookie", "is_login", False, BoolValidator())
-    is_expired = False
 
     # Application
     accepted_terms = ConfigItem("Application", "accepted_terms", False, BoolValidator())
     skip_version = ConfigItem("Application", "skip_version", "")
 
-    # User
-    user_uname: str = ""
-    user_uid: str = ""
-    user_avatar_pixmap: QPixmap = None
-
-    # FFmpeg
-    ffmpeg_executable = ""
-    bundle_ffmpeg_exist = False
-
-    no_ffmpeg_available = True
-
-    # Download Options
-    video_quality_id = 200
-    audio_quality_id = 30300
-    video_codec_id = 20
-
-    download_video_stream = True
-    download_audio_stream = True
-    merge_video_audio = True
-    keep_original_files = False
-    keep_original_files_type = 0
-
-    # MCP 运行时状态，仅供界面展示，不落盘
-    mcp_running = False
-    mcp_last_error = ""
-
     # Misc
-    target_naming_rule_id = None
-    global_starting_number = 1
-    current_starting_number = None
-
-    main_window_ready = False
-
     show_auto_parse_dialog = ConfigItem("Misc", "show_auto_parse_dialog", False, BoolValidator())
     auto_add_to_download_list = ConfigItem("Misc", "auto_add_to_download_list", False, BoolValidator())
     auto_parse_interval = ConfigItem("Misc", "auto_parse_interval", 2.0)

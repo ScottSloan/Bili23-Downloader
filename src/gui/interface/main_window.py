@@ -10,6 +10,7 @@ from util.common.enum import ToastNotificationCategory, WhenClose
 from util.common.signal_bus import signal_bus
 from util.common.icon import ExtendedFluentIcon
 from util.common.config import config
+from util.common.runtime import runtime
 from util.misc.macos import activate_app
 
 import logging
@@ -296,7 +297,7 @@ class MainWindowBase(MSFluentWindow):
             logger.error("下载目录不可访问或缺少写入权限：%s", download_path)
 
     def check_ffmpeg(self: "MainWindow"):
-        if config.no_ffmpeg_available:
+        if runtime.ffmpeg.unavailable:
             signal_bus.toast.show_long_message.emit(
                 ToastNotificationCategory.ERROR,
                 self.tr("FFmpeg Not Found"),
@@ -307,7 +308,7 @@ class MainWindowBase(MSFluentWindow):
         from qfluentwidgets import FlyoutAnimationType, FlyoutAnimationManager, MessageBox
         from PySide6.QtCore import QPoint
 
-        if not config.get(config.is_login) or config.is_expired:
+        if not config.get(config.is_login) or runtime.auth.is_expired:
             dialog = MessageBox(
                 title = self.tr("Login Required"),
                 content = self.tr("Please log in to your account first."),
@@ -670,7 +671,7 @@ class MainWindow(MainWindowBase):
         dialog.exec()
 
     def on_avatar_click(self):
-        if not config.get(config.is_login) or config.is_expired:
+        if not config.get(config.is_login) or runtime.auth.is_expired:
             # 未登录，点击头像显示登录界面
             from ..dialog.login import LoginDialog
             from util.auth.user import user_manager
@@ -697,7 +698,7 @@ class MainWindow(MainWindowBase):
             avatar_pixmap.loadFromData(pixmap)
 
             pixmap = avatar_pixmap
-            config.user_avatar_pixmap = avatar_pixmap
+            runtime.auth.avatar_pixmap = avatar_pixmap
 
         self.avatar_widget.setAvatar(pixmap)
 

@@ -1,6 +1,7 @@
 from ..common.signal_bus import signal_bus
 from ..common.translator import Translator
 from ..common.config import config
+from ..common.runtime import runtime
 
 from ..network.request import NetworkRequestWorker, RequestType, ResponseType
 from ..thread.async_ import AsyncTask
@@ -29,18 +30,18 @@ class UserManager(AuthBase):
             config.set(config.sub_key, Path(sub_url).stem, save = False)
 
             if data.get("isLogin"):
-                config.user_uname = data.get("uname", "")
-                config.user_uid = data.get("mid")
+                runtime.auth.uname = data.get("uname", "")
+                runtime.auth.uid = data.get("mid")
 
                 self.get_user_avatar(data.get("face", ""))
 
                 signal_bus.emit_signal(signal_bus.parse.update_preview_info)
 
-                logger.info("用户信息获取成功，用户名: %s, UID: %s", config.user_uname, config.user_uid)
+                logger.info("用户信息获取成功，用户名: %s, UID: %s", runtime.auth.uname, runtime.auth.uid)
 
             else:
                 if config.get(config.is_login):
-                    config.is_expired = True
+                    runtime.auth.is_expired = True
 
                     self.show_toast_error(
                         Translator.ERROR_MESSAGES("LOGIN_EXPIRED"),
@@ -81,7 +82,7 @@ class UserManager(AuthBase):
     def logout(self):
         def on_success(response: dict):
             config.set(config.is_login, False)
-            config.is_expired = False
+            runtime.auth.is_expired = False
 
             config.set(config.bili_jct, "")
             config.set(config.DedeUserID, "")

@@ -8,6 +8,7 @@ from .card import NamingConventionCard
 
 from util.common.icon import ExtendedFluentIcon
 from util.common.config import config
+from util.common.runtime import runtime
 
 class DownloadSettingsPage(ScrollArea):
     def __init__(self, parent = None):
@@ -38,4 +39,4 @@ class DownloadSettingsPage(ScrollArea):
     def on_save(self):
         config.set(config.download_path, self.download_path_card.path)
 
-        config.target_naming_rule_id = self.naming_convention_card.rule_choice.currentData()
+        runtime.naming.target_rule_id = self.naming_convention_card.rule_choice.currentData()

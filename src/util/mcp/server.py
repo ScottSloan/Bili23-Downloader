@@ -1,4 +1,5 @@
 from ..common.config import config
+from ..common.runtime import runtime
 
 from .protocol import (
     Dispatcher, make_error, HEADER_MISMATCH, PARSE_ERROR, INVALID_REQUEST,
@@ -401,8 +402,8 @@ class MCPServerManager:
             # 端口被占用不能拖垮程序启动，只记录并让设置界面显示出来
             logger.error("MCP 服务器启动失败，端口 %d：%s", port, e)
 
-            config.mcp_running = False
-            config.mcp_last_error = str(e)
+            runtime.mcp.running = False
+            runtime.mcp.last_error = str(e)
 
             return False
 
@@ -413,8 +414,8 @@ class MCPServerManager:
         self.thread = Thread(target = self._serve, name = "mcp-server", daemon = True)
         self.thread.start()
 
-        config.mcp_running = True
-        config.mcp_last_error = ""
+        runtime.mcp.running = True
+        runtime.mcp.last_error = ""
 
         logger.info("MCP 服务器已启动，监听 127.0.0.1:%d", port)
 
@@ -466,7 +467,7 @@ class MCPServerManager:
         self.stop_event = None
         self.server = None
 
-        config.mcp_running = False
+        runtime.mcp.running = False
 
     def restart(self):
         self.stop()

@@ -11,6 +11,7 @@ from util.common.data import video_quality_map, audio_quality_map, video_codec_m
 from util.common.translator import Translator
 from util.common.signal_bus import signal_bus
 from util.common.config import config
+from util.common.runtime import runtime
 
 class MediaSettingsPage(ScrollArea):
     # 下载内容发生变化时发出，用于刷新下载内容预览
@@ -78,16 +79,16 @@ class MediaSettingsPage(ScrollArea):
         )
 
     def on_save(self):
-        config.video_quality_id = self.media_info_card.video_quality_id
-        config.audio_quality_id = self.media_info_card.audio_quality_id
-        config.video_codec_id = self.media_info_card.video_codec_id
+        runtime.download.video_quality_id = self.media_info_card.video_quality_id
+        runtime.download.audio_quality_id = self.media_info_card.audio_quality_id
+        runtime.download.video_codec_id = self.media_info_card.video_codec_id
 
-        config.download_video_stream = self.media_options_card.download_video_stream
-        config.download_audio_stream = self.media_options_card.download_audio_stream
-        config.merge_video_audio = self.media_options_card.merge_video_audio
-        config.keep_original_files = self.media_options_card.keep_original_files
+        runtime.download.download_video_stream = self.media_options_card.download_video_stream
+        runtime.download.download_audio_stream = self.media_options_card.download_audio_stream
+        runtime.download.merge_video_audio = self.media_options_card.merge_video_audio
+        runtime.download.keep_original_files = self.media_options_card.keep_original_files
 
-        config.keep_original_files_type = self.media_options_card.original_files_type_choice.currentIndex()
+        runtime.download.keep_original_files_type = self.media_options_card.original_files_type_choice.currentIndex()
 
     def on_check(self):
         # 只下载独立视频流会导致没有声音，提示用户确认

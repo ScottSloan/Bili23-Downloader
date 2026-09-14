@@ -3,6 +3,7 @@ from ...common.translator import Translator
 from ...common.signal_bus import signal_bus
 from ...common._json import json_dumps
 from ...common.config import config
+from ...common.runtime import runtime
 
 from ..search_url import extract_keyword
 
@@ -129,7 +130,7 @@ class ParserBase:
         return self.get_parser_type().value
     
     def check_login(self):
-        if not config.get(config.is_login) or config.is_expired:
+        if not config.get(config.is_login) or runtime.auth.is_expired:
             signal_bus.toast.show_long_message.emit(
                 ToastNotificationCategory.ERROR,
                 Translator.ERROR_MESSAGES("LOGIN_REQUIRED"),

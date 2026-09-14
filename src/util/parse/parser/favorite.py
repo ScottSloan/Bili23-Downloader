@@ -2,7 +2,7 @@ from ...network.request import NetworkRequestWorker
 from ...download.cover.manager import cover_manager
 from ...thread.dispatcher import post_to_main_thread
 from ...thread.async_ import AsyncTask
-from ...common.config import config
+from ...common.runtime import runtime
 from .base import ParserBase
 
 from urllib.parse import urlencode
@@ -35,7 +35,7 @@ class FavoriteParser(ParserBase):
         self.get_follow_list()
 
     def get_favorite_list(self):
-        url = "https://api.bilibili.com/x/v3/fav/folder/created/list-all?up_mid={uid}".format(uid = config.user_uid)
+        url = "https://api.bilibili.com/x/v3/fav/folder/created/list-all?up_mid={uid}".format(uid = runtime.auth.uid)
 
         worker = NetworkRequestWorker(url, raise_for_status = self.raise_for_status)
         worker.success.connect(self.on_get_favorite_list_success)
@@ -47,7 +47,7 @@ class FavoriteParser(ParserBase):
         param = {
             "pn": 1,
             "ps": 50,
-            "up_mid": config.user_uid,
+            "up_mid": runtime.auth.uid,
             "platform": "web",
             "web_location": "333.1387"
         }
@@ -62,7 +62,7 @@ class FavoriteParser(ParserBase):
 
     def get_follow_list(self):
         params = {
-            "vmid": config.user_uid,
+            "vmid": runtime.auth.uid,
             "type": self.type,
             "pn": self.pn,
             "ps": 24,

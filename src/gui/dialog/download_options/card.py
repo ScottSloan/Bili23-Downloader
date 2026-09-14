@@ -16,7 +16,7 @@ from util.common.data import (
 from util.common.icon import ExtendedFluentIcon
 from util.common.translator import Translator
 from util.common.enum import MediaType
-from util.common.config import config
+from util.common.runtime import runtime
 
 from util.parse.preview.info import PreviewerInfo
 from util.format.file_name import FileNameFormatter
@@ -66,9 +66,9 @@ class MediaInfoCard(ExpandGroupSettingCard):
         self.hyper_label.clicked.connect(lambda: self.showGuideMessageBox(self.tr("Instructions"), Translator.MEDIA_INFO_GUIDE()))
 
     def on_load(self):
-        self.video_quality_widget.choice.set_current_data(config.video_quality_id)
-        self.audio_quality_widget.choice.set_current_data(config.audio_quality_id)
-        self.video_codec_widget.choice.set_current_data(config.video_codec_id)
+        self.video_quality_widget.choice.set_current_data(runtime.download.video_quality_id)
+        self.audio_quality_widget.choice.set_current_data(runtime.download.audio_quality_id)
+        self.video_codec_widget.choice.set_current_data(runtime.download.video_codec_id)
 
     def update_source_description(self):
         # 说明当前的清晰度、编码等信息取自哪个视频。
@@ -237,11 +237,11 @@ class MediaOptionsCard(ExpandGroupSettingCard):
         self.hyper_label.clicked.connect(lambda: self.showGuideMessageBox(self.tr("Instructions"), Translator.MEDIA_OPTIONS_GUIDE()))
 
     def on_load(self):
-        self.download_video_stream_switch.setChecked(config.download_video_stream)
-        self.download_audio_stream_switch.setChecked(config.download_audio_stream)
-        self.merge_video_audio_switch.setChecked(config.merge_video_audio)
-        self.keep_original_files_switch.setChecked(config.keep_original_files)
-        self.original_files_type_choice.setCurrentIndex(config.keep_original_files_type)
+        self.download_video_stream_switch.setChecked(runtime.download.download_video_stream)
+        self.download_audio_stream_switch.setChecked(runtime.download.download_audio_stream)
+        self.merge_video_audio_switch.setChecked(runtime.download.merge_video_audio)
+        self.keep_original_files_switch.setChecked(runtime.download.keep_original_files)
+        self.original_files_type_choice.setCurrentIndex(runtime.download.keep_original_files_type)
 
         self.on_change_keep_original_files_option()
 

@@ -3,7 +3,7 @@ from PySide6.QtCore import QObject, Signal, Slot
 from ...common.enum import MediaType, ToastNotificationCategory
 from ...common.signal_bus import signal_bus
 from ...common.translator import Translator
-from ...common.config import config
+from ...common.runtime import runtime
 
 from ...network.request import NetworkRequestWorker, RequestType
 from ...thread.async_ import AsyncTask
@@ -325,4 +325,4 @@ class Previewer(ParserBase, QObject):
         PreviewerInfo.error_occurred = True
         PreviewerInfo.error_message = ""
 
-        config.target_naming_rule_id = None
+        runtime.naming.target_rule_id = None

@@ -6,6 +6,7 @@ from ...common.translator import Translator
 from ...common.signal_bus import signal_bus
 from ...common.io.file import safe_remove
 from ...common.config import config
+from ...common.runtime import runtime
 
 from ...parse.episode.tree import EpisodeData, Attribute
 from ...format.file_name import FileNameFormatter
@@ -84,11 +85,11 @@ class TaskManager:
         task_info.Download.status = DownloadStatus.QUEUED
         task_info.Download.type = self.__determine_download_type(options)
 
-        task_info.Download.video_quality_id = pick_option(options, "video_quality_id", config.video_quality_id)
-        task_info.Download.audio_quality_id = pick_option(options, "audio_quality_id", config.audio_quality_id)
-        task_info.Download.video_codec_id = pick_option(options, "video_codec_id", config.video_codec_id)
-        task_info.Download.merge_video_audio = pick_option(options, "merge_video_audio", config.merge_video_audio)
-        task_info.Download.keep_original_files = pick_option(options, "keep_original_files", config.keep_original_files)
+        task_info.Download.video_quality_id = pick_option(options, "video_quality_id", runtime.download.video_quality_id)
+        task_info.Download.audio_quality_id = pick_option(options, "audio_quality_id", runtime.download.audio_quality_id)
+        task_info.Download.video_codec_id = pick_option(options, "video_codec_id", runtime.download.video_codec_id)
+        task_info.Download.merge_video_audio = pick_option(options, "merge_video_audio", runtime.download.merge_video_audio)
+        task_info.Download.keep_original_files = pick_option(options, "keep_original_files", runtime.download.keep_original_files)
 
         # EpisodeInfo
         task_info.Episode.from_dict(self.__update_episode_info(episode_info, number))
@@ -116,8 +117,8 @@ class TaskManager:
     def __determine_download_type(self, options: dict = None):
         # 确定下载类型
         attr_dict = {
-            DownloadType.VIDEO: pick_option(options, "download_video_stream", config.download_video_stream),
-            DownloadType.AUDIO: pick_option(options, "download_audio_stream", config.download_audio_stream),
+            DownloadType.VIDEO: pick_option(options, "download_video_stream", runtime.download.download_video_stream),
+            DownloadType.AUDIO: pick_option(options, "download_audio_stream", runtime.download.download_audio_stream),
             DownloadType.DANMAKU: pick_option(options, "download_danmaku", config.get(config.download_danmaku)),
             DownloadType.SUBTITLE: pick_option(options, "download_subtitle", config.get(config.download_subtitle)),
             DownloadType.COVER: pick_option(options, "download_cover", config.get(config.download_cover)),
@@ -163,8 +164,8 @@ class TaskManager:
         formatter = FileNameFormatter()
         formatter.set_variable_data(task_info)
 
-        if config.target_naming_rule_id is not None:
-            formatter.set_rule(formatter.get_rule_by_id(config.target_naming_rule_id))
+        if runtime.naming.target_rule_id is not None:
+            formatter.set_rule(formatter.get_rule_by_id(runtime.naming.target_rule_id))
 
         path = Path(formatter.format())
 
@@ -205,12 +206,12 @@ class TaskManager:
         match config.get(config.numbering_type):
             case NumberingType.CONTINUOUS:
                 # 全局顺序编号
-                return config.global_starting_number
+                return runtime.naming.global_starting_number
 
             case NumberingType.FROM_SPECIFIED:
                 # 返回 current_starting_number，然后自增
-                _current = config.current_starting_number
-                config.current_starting_number += 1
+                _current = runtime.naming.current_starting_number
+                runtime.naming.current_starting_number += 1
 
                 return _current
 
@@ -236,7 +237,7 @@ class TaskManager:
                     number = self.__get_number(episode_info)
 
                     # 全局起始编号自增
-                    config.global_starting_number += 1
+                    runtime.naming.global_starting_number += 1
 
                 task_info = self.__episode_info_to_task_info(episode_info, number, options)
 

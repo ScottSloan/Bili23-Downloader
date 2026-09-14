@@ -1,6 +1,7 @@
 from ..common.enum import ToastNotificationCategory
 from ..common.signal_bus import signal_bus
 from ..common.config import config
+from ..common.runtime import runtime
 from ..network.request import snapshot_client_cookies
 
 import logging
@@ -41,4 +42,4 @@ class AuthBase:
         config.set(config.DedeUserID__ckMd5, cookies.get("DedeUserID__ckMd5", ""))
         config.set(config.SESSDATA, cookies.get("SESSDATA", ""))
         config.set(config.is_login, True)
-        config.is_expired = False
+        runtime.auth.is_expired = False

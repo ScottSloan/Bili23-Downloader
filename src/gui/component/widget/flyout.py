@@ -14,7 +14,7 @@ from .pager import Pager
 from util.parse.parser.favorite import FavoriteParser
 from util.common.icon import ExtendedFluentIcon
 from util.common.signal_bus import signal_bus
-from util.common.config import config
+from util.common.runtime import runtime
 
 import webbrowser
 
@@ -327,9 +327,9 @@ class FavoriteFlyoutWidget(FlyoutViewBase):
     def on_open_in_browser(self):
         match self.stack_widget.currentIndex():
             case 0 | 1:
-                url = "https://space.bilibili.com/{uid}/favlist".format(uid = config.user_uid)
+                url = "https://space.bilibili.com/{uid}/favlist".format(uid = runtime.auth.uid)
 
             case 2:
-                url = "https://space.bilibili.com/{uid}/bangumi".format(uid = config.user_uid)
+                url = "https://space.bilibili.com/{uid}/bangumi".format(uid = runtime.auth.uid)
 
         webbrowser.open(url)

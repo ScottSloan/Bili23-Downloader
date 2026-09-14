@@ -19,6 +19,7 @@ from util.common.icon import ExtendedFluentIcon
 from util.common.translator import Translator
 from util.common.data import url_patterns
 from util.common.config import config
+from util.common.runtime import runtime
 
 from util.parse.worker import ParseWorker, ProgressParseWorker
 from util.parse.search_url import build_search_url
@@ -226,7 +227,7 @@ class ParseBase(QFrame):
             # 开始解析前，隐藏分页组件
             self.segmented_widget.hide_pager()
 
-            config.current_starting_number = 1
+            runtime.naming.current_starting_number = 1
             
             self.start_progress_parse_worker(dialog.payload)
 
@@ -325,7 +326,7 @@ class ParseBase(QFrame):
             # 开始解析前，隐藏分页组件
             self.segmented_widget.hide_pager()
 
-            config.current_starting_number = 1
+            runtime.naming.current_starting_number = 1
 
             self.start_progress_parse_worker(dialog.payload)
 
@@ -539,7 +540,7 @@ class ParseInterface(ParseBase):
         # 获取选中的下载项    
         checked_episodes_list = self.parse_list.get_checked_items(to_dict = True, mark_as_downloaded = True)
 
-        config.current_starting_number = 1
+        runtime.naming.current_starting_number = 1
 
         # 添加到下载队列
         signal_bus.download.create_task.emit(checked_episodes_list, True, None)

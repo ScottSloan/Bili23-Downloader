@@ -20,6 +20,7 @@ from util.common.style_sheet import StyleSheet
 from util.common.signal_bus import signal_bus
 from util.common.translator import Translator
 from util.common.config import config
+from util.common.runtime import runtime
 
 import logging
 
@@ -279,7 +280,7 @@ class SettingInterface(ScrollArea):
         dialog.exec()
 
     def on_change_ffmpeg_source(self, index: int):
-        if index == 0 and not config.bundle_ffmpeg_exist:
+        if index == 0 and not runtime.ffmpeg.bundle_exist:
             dialog = MessageBox(
                 self.tr("Bundled FFmpeg not found"),
                 self.tr("The bundled FFmpeg executable is missing. Please switch to 'System PATH' or specify a custom path."),
@@ -298,7 +299,7 @@ class SettingInterface(ScrollArea):
             self,
             self.tr("Select FFmpeg executable"),
             config.get(config.custom_ffmpeg_path),
-            self.tr("FFmpeg executable ({executable})").format(executable = config.ffmpeg_executable)
+            self.tr("FFmpeg executable ({executable})").format(executable = runtime.ffmpeg.executable)
         )
         
         if not file_path:
@@ -324,17 +325,17 @@ class SettingInterface(ScrollArea):
             restart_mcp_server()
 
         except Exception:
-            # 端口占用等失败已记入 config.mcp_last_error，由状态行呈现给用户，
+            # 端口占用等失败已记入 runtime.mcp.last_error，由状态行呈现给用户，
             # 不能让它把设置界面一起带崩
             logger.exception("重启 MCP 服务器失败")
 
         self.mcp_card.update_status()
 
-        if config.mcp_last_error:
+        if runtime.mcp.last_error:
             signal_bus.toast.show.emit(
                 ToastNotificationCategory.ERROR,
                 self.tr("MCP server failed to start"),
-                config.mcp_last_error
+                runtime.mcp.last_error
             )
 
     def on_view_logs(self):

@@ -14,6 +14,7 @@ from ..widget.spinbox import SpinBox
 
 from util.common.enum import VideoContainer, ToastNotificationCategory
 from util.common.config import config, isWin11, APPConfig
+from util.common.runtime import runtime
 from util.thread.pool import GlobalThreadPoolTask
 from util.common.icon import ExtendedFluentIcon
 from util.common.io.directory import Directory
@@ -427,7 +428,7 @@ class NumberSettingCard(ExpandGroupSettingCard):
         self.global_number_group = self.addGroup(
             "",
             self.tr("Global Sequential Starting Number"),
-            self.get_global_starting_number_content(config.global_starting_number),
+            self.get_global_starting_number_content(runtime.naming.global_starting_number),
             self.custom_global_starting_number_btn
         )
 
@@ -449,7 +450,7 @@ class NumberSettingCard(ExpandGroupSettingCard):
         self.global_number_group.setEnabled(type_index == 2)
 
     def set_current_global_starting_number(self, value: int):
-        config.global_starting_number = value
+        runtime.naming.global_starting_number = value
 
         self.global_number_group.setContent(self.get_global_starting_number_content(value))
 
@@ -461,7 +462,7 @@ class NumberSettingCard(ExpandGroupSettingCard):
 
         dialog = StartingNumberDialog(
             self.tr("Customize Global Sequential Starting Number"), 
-            config.global_starting_number, 
+            runtime.naming.global_starting_number, 
             self.parent_window
         )
 
@@ -469,7 +470,7 @@ class NumberSettingCard(ExpandGroupSettingCard):
             self.set_current_global_starting_number(dialog.starting_number)
 
     def _update_global_starting_number(self):
-        self.get_global_starting_number_content(config.global_starting_number)
+        self.get_global_starting_number_content(runtime.naming.global_starting_number)
 
 class CDNSettingCard(ExpandGroupSettingCard):
     def __init__(self, parent_window, parent = None):
@@ -776,11 +777,11 @@ class MCPSettingCard(ExpandGroupSettingCard):
         if not config.get(config.mcp_enabled):
             text = self.tr("Disabled")
 
-        elif config.mcp_running:
+        elif runtime.mcp.running:
             text = self.tr("Listening on 127.0.0.1:{port}").format(port = config.get(config.mcp_port))
 
-        elif config.mcp_last_error:
-            text = self.tr("Failed to start: {error}").format(error = config.mcp_last_error)
+        elif runtime.mcp.last_error:
+            text = self.tr("Failed to start: {error}").format(error = runtime.mcp.last_error)
 
         else:
             text = self.tr("Not running")
