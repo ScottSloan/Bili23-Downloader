@@ -480,7 +480,8 @@ class APPConfig(QConfig):
                 try:
                     temp_path.unlink(missing_ok = True)
 
-                except Exception:
+                except OSError:
+                    # 临时文件清理失败不影响主流程，下次保存会覆盖它
                     pass
 
 def check_need_patch():

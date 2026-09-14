@@ -184,7 +184,9 @@ class CDN:
         try:
             return urlparse(url).netloc
 
-        except Exception:
+        except ValueError:
+            # 畸形的 IPv6 字面量会让 urlparse 抛 ValueError，取不到就按空处理；
+            # 其余异常（如传入非字符串）属于调用方错误，应当正常暴露
             return ""
 
     @staticmethod

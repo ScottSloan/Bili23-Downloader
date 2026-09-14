@@ -384,7 +384,7 @@ def hard_exit(code: int):
         try:
             stream.flush()
 
-        except Exception:
+        except Exception:    # noqa: S110  退出路径上的尽力而为，失败没有补救手段
             pass
 
     os._exit(code)

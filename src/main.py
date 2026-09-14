@@ -222,14 +222,14 @@ def shutdown_process(exit_code: int = 0):
     try:
         logging.shutdown()
 
-    except Exception:
+    except Exception:    # noqa: S110  日志系统本身正在关闭，无处可记录
         pass
 
     for stream in (sys.stdout, sys.stderr):
         try:
             stream.flush()
 
-        except Exception:
+        except Exception:    # noqa: S110  紧接着就是 os._exit，刷不出去也无从补救
             pass
 
     os._exit(exit_code)

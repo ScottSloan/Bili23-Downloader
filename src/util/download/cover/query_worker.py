@@ -40,7 +40,10 @@ class CoverQueryWorker(QRunnable):
                 self.query_url()
 
             except Exception:
-                # 查询封面 URL 失败，无法继续后续流程
+                # 查询失败则无法继续后续流程。这里必须留痕：
+                # 否则界面上只表现为「没有封面」，无从判断是网络问题还是接口变更
+                logger.exception("查询封面 URL 失败")
+
                 return
 
         if not self.cover_url:

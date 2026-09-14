@@ -149,8 +149,9 @@ class FFmpegRunner(QThread):
 
                     self._parse_duration(line)
 
-            except Exception:
+            except (OSError, ValueError):
                 # 进程被终止时管道会提前关闭，读失败无需处理
+                # （已关闭的文件对象抛 ValueError，底层读失败抛 OSError）
                 pass
 
         stderr_thread = Thread(target = read_stderr, name = "ffmpeg-stderr", daemon = True)
@@ -171,7 +172,8 @@ class FFmpegRunner(QThread):
 
                 self._parse_progress(line)
 
-        except Exception:
+        except (OSError, ValueError):
+            # 同上：进程被终止时 stdout 管道同样会提前关闭
             pass
 
         stderr_thread.join()
@@ -180,7 +182,8 @@ class FFmpegRunner(QThread):
             try:
                 pipe.close()
 
-            except Exception:
+            except OSError:
+                # 管道可能已随进程退出而失效，关闭失败无需处理
                 pass
 
         return "".join(stdout_lines), "".join(stderr_lines)
@@ -244,7 +247,7 @@ class FFmpegRunner(QThread):
             try:
                 proc.terminate()
 
-            except Exception:
+            except OSError:
                 # 子进程可能刚好已经退出，此时 terminate 会失败，忽略即可
                 pass
 

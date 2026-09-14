@@ -59,7 +59,11 @@ class CookieLogin(AuthBase, QObject):
                         cookies[key] = value
 
                 return cookies
-        except Exception:
+
+        except Exception:    # noqa: S110  见下方说明
+            # 用户粘贴的内容完全不可控，任何解析异常都属于正常情况，
+            # 不能收窄成 JSONDecodeError：畸形输入也可能抛 TypeError 等。
+            # 下面按「键=值」分隔的形式再试一次
             pass
 
         for part in text.replace("\n", ";").split(";"):
