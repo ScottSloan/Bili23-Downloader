@@ -36,9 +36,11 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-class ParseBase(QFrame):
+class ParseInterface(QFrame):
     def __init__(self, parent = None):
         super().__init__(parent = parent)
+
+        self.main_window = parent
 
         self.category_name = ""
         self.duplicate_download_queue = deque()
@@ -50,297 +52,6 @@ class ParseBase(QFrame):
         self.server_search_available = False
         self.current_search_keyword = ""
 
-    def update_search_state(self: "ParseInterface", extra_data: dict = None):
-        # 部分内容（个人空间、收藏夹、历史记录、稍后再看）的接口本身支持按关键词搜索，
-        # 此类内容存在分页，只有交由服务端搜索才能覆盖全部内容。
-        # 合集等同样分页但接口不支持搜索的内容，只能筛选当前页，需要提示用户先解析全部分页
-        extra_data = extra_data or {}
-
-        self.has_pagination = bool(extra_data.get("pagination"))
-        self.server_search_available = bool(extra_data.get("server_search"))
-        self.current_search_keyword = extra_data.get("keyword", "")
-
-    def check_extra_data(self: "ParseInterface", extra_data: dict):
-        self.update_search_state(extra_data)
-
-        if extra_data:
-            # 判断是否显示分页组件
-            if extra_data.get("pagination"):
-                self.segmented_widget.show_pager(extra_data["pagination_data"])
-
-                # 具有分页信息，且总页数大于 1 时，根据设置弹出自动解析分页对话框
-                if extra_data["pagination_data"]["total_pages"] > 1:
-                    if not config.get(config.auto_parse_teaching_tip_shown) and not config.get(config.show_auto_parse_dialog):
-                        QTimer.singleShot(0, self.show_auto_parse_teaching_tip)
-
-                    if config.get(config.show_auto_parse_dialog):
-                        QTimer.singleShot(0, self.on_auto_parse)
-                    
-            else:
-                self.segmented_widget.hide_pager()
-
-            # 判断是否显示季选择组件
-            if extra_data.get("seasons"):
-                self.season_choice.update_data(extra_data["season_data"])
-            else:
-                self.season_choice.hide()
-        else:
-            self.segmented_widget.hide_pager()
-
-            self.season_choice.hide()
-
-    def apply_auto_select(self: "ParseInterface", category_name: str):
-        match config.get(config.auto_select_mode):
-            case AutoSelectMode.SELECT_ALL:
-                # 选中全部项目
-                self.parse_list.check_all_items()
-
-                self.download_btn.setEnabled(True)
-
-            case AutoSelectMode.CONDITIONAL:
-                # 按条件自动选择
-                conditions: dict = config.get(config.auto_select_conditions)
-
-                match category_name:
-                    case ParserType.VIDEO.value:
-                        # 投稿视频
-
-                        # 默认的行为就是单个视频自动选中，分P自动选中对应视频，合集自动选中对应视频，所以只需处理全选的情况
-                        if conditions.get("user_uploads") == 1:
-                            self.parse_list.check_all_items()
-
-                        # == 0 时无需处理
-
-                    case "ANIME" | "DOCUMENTARY" | "TV" | "CHN_ANIME" | "MOVIE" | "VARIETY":
-                        # 剧集类
-                        
-                        # 同理，默认行为是选中对应剧集，所以只需处理选中正片的情况
-                        if conditions.get("bangumi") == 1:
-                            self.parse_list._check_main_episodes_node()
-
-                        # == 0 时无需处理
-
-                    case ParserType.CHEESE.value | ParserType.LESSON.value:
-                        # 课程、会员购商城课程
-
-                        # 同理，默认行为是选中对应剧集，所以只需处理选中正片的情况
-                        if conditions.get("bangumi") == 1:
-                            self.parse_list.check_all_items()
-
-                    case _:
-                        # 其他
-                        
-                        # 对于其他类型，默认行为是全不选，所以只需处理全选的情况
-                        if conditions.get("other") == 1:
-                            self.parse_list.check_all_items()
-
-    def reset_search(self: "ParseInterface"):
-        self.parse_list.search_keywords(None)
-
-        self.segmented_widget.hide_search()
-
-    def reset_parse_list(self: "ParseInterface"):
-        PreviewerInfo.error_occurred = True
-
-        self.parse_list.clear_tree()
-
-        self.item_count_label.setText("")
-
-    def scroll_to_item(self: "ParseInterface", tree_item):
-        self.parse_list.scroll_to_item(tree_item)
-
-    def check_matches(self: "ParseInterface", items):
-        self.parse_list.check_items(items)
-
-    def update_previewer_info(self: "ParseInterface"):
-        # 首选链接指向的那个视频，链接未指向具体视频时取解析结果中的第一个视频，
-        # 其余为备选，供首选项取不到媒体信息时依次重试
-        if candidates := self.parse_list.get_preview_candidates():
-            signal_bus.parse.preview_init.emit(candidates, False)
-
-    def check_preview_info(self: "ParseInterface"):
-        if PreviewerInfo.error_occurred:
-            # 只有存在 error_message 时才显示通知
-
-            if PreviewerInfo.error_message:
-                signal_bus.toast.show.emit(ToastNotificationCategory.ERROR, Translator.ERROR_MESSAGES("MEDIA_INFO_FAILED"), PreviewerInfo.error_message)
-
-            return False
-        else:
-            return True
-
-    def adjust_column_width(self: "ParseInterface"):
-        header = self.parse_list.header()
-
-        header.setSectionResizeMode(1, header.ResizeMode.Stretch)
-
-    def reparse(self: "ParseInterface", url: str):
-        self.url_box.setText(url)
-        
-        self.on_parse()
-
-    def on_show_interactive_video_dialog(self: "ParseInterface", data: dict):
-        # 显示互动视频对话框，询问用户是否探查所有节点
-        from gui.dialog.misc.interactive_video import InteractiveVideoDialog
-
-        dialog = InteractiveVideoDialog(data, self.main_window)
-
-        if dialog.exec():
-            self.start_progress_parse_worker(dialog.payload)
-
-    def start_progress_parse_worker(self: "ParseInterface", data: dict):
-        # 启动专门用于解析互动视频的后台线程，并连接进度更新信号
-        worker = ProgressParseWorker(data)
-        worker.success.connect(self.on_parse_success)
-        worker.error.connect(self.on_parse_error)
-        worker.finished.connect(self.on_progress_parse_finished)
-        worker.update_progress.connect(self.on_progress_update)
-
-        self.progress_widget._trigger_stop_callback = worker.trigger_stop
-        self.progress_widget.show_tip()
-
-        AsyncTask.run(worker)
-
-    def on_progress_parse_finished(self: "ParseInterface"):
-        self.progress_widget.hide_tip()
-
-    def on_progress_update(self: "ParseInterface", message: str):
-        self.progress_widget.update_text(message)
-
-    def on_update_parse_list_count(self: "ParseInterface", category_name: str, count: int):
-        # 更新解析结果总数的显示
-        self.category_name = Translator.EPISODE_TYPE(category_name)
-
-        text_label = self.tr("{category_name} ({total_count} total)").format(
-            category_name = self.category_name,
-            total_count = count
-        )
-
-        self.item_count_label.setText(text_label)
-
-    def on_auto_parse(self: "ParseInterface"):
-        from gui.dialog.misc.auto_parse import AutoParseDialog
-
-        dialog = AutoParseDialog(self.url_box.text(), self.pager.total_pages, self.pager.current_page, self.main_window)
-
-        if dialog.exec():
-            # 开始解析前，隐藏分页组件
-            self.segmented_widget.hide_pager()
-
-            runtime.naming.current_starting_number = 1
-            
-            self.start_progress_parse_worker(dialog.payload)
-
-    def show_auto_parse_teaching_tip(self: "ParseInterface"):
-        config.set(config.auto_parse_teaching_tip_shown, True)
-
-        TeachingTip.create(
-            target = self.segmented_widget.pager_widget.auto_parse_btn,
-            title = self.tr("Auto-parse Pagination"),
-            content = self.tr("Click here to automatically parse all pages."),
-            icon = InfoBarIcon.INFORMATION,
-            tailPosition = TeachingTipTailPosition.BOTTOM,
-            isClosable = True,
-            duration = -1,
-            parent = self.main_window
-        )
-
-    def post_parse_success_check(self: "ParseInterface", category_name: str, extra_data: dict):
-        # 根据解析结果判断是否显示分页组件
-        self.check_extra_data(extra_data)
-
-        self.apply_auto_select(category_name)
-
-    def show_download_options_dialog(self: "ParseInterface"):
-        from ..dialog.download_options.dialog import DownloadOptionsDialog
-
-        dialog = DownloadOptionsDialog(self.main_window)
-        
-        return dialog
-
-    def on_preview_info_finished(self: "ParseInterface"):
-        if config.get(config.show_download_confirmation_dialog) and self._triggered_by_clipboard:
-            # 重置标志位
-            self._triggered_by_clipboard = False
-
-            # 如果有选中项才会显示下载确认对话框
-            if self.parse_list.get_checked_items_count() > 0:
-                self.on_download()
-
-    def on_show_duplicate_download_dialog(self: "ParseInterface", episode_info: dict, result_info: dict, done_event: Event):
-        self.duplicate_download_queue.append((episode_info, result_info, done_event))
-
-        if not self.processing_duplicate_download:
-            self.processing_duplicate_download = True
-            QTimer.singleShot(0, self._process_next_duplicate_download)
-
-    def _process_next_duplicate_download(self: "ParseInterface"):
-        if not self.duplicate_download_queue:
-            self.processing_duplicate_download = False
-            return
-
-        episode_info, result_info, done_event = self.duplicate_download_queue.popleft()
-
-        try:
-            if config.get(config.duplicate_download_resolution) != DuplicateDownloadResolution.ALWAYS_ASK:
-                # 根据设置自动处理重复下载的情况，无论是跳过还是继续下载，都不再弹出对话框
-                skip = (config.get(config.duplicate_download_resolution) == DuplicateDownloadResolution.SKIP)
-
-                result_info["skip"] = skip
-
-                if skip:
-                    self.show_skip_duplicate_download_toast(episode_info.get("title", ""))
-
-            else:
-                from ..dialog.misc.duplicate_download import DuplicateDownloadDialog
-
-                dialog = DuplicateDownloadDialog(episode_info, result_info, self.main_window)
-                dialog.exec()
-
-        finally:
-            # 继续处理下一个重复下载的情况，直到队列为空
-            done_event.set()
-            QTimer.singleShot(0, self._process_next_duplicate_download)
-
-    def show_skip_duplicate_download_toast(self: "ParseInterface", task_title: str):
-        if not self.duplicate_download_toast_shown:
-            self.duplicate_download_toast_shown = True
-
-            signal_bus.toast.show.emit(
-                ToastNotificationCategory.INFO,
-                "",
-                self.tr("Skipped duplicate download: {task_title}").format(task_title = task_title)
-            )
-
-            QTimer.singleShot(3000, self._reset_duplicate_download_toast_flag)
-
-    def _reset_duplicate_download_toast_flag(self: "ParseInterface"):
-        self.duplicate_download_toast_shown = False
-
-    def on_show_batch_parse_dialog(self: "ParseInterface"):
-        from ..dialog.misc.batch_parse import BatchParseDialog
-
-        dialog = BatchParseDialog(self.main_window)
-
-        if dialog.exec():
-            # 开始解析前，隐藏分页组件
-            self.segmented_widget.hide_pager()
-
-            runtime.naming.current_starting_number = 1
-
-            self.start_progress_parse_worker(dialog.payload)
-
-    def on_show_multi_part_lists_dialog(self: "ParseInterface", item: dict):
-        from ..dialog.misc.multi_part_lists import MultiPartListsDialog
-
-        dialog = MultiPartListsDialog(item, self.main_window)
-        dialog.exec()
-
-class ParseInterface(ParseBase):
-    def __init__(self, parent = None):
-        super().__init__(parent = parent)
-
-        self.main_window = parent
         self._triggered_by_clipboard = False
         self.download_options_dialog_opened = False
 
@@ -666,3 +377,289 @@ class ParseInterface(ParseBase):
     @property
     def pager(self):
         return self.segmented_widget.pager_widget
+
+    def update_search_state(self, extra_data: dict = None):
+        # 部分内容（个人空间、收藏夹、历史记录、稍后再看）的接口本身支持按关键词搜索，
+        # 此类内容存在分页，只有交由服务端搜索才能覆盖全部内容。
+        # 合集等同样分页但接口不支持搜索的内容，只能筛选当前页，需要提示用户先解析全部分页
+        extra_data = extra_data or {}
+
+        self.has_pagination = bool(extra_data.get("pagination"))
+        self.server_search_available = bool(extra_data.get("server_search"))
+        self.current_search_keyword = extra_data.get("keyword", "")
+
+    def check_extra_data(self, extra_data: dict):
+        self.update_search_state(extra_data)
+
+        if extra_data:
+            # 判断是否显示分页组件
+            if extra_data.get("pagination"):
+                self.segmented_widget.show_pager(extra_data["pagination_data"])
+
+                # 具有分页信息，且总页数大于 1 时，根据设置弹出自动解析分页对话框
+                if extra_data["pagination_data"]["total_pages"] > 1:
+                    if not config.get(config.auto_parse_teaching_tip_shown) and not config.get(config.show_auto_parse_dialog):
+                        QTimer.singleShot(0, self.show_auto_parse_teaching_tip)
+
+                    if config.get(config.show_auto_parse_dialog):
+                        QTimer.singleShot(0, self.on_auto_parse)
+                    
+            else:
+                self.segmented_widget.hide_pager()
+
+            # 判断是否显示季选择组件
+            if extra_data.get("seasons"):
+                self.season_choice.update_data(extra_data["season_data"])
+            else:
+                self.season_choice.hide()
+        else:
+            self.segmented_widget.hide_pager()
+
+            self.season_choice.hide()
+
+    def apply_auto_select(self, category_name: str):
+        match config.get(config.auto_select_mode):
+            case AutoSelectMode.SELECT_ALL:
+                # 选中全部项目
+                self.parse_list.check_all_items()
+
+                self.download_btn.setEnabled(True)
+
+            case AutoSelectMode.CONDITIONAL:
+                # 按条件自动选择
+                conditions: dict = config.get(config.auto_select_conditions)
+
+                match category_name:
+                    case ParserType.VIDEO.value:
+                        # 投稿视频
+
+                        # 默认的行为就是单个视频自动选中，分P自动选中对应视频，合集自动选中对应视频，所以只需处理全选的情况
+                        if conditions.get("user_uploads") == 1:
+                            self.parse_list.check_all_items()
+
+                        # == 0 时无需处理
+
+                    case "ANIME" | "DOCUMENTARY" | "TV" | "CHN_ANIME" | "MOVIE" | "VARIETY":
+                        # 剧集类
+                        
+                        # 同理，默认行为是选中对应剧集，所以只需处理选中正片的情况
+                        if conditions.get("bangumi") == 1:
+                            self.parse_list._check_main_episodes_node()
+
+                        # == 0 时无需处理
+
+                    case ParserType.CHEESE.value | ParserType.LESSON.value:
+                        # 课程、会员购商城课程
+
+                        # 同理，默认行为是选中对应剧集，所以只需处理选中正片的情况
+                        if conditions.get("bangumi") == 1:
+                            self.parse_list.check_all_items()
+
+                    case _:
+                        # 其他
+                        
+                        # 对于其他类型，默认行为是全不选，所以只需处理全选的情况
+                        if conditions.get("other") == 1:
+                            self.parse_list.check_all_items()
+
+    def reset_search(self):
+        self.parse_list.search_keywords(None)
+
+        self.segmented_widget.hide_search()
+
+    def reset_parse_list(self):
+        PreviewerInfo.error_occurred = True
+
+        self.parse_list.clear_tree()
+
+        self.item_count_label.setText("")
+
+    def scroll_to_item(self, tree_item):
+        self.parse_list.scroll_to_item(tree_item)
+
+    def check_matches(self, items):
+        self.parse_list.check_items(items)
+
+    def update_previewer_info(self):
+        # 首选链接指向的那个视频，链接未指向具体视频时取解析结果中的第一个视频，
+        # 其余为备选，供首选项取不到媒体信息时依次重试
+        if candidates := self.parse_list.get_preview_candidates():
+            signal_bus.parse.preview_init.emit(candidates, False)
+
+    def check_preview_info(self):
+        if PreviewerInfo.error_occurred:
+            # 只有存在 error_message 时才显示通知
+
+            if PreviewerInfo.error_message:
+                signal_bus.toast.show.emit(ToastNotificationCategory.ERROR, Translator.ERROR_MESSAGES("MEDIA_INFO_FAILED"), PreviewerInfo.error_message)
+
+            return False
+        else:
+            return True
+
+    def adjust_column_width(self):
+        header = self.parse_list.header()
+
+        header.setSectionResizeMode(1, header.ResizeMode.Stretch)
+
+    def reparse(self, url: str):
+        self.url_box.setText(url)
+        
+        self.on_parse()
+
+    def on_show_interactive_video_dialog(self, data: dict):
+        # 显示互动视频对话框，询问用户是否探查所有节点
+        from gui.dialog.misc.interactive_video import InteractiveVideoDialog
+
+        dialog = InteractiveVideoDialog(data, self.main_window)
+
+        if dialog.exec():
+            self.start_progress_parse_worker(dialog.payload)
+
+    def start_progress_parse_worker(self, data: dict):
+        # 启动专门用于解析互动视频的后台线程，并连接进度更新信号
+        worker = ProgressParseWorker(data)
+        worker.success.connect(self.on_parse_success)
+        worker.error.connect(self.on_parse_error)
+        worker.finished.connect(self.on_progress_parse_finished)
+        worker.update_progress.connect(self.on_progress_update)
+
+        self.progress_widget._trigger_stop_callback = worker.trigger_stop
+        self.progress_widget.show_tip()
+
+        AsyncTask.run(worker)
+
+    def on_progress_parse_finished(self):
+        self.progress_widget.hide_tip()
+
+    def on_progress_update(self, message: str):
+        self.progress_widget.update_text(message)
+
+    def on_update_parse_list_count(self, category_name: str, count: int):
+        # 更新解析结果总数的显示
+        self.category_name = Translator.EPISODE_TYPE(category_name)
+
+        text_label = self.tr("{category_name} ({total_count} total)").format(
+            category_name = self.category_name,
+            total_count = count
+        )
+
+        self.item_count_label.setText(text_label)
+
+    def on_auto_parse(self):
+        from gui.dialog.misc.auto_parse import AutoParseDialog
+
+        dialog = AutoParseDialog(self.url_box.text(), self.pager.total_pages, self.pager.current_page, self.main_window)
+
+        if dialog.exec():
+            # 开始解析前，隐藏分页组件
+            self.segmented_widget.hide_pager()
+
+            runtime.naming.current_starting_number = 1
+            
+            self.start_progress_parse_worker(dialog.payload)
+
+    def show_auto_parse_teaching_tip(self):
+        config.set(config.auto_parse_teaching_tip_shown, True)
+
+        TeachingTip.create(
+            target = self.segmented_widget.pager_widget.auto_parse_btn,
+            title = self.tr("Auto-parse Pagination"),
+            content = self.tr("Click here to automatically parse all pages."),
+            icon = InfoBarIcon.INFORMATION,
+            tailPosition = TeachingTipTailPosition.BOTTOM,
+            isClosable = True,
+            duration = -1,
+            parent = self.main_window
+        )
+
+    def post_parse_success_check(self, category_name: str, extra_data: dict):
+        # 根据解析结果判断是否显示分页组件
+        self.check_extra_data(extra_data)
+
+        self.apply_auto_select(category_name)
+
+    def show_download_options_dialog(self):
+        from ..dialog.download_options.dialog import DownloadOptionsDialog
+
+        dialog = DownloadOptionsDialog(self.main_window)
+        
+        return dialog
+
+    def on_preview_info_finished(self):
+        if config.get(config.show_download_confirmation_dialog) and self._triggered_by_clipboard:
+            # 重置标志位
+            self._triggered_by_clipboard = False
+
+            # 如果有选中项才会显示下载确认对话框
+            if self.parse_list.get_checked_items_count() > 0:
+                self.on_download()
+
+    def on_show_duplicate_download_dialog(self, episode_info: dict, result_info: dict, done_event: Event):
+        self.duplicate_download_queue.append((episode_info, result_info, done_event))
+
+        if not self.processing_duplicate_download:
+            self.processing_duplicate_download = True
+            QTimer.singleShot(0, self._process_next_duplicate_download)
+
+    def _process_next_duplicate_download(self):
+        if not self.duplicate_download_queue:
+            self.processing_duplicate_download = False
+            return
+
+        episode_info, result_info, done_event = self.duplicate_download_queue.popleft()
+
+        try:
+            if config.get(config.duplicate_download_resolution) != DuplicateDownloadResolution.ALWAYS_ASK:
+                # 根据设置自动处理重复下载的情况，无论是跳过还是继续下载，都不再弹出对话框
+                skip = (config.get(config.duplicate_download_resolution) == DuplicateDownloadResolution.SKIP)
+
+                result_info["skip"] = skip
+
+                if skip:
+                    self.show_skip_duplicate_download_toast(episode_info.get("title", ""))
+
+            else:
+                from ..dialog.misc.duplicate_download import DuplicateDownloadDialog
+
+                dialog = DuplicateDownloadDialog(episode_info, result_info, self.main_window)
+                dialog.exec()
+
+        finally:
+            # 继续处理下一个重复下载的情况，直到队列为空
+            done_event.set()
+            QTimer.singleShot(0, self._process_next_duplicate_download)
+
+    def show_skip_duplicate_download_toast(self, task_title: str):
+        if not self.duplicate_download_toast_shown:
+            self.duplicate_download_toast_shown = True
+
+            signal_bus.toast.show.emit(
+                ToastNotificationCategory.INFO,
+                "",
+                self.tr("Skipped duplicate download: {task_title}").format(task_title = task_title)
+            )
+
+            QTimer.singleShot(3000, self._reset_duplicate_download_toast_flag)
+
+    def _reset_duplicate_download_toast_flag(self):
+        self.duplicate_download_toast_shown = False
+
+    def on_show_batch_parse_dialog(self):
+        from ..dialog.misc.batch_parse import BatchParseDialog
+
+        dialog = BatchParseDialog(self.main_window)
+
+        if dialog.exec():
+            # 开始解析前，隐藏分页组件
+            self.segmented_widget.hide_pager()
+
+            runtime.naming.current_starting_number = 1
+
+            self.start_progress_parse_worker(dialog.payload)
+
+    def on_show_multi_part_lists_dialog(self, item: dict):
+        from ..dialog.misc.multi_part_lists import MultiPartListsDialog
+
+        dialog = MultiPartListsDialog(item, self.main_window)
+        dialog.exec()

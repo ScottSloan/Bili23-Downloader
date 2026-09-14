@@ -2463,9 +2463,6 @@ B站的视频通常将视频流和音频流分开存储和传输，下载时需�
         <source>Settings</source>
         <translation>设置</translation>
     </message>
-</context>
-<context>
-    <name>MainWindowBase</name>
     <message>
         <location filename="../../gui/interface/main_window.py" line="98"/>
         <source>Welcome to Bili23 Downloader</source>
@@ -3203,29 +3200,6 @@ For example, if you set the video quality priority to 720P &gt; 1080P &gt; 4K, t
     </message>
 </context>
 <context>
-    <name>ParseBase</name>
-    <message>
-        <location filename="../../gui/interface/parse.py" line="213"/>
-        <source>{category_name} ({total_count} total)</source>
-        <translation>{category_name}（共 {total_count} 项）</translation>
-    </message>
-    <message>
-        <location filename="../../gui/interface/parse.py" line="238"/>
-        <source>Auto-parse Pagination</source>
-        <translation>自动解析分页</translation>
-    </message>
-    <message>
-        <location filename="../../gui/interface/parse.py" line="239"/>
-        <source>Click here to automatically parse all pages.</source>
-        <translation>点击此处可进行自动解析分页操作</translation>
-    </message>
-    <message>
-        <location filename="../../gui/interface/parse.py" line="311"/>
-        <source>Skipped duplicate download: {task_title}</source>
-        <translation>已跳过重复下载的任务：{task_title}</translation>
-    </message>
-</context>
-<context>
     <name>ParseHistoryDialog</name>
     <message>
         <location filename="../../gui/dialog/misc/parse_history.py" line="25"/>
@@ -3329,6 +3303,21 @@ For example, if you set the video quality priority to 720P &gt; 1080P &gt; 4K, t
         <location filename="../../gui/interface/parse.py" line="596"/>
         <source>{category_name} ({total_count} total)</source>
         <translation>{category_name}（共 {total_count} 项）</translation>
+    </message>
+    <message>
+        <location filename="../../gui/interface/parse.py" line="238"/>
+        <source>Auto-parse Pagination</source>
+        <translation>自动解析分页</translation>
+    </message>
+    <message>
+        <location filename="../../gui/interface/parse.py" line="239"/>
+        <source>Click here to automatically parse all pages.</source>
+        <translation>点击此处可进行自动解析分页操作</translation>
+    </message>
+    <message>
+        <location filename="../../gui/interface/parse.py" line="311"/>
+        <source>Skipped duplicate download: {task_title}</source>
+        <translation>已跳过重复下载的任务：{task_title}</translation>
     </message>
 </context>
 <context>

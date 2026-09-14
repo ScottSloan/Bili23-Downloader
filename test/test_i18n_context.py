@@ -11,14 +11,17 @@ Qt 的 self.tr() 按「上下文」查表，PySide6 在运行时用实例所属�
 * 把带 tr() 的方法挪进另一个类
 * 合并或删除一个基类（该基类从 MRO 中消失，靠回退命中的译文随之失效）
 
-本项目目前正好有这种结构：ParseInterface 自身没有登记译文，它的 4 条
-"Skipped duplicate download" 之类的字符串登记在父类 ParseBase 名下，
-靠 MRO 回退才生效；MainWindow 与 MainWindowBase 同理（12 条）。
-若哪天把基类合并掉而没有同步 .ts，这些译文会无声失效。
+本项目就踩过这个坑：ParseInterface 的 4 条译文曾登记在父类 ParseBase 名下，
+MainWindow 的 12 条登记在 MainWindowBase 名下，都靠 MRO 回退才生效。
+合并这两个基类时，.ts 中的 context 已同步改名并重新生成 .qm 与 resources_rc.py。
 
-因此这里把「每个类名形式的 context 都必须对应一个真实的类」钉成断言。
+因此这里钉住两层断言：
+  1. 每个类名形式的 context 都必须对应一个真实存在的类（静态检查）；
+  2. 这些 context 下的每条译文都必须能被真正解析出来（端到端，走完
+     .ts → lrelease → .qm → resources_rc.py → QTranslator 整条链）。
+
 Translator 中用 QCoreApplication.translate() 显式指定的上下文
-（EPISODE_TYPE、ERROR_MESSAGES 等，全大写下划线命名）不在此列。
+（EPISODE_TYPE、ERROR_MESSAGES 等，全大写下划线命名）不在第 1 条的检查范围内。
 """
 
 from pathlib import Path
@@ -105,37 +108,66 @@ def test_explicit_contexts_are_declared_in_translator(ts_path):
     assert not unused, f"{ts_path.name} 中以下显式 context 在代码里没有任何使用：{unused}"
 
 
-class TestMroFallbackContexts:
+class TestTranslationsActuallyResolve:
     """
-    记录当前依赖 MRO 回退才能生效的上下文。
+    端到端验证：登记在某个 context 下的译文，能被同名类的实例真正解析出来。
 
-    这些 context 对应的是基类，而实际被实例化的是它们的子类。译文能生效，
-    靠的是 PySide6 在子类名未命中时回退到父类名。一旦基类被合并或删除，
-    这层回退就没了。
+    上面的用例只检查 .ts 里的 context 名与代码中的类名对得上，属于静态检查。
+    这里进一步把编译后的 .qm 装进 QTranslator，用真实的类去查，确认整条链
+    （.ts → lrelease → .qm → resources_rc.py → QTranslator → tr）都是通的。
 
-    本用例不是要求保持现状，而是让这种隐式依赖显式可见：如果哪次重构确实
-    移除了这些基类，用例会失败并提示需要同步 .ts。
+    ParseInterface 与 MainWindow 是重点：它们的译文原本登记在 ParseBase /
+    MainWindowBase 名下，靠 PySide6 沿 MRO 回退才生效。两个基类合并掉之后，
+    .ts 中的 context 已同步改名，这里确保改名后译文没有失效。
     """
 
-    KNOWN_BASE_CONTEXTS = ["ParseBase", "MainWindowBase"]
+    LANGUAGES = [
+        ("zh_CN", "China"),
+        ("zh_TW", "Taiwan"),
+    ]
 
-    @pytest.mark.parametrize("context", KNOWN_BASE_CONTEXTS)
-    def test_base_class_still_in_mro(self, context):
-        import importlib
+    CONTEXTS = ["ParseInterface", "MainWindow"]
 
-        module_by_context = {
-            "ParseBase": ("gui.interface.parse", "ParseInterface"),
-            "MainWindowBase": ("gui.interface.main_window", "MainWindow"),
-        }
+    @staticmethod
+    def _load(language: str, country: str):
+        from PySide6.QtCore import QLocale, QTranslator
 
-        module_path, subclass_name = module_by_context[context]
-        subclass = getattr(importlib.import_module(module_path), subclass_name)
+        translator = QTranslator()
+        locale = QLocale(QLocale.Language.Chinese, getattr(QLocale.Country, country))
 
-        mro_names = [cls.__name__ for cls in subclass.__mro__]
+        assert translator.load(locale, "bili23", ".", ":/bili23/i18n"), f"无法加载 {language} 翻译"
 
-        assert context in mro_names, (
-            f"{context} 已不在 {subclass_name} 的 MRO 中，"
-            f"登记在该 context 下的译文将失效。请把 .ts 里的 <name>{context}</name> "
-            f"改为 {subclass_name}（与既有 context 合并），"
-            "再重新生成 .qm 与 resources_rc.py。"
+        return translator
+
+    @pytest.mark.parametrize("language, country", LANGUAGES, ids = [lang for lang, _ in LANGUAGES])
+    @pytest.mark.parametrize("context", CONTEXTS)
+    def test_every_message_resolves(self, language, country, context):
+        from PySide6.QtWidgets import QApplication
+
+        app = QApplication.instance() or QApplication([])
+
+        import res.resources_rc     # noqa: F401  .qm 由 Qt 资源系统提供
+
+        ts_path = next(p for p in TS_FILES if language in p.name)
+        root = ET.parse(ts_path).getroot()
+
+        block = next(c for c in root.findall("context") if c.findtext("name") == context)
+        messages = [(m.findtext("source"), m.findtext("translation")) for m in block.findall("message")]
+
+        assert messages, f"{ts_path.name} 中 context {context} 没有任何条目"
+
+        translator = self._load(language, country)
+        app.installTranslator(translator)
+
+        try:
+            mismatched = [
+                source for source, expected in messages
+                if app.translate(context, source) != expected
+            ]
+        finally:
+            app.removeTranslator(translator)
+
+        assert not mismatched, (
+            f"{language} 下 context {context} 的以下译文无法解析：{mismatched}\n"
+            "多半是 .ts 改动后没有重新生成 .qm 与 resources_rc.py。"
         )
