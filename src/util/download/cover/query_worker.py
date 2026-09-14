@@ -8,7 +8,11 @@ from ...network.request import SyncNetWorkRequest, ResponseType
 from urllib.parse import urlencode
 import base64
 import logging
-import httpx
+
+# 不在模块顶层导入 httpx：本模块经封面列表被界面模块间接引入，而导入 httpx
+# 需要连带加载 httpcore、ssl 等约 40 个模块（实测 64ms）。main.py 特意把网络栈
+# 预热放到后台线程，若此处在顶层导入，这笔开销就又回到了 GUI 线程上 ——
+# init_deferred_ui 比 warmup_network_stack 先执行（零延时定时器按注册顺序触发）
 
 logger = logging.getLogger(__name__)
 
@@ -57,6 +61,8 @@ class CoverQueryWorker(QRunnable):
             image.loadFromData(base64.b64decode(result))
 
         else:
+            import httpx
+
             for i in range(3):
                 try:
                     image, base64_data = self.download_cover()

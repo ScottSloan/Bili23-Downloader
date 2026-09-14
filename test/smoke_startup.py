@@ -161,3 +161,47 @@ def test_captcha_still_imports_server_before_emitting():
     )
     assert emit_index != -1, "captcha.py 不再发出 start_server 信号，本用例需要同步更新"
     assert import_index < emit_index, "导入必须在 emit 之前，否则信号发出时还没有接收者"
+
+
+# 首屏构造阶段（QApplication + MainWindow）之后仍不该出现的模块。
+#
+# 与 FORBIDDEN_AT_STARTUP 的区别：那一组只覆盖 `import main`，而界面模块是在
+# MainWindow 构造时才被拉进来的 —— 本项目就曾因此漏掉一处：封面查询模块在顶层
+# import httpx，经「收藏夹浮出控件 → 条目列表」的链路被界面间接引入，使得 main.py
+# 特意放到后台线程的网络栈预热失去意义（零延时定时器按注册顺序触发，
+# MainWindow.init_utils 先于 bootstrap_startup_tasks 执行）。
+FORBIDDEN_AFTER_WINDOW = {
+    "httpx": "网络栈，main.py 明确将其预热放在后台线程（导入约 64ms）",
+    "http.server": "MCP 服务端，默认关闭时不应加载",
+    "util.mcp.server": "MCP 服务端实现",
+    "util.download.downloader.downloader": "下载链路，应延迟到真正开始下载时",
+}
+
+
+def test_window_construction_does_not_import_network_stack():
+    loaded = _run_in_subprocess(f"""
+        import sys, json
+        sys.path.insert(0, "test")
+        import conftest
+
+        import main
+
+        app = main.Application([])
+        app.setup_app()
+
+        from gui.interface.main_window import MainWindow
+
+        MainWindow()
+
+        forbidden = {list(FORBIDDEN_AFTER_WINDOW)!r}
+
+        print(json.dumps([m for m in forbidden if m in sys.modules]))
+
+        import os
+        sys.stdout.flush()
+        os._exit(0)     # 主题监听等线程会让事件循环无法正常收敛
+    """)
+
+    assert loaded == [], "主窗口构造阶段拖入了以下模块：\n" + "\n".join(
+        f"  - {name}：{FORBIDDEN_AFTER_WINDOW[name]}" for name in loaded
+    )

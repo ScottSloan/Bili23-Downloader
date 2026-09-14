@@ -72,7 +72,17 @@ class HistoryDatabase(Database):
 
 class HistoryManager:
     def __init__(self):
-        self.db_manager = HistoryDatabase()
+        # 惰性建库：HistoryDatabase 的构造会连库、建表并切到 WAL 模式，
+        # 而本模块被解析界面在模块级引入，这笔开销原本落在启动路径上。
+        # 解析历史是用户可能整轮都不会打开的功能，推迟到首次真正使用时再付
+        self._db_manager = None
+
+    @property
+    def db_manager(self):
+        if self._db_manager is None:
+            self._db_manager = HistoryDatabase()
+
+        return self._db_manager
 
     def add_history(self, title: str, url: str, type: str):
         self.db_manager.add(title, url, type)
