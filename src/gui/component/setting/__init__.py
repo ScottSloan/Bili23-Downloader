@@ -2,7 +2,7 @@ from .card import (
     DownloadPathSettingCard, PrioritySettingCard, DanmakuSettingCard, SubtitleSettingCard, CoverSettingCard,
     ChapterSettingCard, MetadataSettingCard, NumberSettingCard, CDNSettingCard, ProxySettingCard, FFmpegSettingCard,
     DownloadFormatCard, ParsingSettingCard, WindowBehaviorSettingCard, DownloadHandlingSettingCard,
-    DownloadConcurrencySettingCard, DownloadConcurrencySettingCard, PersonalizationCard,
+    DownloadConcurrencySettingCard, PersonalizationCard,
     CheckUpdateSettingCard, OtherAdvancedSettingCard, MCPSettingCard
 )
 from .group import FontGroup, BorderGroup, ColorGroup, MarginGroup, AlignmentGroup, AdvancedGroup, ResolutionGroup

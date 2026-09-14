@@ -1,5 +1,5 @@
 from ...common._json import json_loads, json_dumps
-from ...common.config import appdata_path, config
+from ...common.config import appdata_path
 from ...common.timestamp import get_timestamp
 from ...common.database import Database
 from .hash_id import calc_hash_id, HASH_ID_VERSION

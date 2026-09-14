@@ -58,8 +58,9 @@ class FileNameFormatter:
 
             return self.__normalize_path(self.rule.format(**safe_variable_data))
         
-        except Exception as e:
-            logger.exception(f"格式化文件名时发生错误")
+        except Exception:
+            # logger.exception 已带上完整堆栈，无需再引用异常对象
+            logger.exception("格式化文件名时发生错误")
 
             return None
 

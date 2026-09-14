@@ -1,6 +1,6 @@
 from PySide6.QtWidgets import QVBoxLayout, QSizePolicy, QFileDialog
 from PySide6.QtGui import QImage, QPixmap
-from PySide6.QtCore import Qt, QRect
+from PySide6.QtCore import Qt
 
 from qfluentwidgets import PushButton, FluentIcon
 

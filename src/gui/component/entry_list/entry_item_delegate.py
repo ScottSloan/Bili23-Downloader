@@ -1,4 +1,4 @@
-from PySide6.QtCore import QModelIndex, Qt, QSize, QRect, QEvent
+from PySide6.QtCore import QModelIndex, Qt, QSize, QRect
 from PySide6.QtWidgets import QStyleOptionViewItem
 from PySide6.QtGui import QPainter, QPixmap
 

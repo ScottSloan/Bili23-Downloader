@@ -2,7 +2,7 @@ from ..common.config import config
 
 from .protocol import (
     Dispatcher, make_error, HEADER_MISMATCH, PARSE_ERROR, INVALID_REQUEST,
-    MODERN_VERSION, SUPPORTED_VERSIONS, is_modern_request, unsupported_version_error,
+    SUPPORTED_VERSIONS, is_modern_request, unsupported_version_error,
 )
 
 from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler

@@ -30,11 +30,18 @@ jobs:
       - name: Lint (gate)
         run: ruff check src test
 
-      # 报告层：阶段 1 的清理清单，先可见、不阻塞。
-      # 清理完成后把对应规则移入 pyproject 的 select，本步骤随之收缩
+      # 报告层：阶段 2/3 的候选规则，先可见、不阻塞。
+      # 对应问题清理完成后，把规则移入 pyproject 的 select 转为门禁。
+      #
+      # 这些都需要逐处判断语义、不能机械修改，因此不进门禁：
+      #   BLE001 裸 except Exception（42 处）—— 有些是有意兜底，有些在掩盖问题
+      #   S110   try/except/pass（17 处）—— 静默吞掉异常
+      #   RUF012 可变的类属性默认值（26 处）—— 可能是被共享的全局状态
+      #
+      # 不含 I001：本项目的导入顺序是一套自有约定，见 pyproject 中的说明
       - name: Lint (advisory)
         continue-on-error: true
-        run: ruff check src test --select F401,F811,F841,F522,I001 --statistics
+        run: ruff check src test --select BLE001,S110,RUF012 --statistics
 
   test:
     name: Test (${{ matrix.os }} / py${{ matrix.python-version }})

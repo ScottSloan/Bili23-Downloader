@@ -10,7 +10,6 @@ from qfluentwidgets import (
 from qfluentwidgets.components.settings.expand_setting_card import GroupWidget as _GroupWidget
 
 from .widget import SettingSwitchButton, SettingComboBox, SettingSlider
-from ..widget.button import TransparentToolButton
 from ..widget.spinbox import SpinBox
 
 from util.common.enum import VideoContainer, ToastNotificationCategory

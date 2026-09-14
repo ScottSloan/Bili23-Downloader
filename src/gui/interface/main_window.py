@@ -7,7 +7,7 @@ from qfluentwidgets import (
 )
 
 from util.common.enum import ToastNotificationCategory, WhenClose
-from util.common.signal_bus import signal_bus, config
+from util.common.signal_bus import signal_bus
 from util.common.icon import ExtendedFluentIcon
 from util.common.config import config
 from util.misc.macos import activate_app

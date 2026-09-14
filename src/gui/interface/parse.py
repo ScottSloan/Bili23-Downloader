@@ -14,7 +14,7 @@ from gui.component.widget.segment import SegmentedWidget
 from gui.component.parse_list import ParseTreeView
 
 from util.common.enum import ToastNotificationCategory, AutoSelectMode, ParserType, DuplicateDownloadResolution
-from util.common.signal_bus import signal_bus, config
+from util.common.signal_bus import signal_bus
 from util.common.icon import ExtendedFluentIcon
 from util.common.translator import Translator
 from util.common.data import url_patterns

@@ -29,8 +29,6 @@ if sys.platform == "win32":
     def _msw_messagebox(title: str, content: str):
         ctypes.windll.user32.MessageBoxW(0, content, title, 0 | 0x10)
 
-        from PySide6 import __version__
-
     def _get_messages(lang_tag):
         match lang_tag:
             case "zh_CN" | "zh_SG":
@@ -309,7 +307,10 @@ from PySide6.QtGui import QFont
 from qfluentwidgets import FluentTranslator
 
 from util.common.config import config
-import res.resources_rc
+
+# 副作用导入：执行时把 :/bili23/... 注册进 Qt 资源系统，
+# 图标、样式表与翻译文件均由此加载，没有任何符号需要被引用
+import res.resources_rc     # noqa: F401
 
 INSTANCE_LOCK_NAME = "instance.lock"
 INSTANCE_LOCK_TIMEOUT_MS = 10_000
