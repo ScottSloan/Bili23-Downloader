@@ -10,6 +10,10 @@ class HistoryDatabase(Database):
         super().__init__()
 
         self.path = Path(appdata_path) / "Bili23 Downloader" / "history.db"
+        # 与 TaskDatabase、CoverDatabase 保持一致：自己确保目录存在。
+        # history_manager 在模块导入期就建库，此前该目录是靠 main.py 创建
+        # 日志目录时顺带建出来的，等于隐式依赖了启动顺序
+        self.path.parent.mkdir(parents = True, exist_ok = True)
 
         self.max_length = 100
 
