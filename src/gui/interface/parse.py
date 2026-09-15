@@ -314,21 +314,48 @@ class ParseInterface(QFrame):
         self.download_btn.setEnabled(checked_count > 0)
 
     def on_copy_url(self):
+        return self._parse_clipboard_url()
+
+    def check_clipboard_on_startup(self):
+        """
+        启动时检查一次剪贴板
+
+        clipboard.changed 只在程序运行期间剪贴板发生变化时才发。用户的常见动作是
+        先复制链接再启动程序，此时内容在启动之前就已经在剪贴板里，changed 永远不会
+        触发，监控剪贴板对这一次复制完全失效 —— 而冷启动本就要等上几秒，正是这个
+        功能最该生效的时候。因此在界面就绪后主动补检一次
+        """
+        if self._parse_clipboard_url() is not None:
+            logger.info("启动时检测到剪贴板中的链接，已自动解析")
+
+    def _parse_clipboard_url(self):
         # 只有当剪贴板内容为文本且符合 URL 模式，并且用户启用了监控剪贴板功能，且当前没有打开下载选项对话框时，才自动解析剪贴板中的链接
-        if self.clipboard.mimeData().hasText() and config.get(config.monitor_clipboard) and not self.download_options_dialog_opened:
-            url = self.clipboard.text()
+        if not config.get(config.monitor_clipboard) or self.download_options_dialog_opened:
+            return None
 
-            for parser_type, pattern in url_patterns:
-                if pattern.search(url):
-                    # 置标志位，表示接下来的解析是由监控剪贴板触发的
-                    self._triggered_by_clipboard = True
+        # 剪贴板可能正被其他进程独占（Windows 上尤为常见，启动瞬间撞上的概率最高），
+        # 此时 mimeData() 返回 None。本方法由 clipboard.changed 直接驱动，
+        # 在槽里抛出的异常会被 PySide 直接带崩进程，必须在这里挡住
+        mime_data = self.clipboard.mimeData()
 
-                    self.url_box.setText(url)
-                    self.on_parse()
+        if mime_data is None or not mime_data.hasText():
+            return None
 
-                    logger.info("检测到复制链接，已自动解析，链接: %s", url)
+        url = self.clipboard.text()
 
-                    return parser_type
+        for parser_type, pattern in url_patterns:
+            if pattern.search(url):
+                # 置标志位，表示接下来的解析是由监控剪贴板触发的
+                self._triggered_by_clipboard = True
+
+                self.url_box.setText(url)
+                self.on_parse()
+
+                logger.info("检测到复制链接，已自动解析，链接: %s", url)
+
+                return parser_type
+
+        return None
 
     def on_history(self):
         from ..dialog.misc.parse_history import ParseHistoryDialog

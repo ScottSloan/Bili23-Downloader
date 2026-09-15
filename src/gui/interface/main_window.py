@@ -368,6 +368,10 @@ class MainWindow(MSFluentWindow):
 
         signal_bus.emit_pending_signals()
 
+        # 剪贴板补检必须排在这一切之后：走到这里才说明用户已接受使用协议、
+        # 界面与信号通路均已就绪，解析过程中发出的提示才不会被丢掉
+        QTimer.singleShot(0, self.parse_interface.check_clipboard_on_startup)
+
     def _get_toast_function(self, category: ToastNotificationCategory):
         from gui.component.widget.info_bar import InfoBar
 
