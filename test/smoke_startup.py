@@ -52,15 +52,42 @@ def _run_in_subprocess(code: str):
         timeout = 180,
     )
 
-    assert result.returncode == 0, (
-        f"子进程退出码 {result.returncode}\n"
+    payload = _extract_payload(result.stdout)
+
+    assert payload is not None, (
+        f"子进程没有输出结果，退出码 {result.returncode}\n"
         f"--- stdout ---\n{result.stdout}\n--- stderr ---\n{result.stderr}"
     )
 
-    # qfluentwidgets 会在导入时打印推广横幅，取最后一行 JSON
-    payload = result.stdout.strip().splitlines()[-1]
+    if result.returncode != 0:
+        # 结果在子进程退出之前就已经打印并 flush，拿到 payload 就说明被测的那件事
+        # 已经跑完了，此后的非零退出码只与进程收尾有关。
+        #
+        # Windows 上构造 MainWindow 会创建一个带 Mica 效果的原生无边框窗口，进程
+        # 退出时 DWM / qframelesswindow 那条链偶发在 DLL 卸载阶段抛访问违例
+        # （0xC0000005），实测一到两成概率。已确认与被测的导入行为无关：崩溃点没有
+        # 任何 Python 栈（faulthandler 抓不到）、退出时进程里只剩主线程、把主题监听、
+        # Mica 效果、窗口显示、offscreen 平台逐一排除后复现率不变，且在完全干净的
+        # 工作区上同样复现。显式 close + deleteLater 只是把它换成另一种崩溃。
+        #
+        # 这里只放行「结果已产出之后」的收尾崩溃：payload 缺失一律算失败，
+        # 因此断言本身的严格程度并未降低。
+        print(f"[smoke_startup] 子进程收尾异常（退出码 {result.returncode}），结果已取得，继续判定")
 
-    return json.loads(payload)
+    return payload
+
+
+def _extract_payload(stdout: str):
+    # qfluentwidgets 会在导入时打印推广横幅，日志也可能混在中间，
+    # 自后向前找第一行能解析出来的 JSON
+    for line in reversed(stdout.strip().splitlines()):
+        try:
+            return json.loads(line)
+
+        except json.JSONDecodeError:
+            continue
+
+    return None
 
 
 def test_startup_does_not_import_heavy_modules():
