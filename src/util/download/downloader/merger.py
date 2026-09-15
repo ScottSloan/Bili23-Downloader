@@ -302,7 +302,11 @@ class Merger(QObject):
         self.task_info.Download.status = DownloadStatus.COMPLETED
         self.task_info.Basic.completed_time = get_timestamp()
 
-        task_manager.mark_as_completed(self.task_info)
+        # 必须等这条写入落盘再往下走。下面的 remove_from_downloading_list 会一路同步
+        # 走到 Downloader.on_delete()，那是整个下载流程中最容易出现原生崩溃的一段
+        # （线程池与定时器的销毁）。进程若在那里没了，异步排队的这条记录就永远丢了：
+        # 磁盘上是合并好的成品，库里却停在「下载中」
+        task_manager.mark_as_completed(self.task_info, wait = True)
 
         signal_bus.download.auto_manage_concurrent_downloads.emit()
         signal_bus.download.add_to_completed_list.emit([self.task_info])

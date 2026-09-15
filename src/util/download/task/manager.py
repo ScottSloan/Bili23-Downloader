@@ -454,14 +454,37 @@ class TaskManager:
             except Exception:
                 logger.exception("删除下载任务临时文件失败: %s", task_id)
 
-    def mark_as_completed(self, task_info: TaskInfo):
-        # 由 Merger 在 GUI 线程调用，改为投递到写线程，避免两次同步数据库写入阻塞界面。
-        # 记录在调用方线程上组装，保证写入的是此刻的任务快照。
+    def mark_as_completed(self, task_info: TaskInfo, wait: bool = False, timeout: float = 5.0):
+        """
+        把任务移入已完成表
+
+        记录在调用方线程上组装，保证写入的是此刻的任务快照；写入本身投递到写线程，
+        避免同步的数据库写入阻塞界面。
+
+        wait 为 True 时阻塞到本条写入落盘为止。调用方紧接着要做的事（发出
+        remove_from_downloading_list，进而触发 Downloader 销毁）是整个下载流程中
+        最容易出现原生崩溃的一段，此时若写入还排在队列里，进程一旦没了这条记录就
+        彻底丢失 —— 磁盘上躺着合并好的成品文件，库里却还停在「下载中」，重启后
+        任务显示未完成，重复下载判定也会失效。这条写入只有一次，代价是可接受的。
+        """
         self._discard_pending_updates([task_info.Basic.task_id])
 
         record = self.db_manager.build_record(task_info, completed = True)
 
-        self._update_executor.submit(self._mark_as_completed_storage, record)
+        future = self._update_executor.submit(self._mark_as_completed_storage, record)
+
+        if not wait:
+            return
+
+        try:
+            # 写线程只做数据库操作，其中的 emit 是跨线程排队、不会回等 GUI 线程，
+            # 因此这里不存在互相等待的可能。超时通常意味着前面排着一批大的写入，
+            # 或 SQLite 正在等写锁（busy_timeout 30s），此时放弃等待继续走流程，
+            # 写入仍会在写线程上完成，只是不再有落盘保证
+            future.result(timeout = timeout)
+
+        except Exception:
+            logger.exception("等待标记下载任务为已完成的写入落盘超时: %s", record[0])
 
     def _mark_as_completed_storage(self, record: tuple):
         self._flush_pending_snapshots()
