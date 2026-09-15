@@ -16,6 +16,7 @@ from ._json import json_loads
 from threading import Lock
 from typing import ClassVar
 from pathlib import Path
+from copy import deepcopy
 import logging
 import json
 import sys
@@ -216,28 +217,28 @@ class DefaultValue:
             "id": "5913e25f-0bf3-4d3c-a608-8416af778a8a",
             "name": "DEFAULT_FOR_FAVORITE",
             "type": 40,
-            "rule": "{favorites_owner_id}_{favorites_owner}/{favorites_name}/{leaf_title}",
+            "rule": "{favorites_owner_id}_{favorites_owner}/{favorites_name}/{parent_title}/<P{p:02d}->{leaf_title}",
             "default": True
         },
         {
             "id": "8c48ac82-14c5-4d48-9de7-225d9b53513f",
             "name": "DEFAULT_FOR_SPACE",
             "type": 50,
-            "rule": "{space_owner_id}_{space_owner}/{leaf_title}",
+            "rule": "{space_owner_id}_{space_owner}/{parent_title}/<P{p:02d}->{leaf_title}",
             "default": True
         },
         {
             "id": "307ccc8e-ad2f-4195-94f0-162ee9ff1ac0",
             "name": "DEFAULT_FOR_HISTORY",
             "type": 60,
-            "rule": "{parent_title}/{leaf_title}",
+            "rule": "{parent_title}/<P{p:02d}->{leaf_title}",
             "default": True
         },
         {
             "id": "0a72a82b-5684-448e-9db1-a342de933d3e",
             "name": "DEFAULT_FOR_WATCH_LATER",
             "type": 70,
-            "rule": "{parent_title}/{leaf_title}",
+            "rule": "{parent_title}/<P{p:02d}->{leaf_title}",
             "default": True
         },
         {
@@ -313,7 +314,7 @@ class APPConfig(QConfig):
     app_name = "Bili23 Downloader"
     app_version = "2.15.0"
     app_comparable_version = "2.15.0"
-    app_config_version = 2150
+    app_config_version = 2160
     config_version = ConfigItem("Application", "config_version", app_config_version)
 
     # Interface
@@ -484,6 +485,15 @@ class APPConfig(QConfig):
                     # 临时文件清理失败不影响主流程，下次保存会覆盖它
                     pass
 
+# 2.16.0 之前这几条默认规则的原始内容。迁移时据此判断用户有没有改过：
+# 内容完全一致才替换成可选段写法，改过一个字都不动
+_OPTIONAL_SEGMENT_UPGRADE = {
+    "5913e25f-0bf3-4d3c-a608-8416af778a8a": "{favorites_owner_id}_{favorites_owner}/{favorites_name}/{leaf_title}",
+    "8c48ac82-14c5-4d48-9de7-225d9b53513f": "{space_owner_id}_{space_owner}/{leaf_title}",
+    "307ccc8e-ad2f-4195-94f0-162ee9ff1ac0": "{parent_title}/{leaf_title}",
+    "0a72a82b-5684-448e-9db1-a342de933d3e": "{parent_title}/{leaf_title}",
+}
+
 def check_need_patch():
     # 检查是否需要修补配置文件
     if config_path.exists():
@@ -560,6 +570,34 @@ def patch_config(config_version: int, data: dict):
             config.set(config.naming_rule_list, naming_rule_list)
 
             logger.info("商城课程命名规则已补入命名规则列表")
+
+    if config_version < 2160:
+        # 2.16.0 起命名规则支持 <> 可选段：段内变量取空值时整段连同字面量前后缀
+        # 一并丢弃。个人空间、收藏夹、历史记录、稍后再看这几类里单P与多P混在一起，
+        # 旧默认规则只能顾及一种形态 —— 多P视频会丢掉稿件标题，全部平铺在同一层
+        # （GitHub #461）。此处把它们升级成可选段写法。
+        #
+        # 只替换与旧默认值**完全一致**的那条：用户改过的规则一律不动，
+        # 哪怕只改了一个字
+        naming_rule_list = deepcopy(config.get(config.naming_rule_list))
+
+        upgraded = []
+
+        for entry in naming_rule_list:
+            previous = _OPTIONAL_SEGMENT_UPGRADE.get(entry.get("id"))
+
+            if previous is not None and entry.get("rule") == previous:
+                entry["rule"] = next(
+                    default["rule"] for default in DefaultValue.naming_rule_list
+                    if default["id"] == entry["id"]
+                )
+
+                upgraded.append(entry.get("name"))
+
+        if upgraded:
+            config.set(config.naming_rule_list, naming_rule_list)
+
+            logger.info("以下默认命名规则已升级为可选段写法：%s", "、".join(upgraded))
 
     # 完成修补，写入新的 config_version
     config.set(config.config_version, config.app_config_version)

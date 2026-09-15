@@ -253,8 +253,13 @@ class ParseInterface(QFrame):
 
         runtime.naming.current_starting_number = 1
 
+        # 把本次选定的规则随任务一起带下去。收藏夹、个人空间的条目要二次解析，
+        # ReparseWorker 会原样转发 options，届时不必再依赖此刻的全局状态 ——
+        # 那时用户可能已经解析了别的链接，全局状态早被重置了
+        options = {"naming_rule_ids": runtime.naming.target_rule_ids} if runtime.naming.target_rule_ids else None
+
         # 添加到下载队列
-        signal_bus.download.create_task.emit(checked_episodes_list, True, None)
+        signal_bus.download.create_task.emit(checked_episodes_list, True, options)
 
         QTimer.singleShot(0, self.parse_list.update_check_state)
 
@@ -606,10 +611,31 @@ class ParseInterface(QFrame):
 
         self.apply_auto_select(category_name)
 
+    def get_checked_type_ids(self):
+        """
+        本次勾选的条目分别归属哪些命名规则类型
+
+        一次解析里可能混有多种类型（收藏夹里既有普通视频又有剧集），下载选项
+        对话框据此决定是给一个下拉框，还是每种类型各给一个。
+
+        来源类条目的类型在二次解析前后是一致的（来源位第一次解析就带上了），
+        所以这里在对话框弹出时就能算准，不必等 ReparseWorker。
+        """
+        from util.format.file_name import FileNameFormatter
+
+        formatter = FileNameFormatter()
+
+        type_ids = {
+            formatter.get_type_id_from_attribute(item.attribute)
+            for item in self.parse_list.get_checked_items()
+        }
+
+        return {type_id for type_id in type_ids if type_id is not None}
+
     def show_download_options_dialog(self):
         from ..dialog.download_options.dialog import DownloadOptionsDialog
 
-        dialog = DownloadOptionsDialog(self.main_window)
+        dialog = DownloadOptionsDialog(self.main_window, self.get_checked_type_ids())
         
         return dialog
 

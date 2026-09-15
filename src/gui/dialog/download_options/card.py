@@ -11,9 +11,11 @@ from gui.component.widget.button import ToolButton
 from gui.component.widget.combobox import DictComboBox
 
 from util.common.data import (
-    reversed_video_quality_map, reversed_audio_quality_map, reversed_video_codec_map, reversed_audio_codec_map
+    reversed_video_quality_map, reversed_audio_quality_map, reversed_video_codec_map, reversed_audio_codec_map,
+    reversed_convention_type_map
 )
 from util.common.icon import ExtendedFluentIcon
+from util.common.naming_rules import display_name
 from util.common.translator import Translator
 from util.common.enum import MediaType
 from util.common.runtime import runtime
@@ -289,9 +291,32 @@ class MediaOptionsCard(ExpandGroupSettingCard):
     def keep_original_files(self):
         return self.keep_original_files_switch.isChecked()
 
+def fill_rule_choice(choice: ComboBox, type_id: int):
+    """
+    把某个内容类型下可用的命名规则填进下拉框，返回是否有可选项
+
+    只取显示名，不写回 entry —— 写回去就把当前语言的译文持久化进了配置，
+    用户切一次界面语言，翻译键便再也匹配不上
+    """
+    rule_list = FileNameFormatter().get_rule_list_from_type(type_id)
+
+    for entry in rule_list:
+        name = display_name(entry)
+
+        choice.addItem(name, userData = entry["id"])
+
+        # 如果是默认规则，直接选中
+        if entry["default"]:
+            choice.setCurrentText(name)
+
+    return bool(rule_list)
+
 class NamingConventionCard(SettingCard):
-    def __init__(self, parent = None):
+    def __init__(self, type_id = None, parent = None):
         super().__init__(FluentIcon.DOCUMENT, self.tr("Naming Convention"), self.tr("Choose the naming rule to use when downloading"), parent)
+
+        # 未指定时回落到链接指向的那个条目，供 MCP 等拿不到勾选列表的调用方使用
+        self.type_id = type_id if type_id is not None else FileNameFormatter().get_type_id_from_attribute(PreviewerInfo.attribute)
 
         self.rule_choice = ComboBox(parent = self)
 
@@ -302,27 +327,56 @@ class NamingConventionCard(SettingCard):
         self.init_default_rules()
 
     def init_default_rules(self):
-        # 查询可用的命名规则列表
-        file_name_formatter = FileNameFormatter()
-        rule_list = file_name_formatter.get_rule_list_from_attribute(PreviewerInfo.attribute)
-
-        # 如果能查询到数据，则说明是支持自定义命名规则的类型，直接显示
-        if rule_list:
-            for entry in rule_list:
-                name_key = entry["name"]
-                default_rule_names = Translator.DEFAULT_RULE_NAMES()
-
-                if name_key in default_rule_names:
-                    entry["name"] = Translator.DEFAULT_RULE_NAMES(name_key)
-
-                self.rule_choice.addItem(entry["name"], userData = entry["id"])
-
-                # 如果是默认规则，直接选中
-                if entry["default"]:
-                    self.rule_choice.setCurrentText(entry["name"])
-
-        # 如果查询不到数据，则说明是该类型不支持自定义命名规则，禁用选择框
-        else:
+        # 如果查询不到数据，则说明该类型不支持自定义命名规则，禁用选择框
+        if not fill_rule_choice(self.rule_choice, self.type_id):
             self.rule_choice.addItem(self.tr("Not available"))
             self.rule_choice.setEnabled(False)
             self.setContent(self.tr("Custom naming rules are not available for this type of media"))
+
+    @property
+    def rule_ids(self):
+        if self.type_id is None or not self.rule_choice.isEnabled():
+            return {}
+
+        return {self.type_id: self.rule_choice.currentData()}
+
+class MultiTypeNamingConventionCard(ExpandGroupSettingCard):
+    """
+    一次下载里混有多种内容类型时，逐类型选择命名规则
+
+    解析结果里可能既有普通视频又有剧集，各自该套用自己类型的规则。只给一个
+    下拉框的话，选中的那一条会被无差别套给整批任务
+    """
+
+    def __init__(self, type_ids, parent = None):
+        super().__init__(
+            FluentIcon.DOCUMENT,
+            self.tr("Naming Convention"),
+            self.tr("This batch contains multiple content types, choose a naming rule for each"),
+            parent
+        )
+
+        self.rule_choices = {}
+
+        self.viewLayout.setContentsMargins(0, 0, 0, 0)
+        self.viewLayout.setSpacing(0)
+
+        for type_id in sorted(type_ids):
+            choice = ComboBox(parent = self)
+
+            if fill_rule_choice(choice, type_id):
+                self.rule_choices[type_id] = choice
+            else:
+                choice.addItem(self.tr("Not available"))
+                choice.setEnabled(False)
+
+            self.addGroup(
+                "",
+                Translator.CONVENTION_TYPE(reversed_convention_type_map.get(type_id)),
+                "",
+                choice
+            )
+
+    @property
+    def rule_ids(self):
+        return {type_id: choice.currentData() for type_id, choice in self.rule_choices.items()}

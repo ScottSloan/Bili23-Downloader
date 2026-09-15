@@ -5,13 +5,18 @@ from ..common.enum import ConventionType
 from ..common.config import config
 
 from .time import Time
+from .rule_template import compile_rule
 
 from pathlib import Path
-from typing import List
+from copy import deepcopy
 import re
 import logging
 
 logger = logging.getLogger(__name__)
+
+# 规则表里查不到时的最小可用规则。宁可让文件名退化成一个标题，
+# 也不能让任务带着空文件名建出来
+FALLBACK_RULE = "{leaf_title}"
 
 class FileNameFormatter:
     def __init__(self):
@@ -27,21 +32,16 @@ class FileNameFormatter:
     def set_rule(self, rule: str):
         self.rule = rule
 
-    def set_variable_data(self, data: TaskInfo | List[dict]):
+    def set_variable_data(self, data: TaskInfo | dict):
         if isinstance(data, TaskInfo):
             self.variable_data = self.get_variable_data_from_task_info(data)
 
             self.type_id = self.get_type_id_from_task_info(data)
 
-        elif isinstance(data, list):
-            for entry in data:
-                name = entry.get("name")
-                example = entry.get("example")
-
-                if name in ["pub_time", "create_time", "last_watched_time", "fav_time"]:
-                    example = Time.from_timestamp(1772841600)
-
-                self.variable_data[name] = example
+        elif isinstance(data, dict):
+            # 预览路径：样本数据由 VariableListFactory.build_variable_data 构造，
+            # 键空间与运行期完全一致，不能在这里再做裁剪
+            self.variable_data = dict(data)
 
     def format(self):
         try:
@@ -51,12 +51,20 @@ class FileNameFormatter:
             if self.attribute:
                 self.rule = self.get_special_rule()
 
+            if not self.rule:
+                # 该类型的规则被用户删光了，或是新增的类型还没迁移。
+                # 以前这里会被 get_special_rule 兜成空串，一路走到 File.name
+                # 变空、folder 变 "."，任务建得出来却没有文件名，且全程不报错
+                logger.warning("未找到 type_id = %s 对应的命名规则，已回退到 %s", self.type_id, FALLBACK_RULE)
+
+                self.rule = FALLBACK_RULE
+
             safe_variable_data = {
                 name: self.__sanitize_component(value)
                 for name, value in self.variable_data.items()
             }
 
-            return self.__normalize_path(self.rule.format(**safe_variable_data))
+            return self.__normalize_path(compile_rule(self.rule).render(safe_variable_data))
         
         except Exception:
             # logger.exception 已带上完整堆栈，无需再引用异常对象
@@ -73,7 +81,9 @@ class FileNameFormatter:
 
     def __normalize_path(self, path_str: str):
         if not path_str:
-            return path_str
+            # 不能返回空串：Path("") 得到的是 "."，会让 File.name 变空、folder 变 "."，
+            # 任务建得出来却没有文件名，且全程不报错
+            return "_"
         
         path_str = path_str.lstrip("/\\")
 
@@ -92,9 +102,8 @@ class FileNameFormatter:
         return str(Path(*normalized_parts))
 
     def get_special_rule(self):
-        if self.rule is None:
-            self.rule = ""
-
+        # 查不到规则时返回 None，由 format() 统一回退 —— 这里再兜一次空串的话，
+        # "".format() 会得到空路径，反而把问题藏起来
         rule_map = {
             Attribute.DOWNLOAD_AS_SINGLE_VIDEO_BIT: "{leaf_title}",
         }
@@ -194,6 +203,10 @@ class FileNameFormatter:
             Attribute.BANGUMI_BIT: ConventionType.BANGUMI,
             Attribute.CHEESE_BIT: ConventionType.CHEESE,
             Attribute.LESSON_BIT: ConventionType.LESSON,
+
+            # 兜底放在最后：没有结构形态位也没有来源位的纯投稿视频，按单个视频处理。
+            # 放在末尾才不会抢走 PART / COLLECTION 的判定，attribute 为 0 时也仍然返回 None
+            Attribute.VIDEO_BIT: ConventionType.NORMAL,
         }
 
         for attr, type_id in type_map.items():
@@ -201,13 +214,16 @@ class FileNameFormatter:
                 return type_id
 
     def get_rule_list_from_attribute(self, attribute: int):
-        type_id = self.get_type_id_from_attribute(attribute)
+        return self.get_rule_list_from_type(self.get_type_id_from_attribute(attribute))
 
+    def get_rule_list_from_type(self, type_id: int):
         rule_list = []
 
         for entry in config.get(config.naming_rule_list):
             if entry["type"] == type_id:
-                rule_list.append(entry)
+                # 必须拷贝：直接返回配置里的原字典，调用方顺手改一个字段
+                # 就污染了进程内的配置对象乃至 DefaultValue
+                rule_list.append(deepcopy(entry))
 
         return rule_list
     

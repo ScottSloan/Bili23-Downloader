@@ -105,6 +105,9 @@ class TaskManager:
         # 下载目录在生成 TaskInfo 时就确定，后续即便修改了下载目录的设置，也不会影响已生成的 TaskInfo 中的下载目录，避免下载过程中下载目录发生变化导致的问题
         task_info.File.download_path = config.get(config.download_path)
 
+        # NamingInfo
+        self.__freeze_naming_rule(task_info, options)
+
         self.__update_file_name_info(task_info)
 
         return task_info
@@ -160,14 +163,49 @@ class TaskManager:
 
         return data
 
+    def __freeze_naming_rule(self, task_info: TaskInfo, options: dict = None):
+        """
+        固化本条任务要用的命名规则
+
+        规则按**条目自己的类型**查，而不是把界面上选中的那一条无差别套给整批 ——
+        一次解析里混有多种类型时（收藏夹里既有普通视频又有剧集），单个 rule_id
+        会让剧集条目用上收藏夹的规则。这里是真正的收口点，界面只负责让用户
+        看得见、选得到。
+        """
+        formatter = FileNameFormatter()
+
+        type_id = formatter.get_type_id_from_attribute(task_info.Episode.attribute)
+
+        rule_map = pick_option(options, "naming_rule_ids", runtime.naming.target_rule_ids) or {}
+
+        rule_id = rule_map.get(type_id) if type_id is not None else None
+
+        rule = formatter.get_rule_by_id(rule_id) if rule_id else None
+
+        if rule is None:
+            rule = formatter.get_rule_from_config(type_id)
+
+        task_info.Naming.rule_id = rule_id
+        task_info.Naming.rule = rule
+        task_info.Naming.type_id = int(type_id) if type_id is not None else None
+
     def __update_file_name_info(self, task_info: TaskInfo):
         formatter = FileNameFormatter()
         formatter.set_variable_data(task_info)
 
-        if runtime.naming.target_rule_id is not None:
-            formatter.set_rule(formatter.get_rule_by_id(runtime.naming.target_rule_id))
+        if task_info.Naming.rule:
+            # 只读建任务时固化下来的规则。下载开始后的二次格式化绝不能再回头
+            # 去看全局状态，否则排队期间用户的新选择会改写这条任务的落盘路径
+            formatter.set_rule(task_info.Naming.rule)
 
-        path = Path(formatter.format())
+        path_str = formatter.format()
+
+        if not path_str:
+            # 以前这里是 Path(None)，抛 TypeError 被 create() 外层吞掉，
+            # 条目静默消失，用户只看到数量对不上
+            raise ValueError("命名规则无法生成文件名：{rule!r}".format(rule = task_info.Naming.rule))
+
+        path = Path(path_str)
 
         task_info.File.name = str(path.name)
         task_info.File.folder = str(path.parent)
@@ -218,10 +256,28 @@ class TaskManager:
             case _:
                 return episode_info.get("number", "")
 
+    def __rollback_number(self, token):
+        """
+        任务没建成，把刚取走的编号还回去
+
+        只有没人在我们之后取过号时才能安全回退，否则会和已经分配出去的编号
+        撞上 —— 宁可在序号里留个洞，也不能发出重号。
+        """
+        if token is None:
+            return
+
+        before, after = token
+
+        with self._numbering_lock:
+            if (runtime.naming.global_starting_number, runtime.naming.current_starting_number) == after:
+                runtime.naming.global_starting_number, runtime.naming.current_starting_number = before
+
     def create(self, episode_info_list: List[dict], show_toast: bool = False, options: dict = None):
         task_info_list = []
 
         for episode_info in episode_info_list:
+            numbering_token = None
+
             try:
                 # 判断是否需要重新解析
                 if self.__check_reparse_needed(episode_info, show_toast, options):
@@ -234,10 +290,18 @@ class TaskManager:
                 # 先判断重复下载，再分配编号。
                 # 取号与自增必须在同一把锁内完成，否则并发创建任务时会分配出重复的编号
                 with self._numbering_lock:
+                    before = (runtime.naming.global_starting_number, runtime.naming.current_starting_number)
+
                     number = self.__get_number(episode_info)
 
                     # 全局起始编号自增
                     runtime.naming.global_starting_number += 1
+
+                    # 任务建失败时据此把号还回去
+                    numbering_token = (
+                        before,
+                        (runtime.naming.global_starting_number, runtime.naming.current_starting_number)
+                    )
 
                 task_info = self.__episode_info_to_task_info(episode_info, number, options)
 
@@ -246,6 +310,8 @@ class TaskManager:
             except Exception as error:
                 title = episode_info.get("title", "")
                 logger.exception("创建下载任务失败：%s", title)
+
+                self.__rollback_number(numbering_token)
 
                 signal_bus.toast.show_long_message.emit(
                     ToastNotificationCategory.ERROR,

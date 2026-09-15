@@ -325,4 +325,4 @@ class Previewer(ParserBase, QObject):
         PreviewerInfo.error_occurred = True
         PreviewerInfo.error_message = ""
 
-        runtime.naming.target_rule_id = None
+        runtime.naming.target_rule_ids = {}

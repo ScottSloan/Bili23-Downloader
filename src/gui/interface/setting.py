@@ -270,8 +270,24 @@ class SettingInterface(ScrollArea):
     def on_custom_naming_rule(self):
         from ..dialog.setting.rule_list import RuleListDialog
 
-        dialog = RuleListDialog(self.main_window)
-        dialog.exec()
+        window = getattr(self, "_naming_rule_window", None)
+
+        if window is not None:
+            # FluentWidget 的 Qt parent 是 None，不复用的话每点一次就会开出
+            # 一个新窗口，而且调用方不持引用它还会被 GC 掉
+            window.show()
+            window.raise_()
+            window.activateWindow()
+
+            return
+
+        window = RuleListDialog(self.main_window)
+        window.enable_delete_on_close()
+        window.destroyed.connect(lambda: setattr(self, "_naming_rule_window", None))
+
+        self._naming_rule_window = window
+
+        window.show()
 
     def on_custom_cdn_server_list(self):
         from ..dialog.setting.cdn_server import CDNServerDialog

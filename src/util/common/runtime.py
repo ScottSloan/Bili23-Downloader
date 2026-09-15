@@ -77,7 +77,9 @@ class NamingState:
     """命名规则与编号的本次选择"""
 
     def __init__(self):
-        self.target_rule_id = None
+        # 本次下载为各内容类型选定的规则：{ConventionType: rule_id}。
+        # 一次解析里可能混有多种类型，只记一个 id 的话，它会被无差别套给整批任务
+        self.target_rule_ids: dict = {}
 
         # 全局起始序号；current 为本次解析的临时覆盖，None 表示沿用 global
         self.global_starting_number: int = 1

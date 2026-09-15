@@ -165,6 +165,77 @@ class TestLessonRuleMigration:
         assert types.count(ConventionType.LESSON) == 1
 
 
+class TestOptionalSegmentUpgrade:
+    """
+    2.16.0：把个人空间等几类的默认规则升级成可选段写法
+
+    这几类里单P与多P混在一起，旧规则只能顾及一种形态 —— 多P视频会丢掉稿件
+    标题、全部平铺在同一层（GitHub #461）。
+    """
+
+    UPGRADED_IDS = (
+        "5913e25f-0bf3-4d3c-a608-8416af778a8a",     # 收藏夹
+        "8c48ac82-14c5-4d48-9de7-225d9b53513f",     # 个人空间
+        "307ccc8e-ad2f-4195-94f0-162ee9ff1ac0",     # 历史记录
+        "0a72a82b-5684-448e-9db1-a342de933d3e",     # 稍后再看
+    )
+
+    @staticmethod
+    def legacy_rules():
+        from util.common.config import _OPTIONAL_SEGMENT_UPGRADE
+
+        rules = [dict(entry) for entry in DefaultValue.naming_rule_list]
+
+        for entry in rules:
+            if entry["id"] in _OPTIONAL_SEGMENT_UPGRADE:
+                entry["rule"] = _OPTIONAL_SEGMENT_UPGRADE[entry["id"]]
+
+        return rules
+
+    def rules_by_id(self):
+        return {entry["id"]: entry for entry in config.get(config.naming_rule_list)}
+
+    def test_untouched_defaults_are_upgraded(self):
+        config.set(config.naming_rule_list, self.legacy_rules())
+
+        patch_config(2150, {})
+
+        rules = self.rules_by_id()
+
+        for rule_id in self.UPGRADED_IDS:
+            assert "<P{p:02d}->" in rules[rule_id]["rule"], rule_id
+
+    def test_customized_rules_are_left_alone(self):
+        rules = self.legacy_rules()
+
+        for entry in rules:
+            if entry["id"] == self.UPGRADED_IDS[1]:
+                entry["rule"] = "{space_owner}/我自己的写法/{leaf_title}"
+
+        config.set(config.naming_rule_list, rules)
+
+        patch_config(2150, {})
+
+        assert self.rules_by_id()[self.UPGRADED_IDS[1]]["rule"] == "{space_owner}/我自己的写法/{leaf_title}"
+
+    def test_already_upgraded_is_idempotent(self):
+        config.set(config.naming_rule_list, [dict(entry) for entry in DefaultValue.naming_rule_list])
+
+        patch_config(2150, {})
+
+        rules = self.rules_by_id()
+
+        for rule_id in self.UPGRADED_IDS:
+            assert rules[rule_id]["rule"].count("<P{p:02d}->") == 1
+
+    def test_all_default_rules_remain_representable(self):
+        # 内置规则必须全都能在可视化编辑器里打开，否则用户一进去就看到降级提示
+        from util.format.rule_model import parse_rule, RuleModel
+
+        for entry in DefaultValue.naming_rule_list:
+            assert isinstance(parse_rule(entry["rule"]), RuleModel), entry["name"]
+
+
 class TestVersionBump:
     def test_version_written_after_patch(self):
         config.set(config.config_version, 2100)

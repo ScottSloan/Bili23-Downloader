@@ -1,5 +1,9 @@
 from ..enum import ConventionType, VariableType
 
+from ...format.time import Time
+
+from enum import StrEnum
+
 convention_type_map = {
     "NORMAL": ConventionType.NORMAL,
     "PART": ConventionType.PART,
@@ -18,11 +22,202 @@ convention_type_map = {
 
 reversed_convention_type_map = {v: k for k, v in convention_type_map.items()}
 
+class SampleShape(StrEnum):
+    """
+    预览样本的条目形态
+
+    同一条规则要同时适配这几种形态，预览必须把它们并排摆出来，
+    否则用户根本看不出可选段在哪一种下会收缩
+    """
+
+    SINGLE = "single"                   # 单个视频
+    MULTI = "multi"                     # 分P视频中的一P
+    COLLECTION = "collection"           # 合集中的一集
+
+# 各规则类型实际可能遇到的条目形态。
+# 收藏夹、个人空间、历史记录、稍后再看都是「来源」，里面什么都可能有；
+# 剧集、课程、音乐则没有分P与合集之分。
+# 每周必看的条目不带 NEED_PARSE_BIT，从不二次解析，因此也没有分P形态
+SUPPORTED_SHAPES = {
+    ConventionType.NORMAL: (SampleShape.SINGLE,),
+    ConventionType.PART: (SampleShape.MULTI,),
+    ConventionType.COLLECTION: (SampleShape.COLLECTION,),
+    ConventionType.INTERACTIVE_VIDEO: (SampleShape.SINGLE,),
+    ConventionType.BANGUMI: (SampleShape.SINGLE,),
+    ConventionType.CHEESE: (SampleShape.SINGLE,),
+    ConventionType.LESSON: (SampleShape.SINGLE,),
+    ConventionType.FAVORITE: (SampleShape.SINGLE, SampleShape.MULTI, SampleShape.COLLECTION),
+    ConventionType.SPACE: (SampleShape.SINGLE, SampleShape.MULTI, SampleShape.COLLECTION),
+    ConventionType.HISTORY: (SampleShape.SINGLE, SampleShape.MULTI, SampleShape.COLLECTION),
+    ConventionType.WATCH_LATER: (SampleShape.SINGLE, SampleShape.MULTI, SampleShape.COLLECTION),
+    ConventionType.WEEKLY: (SampleShape.SINGLE,),
+    ConventionType.AUDIO: (SampleShape.SINGLE,),
+}
+
+# 变量的数据类型。只有这几个变量做数字格式化（{number:02d} 之类）有意义，
+# 其余标识符虽然也是整数，但补零毫无用途，一律按文本处理。
+# 这张表决定编辑器里格式项的形态：日期给 strftime 预设，数字给补零位数，文本不显示
+_VARIABLE_TYPE = {
+    "pub_time": VariableType.DATETIME,
+    "create_time": VariableType.DATETIME,
+    "fav_time": VariableType.DATETIME,
+    "last_watched_time": VariableType.DATETIME,
+
+    "number": VariableType.NUMBER,
+    "season_number": VariableType.NUMBER,
+    "episode_number": VariableType.NUMBER,
+    "p": VariableType.NUMBER,
+}
+
+# 预览样本里「没有取到值」时填什么。必须与 EpisodeInfo 的 dataclass 默认值
+# 保持一致 —— 整数字段是 0，字符串字段是空串。
+#
+# 这里不能图省事一律用空串：{p:02d}、{aid:05d} 这类写法碰上空串会抛
+# ValueError，预览便报「规则无效」，而同样的规则在运行期完全正常。
+# 编辑器拒绝一条运行期可用的规则，正是 issue #461 的病根
+_NUMERIC_VARIABLES = frozenset({
+    "pub_ts", "create_ts", "fav_ts", "last_watched_ts", "number",
+    "uploader_uid", "aid", "cid", "ep_id", "season_id",
+    "course_id", "lesson_id", "item_id", "section_id",
+    "season_number", "episode_number", "p",
+    "favorites_id", "favorites_owner_id", "space_owner_id",
+})
+
+_SAMPLE_TIMESTAMP = 1772841600
+
+# 同一个变量在不同类型下含义不同，_FOR_XXX 描述键只在该类型的推荐清单里准确。
+# 作为「更多变量」追加时改用通用描述，免得个人空间的 leaf_title 被说成「分P标题」
+_GENERIC_DESCRIPTION = {
+    "leaf_title": "LEAF_TITLE_GENERIC",
+    "parent_title": "PARENT_TITLE_GENERIC",
+    "p": "PART_NUMBER_GENERIC",
+    "section_title": "SECTION_TITLE_GENERIC",
+    "series_title": "SERIES_TITLE_GENERIC",
+    "episode_title": "EPISODE_TITLE_GENERIC",
+}
+
+# 这几类的 parent_title 是入口固定标签（「历史记录」「稍后再看」「第377期」「歌单名称」），
+# 单个条目时不该被形态覆盖清空。
+#
+# 分P条目则不同：二次解析产生的 related_titles 会盖掉入口标签，此时 parent_title
+# 确实是稿件标题 —— 见 TaskManager.__update_episode_info 的合并顺序，
+# 条目级 related_titles 排在来源级 EpisodeData 之后
+_LABEL_PARENT_TITLE_TYPES = frozenset({
+    ConventionType.HISTORY,
+    ConventionType.WATCH_LATER,
+    ConventionType.WEEKLY,
+    ConventionType.AUDIO,
+})
+
+_SHAPE_OVERRIDES = {
+    # 只清空形态相关的键，leaf_title 留给各类型自己的样例
+    SampleShape.SINGLE: {
+        "parent_title": "",
+        "p": 0,
+        "collection_title": "",
+        "section_title": "",
+    },
+    SampleShape.MULTI: {
+        "parent_title": "【KEY社20周年音乐专辑】Key BEST SELECTION",
+        "p": 4,
+        "leaf_title": "04 アルカテイル",
+        "collection_title": "",
+        "section_title": "",
+    },
+    SampleShape.COLLECTION: {
+        "collection_title": "艾尔登法环白金攻略",
+        "section_title": "DLC黄金树幽影",
+        "parent_title": "全收集、全流程、全剧情攻略",
+        "p": 3,
+        "leaf_title": "03【墓地平原-西+艾拉克河】",
+    },
+}
+
 class VariableListFactory:
     def __init__(self):
         pass
 
-    def build(self, type):
+    def build(self, type, full: bool = True):
+        """
+        取该类型的变量清单
+
+        full 为真时，在类型专属的推荐变量之后追加其余全部变量。
+
+        命名规则的键空间本来就是恒定的 —— get_variable_data_from_task_info
+        无条件填齐全部键 —— 按类型裁剪只是界面上的「推荐」。一旦拿这份裁剪过的
+        清单去当 str.format 的 kwargs，编辑器就会因为 KeyError 拒绝一条运行期
+        完全正常的规则：个人空间下写不了 {parent_title}/{p} 正是这么来的。
+        """
+        primary = [self._decorate(entry, "PRIMARY") for entry in self._primary_variable(type)]
+
+        if not full:
+            return primary
+
+        known = {entry["name"] for entry in primary}
+
+        return primary + [
+            self._decorate(entry, "MORE", generic = True)
+            for entry in self._all_variable
+            if entry["name"] not in known
+        ]
+
+    def build_variable_data(self, type, shape = SampleShape.SINGLE):
+        """构造一份预览用的变量数据，键空间与运行期完全一致"""
+        data = {
+            entry["name"]: self._unset_value(entry["name"])
+            for entry in self._all_variable
+        }
+
+        for entry in self._primary_variable(type):
+            data[entry["name"]] = entry["example"]
+
+        for name, value in _SHAPE_OVERRIDES[shape].items():
+            if name == "parent_title" and shape is SampleShape.SINGLE and type in _LABEL_PARENT_TITLE_TYPES:
+                continue
+
+            data[name] = value
+
+        # 时间变量必须是 datetime，否则 {pub_time:%Y-%m-%d} 会抛异常
+        for name, variable_type in _VARIABLE_TYPE.items():
+            if variable_type == VariableType.DATETIME:
+                data[name] = Time.from_timestamp(_SAMPLE_TIMESTAMP)
+
+        return data
+
+    @property
+    def _all_variable(self):
+        """按 name 去重的全集，顺序取各类型推荐清单的出现次序"""
+        entries = []
+        known = set()
+
+        for type in convention_type_map.values():
+            for entry in self._primary_variable(type):
+                if entry["name"] not in known:
+                    known.add(entry["name"])
+                    entries.append(entry)
+
+        return entries
+
+    @staticmethod
+    def _decorate(entry: dict, group: str, generic: bool = False):
+        entry = entry.copy()
+
+        entry["group"] = group
+        entry["type"] = _VARIABLE_TYPE.get(entry["name"], VariableType.TEXT)
+
+        if generic:
+            entry["description"] = _GENERIC_DESCRIPTION.get(entry["name"], entry["description"])
+
+        return entry
+
+    @staticmethod
+    def _unset_value(name: str):
+        if name in _NUMERIC_VARIABLES:
+            return 0
+
+        return ""
+
+    def _primary_variable(self, type):
         match type:
             case ConventionType.NORMAL:
                 return self._base_variable + self._normal_variable
@@ -62,6 +257,9 @@ class VariableListFactory:
 
             case ConventionType.AUDIO:
                 return self._audio_variable
+
+            case _:
+                return []
 
     @property
     def _base_variable(self):
@@ -556,7 +754,7 @@ class VariableListFactory:
             {
                 "name": "fav_time",
                 "variable": "{fav_time:%Y-%m-%d_%H-%M-%S}",
-                "description": "FAVTIME",
+                "description": "FAV_TIME",
                 "example": "2026-03-07_12-00-00"
             },
             {

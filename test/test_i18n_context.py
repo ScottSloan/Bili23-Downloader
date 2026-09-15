@@ -126,7 +126,12 @@ class TestTranslationsActuallyResolve:
         ("zh_TW", "Taiwan"),
     ]
 
-    CONTEXTS = ["ParseInterface", "MainWindow"]
+    # 命名规则那几个上下文是 2.16.0 重构中新建或大幅改动的，一并纳入端到端校验：
+    # 静态检查只保证 <name> 对得上类名，保证不了译文真的能查出来
+    CONTEXTS = [
+        "ParseInterface", "MainWindow",
+        "RuleListDialog", "EditRuleDialog", "RuleBuilderWidget", "FragmentEditView",
+    ]
 
     @staticmethod
     def _load(language: str, country: str):
@@ -152,7 +157,14 @@ class TestTranslationsActuallyResolve:
         root = ET.parse(ts_path).getroot()
 
         block = next(c for c in root.findall("context") if c.findtext("name") == context)
-        messages = [(m.findtext("source"), m.findtext("translation")) for m in block.findall("message")]
+
+        # 跳过 vanished / obsolete：它们对应的源串已经从代码里删掉了，lrelease
+        # 不会把这类条目编进 .qm，运行时也永远不会去查它们
+        messages = [
+            (m.findtext("source"), m.findtext("translation"))
+            for m in block.findall("message")
+            if m.find("translation") is not None and m.find("translation").get("type") not in ("vanished", "obsolete")
+        ]
 
         assert messages, f"{ts_path.name} 中 context {context} 没有任何条目"
 

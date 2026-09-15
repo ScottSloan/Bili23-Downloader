@@ -93,3 +93,92 @@ class TestMiscDialogs:
         from gui.dialog.misc.interactive_video import InteractiveVideoDialog
 
         assert InteractiveVideoDialog({"title": "t", "choices": []}, parent) is not None
+
+
+class TestNamingRuleEditor:
+    """
+    命名规则编辑器
+
+    这两个类此前没有任何构造覆盖。规则编辑改成可视化之后，「载入 → 编辑 →
+    取出」这条往返链路是最容易在重构中悄悄坏掉的地方。
+    """
+
+    RULE = "{space_owner}/{parent_title}/<P{p:02d}->{leaf_title}"
+
+    def test_rule_builder_round_trip(self, parent):
+        from gui.component.rule_builder import RuleBuilderWidget
+        from util.common.enum import ConventionType
+
+        builder = RuleBuilderWidget(parent)
+        builder.set_type(ConventionType.SPACE)
+
+        assert builder.set_rule(self.RULE)
+        assert builder.rule() == self.RULE
+
+    def test_rule_builder_degrades_on_unsupported_rule(self, parent):
+        from gui.component.rule_builder import RuleBuilderWidget
+        from util.common.enum import ConventionType
+
+        builder = RuleBuilderWidget(parent)
+        builder.set_type(ConventionType.SPACE)
+
+        # 表达不了时禁用可视化区并给出原因，绝不静默丢掉解析不了的部分
+        assert not builder.set_rule("<{parent_title}-{leaf_title}>")
+        assert not builder.body.isEnabled()
+        assert builder.unsupported_label.text()
+
+        assert builder.set_rule("{leaf_title}")
+        assert builder.body.isEnabled()
+
+    def test_edit_panel_load_and_dump(self, parent):
+        from gui.dialog.setting.edit_rule import EditRuleDialog
+        from util.common.enum import ConventionType
+
+        entry = {
+            "id": "test-id",
+            "name": "DEFAULT_FOR_SPACE",
+            "type": ConventionType.SPACE,
+            "rule": self.RULE,
+            "default": False
+        }
+
+        panel = EditRuleDialog(parent)
+        panel.load(entry)
+
+        result = panel.dump()
+
+        assert result["rule"] == self.RULE
+        assert result["type"] == ConventionType.SPACE
+        # 名称没改动过，内置规则要把翻译键原样存回去
+        assert result["name"] == "DEFAULT_FOR_SPACE"
+
+    def test_edit_panel_previews_every_shape(self, parent):
+        from gui.dialog.setting.edit_rule import EditRuleDialog
+        from util.common.data.naming_convention import SampleShape
+        from util.common.enum import ConventionType
+
+        panel = EditRuleDialog(parent)
+        panel.load({"id": "x", "name": "n", "type": ConventionType.SPACE, "rule": self.RULE, "default": False})
+        panel.refresh_preview()
+
+        rendered = {shape: label.text() for shape, label in panel.preview_panel.rows.items()}
+
+        # 同一条规则在三种形态下给出三种结果，这正是可选段存在的理由
+        assert len(rendered) == 3
+        assert "P04-" in rendered[SampleShape.MULTI]
+        assert "P0" not in rendered[SampleShape.SINGLE]
+
+    def test_edit_panel_validation_messages(self, parent):
+        from gui.dialog.setting.edit_rule import EditRuleDialog
+        from util.common.enum import ConventionType
+
+        panel = EditRuleDialog(parent)
+        panel.load({"id": "x", "name": "n", "type": ConventionType.NORMAL, "rule": "{leaf_title}", "default": False})
+
+        assert panel.validate_rule("{leaf_title}")[0]
+
+        # 以前一律报「命名规则无效」，用户根本不知道错在哪个变量上
+        valid, message = panel.validate_rule("{titel}")
+
+        assert not valid
+        assert "titel" in message

@@ -1,211 +1,343 @@
-from PySide6.QtCore import Qt, QSize
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QFrame
+from PySide6.QtCore import Qt
 
-from qfluentwidgets import SubtitleLabel, MessageBox, CommandBar, Action, FluentIcon
+from qfluentwidgets import (
+    MessageBox, CommandBar, Action, FluentIcon, PrimaryPushButton, PushButton
+)
 
-from gui.component.setting import EditActionWidget
 from gui.component.widget.tree_widget import ColumnTreeWidget
-from gui.component.dialog import DialogBase
+from gui.component.dialog import Base, FluentWidget
+from .edit_rule import EditRuleDialog
 
 from util.common.data import reversed_convention_type_map
-from util.common.config import config, DefaultValue
+from util.common.naming_rules import load_rules, load_default_rules, save_rules, display_name
+from util.common.enum import ToastNotificationCategory
 from util.common.translator import Translator
 from util.common.icon import ExtendedFluentIcon
 
 from uuid import uuid4
+from copy import deepcopy
 import webbrowser
 
-class RuleListDialog(DialogBase):
+class RuleListDialog(Base, FluentWidget):
+    """
+    命名规则窗口
+
+    名字里的 Dialog 是历史包袱：这里的界面文本以 RuleListDialog 为 Qt 翻译
+    上下文存在两份 .ts 里，改类名要先手改 zh_CN / zh_TW 的 <name> 再跑
+    scripts/translate.py，否则旧译文会全变孤儿。
+
+    做成独立窗口而不是对话框，是因为可视化编辑器加上三行并排预览，对话框的
+    高度根本不够摆。
+    """
+
     def __init__(self, parent = None):
-        super().__init__(parent)
+        Base.__init__(self)
+        FluentWidget.__init__(self, parent_window = parent)
+
+        self.setWindowTitle(self.tr("Naming Rules"))
+        self.setMinimumSize(1060, 700)
+
+        self.rule_data_list = load_rules()
+        self.current_index = None
+        self.dirty = False
+
+        # 程序性地改选中项时不要触发提交流程，否则校验失败会和「挪回原选中」
+        # 互相递归
+        self.suppress_selection = False
 
         self.init_UI()
 
-        self.main_window = parent
-
-        self.rule_data_list = config.get(config.naming_rule_list).copy()
+        self.connect_signals()
 
         self.init_rule_list()
 
-    def init_UI(self):
-        self.caption_lab = SubtitleLabel(self.tr("Naming Rules"), self)
+        self._init_common()
 
+    def init_UI(self):
         self.command_bar = CommandBar(self)
         self.command_bar.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
 
         self.command_bar.addAction(self._create_action(FluentIcon.ADD, self.tr("Add"), self.on_add_rule))
+        self.command_bar.addAction(self._create_action(FluentIcon.COPY, self.tr("Duplicate"), self.on_duplicate_rule))
+        self.command_bar.addAction(self._create_action(FluentIcon.DELETE, self.tr("Delete"), self.on_delete_rule))
         self.command_bar.addAction(self._create_action(ExtendedFluentIcon.RETRY, self.tr("Reset to Default"), self.on_reset_to_default))
         self.command_bar.addAction(self._create_action(FluentIcon.HELP, self.tr("Help"), self.on_help))
 
         self.rule_list = ColumnTreeWidget(self)
         self.rule_list.header().setStretchLastSection(False)
 
-        self.viewLayout.addWidget(self.caption_lab)
-        self.viewLayout.addWidget(self.command_bar)
-        self.viewLayout.addWidget(self.rule_list)
+        left_widget = QWidget(self)
+        left_widget.setFixedWidth(300)
 
-        self.adjust_widget_size()
+        left_layout = QVBoxLayout(left_widget)
+        left_layout.setContentsMargins(0, 0, 0, 0)
+        left_layout.addWidget(self.command_bar)
+        left_layout.addWidget(self.rule_list)
+
+        separator = QFrame(self)
+        separator.setFrameShape(QFrame.Shape.VLine)
+        separator.setFrameShadow(QFrame.Shadow.Plain)
+
+        self.editor = EditRuleDialog(self)
+
+        body_layout = QHBoxLayout()
+        body_layout.setContentsMargins(0, 0, 0, 0)
+        body_layout.addWidget(left_widget)
+        body_layout.addWidget(separator)
+        body_layout.addSpacing(8)
+        body_layout.addWidget(self.editor, 1)
+
+        self.save_btn = PrimaryPushButton(self.tr("Save"), self)
+        self.close_btn = PushButton(self.tr("Close"), self)
+
+        button_layout = QHBoxLayout()
+        button_layout.setContentsMargins(0, 0, 0, 0)
+        button_layout.addStretch()
+        button_layout.addWidget(self.save_btn)
+        button_layout.addWidget(self.close_btn)
+
+        main_layout = QVBoxLayout(self)
+        main_layout.setContentsMargins(15, self.titleBar.height(), 15, 15)
+        main_layout.addLayout(body_layout, 1)
+        main_layout.addSpacing(10)
+        main_layout.addLayout(button_layout)
+
+    def connect_signals(self):
+        self.rule_list.currentItemChanged.connect(self.on_current_changed)
+
+        self.editor.changed.connect(self.on_editor_changed)
+
+        self.save_btn.clicked.connect(self.on_save)
+        self.close_btn.clicked.connect(self.close)
 
     def init_rule_list(self):
+        self.suppress_selection = True
+
         self.rule_list.clear()
 
         self.rule_list.setColumnHeaders(
             [
                 self.tr("Rule Name"),
                 self.tr("Rule Type"),
-                self.tr("Default"),
-                self.tr("Actions")
+                self.tr("Default")
             ],
-            [
-                275,
-                200,
-                75,
-                75
-            ]
+            [150, 100, 50]
         )
 
-        for index, entry in enumerate(self.rule_data_list):
-            name_key = entry.get("name")
-            type_key = reversed_convention_type_map.get(entry.get("type"))
-
-            default_rule_names = Translator.DEFAULT_RULE_NAMES()
-
-            if name_key in default_rule_names:
-                entry["name"] = Translator.DEFAULT_RULE_NAMES(name_key)
-
-            self._add_row(
-                entry.get("name"),
-                Translator.CONVENTION_TYPE(type_key),
-                index,
-                userData = entry.copy()
-            )
+        for entry in self.rule_data_list:
+            self._add_row(entry)
 
         self.rule_list.header().setSectionResizeMode(0, self.rule_list.header().ResizeMode.Stretch)
 
-    def _create_action_widget(self, index: int):
-        action_widget = EditActionWidget(self.rule_list)
-        action_widget.edit_btn.clicked.connect(lambda: self.on_edit_rule(index))
-        action_widget.delete_btn.clicked.connect(lambda: self.on_delete_rule(index))
+        self.suppress_selection = False
 
-        return action_widget
+        self.current_index = None
+
+        self._select_row(0 if self.rule_data_list else None)
+
+    def _add_row(self, entry: dict):
+        return self.rule_list.addRow(
+            display_name(entry),
+            self._get_type_str(entry.get("type")),
+            "✓" if entry.get("default") else ""
+        )
+
+    def _refresh_row(self, index: int):
+        entry = self.rule_data_list[index]
+        row = self.rule_list.topLevelItem(index)
+
+        row.setText(0, display_name(entry))
+        row.setText(1, self._get_type_str(entry.get("type")))
+        row.setText(2, "✓" if entry.get("default") else "")
+
+    def _select_row(self, index):
+        self.suppress_selection = True
+
+        if index is None or not self.rule_data_list:
+            self.rule_list.setCurrentItem(None)
+
+            self.current_index = None
+            self.editor.setEnabled(False)
+
+        else:
+            index = max(0, min(index, len(self.rule_data_list) - 1))
+
+            self.rule_list.setCurrentItem(self.rule_list.topLevelItem(index))
+
+            self.current_index = index
+            self.editor.setEnabled(True)
+            self.editor.load(self.rule_data_list[index])
+
+        self.suppress_selection = False
+
+    def on_current_changed(self, current, _previous):
+        if self.suppress_selection:
+            return
+
+        if self.current_index is not None and not self._commit_editor():
+            # 校验没过，把选中项挪回原处，不让用户带着一条无效规则走开
+            self._select_row(self.current_index)
+
+            return
+
+        index = self.rule_list.indexOfTopLevelItem(current) if current else -1
+
+        self._select_row(index if index >= 0 else None)
+
+    def _commit_editor(self):
+        """把编辑区的内容写回工作副本，校验不通过时提示并返回 False"""
+        valid, widget, message = self.editor.validate()
+
+        if not valid:
+            self.show_top_toast_message(ToastNotificationCategory.ERROR, "", message)
+
+            widget.setError(True)
+            widget.setFocus()
+
+            return False
+
+        entry = self.editor.dump()
+
+        self.rule_data_list[self.current_index] = entry
+
+        if entry.get("default"):
+            self._set_default_rule(entry.get("id"), entry.get("type"))
+
+        self._refresh_row(self.current_index)
+
+        return True
+
+    def on_editor_changed(self):
+        self.dirty = True
 
     def on_add_rule(self):
-        from .edit_rule import EditRuleDialog
-
-        entry = {
+        self._append_rule({
             "id": str(uuid4()),
-            "name": "",
+            "name": self.tr("New rule"),
             "type": 11,
-            "rule": "",
+            "rule": "{leaf_title}",
             "default": False
-        }
+        })
 
-        dialog = EditRuleDialog(entry, self.main_window)
+    def on_duplicate_rule(self):
+        if self.current_index is None:
+            return
 
-        if dialog.exec():
-            new_entry = dialog.rule_data
+        if not self._commit_editor():
+            return
 
-            self.rule_data_list.append(new_entry)
+        entry = deepcopy(self.rule_data_list[self.current_index])
 
-            index = len(self.rule_data_list) - 1
+        entry["id"] = str(uuid4())
+        entry["name"] = self.tr("{name} (copy)").format(name = display_name(entry))
+        entry["default"] = False
 
-            self._add_row(
-                new_entry.get("name"),
-                self._get_type_str(new_entry.get("type")),
-                index,
-                userData = new_entry
-            )
+        self._append_rule(entry)
 
-            if new_entry.get("default"):
-                self._set_default_rule(new_entry.get("id"), new_entry.get("type"))
+    def _append_rule(self, entry: dict):
+        if self.current_index is not None and not self._commit_editor():
+            return
 
-    def on_edit_rule(self, index: int):
-        from .edit_rule import EditRuleDialog
+        self.rule_data_list.append(entry)
 
-        entry = self.rule_data_list[index]
+        self.suppress_selection = True
+        self._add_row(entry)
+        self.suppress_selection = False
 
-        dialog = EditRuleDialog(entry, self.main_window)
+        self.dirty = True
 
-        if dialog.exec():
-            new_entry = dialog.rule_data
+        self._select_row(len(self.rule_data_list) - 1)
 
-            row = self.rule_list.topLevelItem(index)
+    def on_delete_rule(self):
+        if self.current_index is None:
+            return
 
-            row.setText(0, new_entry.get("name"))
-            row.setText(1, self._get_type_str(new_entry.get("type")))
-            row.setData(0, Qt.ItemDataRole.UserRole, new_entry)
+        entry = self.rule_data_list[self.current_index]
 
-            self.rule_data_list[index] = new_entry
-
-            if new_entry.get("default"):
-                self._set_default_rule(new_entry.get("id"), new_entry.get("type"))
-
-    def on_delete_rule(self, index: int):
-        entry = self.rule_data_list[index]
-
-        # 不允许删除默认规则
+        # 不允许删除默认规则：删掉之后该类型就没有规则可用了
         if entry.get("default"):
-            dialog = MessageBox(self.tr("Cannot delete default rule"), self.tr("Only non-default naming rules can be deleted."), self.main_window)
+            dialog = MessageBox(
+                self.tr("Cannot delete default rule"),
+                self.tr("Only non-default naming rules can be deleted."),
+                self
+            )
             dialog.hideCancelButton()
             dialog.exec()
 
             return
-        
+
+        index = self.current_index
+
+        self.suppress_selection = True
         self.rule_list.takeTopLevelItem(index)
+        self.suppress_selection = False
 
         self.rule_data_list.pop(index)
 
+        self.current_index = None
+        self.dirty = True
+
+        self._select_row(min(index, len(self.rule_data_list) - 1) if self.rule_data_list else None)
+
     def on_reset_to_default(self):
-        self.rule_data_list = DefaultValue.naming_rule_list.copy()
+        dialog = MessageBox(
+            self.tr("Reset to Default"),
+            self.tr("All custom naming rules will be discarded. Continue?"),
+            self
+        )
+
+        if not dialog.exec():
+            return
+
+        self.rule_data_list = load_default_rules()
+        self.current_index = None
+        self.dirty = True
 
         self.init_rule_list()
 
     def on_help(self):
         webbrowser.open("https://bili23.scott-sloan.cn/doc/naming-rule.html")
 
-    def accept(self):
-        config.set(config.naming_rule_list, self.rule_data_list)
+    def on_save(self):
+        if self.current_index is not None and not self._commit_editor():
+            return
 
-        return super().accept()
-    
+        save_rules(self.rule_data_list)
+
+        self.dirty = False
+
+        self.show_top_toast_message(
+            ToastNotificationCategory.SUCCESS, "", self.tr("Naming rules saved")
+        )
+
+    def closeEvent(self, event):
+        if self.dirty:
+            dialog = MessageBox(
+                self.tr("Discard changes?"),
+                self.tr("The naming rules have been modified but not saved."),
+                self
+            )
+
+            if not dialog.exec():
+                event.ignore()
+
+                return
+
+        super().closeEvent(event)
+
     def _create_action(self, icon, text, slot):
         action = Action(icon = icon, text = text, parent = self)
         action.triggered.connect(slot)
 
         return action
 
-    def _add_row(self, name: str, type: str, index: int, userData = None):
-        row = self.rule_list.addRow(
-            name,
-            type,
-            "✓" if userData.get("default") else "",
-            "",
-            userData = userData
-        )
-
-        widget = self._create_action_widget(index)
-
-        self.rule_list.setItemWidget(row, 3, widget)
-
     def _get_type_str(self, type_value: int):
         return Translator.CONVENTION_TYPE(reversed_convention_type_map.get(type_value))
 
     def _set_default_rule(self, rule_id: str, rule_type: int):
-        for entry in self.rule_data_list:
+        for index, entry in enumerate(self.rule_data_list):
             if entry.get("type") == rule_type:
                 entry["default"] = (entry.get("id") == rule_id)
 
-        for i in range(self.rule_list.topLevelItemCount()):
-            row = self.rule_list.topLevelItem(i)
-            data = row.data(0, Qt.ItemDataRole.UserRole)
-
-            if data.get("type") == rule_type:
-                row.setText(2, "✓" if data.get("id") == rule_id else "")
-
-    def adjust_widget_size(self):
-        parent_size: QSize = self.parent().size()
-
-        width = parent_size.width() * 0.55
-        height = parent_size.height() * 0.70
-
-        self.widget.setMinimumWidth(max(700, width))
-        self.widget.setMinimumHeight(max(450, height))
+                self._refresh_row(index)

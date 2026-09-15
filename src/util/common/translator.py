@@ -191,6 +191,15 @@ class Translator:
             "EP_ID": translate("VARIABLE_DESCRIPTION", "Episode id"),
             "SEASON_ID": translate("VARIABLE_DESCRIPTION", "Season id"),
 
+            # 「更多变量」分组用的通用描述。同一个变量在不同规则类型下含义不同，
+            # 下面那些 _FOR_XXX 描述只在对应类型的推荐清单里才准确
+            "LEAF_TITLE_GENERIC": translate("VARIABLE_DESCRIPTION", "Item title"),
+            "PARENT_TITLE_GENERIC": translate("VARIABLE_DESCRIPTION", "Parent title"),
+            "PART_NUMBER_GENERIC": translate("VARIABLE_DESCRIPTION", "Part number"),
+            "SECTION_TITLE_GENERIC": translate("VARIABLE_DESCRIPTION", "Section title (empty if not divided into sections)"),
+            "SERIES_TITLE_GENERIC": translate("VARIABLE_DESCRIPTION", "Series title"),
+            "EPISODE_TITLE_GENERIC": translate("VARIABLE_DESCRIPTION", "Episode title"),
+
             "LEAF_TITLE_FOR_NORMAL": translate("VARIABLE_DESCRIPTION", "Full video title"),
             "LEAF_TITLE_FOR_PART": translate("VARIABLE_DESCRIPTION", "Current part's title"),
             "LEAF_TITLE_FOR_COLLECTION": translate("VARIABLE_DESCRIPTION", "Content title (video title for single videos, part title for multi-part)"),
@@ -371,19 +380,19 @@ Videos on Bilibili typically store and transmit video and audio streams separate
 
     @staticmethod
     def NAMING_RULE_GUIDE():
-        return translate("NAMING_RULE_GUIDE", """Customize the file name and folder structure using variables.
+        return translate("NAMING_RULE_GUIDE", """Build the folder structure and file name visually: each row is one folder level, and the last row is the file name.
 
-Rules:
-1. Use {variable} to insert dynamic values (e.g., {uploader}, {leaf_title}).
-2. Use "/" to create folders — don't start or end with "/".
-3. The part after the last "/" is the file name; before it is the directory.
-4. Available variables depend on the naming rule type (see list below).
-5. File extensions (.mp4, .m4a, etc.) are added automatically — don’t include them.
+Basics:
+1. A row holds a sequence of fragments. A fragment is either a variable or a piece of plain text.
+2. Click a fragment to change its variable, format, prefix and suffix.
+3. A prefix or suffix disappears together with its variable. This is what lets one rule fit both single-part and multi-part videos: with the prefix "P" and the suffix "-", a multi-part item becomes "P01-Part Title", while a single video is just "Title".
+4. A folder level that ends up empty is skipped automatically, so there is no need to mark levels as optional.
+5. File extensions (.mp4, .m4a, etc.) are added automatically - don't include them.
 
-Examples:
-• {uploader}/{leaf_title} → Saves as "Video Title" inside "Uploader" folder
-• {uploader}_{leaf_title} → Saves directly as "Uploader_Video Title"
-                         
+The preview shows the same rule applied to a single video, a multi-part video and a collection side by side, so you can see which fragments collapse in which case.
+
+The advanced section shows the rule as text. There, a fragment with a prefix or suffix is written as an optional segment, for example <P{p:02d}->. Everything inside is dropped when any variable in it has no value. "<" and ">" are reserved for this purpose and cannot appear in file names anyway.
+
 For advanced usage, see the help documentation.""")
     
     @staticmethod

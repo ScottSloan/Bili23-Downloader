@@ -41,6 +41,7 @@ sources = [
     "src/gui/component/log_list/list_view.py",
     "src/gui/component/parse_list/model.py",
     "src/gui/component/parse_list/tree_view.py",
+    "src/gui/component/rule_builder.py",
     "src/gui/component/setting/card.py",
     "src/gui/component/setting/group.py",
     "src/gui/component/setting/widget.py",
