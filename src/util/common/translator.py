@@ -264,6 +264,8 @@ class Translator:
         return {
             "FFMPEG_FAILED": translate("ERROR_MESSAGES", "An error occurred while running FFmpeg"),
             "FFMPEG_FAILED_WITH_CODE": translate("ERROR_MESSAGES", "FFmpeg failed with exit code {code}"),
+            "FFMPEG_NO_RESPONSE": translate("ERROR_MESSAGES", "FFmpeg stopped responding and has been terminated. The output file may be locked by another program (such as antivirus software), or the destination drive may be unavailable."),
+            "FFMPEG_STILL_RUNNING": translate("ERROR_MESSAGES", "The previous FFmpeg task has not exited yet. Please try again later."),
             "FILE_NOT_FOUND": translate("ERROR_MESSAGES", "The specified file or folder does not exist, you may need to download it again."),
             "FILE_NOT_FOUND_TITLE": translate("ERROR_MESSAGES", "File Not Found"),
             "FILE_NOT_FOUND_DETAIL": translate("ERROR_MESSAGES", "The file may have been moved or deleted. Please download it again."),

@@ -20,6 +20,10 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+# stop() 超时后从 parent 链上摘下来的 Merger 暂存于此，保活到 FFmpeg 线程真正结束。
+# 不保活的话，Python 侧最后一个引用消失就会析构，而 C++ 端的 QThread 还在跑
+_detached_mergers: set = set()
+
 class Merger(QObject):
     def __init__(self, task_info: TaskInfo, parent = None):
         super().__init__(parent)
@@ -61,7 +65,64 @@ class Merger(QObject):
             # C++ 侧已经析构，无需再处理
             return True
 
+    def detach(self):
+        """
+        stop() 超时后调用：脱离 parent 链并自行保活，直到 FFmpeg 线程结束
+
+        留在链上的话，销毁 Downloader 会连带析构仍在运行的 FFmpegRunner，
+        Qt 随即 qFatal 中止进程。摘下来之后本对象与 Downloader 再无关系，
+        线程自己跑完即可安全回收
+        """
+        try:
+            self.setParent(None)
+
+            runner = self._ffmpeg_runner
+
+            if runner is None or not runner.isRunning():
+                self.deleteLater()
+                return
+
+            _detached_mergers.add(self)
+
+            runner.finished.connect(self._on_detached_finished)
+
+            # 连接之前线程可能刚好结束，finished 已经发过且不会再发，这里补一次检查
+            if not runner.isRunning():
+                self._on_detached_finished()
+
+        except RuntimeError:
+            # C++ 侧已经析构，无需再处理
+            _detached_mergers.discard(self)
+
+    def _on_detached_finished(self):
+        _detached_mergers.discard(self)
+
+        try:
+            self.deleteLater()
+
+        except RuntimeError:
+            # 同上
+            pass
+
     def start(self):
+        """
+        启动合并流程，并兜住其中的全部异常
+
+        调用方在此之前已经把状态置为 MERGING。这条路径上有大量文件系统操作
+        （探测文件是否存在、写 concat 清单、拉起 FFmpeg 线程），任意一处抛出，
+        任务就会永远停在 MERGING：状态已经置位，却没有任何 FFmpeg 在跑，
+        也就再没有人把它推向终态。而合并额度全局只有一个，这一个僵住会让
+        整条队列都排不下去，所以这里必须保证异常一定收敛到失败态
+        """
+        try:
+            self._start()
+
+        except Exception as e:
+            logger.exception("启动 FFmpeg 合并流程时发生异常")
+
+            self.set_error_message(Translator.ERROR_MESSAGES("DOWNLOAD_FAILED"), str(e))
+
+    def _start(self):
         if self.task_info.Download.merge_video_audio:
             # 现代 dash 视频合并
             self.merge_video_audio()
@@ -186,7 +247,12 @@ class Merger(QObject):
             self.set_error_message(Translator.ERROR_MESSAGES("RENAME_FAILED"), str(e))
 
     def on_merge_completed(self, return_code: int, stdout: str, stderr: str):
-        if getattr(self, "_has_error", False) or self._stopped:
+        if getattr(self, "_has_error", False):
+            return
+
+        if self._stopped:
+            # 本 Merger 已被接管或随任务一同销毁，状态交由接管方推进，这里不能再改
+            logger.debug("合并完成回调在 Merger 停止后到达，已忽略")
             return
 
         try:
@@ -278,6 +344,7 @@ class Merger(QObject):
         # 主动终止 FFmpeg 必然带回一个非零返回码，这不是真正的合并失败，
         # 不能据此把任务标记为失败
         if self._stopped:
+            logger.debug("合并错误回调在 Merger 停止后到达，已忽略")
             return
 
         error_map = {

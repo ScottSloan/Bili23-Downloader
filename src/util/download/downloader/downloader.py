@@ -802,30 +802,59 @@ class Downloader(QObject):
     def start_merge(self):
         # 合并失败后可以重试，上一次的 Merger 不再需要。它挂在本对象的 parent 链上，
         # 不主动释放就会一直累积到任务结束
-        self._release_merger()
+        if not self._release_merger():
+            # 上一轮的 FFmpeg 还活着。此刻再起一个，两个进程会同时写同一个输出文件，
+            # 在 Windows 上表现为互相占用，轻则合并失败，重则产出损坏的文件。
+            # 先落到失败态并释放合并额度，由用户稍后重试
+            self.task_info.Download.status = DownloadStatus.FFMPEG_FAILED
+
+            signal_bus.download.update_downloading_item.emit(self.task_info)
+            signal_bus.download.auto_manage_concurrent_downloads.emit()
+            signal_bus.toast.show.emit(
+                ToastNotificationCategory.WARNING,
+                "",
+                Translator.ERROR_MESSAGES("FFMPEG_STILL_RUNNING")
+            )
+
+            return
 
         self.task_info.Download.status = DownloadStatus.MERGING
 
         self.merger = Merger(self.task_info, parent = self)
         self.merger.start()
 
-    def _release_merger(self):
-        # 先停掉 FFmpeg 线程再释放对象：Merger 与其中的 FFmpegRunner 都挂在
-        # 本对象的 parent 链上，销毁 Downloader 会连带析构它们，
-        # 而销毁一个仍在运行的 QThread 会让 Qt 直接 qFatal 中止进程
+    def _release_merger(self, timeout: int = 3000):
+        """
+        停止并释放当前 Merger，返回它是否已经干净收尾
+
+        先停掉 FFmpeg 线程再释放对象：Merger 与其中的 FFmpegRunner 都挂在
+        本对象的 parent 链上，销毁 Downloader 会连带析构它们，
+        而销毁一个仍在运行的 QThread 会让 Qt 直接 qFatal 中止进程。
+
+        线程没能按时退出时不可 deleteLater，改为把整个 Merger 从链上摘走，
+        让它自己等线程结束再回收
+        """
         merger = self.merger
         self.merger = None
 
         if merger is None:
-            return
+            return True
 
         try:
-            merger.stop()
-            merger.deleteLater()
+            if merger.stop(timeout):
+                merger.deleteLater()
+
+                return True
+
+            logger.warning(f"FFmpeg 线程在 {timeout} ms 内未退出，已将 Merger 从任务上摘除")
+
+            merger.detach()
+
+            return False
 
         except RuntimeError:
             # C++ 侧已经析构，无需再处理
-            pass
+            return True
 
     def pause(self):
         with self.start_worker_lock:

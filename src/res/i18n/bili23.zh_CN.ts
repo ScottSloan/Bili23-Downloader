@@ -1511,6 +1511,16 @@ If you continue, please disable the &quot;Preallocate file space&quot; option. (
         <translation>调用 FFmpeg 时发生错误 ({code})</translation>
     </message>
     <message>
+        <location filename="../../util/common/translator.py" line="267"/>
+        <source>FFmpeg stopped responding and has been terminated. The output file may be locked by another program (such as antivirus software), or the destination drive may be unavailable.</source>
+        <translation>FFmpeg 无响应，已终止。输出文件可能被其他程序（如杀毒软件）占用，或目标磁盘不可用</translation>
+    </message>
+    <message>
+        <location filename="../../util/common/translator.py" line="267"/>
+        <source>The previous FFmpeg task has not exited yet. Please try again later.</source>
+        <translation>上一个 FFmpeg 任务尚未退出，请稍后重试</translation>
+    </message>
+    <message>
         <location filename="../../util/common/translator.py" line="269"/>
         <source>The file may have been moved or deleted. Please download it again.</source>
         <translation>文件可能已被移动或删除，请重新下载</translation>
