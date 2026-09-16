@@ -130,6 +130,12 @@ class Merger(QObject):
 
     def _start(self):
         if self.task_info.Download.merge_video_audio:
+            if self.should_remux_kept_audio():
+                # 保留原始文件时音频要当成品交付，而它同时是合并命令的输入，两者只能串行：
+                # 先重封装，完成后由回调接回合并流程
+                self.remux_audio(on_finished = self.on_remux_before_merge_completed)
+                return
+
             # 现代 dash 视频合并
             self.merge_video_audio()
 
@@ -198,6 +204,17 @@ class Merger(QObject):
         self._start_ffmpeg(command, cwd, self.on_merge_completed)
 
     def _start_ffmpeg(self, command: FFmpegCommand, cwd: Path, on_finished):
+        # 上一次的 runner 必须先收干净再覆盖引用。保留原始文件的合并任务会在同一个 Merger 上
+        # 顺序跑两次 FFmpeg（重封装 → 合并），而 stop()/detach() 只认得 _ffmpeg_runner 一个引用，
+        # 上一个 runner 若还活着就变成无人认领的 child，只能等本对象析构时被连带销毁 ——
+        # 销毁一个仍在运行的 QThread 会让 Qt 直接 qFatal
+        if not self.retire_runner():
+            self.set_error_message(
+                Translator.ERROR_MESSAGES("DOWNLOAD_FAILED"),
+                Translator.ERROR_MESSAGES("FFMPEG_STILL_RUNNING")
+            )
+            return
+
         # 下载阶段结束时进度停在 100，这里必须归零，否则进度条会从满格开始重走
         self.task_info.Download.progress = 0
 
@@ -209,6 +226,43 @@ class Merger(QObject):
         self._ffmpeg_runner.finished_signal.connect(on_finished)
         self._ffmpeg_runner.error_signal.connect(self.on_merge_error)
         self._ffmpeg_runner.start()
+
+    def retire_runner(self, timeout: int = 3000):
+        """
+        回收上一次的 FFmpegRunner，返回是否可以安全启动下一个
+
+        能走到这里，说明上一个 runner 的 finished_signal 已经送达（第二次启动只发生在它的
+        回调里），它的 run() 只剩 Qt 收尾的几条指令，wait 几乎立刻返回。
+
+        顺序不能反：先确认线程退出再清引用。清早了它就变成无人认领的 child，而销毁一个仍在
+        运行的 QThread 会让 Qt 直接 qFatal。仍在运行时宁可让本次流程失败收场，由用户重试，
+        也不覆盖引用
+        """
+        runner = self._ffmpeg_runner
+
+        if runner is None:
+            return True
+
+        try:
+            if not runner.wait(timeout):
+                logger.error(f"上一个 FFmpeg 线程在 {timeout} ms 内仍未退出，本次不再启动新的 FFmpeg")
+                return False
+
+        except RuntimeError:
+            # C++ 侧已经析构，无需再处理
+            pass
+
+        self._ffmpeg_runner = None
+
+        try:
+            runner.setParent(None)
+            runner.deleteLater()
+
+        except RuntimeError:
+            # 同上
+            pass
+
+        return True
 
     def on_progress_updated(self, progress: int):
         if self._has_error or self._stopped:
@@ -314,21 +368,39 @@ class Merger(QObject):
         signal_bus.download.add_to_completed_list.emit([self.task_info])
         signal_bus.download.remove_from_downloading_list.emit(self.task_info)
 
+    def get_keep_original_file_type(self):
+        try:
+            return OriginalFileType(resolve(self.task_info, "keep_original_files_type"))
+        except ValueError:
+            # 降级用的枚举成员被改名或删除时按「都保留」处理，与旧行为的默认值一致
+            return OriginalFileType.BOTH
+
+    def should_remux_kept_audio(self):
+        """
+        本次是否需要先把音频重封装再交付
+
+        除「保留原始文件且保留范围含音频」外，还要确认磁盘上真有独立音频流：扩展名不在
+        DASH_AUDIO_STREAM_EXTS 里就说明上游没拿到音频流（audio_info.py 会清掉 AUDIO 位），
+        或走的是音频内嵌在分片里的 flv 老格式，此时重封装必然找不到输入文件
+        """
+        if not self.task_info.Download.keep_original_files:
+            return False
+
+        if self.task_info.File.audio_file_ext not in DASH_AUDIO_STREAM_EXTS:
+            return False
+
+        return self.get_keep_original_file_type() in (OriginalFileType.BOTH, OriginalFileType.AUDIO)
+
     def keep_original_files(self):
         try:
             cwd = self.get_cwd()
 
-            try:
-                original_file_type = OriginalFileType(resolve(self.task_info, "keep_original_files_type"))
-            except ValueError:
-                original_file_type = OriginalFileType.BOTH
-
             kept_original_files = []
 
-            match original_file_type:
+            match self.get_keep_original_file_type():
                 case OriginalFileType.BOTH:
                     final_video_file_name = safe_rename(cwd, self.temp_video_file_name, self.final_video_file_name).name
-                    final_audio_file_name = safe_rename(cwd, self.temp_audio_file_name, self.final_audio_file_name).name
+                    final_audio_file_name = safe_rename(cwd, self.output_audio_file_name, self.final_audio_file_name).name
 
                     kept_original_files.extend([final_video_file_name, final_audio_file_name])
 
@@ -337,7 +409,7 @@ class Merger(QObject):
                     kept_original_files.append(final_video_file_name)
 
                 case OriginalFileType.AUDIO:
-                    final_audio_file_name = safe_rename(cwd, self.temp_audio_file_name, self.final_audio_file_name).name
+                    final_audio_file_name = safe_rename(cwd, self.output_audio_file_name, self.final_audio_file_name).name
                     kept_original_files.append(final_audio_file_name)
 
             return kept_original_files
@@ -442,6 +514,9 @@ class Merger(QObject):
         与 m4a_to_mp3 同构：先写独立的临时名，成功了再由回调改名交付。就地把
         temp_audio_file_name 覆盖掉的话，中途失败或程序退出会让任务停在「文件已经不是
         原始流、记录却仍指向原始流」的状态，重试时无从判断
+
+        两种调用方：仅音频下载直接交付（回调 on_convert_completed），以及保留原始文件时
+        为合并准备交付用的音频（回调 on_remux_before_merge_completed）
         """
         cwd = self.get_cwd()
 
@@ -463,6 +538,22 @@ class Merger(QObject):
         )
 
         self._start_ffmpeg(remux_cmd, cwd, on_finished)
+
+    def on_remux_before_merge_completed(self, return_code: int, stdout: str, stderr: str):
+        """
+        保留原始文件的合并任务：音频已重封装完，接着跑合并
+        """
+        if self._has_error or self._stopped:
+            return
+
+        # 任务整体仍然是「合并中」，重封装只是为交付保留的原始文件做准备
+        self.task_info.Download.status = DownloadStatus.MERGING
+        signal_bus.download.update_downloading_item.emit(self.task_info)
+
+        if self.task_info.Download.merge_video_audio:
+            self.merge_video_audio()
+        else:
+            self.merge_video_parts()
 
     def check_attach_cover(self):
         if resolve(self.task_info, "attach_cover"):
