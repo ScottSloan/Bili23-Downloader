@@ -20,6 +20,12 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+# 存在独立 DASH 音频流时 audio_file_ext 的取值（见 parse/audio_info.py 的 get_audio_file_ext）。
+# 这些流下发的都是 fMP4 分片容器（.m4s 的内容配 .m4a/.flac/.ec3 的扩展名），交付前必须
+# 重封装成与扩展名一致的标准容器，否则严格解析器打不开。
+# 用它当判据而不是逐个判断扩展名，是为了让三种格式始终走同一条命令
+DASH_AUDIO_STREAM_EXTS = ("m4a", "flac", "ec3")
+
 # stop() 超时后从 parent 链上摘下来的 Merger 暂存于此，保活到 FFmpeg 线程真正结束。
 # 不保活的话，Python 侧最后一个引用消失就会析构，而 C++ 端的 QThread 还在跑
 _detached_mergers: set = set()
@@ -131,15 +137,17 @@ class Merger(QObject):
             # 旧版 flv 分片下载合并
             self.merge_video_parts()
 
-        elif self.task_info.File.audio_file_ext == "m4a":
-            if resolve(self.task_info, "m4a_to_mp3"):
-                # 将 m4a 转换为 mp3
+        elif self.task_info.File.audio_file_ext in DASH_AUDIO_STREAM_EXTS:
+            if self.task_info.File.audio_file_ext == "m4a" and resolve(self.task_info, "m4a_to_mp3"):
+                # 转 mp3 是重编码，容器随之重写，不必再重封装一次
                 self.m4a_to_mp3()
                 return
 
-            self.rename_output_file()
+            self.remux_audio(on_finished = self.on_convert_completed)
 
         else:
+            # 纯视频下载（未勾选独立音频流）走这里：audio_file_ext 为空串，
+            # 没有任何音频文件需要交付，直接改名即可
             self.rename_output_file()
 
     def merge_video_audio(self):
@@ -231,10 +239,7 @@ class Merger(QObject):
                 self.add_file(final_video_file_name, clear = True)
 
             elif has_audio and not has_video:
-                if self._output_audio_file is None:
-                    self._output_audio_file = self.temp_audio_file_name
-
-                final_audio_file_name = safe_rename(cwd, self._output_audio_file, self.final_audio_file_name).name
+                final_audio_file_name = safe_rename(cwd, self.output_audio_file_name, self.final_audio_file_name).name
                 self.add_file(final_audio_file_name, clear = True)
 
             self.mark_as_completed()
@@ -280,7 +285,8 @@ class Merger(QObject):
             return
 
         try:
-            # 必须赶在改扩展名之前删源文件，此刻 temp_audio_file_name 指的还是输入的那个 m4a
+            # 必须赶在改扩展名之前删源文件，此刻 temp_audio_file_name 指的还是输入的那个原始流。
+            # 重封装路径下 _converted_audio_file_ext 保持 None、扩展名不变，这一步只是顺带清理
             safe_remove(self.get_cwd(), self.temp_audio_file_name)
 
             if self._converted_audio_file_ext:
@@ -429,6 +435,35 @@ class Merger(QObject):
                 Translator.ERROR_MESSAGES("M4A_NOT_FOUND")
             )
 
+    def remux_audio(self, on_finished):
+        """
+        把独立音频流重封装成标准容器，完成后回调 on_finished
+
+        与 m4a_to_mp3 同构：先写独立的临时名，成功了再由回调改名交付。就地把
+        temp_audio_file_name 覆盖掉的话，中途失败或程序退出会让任务停在「文件已经不是
+        原始流、记录却仍指向原始流」的状态，重试时无从判断
+        """
+        cwd = self.get_cwd()
+
+        if not Path(cwd, self.temp_audio_file_name).exists():
+            self.set_error_message(
+                Translator.ERROR_MESSAGES("DOWNLOAD_FAILED"),
+                Translator.ERROR_MESSAGES("FILE_NOT_FOUND_DETAIL")
+            )
+            return
+
+        self.task_info.Download.status = DownloadStatus.CONVERTING
+        signal_bus.download.update_downloading_item.emit(self.task_info)
+
+        self._output_audio_file = self.temp_remux_audio_file_name
+
+        remux_cmd = FFmpegCommand.remux_audio(
+            input_path = self.temp_audio_file_name,
+            output_path = self.temp_remux_audio_file_name
+        )
+
+        self._start_ffmpeg(remux_cmd, cwd, on_finished)
+
     def check_attach_cover(self):
         if resolve(self.task_info, "attach_cover"):
             cover_path = Path(self.get_cwd(), self.cover_file_name)
@@ -531,7 +566,17 @@ class Merger(QObject):
             task_id = self.task_info.Basic.task_id,
             file_ext = self.task_info.File.audio_file_ext
         )
-    
+
+    @property
+    def temp_remux_audio_file_name(self):
+        # 刻意不复用 output_ 前缀：temp_output_file_name 是 output_{task_id}.{merge_file_ext}，
+        # 与 m4a/flac/ec3 虽然天然不撞，但那依赖 VideoContainer 只有两个成员这个隐含前提，
+        # 不如另起前缀让「不撞」变成一眼可见的事实
+        return "remux_{task_id}.{file_ext}".format(
+            task_id = self.task_info.Basic.task_id,
+            file_ext = self.task_info.File.audio_file_ext
+        )
+
     @property
     def temp_output_file_name(self):
         return "output_{task_id}.{file_ext}".format(
@@ -557,6 +602,15 @@ class Merger(QObject):
     @property
     def final_mp4_video_file_name(self):
         return f"{self.task_info.File.name}.mp4"
+
+    @property
+    def output_audio_file_name(self):
+        """
+        当前应当交付的音频文件：重封装/转换跑过就是它的产物，否则是下载到的原始流
+
+        这个属性是 self._output_audio_file 的唯一解析处，改名交付的每一条路径都从这里取源
+        """
+        return self._output_audio_file or self.temp_audio_file_name
 
     @property
     def final_audio_file_name(self):
