@@ -295,10 +295,14 @@ class DefaultValue:
     
     # 海外 CDN 服务器列表
     #
-    # 这里原先把 Akamai（upos-hz-mirrorakam.akamaized.net）列在首位，实测已确认它不可用：
-    # 把 upos 签名链接换到这个 host，无论直连还是经代理一律返回 403，与出口地区无关，
-    # 属确定性失败而非网络抖动。探测它不产生任何信息，只会让每次海外解析白占一个
-    # 并发探测位，因此移除。同一批对照的 aliov、cosov 均正常返回 200。
+    # 这里原先把 Akamai（upos-hz-mirrorakam.akamaized.net）列在首位。它作为**替换目标**
+    # 不可用：把别的 host 的签名链接改写过去，无论直连还是经代理一律返回 403，与出口
+    # 地区无关。而本列表的用途恰恰是替换 host（见 CDN.replace），留着它只会让每次海外
+    # 解析白占一个并发探测位，因此移除。
+    #
+    # 别把结论扩大化：Akamai 拒绝的是"被改写"的请求，不是 upos 链接本身 —— B 站原生
+    # 签发的 Akamai 链接实测返回 206（香港出口下 16MB 读到 10.84 Mbps）。那类链接本来
+    # 就出现在 playurl 返回值里，也不在黑名单中，作为原始候选照常参与探测
     ov_cdn_server_list: ClassVar = [
         {
             "host": "upos-sz-mirroraliov.bilivideo.com",
@@ -602,8 +606,8 @@ def patch_config(config_version: int, data: dict):
 
     if config_version < 2200:
         # 2.20.0 起默认海外 CDN 列表中移除了 Akamai（upos-hz-mirrorakam.akamaized.net）：
-        # 实测确认它不接受 upos 的签名路径 —— 把真实签名链接换到这个 host，无论直连
-        # 还是经代理一律返回 403，且与出口地区无关，属确定性失败而非网络抖动。
+        # 它不能作为替换目标 —— 把别的 host 的签名链接改写过去一律返回 403，与出口
+        # 地区无关（成因详见 DefaultValue.ov_cdn_server_list 上的那段说明）。
         # 老配置里原样继承下来的那条留着，只会让每次海外解析都白占一个并发探测位
         #
         # 只按 host 精确匹配剔除这一条。用户自行增删或改过的其他节点一律不动 ——

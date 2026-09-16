@@ -263,9 +263,10 @@ class TestCDNServerListMigration:
     """
     2.20.0：默认海外 CDN 列表移除 Akamai
 
-    upos-hz-mirrorakam.akamaized.net 不接受 upos 的签名路径：把真实签名链接换到
-    它一律返回 403，直连与经代理结果一致、与出口地区无关，是确定性失败而非网络
-    抖动，探测它必然是白占一个并发槽。
+    upos-hz-mirrorakam.akamaized.net 不能作为替换目标：把别的 host 的签名链接改写
+    过去一律返回 403，直连与经代理结果一致、与出口地区无关。而这份列表的用途正是
+    替换 host，探测它必然是白占一个并发槽。（B 站原生签发的 Akamai 链接可用，
+    不受此影响。）
 
     这条迁移存在的唯一理由是 **config 是落盘的** —— 改掉 DefaultValue 对已有用户
     毫无影响，他们配置里那份副本得靠这里删。
