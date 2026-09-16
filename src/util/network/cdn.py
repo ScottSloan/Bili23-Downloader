@@ -123,6 +123,15 @@ class CDN:
             "pcdn",
             "szbdyd.com",
             "mountaintoys.cn",
+            # mirror14b 虽然挂在 upos- 前缀下，实测却是 P2P 节点而非普通镜像：
+            # 它不响应 HEAD（返回 404），直连 GET 会以 RemoteProtocolError 断开连接，
+            # 只有经由代理才返回正常分片。探测它必然得出失败结论，白白消耗一次往返，
+            # 因此直接在候选阶段剔除。（同批对照的 mirror08c、mirrorcoso1 均正常返回 200）
+            "upos-sz-mirror14b.bilivideo.com",
+            # 以下两个域名取自 bilibili-accelerator 的 P2P 实测名单。本机采样 60 个视频
+            # 未出现，属预防性收录：名单若有偏差也只是这条规则不生效，不会误伤正常节点
+            "nexusedgeio.com",
+            "ahdohpiechei.com",
         ]
 
         for url in url_list:

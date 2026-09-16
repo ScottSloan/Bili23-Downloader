@@ -294,11 +294,12 @@ class DefaultValue:
     ]
     
     # 海外 CDN 服务器列表
+    #
+    # 这里原先把 Akamai（upos-hz-mirrorakam.akamaized.net）列在首位，实测已确认它不可用：
+    # 把 upos 签名链接换到这个 host，无论直连还是经代理一律返回 403，与出口地区无关，
+    # 属确定性失败而非网络抖动。探测它不产生任何信息，只会让每次海外解析白占一个
+    # 并发探测位，因此移除。同一批对照的 aliov、cosov 均正常返回 200。
     ov_cdn_server_list: ClassVar = [
-        {
-            "host": "upos-hz-mirrorakam.akamaized.net",
-            "provider": "AKAMAI"
-        },
         {
             "host": "upos-sz-mirroraliov.bilivideo.com",
             "provider": "ALIYUN"
@@ -312,9 +313,9 @@ class DefaultValue:
 class APPConfig(QConfig):
     # APP
     app_name = "Bili23 Downloader"
-    app_version = "2.15.0"
-    app_comparable_version = "2.15.0"
-    app_config_version = 2160
+    app_version = "2.20.0"
+    app_comparable_version = "2.20.0"
+    app_config_version = 2200
     config_version = ConfigItem("Application", "config_version", app_config_version)
 
     # Interface
@@ -598,6 +599,26 @@ def patch_config(config_version: int, data: dict):
             config.set(config.naming_rule_list, naming_rule_list)
 
             logger.info("以下默认命名规则已升级为可选段写法：%s", "、".join(upgraded))
+
+    if config_version < 2200:
+        # 2.20.0 起默认海外 CDN 列表中移除了 Akamai（upos-hz-mirrorakam.akamaized.net）：
+        # 实测确认它不接受 upos 的签名路径 —— 把真实签名链接换到这个 host，无论直连
+        # 还是经代理一律返回 403，且与出口地区无关，属确定性失败而非网络抖动。
+        # 老配置里原样继承下来的那条留着，只会让每次海外解析都白占一个并发探测位
+        #
+        # 只按 host 精确匹配剔除这一条。用户自行增删或改过的其他节点一律不动 ——
+        # 这份列表在设置界面里可编辑，不能假设它还是默认值
+        ov_cdn_server_list = deepcopy(config.get(config.ov_cdn_server_list))
+
+        filtered_list = [
+            entry for entry in ov_cdn_server_list
+            if entry.get("host") != "upos-hz-mirrorakam.akamaized.net"
+        ]
+
+        if len(filtered_list) != len(ov_cdn_server_list):
+            config.set(config.ov_cdn_server_list, filtered_list)
+
+            logger.info("已从海外 CDN 服务器列表中移除 Akamai")
 
     # 完成修补，写入新的 config_version
     config.set(config.config_version, config.app_config_version)

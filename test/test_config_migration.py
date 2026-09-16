@@ -28,6 +28,7 @@ def restore_config():
         "proxy_mode": config.get(config.proxy_mode),
         "video_quality_priority": list(config.get(config.video_quality_priority)),
         "naming_rule_list": [dict(entry) for entry in config.get(config.naming_rule_list)],
+        "ov_cdn_server_list": [dict(entry) for entry in config.get(config.ov_cdn_server_list)],
         "config_version": config.get(config.config_version),
     }
 
@@ -36,6 +37,7 @@ def restore_config():
     config.set(config.proxy_mode, saved["proxy_mode"])
     config.set(config.video_quality_priority, saved["video_quality_priority"])
     config.set(config.naming_rule_list, saved["naming_rule_list"])
+    config.set(config.ov_cdn_server_list, saved["ov_cdn_server_list"])
     config.set(config.config_version, saved["config_version"])
 
 
@@ -255,3 +257,95 @@ class TestVersionBump:
         assert config.get(config.proxy_mode) == ProxyMode.MANUAL
         assert 122 in config.get(config.video_quality_priority)
         assert any(e["type"] == ConventionType.LESSON for e in config.get(config.naming_rule_list))
+
+
+class TestCDNServerListMigration:
+    """
+    2.20.0：默认海外 CDN 列表移除 Akamai
+
+    upos-hz-mirrorakam.akamaized.net 不接受 upos 的签名路径：把真实签名链接换到
+    它一律返回 403，直连与经代理结果一致、与出口地区无关，是确定性失败而非网络
+    抖动，探测它必然是白占一个并发槽。
+
+    这条迁移存在的唯一理由是 **config 是落盘的** —— 改掉 DefaultValue 对已有用户
+    毫无影响，他们配置里那份副本得靠这里删。
+    """
+
+    AKAMAI_HOST = "upos-hz-mirrorakam.akamaized.net"
+
+    @classmethod
+    def legacy_list(cls):
+        """旧版默认值：Akamai 在首位"""
+        return [
+            {"host": cls.AKAMAI_HOST, "provider": "AKAMAI"},
+            {"host": "upos-sz-mirroraliov.bilivideo.com", "provider": "ALIYUN"},
+            {"host": "upos-sz-mirrorcosov.bilivideo.com", "provider": "TENCENT"},
+        ]
+
+    def hosts(self):
+        return [entry.get("host") for entry in config.get(config.ov_cdn_server_list)]
+
+    def test_akamai_removed_and_rest_kept(self):
+        config.set(config.ov_cdn_server_list, self.legacy_list())
+
+        patch_config(2160, {})
+
+        assert self.hosts() == [
+            "upos-sz-mirroraliov.bilivideo.com",
+            "upos-sz-mirrorcosov.bilivideo.com",
+        ]
+
+    def test_user_added_nodes_untouched(self):
+        # 这份列表在设置界面里可编辑，用户自己加的节点不能被顺手清掉
+        config.set(config.ov_cdn_server_list, self.legacy_list() + [
+            {"host": "upos-sz-mirrorcoso1.bilivideo.com", "provider": "TENCENT"},
+            {"host": "my.own.node.example.com", "provider": "CUSTOM"},
+        ])
+
+        patch_config(2160, {})
+
+        assert self.hosts() == [
+            "upos-sz-mirroraliov.bilivideo.com",
+            "upos-sz-mirrorcosov.bilivideo.com",
+            "upos-sz-mirrorcoso1.bilivideo.com",
+            "my.own.node.example.com",
+        ]
+
+    def test_already_clean_list_is_untouched(self):
+        # 用户早就自己删过 Akamai，迁移不该改动他的列表
+        config.set(config.ov_cdn_server_list, [
+            {"host": "upos-sz-mirroraliov.bilivideo.com", "provider": "ALIYUN"},
+        ])
+
+        patch_config(2160, {})
+
+        assert self.hosts() == ["upos-sz-mirroraliov.bilivideo.com"]
+
+    def test_not_applied_when_already_newer(self):
+        config.set(config.ov_cdn_server_list, self.legacy_list())
+
+        patch_config(2200, {})
+
+        assert self.AKAMAI_HOST in self.hosts()
+
+    def test_malformed_entries_are_safe(self):
+        # 用户手改配置文件导致条目缺 host 时不能抛异常
+        config.set(config.ov_cdn_server_list, [{}, {"provider": "ALIYUN"}])
+
+        patch_config(2160, {})
+
+        assert len(config.get(config.ov_cdn_server_list)) == 2
+
+    def test_empty_list_is_safe(self):
+        config.set(config.ov_cdn_server_list, [])
+
+        patch_config(2160, {})
+
+        assert config.get(config.ov_cdn_server_list) == []
+
+    def test_default_value_no_longer_lists_akamai(self):
+        # 默认值本身也不该再有 Akamai，否则新用户照样会拿到它
+        assert all(
+            entry.get("host") != self.AKAMAI_HOST
+            for entry in DefaultValue.ov_cdn_server_list
+        )
