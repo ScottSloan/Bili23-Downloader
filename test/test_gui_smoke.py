@@ -208,6 +208,38 @@ class TestNamingRuleEditor:
         assert not builder.add_level_btn.isEnabled()
         assert builder.limit_lab.isVisibleTo(builder)
 
+    def test_rebuild_does_not_spawn_stray_windows(self, parent):
+        """
+        重建层级时不能冒出野生顶层窗口
+
+        被丢弃的控件必须 hide() 而不是 setParent(None)：后者会把它变成顶层窗口，
+        在 DeferredDelete 真正执行前作为独立窗口显示出来 —— 切换规则时屏幕上会
+        闪过一排空窗口。
+        """
+        from gui.component.rule_builder import RuleBuilderWidget, RuleLevelRow
+        from util.common.enum import ConventionType
+
+        parent.setAttribute(Qt.WidgetAttribute.WA_DontShowOnScreen, True)
+        parent.resize(700, 400)
+        parent.show()
+
+        builder = RuleBuilderWidget(parent)
+        builder.resize(700, 400)
+        builder.show()
+
+        builder.set_type(ConventionType.SPACE)
+        builder.set_rule("/".join(["{leaf_title}"] * 5))
+
+        # 不放行 DeferredDelete：待销毁的控件只在这个窗口期里露头
+        builder.set_rule("{space_owner}/{leaf_title}")
+
+        stray = [
+            widget for widget in QApplication.allWidgets()
+            if isinstance(widget, RuleLevelRow) and widget.parent() is None
+        ]
+
+        assert not stray
+
     def test_editor_does_not_overlap_at_minimum_height(self, parent):
         """
         窗口压到最小尺寸时右栏不能重叠

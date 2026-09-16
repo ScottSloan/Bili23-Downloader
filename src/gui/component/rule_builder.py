@@ -22,11 +22,14 @@ def _discard(widget: QWidget):
     """
     丢弃一个不再需要的控件
 
-    光调 deleteLater 不够：控件从布局里 takeAt 出来之后父子关系还在，DeferredDelete
-    要等下一轮事件循环才处理，这中间它会**继续画在原来的位置上**。层级一多，重建
-    赶上同一轮事件，界面就会出现上下重影。先断开父子关系，当场从画面上消失。
+    光调 deleteLater 不够：控件从布局里 takeAt 出来之后仍挂在原来的父控件下，而
+    DeferredDelete 要等下一轮事件循环才处理，这中间它会**继续画在原来的位置上**，
+    重建时界面就出现上下重影。先 hide() 让它当场从画面上消失。
+
+    别改成 setParent(None)：那会把控件变成顶层窗口，在真正销毁前的这一小段时间里
+    会被当成独立窗口显示出来 —— 切换规则时屏幕上闪过几个空窗口就是这么来的。
     """
-    widget.setParent(None)
+    widget.hide()
     widget.deleteLater()
 
 def variable_label(entry: dict) -> str:

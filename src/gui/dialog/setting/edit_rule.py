@@ -65,9 +65,10 @@ class RulePreviewPanel(QWidget):
             item = self.grid_layout.takeAt(0)
 
             if item.widget():
-                # 先断开父子关系再 deleteLater：DeferredDelete 要等下一轮事件循环，
-                # 这中间旧标签会继续画在原位，和新的一行叠在一起
-                item.widget().setParent(None)
+                # 先 hide 再 deleteLater：DeferredDelete 要等下一轮事件循环，这中间
+                # 旧标签会继续画在原位，和新的一行叠在一起。
+                # 不能用 setParent(None) —— 那会让它短暂地变成一个顶层窗口闪出来
+                item.widget().hide()
                 item.widget().deleteLater()
 
         self.rows = {}
