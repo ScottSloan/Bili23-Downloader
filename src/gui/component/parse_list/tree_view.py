@@ -518,6 +518,15 @@ class ParseTreeView(TreeView):
 
         return total_items[0].to_dict() if total_items else None
 
+    def get_current_episode_item(self):
+        """
+        链接明确指向的那一项，链接未指向具体视频（或没能在列表中定位到）时为 None
+
+        外部只应把它当作"这一项"的身份用于比对，不要缓存：解析新链接后整棵树
+        会被替换，此处返回的对象随即失效
+        """
+        return self._current_episode_item
+
     def get_preview_item_info(self):
         # 链接明确指向某个视频时，用该视频的信息作为媒体信息预览的来源，
         # 否则退回解析结果中的第一个视频

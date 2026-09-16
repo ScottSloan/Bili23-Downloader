@@ -23,7 +23,7 @@ target_language = "zh_CN"
 
 # 项目根目录（请根据实际情况修改）
 # Project root directory (please modify according to your actual situation)
-project_root = r"D:\Projects\Python\Bili23_Downloader_Fluent"
+project_root = r"D:\Projects\Python\Bili23_Downloader_V2.2"
 
 
 # ---------- 代码实现 (Code Implementation) ---------

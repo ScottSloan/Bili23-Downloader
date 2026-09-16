@@ -39,7 +39,7 @@ def build_item_index(items) -> dict:
     """
     return {str(position): item for position, item in enumerate(items, 1)}
 
-def _episode_to_dict(item_id: str, item) -> dict:
+def _episode_to_dict(item_id: str, item, is_link_target: bool = False) -> dict:
     from ...parse.episode.tree import Attribute
 
     data = {
@@ -48,6 +48,12 @@ def _episode_to_dict(item_id: str, item) -> dict:
         "number": item.number,
         "duration": item.duration,
     }
+
+    # 解析的链接精确指向的就是这一条。界面上它会被自动滚动到、自动勾选，
+    # 模型手上却只有一份看起来齐平的列表：一个视频的所有分P 共享同一个 bvid，
+    # 番剧一整季的条目在导出字段上也毫无差别，不点出来就无从分辨
+    if is_link_target:
+        data["is_link_target"] = True
 
     if item.badge:
         data["badge"] = item.badge
@@ -74,16 +80,21 @@ def _media_info_error():
 
     return None
 
-def _available_media_options():
+def _media_info_summary():
     """
-    本次解析的内容实际提供哪些清晰度、音质与编码
+    本次解析的内容实际提供哪些清晰度、音质与编码，以及这些信息取自哪个视频
 
     模型要在 create_download 里指定画质，但它无从知道这个视频有没有 4K。
     不告诉它的话，它只能凭标题猜，猜错了会被静默降级到最接近的档位 ——
     它以为下到了 4K，实际是 1080P，而且没有任何迹象可循。
 
+    首选项是充电专属、付费等取不到媒体信息的视频时，Previewer 会自动换用备选，
+    于是这些档位其实属于列表里的**另一个**视频。界面把这件事写在下载选项对话框上，
+    模型同样需要知道，否则它会把别人的 4K 当成自己要下的那一集的。
+
     这几个 choice_data 由 Previewer 填充，解析开始时会被重置成空，
-    因此只有在媒体信息就绪后取到的值才有意义。
+    因此只有在媒体信息就绪后取到的值才有意义。一次取齐是为了让选项与来源
+    出自同一个快照：分两次回主线程取，中间用户切换剧集就会把两者对不上。
     """
     from ...parse.preview.info import PreviewerInfo
 
@@ -98,25 +109,82 @@ def _available_media_options():
         if names := list(data):
             options[key] = names
 
-    return options
+    source = {}
+
+    if PreviewerInfo.episode_title:
+        source["title"] = PreviewerInfo.episode_title
+
+        if PreviewerInfo.episode_number:
+            source["number"] = PreviewerInfo.episode_number
+
+        if PreviewerInfo.from_fallback:
+            source["from_fallback"] = True
+
+    return options, source
 
 def _collect_episodes(limit: int):
+    """
+    汇总解析列表的当前内容，界面不可用时返回 None
+
+    返回的字典直接构成工具结果的主体，键序即模型读到的顺序：
+    先是规模与链接指向哪一项，再是条目本身
+    """
     interface = get_parse_interface()
 
     if interface is None:
-        return None, 0
+        return None
 
     items = interface.parse_list.get_all_items()
 
     # 先按完整列表编号再截断，保证 limit 不会改变任何条目的 id
     index = build_item_index(items)
 
+    link_target_id = _locate_link_target(interface, index)
+
     episodes = [
-        _episode_to_dict(item_id, item)
+        _episode_to_dict(item_id, item, is_link_target = item_id == link_target_id)
         for item_id, item in list(index.items())[:limit]
     ]
 
-    return episodes, len(items)
+    result = {
+        "total": len(items),
+        "returned": len(episodes),
+    }
+
+    if link_target_id is not None:
+        result["link_target_episode_id"] = link_target_id
+
+        # 目标项落在 limit 之外时单独附上它的完整信息。这恰恰是最需要它的场景 ——
+        # 三百集的合集，链接指向第 250 集 —— 只给一个编号，模型没法跟用户确认
+        # 要下的是哪一集，还得再花一轮 get_episodes 去捞
+        if not any(episode["episode_id"] == link_target_id for episode in episodes):
+            result["link_target_episode"] = _episode_to_dict(
+                link_target_id, index[link_target_id], is_link_target = True
+            )
+
+    result["episodes"] = episodes
+
+    return result
+
+def _locate_link_target(interface, index: dict):
+    """
+    解析的链接精确指向的那一项在列表中的位置，链接未指向具体视频时为 None
+
+    投稿视频按 cid、番剧与课程按 ep_id、会员购课程按 section_id 定位，解析侧已经
+    算好并交给了解析树（见 ParseTreeView.update_tree），这里只是把结果取出来。
+
+    按对象身份比对而不是比字段：分P 之间除了 cid 什么都一样，番剧一整季的条目
+    在导出字段上同样难分彼此，只有对象本身能唯一确定是哪一条。index 里的对象与
+    get_current_episode_item() 返回的都来自同一棵树，比对是可靠的
+    """
+    current_item = interface.parse_list.get_current_episode_item()
+
+    if current_item is None:
+        return None
+
+    return next(
+        (item_id for item_id, item in index.items() if item is current_item), None
+    )
 
 # MCP 上一次解析结束时界面的状态指纹：(全部条目 id, 被勾选的条目 id)
 #
@@ -309,19 +377,20 @@ def _parse_url_locked(url: str, arguments: dict) -> dict:
 
     # 这次调用会排在界面的 on_update_parse_list 之后执行（两者都投递到 GUI
     # 线程的事件循环，先进先出），所以读到的一定是已经更新过的树
-    episodes, total = call_in_main_thread(_collect_episodes, limit, timeout = 15.0)
+    collected = call_in_main_thread(_collect_episodes, limit, timeout = 15.0)
 
-    if episodes is None:
+    if collected is None:
         return error_result("The parse list is unavailable.")
 
-    structured = {
-        "category": outcome.get("category", ""),
-        "total": total,
-        "returned": len(episodes),
-        "episodes": episodes,
-    }
+    structured = {"category": outcome.get("category", "")}
+    structured.update(collected)
+
+    total = collected["total"]
+    returned = collected["returned"]
 
     media_error = call_in_main_thread(_media_info_error, timeout = 5.0)
+
+    source = {}
 
     if media_error:
         # 明确告诉模型下载会失败，省得它拿着 episode_id 去撞 create_download
@@ -330,26 +399,36 @@ def _parse_url_locked(url: str, arguments: dict) -> dict:
 
     else:
         # 供 create_download 的 options 使用：只有这里列出的档位是真实可选的
-        if available := call_in_main_thread(_available_media_options, timeout = 5.0):
-            structured["available"] = available
+        options, source = call_in_main_thread(_media_info_summary, timeout = 5.0)
 
-    summary = f"Parsed {total} item(s) from {url}."
+        if options:
+            structured["available"] = options
+
+        if source:
+            structured["media_info_source"] = source
+
+    summary = f"Parsed {total} item(s) from {url}." + _link_target_note(collected)
 
     if media_error:
         summary += f" Media information is unavailable ({media_error}), so downloads cannot be created yet."
 
-    if len(episodes) < total:
-        summary += f" Showing the first {len(episodes)}; call get_episodes with a higher limit to see more."
+    else:
+        summary += _fallback_note(source)
+
+    if returned < total:
+        summary += f" Showing the first {returned}; call get_episodes with a higher limit to see more."
 
     return text_result(summary, structured)
 
 def tool_get_episodes(arguments: dict) -> dict:
     limit = _clamp_limit(arguments.get("limit"))
 
-    episodes, total = call_in_main_thread(_collect_episodes, limit, timeout = 15.0)
+    collected = call_in_main_thread(_collect_episodes, limit, timeout = 15.0)
 
-    if episodes is None:
+    if collected is None:
         return error_result("The parse list is unavailable.")
+
+    total = collected["total"]
 
     if not total:
         return text_result("The parse list is empty. Call parse_url first.", {
@@ -358,16 +437,51 @@ def tool_get_episodes(arguments: dict) -> dict:
             "episodes": [],
         })
 
-    structured = {
-        "total": total,
-        "returned": len(episodes),
-        "episodes": episodes,
-    }
+    structured = collected
 
-    if available := call_in_main_thread(_available_media_options, timeout = 5.0):
-        structured["available"] = available
+    options, source = call_in_main_thread(_media_info_summary, timeout = 5.0)
 
-    return text_result(f"{total} item(s) in the parse list.", structured)
+    if options:
+        structured["available"] = options
+
+    if source:
+        structured["media_info_source"] = source
+
+    summary = f"{total} item(s) in the parse list."
+
+    return text_result(summary + _link_target_note(collected) + _fallback_note(source), structured)
+
+def _link_target_note(collected: dict) -> str:
+    """
+    把"链接指向的是哪一项"也写进文本摘要
+
+    结构化结果里已经有 is_link_target 与 link_target_episode_id，但并非所有
+    MCP 客户端都会把 structuredContent 交给模型，文本是唯一保证送达的那一份
+    """
+    item_id = collected.get("link_target_episode_id")
+
+    if item_id is None:
+        return ""
+
+    episode = collected.get("link_target_episode") or next(
+        (item for item in collected["episodes"] if item["episode_id"] == item_id), None
+    )
+
+    if title := (episode or {}).get("title"):
+        return f" The link points to episode_id {item_id} ({title})."
+
+    return f" The link points to episode_id {item_id}."
+
+def _fallback_note(source: dict) -> str:
+    """媒体信息取自别的视频时明说，别让模型把这些档位当成目标视频的"""
+    if not source.get("from_fallback"):
+        return ""
+
+    return (
+        " Note: the linked item did not provide media information, so the qualities in "
+        f"'available' are those of another item ({source.get('title', '')}) and may differ "
+        "from what the item you download actually offers."
+    )
 
 def _clamp_limit(value) -> int:
     if not isinstance(value, int) or isinstance(value, bool):
@@ -392,7 +506,11 @@ def register(registry):
             "This replaces whatever is currently in the parse list, and is refused while the "
             "user has items selected there. Call this before create_download. The result's "
             "'available' field lists the qualities and codecs this content actually offers, "
-            "which are the valid values for create_download's options."
+            "which are the valid values for create_download's options. When the link points at "
+            "one specific item of a multi-part video, season or collection, 'link_target_episode_id' "
+            "names it (and that item carries 'is_link_target'); prefer it over guessing from titles, "
+            "since every part of a video shares one bvid. Its absence means the link addressed the "
+            "whole listing rather than a single item."
         ),
         input_schema = {
             "type": "object",
@@ -414,7 +532,8 @@ def register(registry):
         title = "List Parsed Episodes",
         description = (
             "List the episodes currently loaded in the application's parse list, including "
-            "the episode_id values needed by create_download."
+            "the episode_id values needed by create_download, and 'link_target_episode_id' "
+            "identifying which item the parsed link pointed at, when it pointed at one."
         ),
         input_schema = {
             "type": "object",
