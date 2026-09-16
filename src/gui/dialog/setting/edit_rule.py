@@ -8,11 +8,12 @@ from qfluentwidgets import (
 
 from gui.component.widget.combobox import DictComboBox
 from gui.component.widget.tree_widget import ColumnTreeWidget
-from gui.component.setting import InsertActionWidget
+from gui.component.dialog import Base
 from gui.component.rule_builder import RuleBuilderWidget
 
 from util.common.data import convention_type_map, VariableListFactory
 from util.common.data.naming_convention import SampleShape, SUPPORTED_SHAPES
+from util.common.enum import ToastNotificationCategory
 from util.common.translator import Translator
 from util.format.file_name import FileNameFormatter
 from util.format.rule_template import compile_rule, RuleSyntaxError
@@ -64,6 +65,9 @@ class RulePreviewPanel(QWidget):
             item = self.grid_layout.takeAt(0)
 
             if item.widget():
+                # 先断开父子关系再 deleteLater：DeferredDelete 要等下一轮事件循环，
+                # 这中间旧标签会继续画在原位，和新的一行叠在一起
+                item.widget().setParent(None)
                 item.widget().deleteLater()
 
         self.rows = {}
@@ -115,7 +119,7 @@ class RulePreviewPanel(QWidget):
             folder = path.parent, sep = os.sep, name = path.name
         )
 
-class EditRuleDialog(QWidget):
+class EditRuleDialog(Base, QWidget):
     """
     规则编辑面板
 
@@ -123,12 +127,16 @@ class EditRuleDialog(QWidget):
     上下文存在两份 .ts 里，改类名要先手改 zh_CN / zh_TW 的 <name> 再跑
     scripts/translate.py，否则 lupdate 会另建一个空上下文、旧译文全变孤儿，
     test_i18n_context.py 直接挂。留名换译文，划算。
+
+    混入 Base 只为拿 show_top_toast_message：复制变量这种没有视觉结果的操作，
+    不给反馈用户不知道到底复制上没有。
     """
 
     changed = Signal()
 
     def __init__(self, parent = None):
-        super().__init__(parent)
+        Base.__init__(self)
+        QWidget.__init__(self, parent)
 
         self.rule_data = {}
         self._loading = False
@@ -198,32 +206,35 @@ class EditRuleDialog(QWidget):
         self.variable_list.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.variable_list.setTooltipEnabled(True)
         self.variable_list.header().setStretchLastSection(False)
-
+        # 不给硬性最小高度，让它自己的 minimumSizeHint 说了算：整栏的最小高度之和
+        # 一旦超过窗口能给的，Qt 会无视最小值继续压，多出来的那几像素就会变成重叠
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.addLayout(header_layout)
-        main_layout.addSpacing(10)
-        main_layout.addWidget(self.builder)
-        main_layout.addSpacing(6)
+        main_layout.addSpacing(8)
+        main_layout.addWidget(self.builder, 3)
+        main_layout.addSpacing(4)
         main_layout.addWidget(self.advanced_btn, 0, Qt.AlignmentFlag.AlignLeft)
         main_layout.addWidget(self.advanced_widget)
-        main_layout.addSpacing(6)
+        main_layout.addSpacing(4)
         main_layout.addWidget(self.preview_panel)
-        main_layout.addSpacing(6)
+        main_layout.addSpacing(4)
         main_layout.addLayout(link_layout)
-        main_layout.addWidget(self.variable_list, 1)
+        main_layout.addWidget(self.variable_list, 2)
 
     def init_data(self):
         self.variable_list_factory = VariableListFactory()
 
+        # 这张表是**参考表**，不是操作面板：插入变量的唯一入口是可视化编辑器里
+        # 每一层的「＋」。以前最后一列的插入按钮插的是高级区的规则串，还会顺手把
+        # 折叠着的高级区展开，用户在可视化界面里点它，完全看不出东西插到哪去了
         self.variable_list.setColumnHeaders(
             [
                 self.tr("Variable"),
                 self.tr("Description"),
-                self.tr("Example"),
-                self.tr("Actions")
+                self.tr("Example")
             ],
-            [150, 200, 150, 60]
+            [150, 200, 150]
         )
 
         self.type_choice.init_dict_data(convention_type_map, Translator.CONVENTION_TYPE())
@@ -248,6 +259,7 @@ class EditRuleDialog(QWidget):
         self.preview_timer.timeout.connect(self.refresh_preview)
 
         self.variable_list.customContextMenuRequested.connect(self.on_context_menu)
+        self.variable_list.itemDoubleClicked.connect(self.on_copy_variable)
 
     def load(self, rule_data: dict):
         """载入一条规则。载入期间的信号一律吞掉，免得被当成用户改动"""
@@ -311,14 +323,34 @@ class EditRuleDialog(QWidget):
     def init_variable_list(self, type_id):
         self.variable_list.clear()
 
+        group = None
+
         # 推荐变量在前、其余在后，但清单本身是完整的：按类型裁剪只是界面上的
         # 「推荐」，键空间恒等于运行期，否则编辑器会拒绝一条运行期可用的规则
         for entry in self.variable_list_factory.build(type_id):
+            if entry.get("group") != group:
+                group = entry.get("group")
+
+                self._add_group_item(group)
+
             description = Translator.VARIABLE_DESCRIPTION(entry["description"]) or entry["description"]
 
             self._add_item(entry["variable"], description, str(entry["example"]))
 
         self.variable_list.header().setSectionResizeMode(0, self.variable_list.header().ResizeMode.Stretch)
+
+    def _add_group_item(self, group: str):
+        """
+        分组标题行
+
+        三十来条变量平铺成一张表，用户分不出哪些是这个类型真正用得上的。
+        标题行只是个视觉分隔，不可选中、不可复制
+        """
+        text = self.tr("Recommended for this type") if group == "PRIMARY" else self.tr("Other available variables")
+
+        item = self.variable_list.addRow(text)
+        item.setFlags(Qt.ItemFlag.ItemIsEnabled)
+        item.setFirstColumnSpanned(True)
 
     def on_type_changed(self):
         if self._loading:
@@ -433,48 +465,33 @@ class EditRuleDialog(QWidget):
         dialog.exec()
 
     def on_context_menu(self, pos):
+        if not self.get_current_variable():
+            return
+
         menu = RoundMenu(parent = self)
 
         copy_action = Action(icon = FluentIcon.COPY, text = self.tr("Copy Variable"), parent = self)
         copy_action.triggered.connect(self.on_copy_variable)
 
-        insert_action = Action(icon = FluentIcon.ADD, text = self.tr("Insert Variable"), parent = self)
-        insert_action.triggered.connect(self.on_insert_variable)
-
         menu.addAction(copy_action)
-        menu.addAction(insert_action)
 
         menu.exec(self.variable_list.viewport().mapToGlobal(pos))
 
-    def on_copy_variable(self):
+    def on_copy_variable(self, *_):
         variable = self.get_current_variable()
 
-        if variable:
-            QApplication.clipboard().setText(variable)
+        if not variable:
+            return
 
-    def on_insert_variable(self):
-        variable = self.get_current_variable()
+        QApplication.clipboard().setText(variable)
 
-        if variable:
-            # 变量表是给高级模式用的，插入前先把它展开
-            self.advanced_btn.setChecked(True)
-
-            self.rule_box.insert(variable)
+        self.show_top_toast_message(ToastNotificationCategory.SUCCESS, "", self.tr("Copied: {variable}").format(variable = variable))
 
     def get_current_variable(self):
         item = self.variable_list.currentItem()
 
-        return item.text(0) if item else None
+        # 分组标题行没有第二列，据此把它和真正的变量行区分开
+        return item.text(0) if item and item.text(1) else None
 
     def _add_item(self, variable: str, description: str, example: str):
-        item = self.variable_list.addRow(variable, description, example)
-
-        widget = InsertActionWidget(self.variable_list)
-        widget.edit_btn.clicked.connect(lambda: self.insert_variable(variable))
-
-        self.variable_list.setItemWidget(item, 3, widget)
-
-    def insert_variable(self, variable: str):
-        self.advanced_btn.setChecked(True)
-
-        self.rule_box.insert(variable)
+        self.variable_list.addRow(variable, description, example)

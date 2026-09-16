@@ -10,6 +10,7 @@ GUI 层的构造冒烟测试。
 """
 
 from PySide6.QtWidgets import QApplication, QWidget
+from PySide6.QtCore import Qt
 
 import pytest
 
@@ -182,3 +183,112 @@ class TestNamingRuleEditor:
 
         assert not valid
         assert "titel" in message
+
+    def test_rule_builder_scrolls_when_levels_pile_up(self, parent):
+        """层级堆多了要滚动，不能把预览和变量表一起压扁"""
+        from gui.component.rule_builder import RuleBuilderWidget
+        from util.common.enum import ConventionType
+
+        builder = RuleBuilderWidget(parent)
+        builder.set_type(ConventionType.SPACE)
+        builder.set_rule("/".join(["{leaf_title}"] * 6))
+
+        scroll_widget = builder.level_scroll.widget()
+
+        # 目录层在滚动区里，文件名留在滚动区外 —— 它是最关键的一行，不能被滚走
+        assert builder.rows[0].parent() is not None
+        assert scroll_widget.isAncestorOf(builder.rows[0])
+        assert not scroll_widget.isAncestorOf(builder.rows[-1])
+
+        # 超过上限就不给再加了，并且把原因摆在按钮旁边（禁用控件不弹 tooltip）
+        for _ in range(builder.MAX_LEVELS):
+            builder.on_add_level()
+
+        assert len(builder.model.levels) == builder.MAX_LEVELS + 1
+        assert not builder.add_level_btn.isEnabled()
+        assert builder.limit_lab.isVisibleTo(builder)
+
+    def test_editor_does_not_overlap_at_minimum_height(self, parent):
+        """
+        窗口压到最小尺寸时右栏不能重叠
+
+        右栏把可视化编辑器、预览、变量表叠在一栏里，各块的最小高度之和一旦超过
+        窗口能给的，Qt 就不再理会最小值继续压，带硬性下限的滚动区会画到分配区
+        之外、直接盖住「文件名」那一行。以后往这一栏里再加东西，先看这条用例。
+        """
+        from gui.dialog.setting.edit_rule import EditRuleDialog
+        from util.common.enum import ConventionType
+
+        panel = EditRuleDialog(parent)
+        panel.load({
+            "id": "x", "name": "n", "type": ConventionType.FAVORITE,
+            "rule": "{favorites_owner_id}_{favorites_owner}/{favorites_name}/{parent_title}/<P{p:02d}->{leaf_title}",
+            "default": False
+        })
+
+        # 最坏组合：最小窗口高度减去标题栏与按钮行 + 高级区展开 + 规则报错多出一行红字
+        panel.advanced_btn.setChecked(True)
+        panel.rule_box.setText("{titel}")
+        panel.refresh_preview()
+
+        # WA_DontShowOnScreen：走完整的布局流程但不真的弹出窗口。
+        # 只调 layout().activate() 的话，嵌套布局不会被激活，量到的全是默认几何
+        parent.setAttribute(Qt.WidgetAttribute.WA_DontShowOnScreen, True)
+        parent.resize(700, 630)
+        parent.show()
+
+        panel.resize(700, 630)
+        panel.show()
+
+        builder = panel.builder
+
+        def top_of(widget):
+            return widget.mapTo(builder, widget.rect().topLeft()).y()
+
+        assert builder.level_scroll.geometry().bottom() <= top_of(builder.add_level_btn)
+        assert builder.add_level_btn.geometry().bottom() <= top_of(builder.file_name_label)
+        assert builder.file_name_label.geometry().bottom() <= top_of(builder.rows[-1])
+
+    def test_fragment_move_inside_file_name(self, parent):
+        """文件名那一行的片段此前只能删掉重加，顺序完全调不了"""
+        from gui.component.rule_builder import RuleBuilderWidget
+        from util.common.enum import ConventionType
+
+        builder = RuleBuilderWidget(parent)
+        builder.set_type(ConventionType.SPACE)
+        builder.set_rule(self.RULE)
+
+        row = builder.rows[-1]
+        leaf = row.level.fragments[1]
+
+        row.move_fragment(leaf, -1)
+
+        assert builder.rule() == "{space_owner}/{parent_title}/{leaf_title}<P{p:02d}->"
+        # 芯片是原地搬运的，不是整行重建 —— 重建会把正开着的编辑面板一起销毁
+        assert row.chips[0].fragment is leaf
+        assert not row.chips[0].can_move_left
+        assert row.chips[1].can_move_left
+
+    def test_fragment_edit_view_keeps_shape_on_variable_change(self, parent):
+        """换变量不改面板的行数，也不会把格式串污染成时间变量用不了的写法"""
+        from gui.component.rule_builder import FragmentEditView, RuleBuilderWidget
+        from util.common.enum import ConventionType
+        from util.format.rule_model import Fragment
+
+        builder = RuleBuilderWidget(parent)
+        builder.set_type(ConventionType.SPACE)
+
+        fragment = Fragment(variable = "leaf_title")
+
+        view = FragmentEditView(fragment, builder.variables, parent)
+
+        rows = view.form_layout.rowCount()
+
+        view.variable_choice.setCurrentIndex(view.variable_choice.findData("pub_time"))
+
+        assert fragment.variable == "pub_time"
+        # 时间变量不带格式渲染出来是「2026-03-07 00:00:00」，冒号要被净化成下划线
+        assert fragment.spec == "%Y-%m-%d"
+        assert view.form_layout.rowCount() == rows
+        assert view.format_choice.isEnabled()
+        assert not view.format_box.isEnabled()

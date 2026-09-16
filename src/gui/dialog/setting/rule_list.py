@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QFrame
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QFrame, QApplication
 from PySide6.QtCore import Qt
 
 from qfluentwidgets import (
@@ -36,7 +36,9 @@ class RuleListDialog(Base, FluentWidget):
         FluentWidget.__init__(self, parent_window = parent)
 
         self.setWindowTitle(self.tr("Naming Rules"))
-        self.setMinimumSize(1060, 700)
+        # 高度给 720 而不是 700：右栏是可视化编辑器 + 预览 + 变量表三块叠在一起，
+        # 700 的时候各块的最小高度之和正好卡在临界，多一行红色错误提示就会挤出重叠
+        self.setMinimumSize(1060, 720)
 
         self.rule_data_list = load_rules()
         self.current_index = None
@@ -51,6 +53,8 @@ class RuleListDialog(Base, FluentWidget):
         self.connect_signals()
 
         self.init_rule_list()
+
+        self.resize_to_screen()
 
         self._init_common()
 
@@ -102,6 +106,18 @@ class RuleListDialog(Base, FluentWidget):
         main_layout.addLayout(body_layout, 1)
         main_layout.addSpacing(10)
         main_layout.addLayout(button_layout)
+
+    def resize_to_screen(self):
+        """
+        按屏幕大小给一个宽裕些的初始尺寸
+
+        可视化编辑器、三行并排预览、变量表叠在一栏里，最小尺寸只够勉强摆下，
+        一打开就得手动拉大。屏幕摆不下时 resize 会被最小尺寸接住，不会把窗口
+        撑到屏幕外面去
+        """
+        available = QApplication.primaryScreen().availableGeometry()
+
+        self.resize(min(1280, available.width() - 80), min(880, available.height() - 80))
 
     def connect_signals(self):
         self.rule_list.currentItemChanged.connect(self.on_current_changed)
