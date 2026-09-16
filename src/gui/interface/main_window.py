@@ -1,6 +1,6 @@
 from PySide6.QtWidgets import QApplication, QWidget
 from PySide6.QtGui import QIcon, QPixmap
-from PySide6.QtCore import Qt, QTimer, QRect
+from PySide6.QtCore import Qt, QTimer, QRect, Signal
 
 from qfluentwidgets import (
     MSFluentWindow, SystemThemeListener, NavigationItemPosition, FluentIcon, InfoBadge, qrouter, setTheme
@@ -12,12 +12,16 @@ from util.common.icon import ExtendedFluentIcon
 from util.common.config import config
 from util.common.runtime import runtime
 from util.misc.macos import activate_app
+from util.thread.pool import GlobalThreadPoolTask
 
 import logging
 
 logger = logging.getLogger(__name__)
 
 class MainWindow(MSFluentWindow):
+    # 地区检测在后台线程执行，结果经信号切回 GUI 线程；传 None 表示这次没能检测出来
+    areaDetected = Signal(object)
+
     def __init__(self):
         super().__init__()
 
@@ -52,6 +56,8 @@ class MainWindow(MSFluentWindow):
         QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
 
         self.setMicaEffectEnabled(config.get(config.mica_effect))
+
+        self.areaDetected.connect(self.on_area_detected)
 
         QTimer.singleShot(0, self.init_utils)
         
@@ -363,9 +369,7 @@ class MainWindow(MSFluentWindow):
             config.set(config.tutorial_dialog_shown, True)
 
         if not config.get(config.select_area_dialog_shown):
-            self.show_select_area_dialog()
-
-            config.set(config.select_area_dialog_shown, True)
+            self.detect_area()
 
         if not config.get(config.is_login):
             self.show_login_teaching_tip()
@@ -481,6 +485,39 @@ class MainWindow(MSFluentWindow):
 
         dialog = UpdateDialog(info, self)
         dialog.exec()
+
+    def detect_area(self):
+        # 首次启动时自动判断出口地区，不再直接弹窗打断用户。
+        # 检测要发网络请求，放在全局线程池上跑，结果经 areaDetected 切回 GUI 线程
+        def worker():
+            from util.network.area import detect_area
+
+            try:
+                area = detect_area()
+
+            except Exception as e:
+                # 检测不出来不是异常路径，交给 on_area_detected 退回询问用户。
+                # 这里必须自己接住：GlobalThreadPoolTask.run_func 只记日志不外抛
+                logger.warning("自动检测地区失败：%s", e)
+
+                area = None
+
+            self.areaDetected.emit(area)
+
+        GlobalThreadPoolTask.run_func(worker)
+
+    def on_area_detected(self, area):
+        if area is None:
+            # 检测不出来就退回询问。静默保持默认的国内列表对海外用户是灾难：
+            # 下载全程走错地区的节点，而他们多半不知道设置里有这个开关
+            self.show_select_area_dialog()
+
+        else:
+            config.set(config.area, area)
+
+            logger.info("已根据出口地区自动选择 CDN 区域：%s", area.value)
+
+        config.set(config.select_area_dialog_shown, True)
 
     def show_select_area_dialog(self):
         from ..dialog.setting.select_area import SelectAreaDialog
