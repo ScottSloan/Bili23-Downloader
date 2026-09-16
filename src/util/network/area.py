@@ -16,16 +16,20 @@ AREA_ZONE_API = "https://api.bilibili.com/x/web-interface/zone"
 # 所以这里收得比全局 client 紧得多，理由同 download_url.py 的探测 client
 AREA_DETECT_TIMEOUT = 5
 
-# 中国大陆的区号，zone 接口用它标记地区
-CHINA_COUNTRY_CODE = 86
+# zone 接口用电话区号标记地区。港澳台（852 / 853 / 886）与大陆一并归入 Area.CN，
+# 依据的不是行政区划而是 CDN 可达性：实测香港出口访问国内节点（华为镜像 16MB 读到
+# 14.04 Mbps）反而快于海外节点（aliov 仅 4.91 Mbps）。这个分组的实际作用只是决定
+# 用哪一套候选列表，那就该按"哪套快"来分，而不是按"在哪儿"分
+CHINA_COUNTRY_CODES = frozenset({86, 852, 853, 886})
 
 def parse_area(data: dict) -> Area | None:
     """
-    从 zone 接口的响应中解析出应当使用的 CDN 区域。
+    从 zone 接口的响应中判断该使用哪一套 CDN 候选列表。
 
-    港澳台按 OV 处理 —— SelectAreaDialog 的文案明确把它们归入
-    "Outside Mainland China"。任何解析不出来的情况都返回 None 而不是抛异常：
-    输入是网络响应，字段缺失、类型不对都属于正常可能，兜底策略由调用方决定
+    返回的是 Area 配置值，不是纯粹的地理位置 —— 港澳台与大陆同归 Area.CN，
+    理由见上面 CHINA_COUNTRY_CODES 的说明。任何解析不出来的情况都返回 None
+    而不是抛异常：输入是网络响应，字段缺失、类型不对都属于正常可能，
+    兜底策略由调用方决定
     """
     if not isinstance(data, dict) or data.get("code") != 0:
         return None
@@ -41,7 +45,7 @@ def parse_area(data: dict) -> Area | None:
     if not isinstance(country_code, int) or isinstance(country_code, bool):
         return None
 
-    return Area.CN if country_code == CHINA_COUNTRY_CODE else Area.OV
+    return Area.CN if country_code in CHINA_COUNTRY_CODES else Area.OV
 
 def detect_area() -> Area:
     """

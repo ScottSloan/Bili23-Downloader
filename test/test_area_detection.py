@@ -33,11 +33,17 @@ class TestParseArea:
     def test_mainland_is_cn(self):
         assert parse_area(zone_response(86)) == Area.CN
 
-    @pytest.mark.parametrize("country_code", [1, 44, 81, 886, 852, 853])
-    def test_non_mainland_is_ov(self, country_code):
-        # 852 / 853 / 886 是港澳台。SelectAreaDialog 的文案明确把它们归入
-        # "Outside Mainland China"，所以它们必须落到 OV 而不是 CN
+    @pytest.mark.parametrize("country_code", [1, 44, 81])
+    def test_overseas_is_ov(self, country_code):
         assert parse_area(zone_response(country_code)) == Area.OV
+
+    @pytest.mark.parametrize("country_code", [852, 853, 886])
+    def test_hong_kong_macau_taiwan_use_mainland_list(self, country_code):
+        # 港澳台与大陆同归 Area.CN：这个分组的实际作用只是决定用哪一套候选
+        # 列表，依据是实测的 CDN 可达性而非行政区划 —— 香港出口访问国内节点
+        # 反而快于海外节点（详见 area.py 中 CHINA_COUNTRY_CODES 的说明）。
+        # 对话框里的选项文案也相应改成了"中国（含港澳台地区）"
+        assert parse_area(zone_response(country_code)) == Area.CN
 
     def test_real_mainland_response(self):
         # 实测原文（直连出口，重庆联通）
@@ -55,10 +61,10 @@ class TestParseArea:
         }) == Area.CN
 
     def test_real_hong_kong_response(self):
-        # 实测原文（Clash 香港节点出口）。这条是用来钉死港澳台的：
-        # B 站对香港返回 country_code = 852 而不是 86，country 也直接写着"香港"，
-        # 因此不需要额外判断 province —— 直接按 852 != 86 落到 OV 即可。
-        # 若哪天 B 站把港澳台也标成 86，这个用例会失败，届时才需要补 province 判断
+        # 实测原文（Clash 香港节点出口）。B 站对香港返回 country_code = 852
+        # 而不是 86，需要显式把它归入大陆那一组 —— 如果只看 86，香港会落到 OV，
+        # 而实测香港用国内节点反而更快。B 站哪天改成返回 86 也不影响结果，
+        # 两条路径都指向 Area.CN
         assert parse_area({
             "code": 0,
             "message": "OK",
@@ -71,7 +77,7 @@ class TestParseArea:
                 "zone_id": 1035993088,
                 "country_code": 852,
             },
-        }) == Area.OV
+        }) == Area.CN
 
     def test_non_zero_code_is_none(self):
         # 接口返回业务错误（如风控）时不能拿 data 里的残留字段下结论

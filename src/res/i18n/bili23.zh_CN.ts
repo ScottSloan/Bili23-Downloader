@@ -1722,17 +1722,17 @@ Reminder: Due to Bilibili&apos;s anti-abuse mechanism, parsing too many pages or
         <translation type="vanished">编辑命名规则</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="148"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="152"/>
         <source>Rule Name</source>
         <translation>规则名称</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="151"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="155"/>
         <source>Rule Type</source>
         <translation>规则类型</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="168"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="172"/>
         <source>Naming Rule</source>
         <translation>命名规则</translation>
     </message>
@@ -1741,32 +1741,32 @@ Reminder: Due to Bilibili&apos;s anti-abuse mechanism, parsing too many pages or
         <translation type="vanished">预览</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="186"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="190"/>
         <source>Set as default rule for this type</source>
         <translation>设为该类型的默认规则</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="188"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="192"/>
         <source>Instructions</source>
         <translation>说明</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="191"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="195"/>
         <source>Open help page</source>
         <translation>打开帮助页面</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="232"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="234"/>
         <source>Variable</source>
         <translation>变量名</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="233"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="235"/>
         <source>Description</source>
         <translation>含义</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="234"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="236"/>
         <source>Example</source>
         <translation>示例</translation>
     </message>
@@ -1775,22 +1775,22 @@ Reminder: Due to Bilibili&apos;s anti-abuse mechanism, parsing too many pages or
         <translation type="vanished">操作</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="418"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="420"/>
         <source>Unmatched &apos;&lt;&apos; or &apos;&gt;&apos; at position {position}</source>
         <translation>位置 {position} 处的 &apos;&lt;&apos; 或 &apos;&gt;&apos; 没有配对</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="431"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="433"/>
         <source>Unknown variable: {name}</source>
         <translation>未知变量：{name}</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="434"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="436"/>
         <source>An optional segment must contain at least one variable</source>
         <translation>可选段中必须至少包含一个变量</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="444"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="446"/>
         <source>Rule name cannot be empty</source>
         <translation>规则名称不能为空</translation>
     </message>
@@ -1801,52 +1801,52 @@ File name: {filename}</source>
 文件名：{filename}</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="458"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="460"/>
         <source>Naming Rule Guide</source>
         <translation>简要说明</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="409"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="411"/>
         <source>Naming rule cannot be empty</source>
         <translation>命名规则不能为空</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="164"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="168"/>
         <source>Advanced</source>
         <translation>高级</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="348"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="350"/>
         <source>Recommended for this type</source>
         <translation>当前类型推荐使用</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="348"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="350"/>
         <source>Other available variables</source>
         <translation>其余可用变量</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="412"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="414"/>
         <source>Rule must not start or end with &apos;/&apos; or &apos;.&apos;</source>
         <translation>命名规则不能以 &apos;/&apos; 或 &apos;.&apos; 开头或结尾</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="423"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="425"/>
         <source>Rule contains illegal characters: &lt;&gt;:\&quot;|?* or control characters</source>
         <translation>命名规则包含非法字符：&lt;&gt;:\&quot;|?* 或控制字符</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="437"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="439"/>
         <source>Invalid naming rule</source>
         <translation>命名规则无效</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="472"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="474"/>
         <source>Copy Variable</source>
         <translation>复制变量</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="487"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="489"/>
         <source>Copied: {variable}</source>
         <translation>已复制：{variable}</translation>
     </message>
@@ -2064,27 +2064,27 @@ File name: {filename}</source>
 <context>
     <name>FragmentChip</name>
     <message>
-        <location filename="../../gui/component/rule_builder.py" line="320"/>
+        <location filename="../../gui/component/rule_builder.py" line="334"/>
         <source>(empty)</source>
         <translation>（空）</translation>
     </message>
     <message>
-        <location filename="../../gui/component/rule_builder.py" line="355"/>
+        <location filename="../../gui/component/rule_builder.py" line="369"/>
         <source>Edit</source>
         <translation>编辑</translation>
     </message>
     <message>
-        <location filename="../../gui/component/rule_builder.py" line="358"/>
+        <location filename="../../gui/component/rule_builder.py" line="372"/>
         <source>Move left</source>
         <translation>左移</translation>
     </message>
     <message>
-        <location filename="../../gui/component/rule_builder.py" line="362"/>
+        <location filename="../../gui/component/rule_builder.py" line="376"/>
         <source>Move right</source>
         <translation>右移</translation>
     </message>
     <message>
-        <location filename="../../gui/component/rule_builder.py" line="366"/>
+        <location filename="../../gui/component/rule_builder.py" line="380"/>
         <source>Remove</source>
         <translation>移除</translation>
     </message>
@@ -2092,72 +2092,72 @@ File name: {filename}</source>
 <context>
     <name>FragmentEditView</name>
     <message>
-        <location filename="../../gui/component/rule_builder.py" line="107"/>
+        <location filename="../../gui/component/rule_builder.py" line="121"/>
         <source>Custom format</source>
         <translation>自定义格式</translation>
     </message>
     <message>
-        <location filename="../../gui/component/rule_builder.py" line="112"/>
+        <location filename="../../gui/component/rule_builder.py" line="126"/>
         <source>The prefix and suffix disappear together with the variable</source>
         <translation>变量为空时，前缀与后缀一并消失</translation>
     </message>
     <message>
-        <location filename="../../gui/component/rule_builder.py" line="77"/>
+        <location filename="../../gui/component/rule_builder.py" line="91"/>
         <source>Remove</source>
         <translation>移除</translation>
     </message>
     <message>
-        <location filename="../../gui/component/rule_builder.py" line="60"/>
+        <location filename="../../gui/component/rule_builder.py" line="74"/>
         <source>Edit fragment</source>
         <translation>编辑片段</translation>
     </message>
     <message>
-        <location filename="../../gui/component/rule_builder.py" line="62"/>
+        <location filename="../../gui/component/rule_builder.py" line="76"/>
         <source>Move left</source>
         <translation>左移</translation>
     </message>
     <message>
-        <location filename="../../gui/component/rule_builder.py" line="63"/>
+        <location filename="../../gui/component/rule_builder.py" line="77"/>
         <source>Move right</source>
         <translation>右移</translation>
     </message>
     <message>
-        <location filename="../../gui/component/rule_builder.py" line="115"/>
+        <location filename="../../gui/component/rule_builder.py" line="129"/>
         <source>Variable</source>
         <translation>变量</translation>
     </message>
     <message>
-        <location filename="../../gui/component/rule_builder.py" line="116"/>
+        <location filename="../../gui/component/rule_builder.py" line="130"/>
         <source>Format</source>
         <translation>格式</translation>
     </message>
     <message>
-        <location filename="../../gui/component/rule_builder.py" line="118"/>
+        <location filename="../../gui/component/rule_builder.py" line="132"/>
         <source>Prefix</source>
         <translation>前缀</translation>
     </message>
     <message>
-        <location filename="../../gui/component/rule_builder.py" line="119"/>
+        <location filename="../../gui/component/rule_builder.py" line="133"/>
         <source>Suffix</source>
         <translation>后缀</translation>
     </message>
     <message>
-        <location filename="../../gui/component/rule_builder.py" line="97"/>
+        <location filename="../../gui/component/rule_builder.py" line="111"/>
         <source>Text</source>
         <translation>文字</translation>
     </message>
     <message>
-        <location filename="../../gui/component/rule_builder.py" line="179"/>
+        <location filename="../../gui/component/rule_builder.py" line="193"/>
         <source>Not available for this variable</source>
         <translation>该变量没有可选格式</translation>
     </message>
     <message>
-        <location filename="../../gui/component/rule_builder.py" line="188"/>
+        <location filename="../../gui/component/rule_builder.py" line="202"/>
         <source>As is</source>
         <translation>原样</translation>
     </message>
     <message>
-        <location filename="../../gui/component/rule_builder.py" line="192"/>
+        <location filename="../../gui/component/rule_builder.py" line="206"/>
         <source>Custom…</source>
         <translation>自定义…</translation>
     </message>
@@ -2577,88 +2577,88 @@ B站的视频通常将视频流和音频流分开存储和传输，下载时需�
 <context>
     <name>MainWindow</name>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="63"/>
+        <location filename="../../gui/interface/main_window.py" line="69"/>
         <source>Parser</source>
         <translation>解析</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="69"/>
+        <location filename="../../gui/interface/main_window.py" line="75"/>
         <source>Downloads</source>
         <translation>下载</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="80"/>
+        <location filename="../../gui/interface/main_window.py" line="86"/>
         <source>Favorites</source>
         <translation>收藏</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="89"/>
+        <location filename="../../gui/interface/main_window.py" line="95"/>
         <source>About</source>
         <translation>关于</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="107"/>
+        <location filename="../../gui/interface/main_window.py" line="113"/>
         <source>Settings</source>
         <translation>设置</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="429"/>
+        <location filename="../../gui/interface/main_window.py" line="440"/>
         <source>Welcome to Bili23 Downloader</source>
         <translation>欢迎使用 Bili23 Downloader</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="430"/>
+        <location filename="../../gui/interface/main_window.py" line="441"/>
         <source>It is recommended to read the user guide and FAQs when using for the first time, to help you get started quickly and make full use of all features.</source>
         <translation>首次使用时建议先查看使用说明和常见问题，帮助你更快上手并充分利用各项功能。</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="433"/>
+        <location filename="../../gui/interface/main_window.py" line="444"/>
         <source>View</source>
         <translation>查看</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="434"/>
+        <location filename="../../gui/interface/main_window.py" line="445"/>
         <source>Skip</source>
         <translation>跳过</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="446"/>
+        <location filename="../../gui/interface/main_window.py" line="457"/>
         <source>Log in to your account</source>
         <translation>登录账号</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="447"/>
+        <location filename="../../gui/interface/main_window.py" line="458"/>
         <source>Click the avatar to log in to your Bilibili account. 
 Download functionality will be limited if you&apos;re not logged in.</source>
         <translation>点击头像登录哔哩哔哩账号，未登录状态下下载功能将受限</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="623"/>
+        <location filename="../../gui/interface/main_window.py" line="667"/>
         <source>Download Directory Invalid</source>
         <translation>下载目录无效</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="624"/>
+        <location filename="../../gui/interface/main_window.py" line="668"/>
         <source>The current download directory is inaccessible or lacks write permissions. Please reset it.</source>
         <translation>当前下载目录无法访问或没有写入权限，请重新设置。</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="633"/>
+        <location filename="../../gui/interface/main_window.py" line="677"/>
         <source>FFmpeg Not Found</source>
         <translation>未找到 FFmpeg</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="634"/>
+        <location filename="../../gui/interface/main_window.py" line="678"/>
         <source>No FFmpeg executable found. Please ensure FFmpeg is installed and configured correctly.</source>
         <translation>未找到 FFmpeg 可执行文件。请确保已正确安装并配置 FFmpeg。</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="643"/>
+        <location filename="../../gui/interface/main_window.py" line="687"/>
         <source>Login Required</source>
         <translation>需要登录</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="644"/>
+        <location filename="../../gui/interface/main_window.py" line="688"/>
         <source>Please log in to your account first.</source>
         <translation>请先登录账号</translation>
     </message>
@@ -3431,78 +3431,78 @@ For example, if you set the video quality priority to 720P &gt; 1080P &gt; 4K, t
 <context>
     <name>ParseInterface</name>
     <message>
-        <location filename="../../gui/interface/parse.py" line="65"/>
+        <location filename="../../gui/interface/parse.py" line="78"/>
         <source>Paste and Parse</source>
         <translation>粘贴并解析</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="69"/>
+        <location filename="../../gui/interface/parse.py" line="82"/>
         <source>Link / av / BV / ep / ss / md / Favorites / Profile</source>
         <translation>链接 / av / BV / ep / ss / md / 收藏夹 / 个人空间</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="74"/>
+        <location filename="../../gui/interface/parse.py" line="87"/>
         <source>Parse</source>
         <translation>解析</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="78"/>
+        <location filename="../../gui/interface/parse.py" line="91"/>
         <source>Batch Parse</source>
         <translation>批量解析</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="89"/>
+        <location filename="../../gui/interface/parse.py" line="102"/>
         <source>Parsing History</source>
         <translation>解析记录</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="93"/>
+        <location filename="../../gui/interface/parse.py" line="106"/>
         <source>Batch Select</source>
         <translation>批量选择</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="97"/>
+        <location filename="../../gui/interface/parse.py" line="110"/>
         <source>Download Options</source>
         <translation>下载选项</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="112"/>
+        <location filename="../../gui/interface/parse.py" line="125"/>
         <source>Download Selected Items</source>
         <translation>下载所选项目</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="226"/>
+        <location filename="../../gui/interface/parse.py" line="239"/>
         <source>Parse Failed</source>
         <translation>解析失败</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="85"/>
+        <location filename="../../gui/interface/parse.py" line="98"/>
         <source>Search</source>
         <translation>搜索</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="307"/>
+        <location filename="../../gui/interface/parse.py" line="320"/>
         <source>{category_name} ({selected_count} selected, {total_count} total)</source>
         <translation>{category_name}（已选择 {selected_count} 项，共 {total_count} 项）</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="313"/>
-        <location filename="../../gui/interface/parse.py" line="574"/>
+        <location filename="../../gui/interface/parse.py" line="326"/>
+        <location filename="../../gui/interface/parse.py" line="598"/>
         <source>{category_name} ({total_count} total)</source>
         <translation>{category_name}（共 {total_count} 项）</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="599"/>
+        <location filename="../../gui/interface/parse.py" line="623"/>
         <source>Auto-parse Pagination</source>
         <translation>自动解析分页</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="600"/>
+        <location filename="../../gui/interface/parse.py" line="624"/>
         <source>Click here to automatically parse all pages.</source>
         <translation>点击此处可进行自动解析分页操作</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="693"/>
+        <location filename="../../gui/interface/parse.py" line="717"/>
         <source>Skipped duplicate download: {task_title}</source>
         <translation>已跳过重复下载的任务：{task_title}</translation>
     </message>
@@ -3982,32 +3982,32 @@ ISP：{isp}</translation>
 <context>
     <name>RuleBuilderWidget</name>
     <message>
-        <location filename="../../gui/component/rule_builder.py" line="580"/>
+        <location filename="../../gui/component/rule_builder.py" line="594"/>
         <source>Directory structure</source>
         <translation>目录结构</translation>
     </message>
     <message>
-        <location filename="../../gui/component/rule_builder.py" line="586"/>
+        <location filename="../../gui/component/rule_builder.py" line="600"/>
         <source>Add level</source>
         <translation>添加层级</translation>
     </message>
     <message>
-        <location filename="../../gui/component/rule_builder.py" line="590"/>
+        <location filename="../../gui/component/rule_builder.py" line="604"/>
         <source>At most {count} directory levels</source>
         <translation>最多 {count} 层目录</translation>
     </message>
     <message>
-        <location filename="../../gui/component/rule_builder.py" line="611"/>
+        <location filename="../../gui/component/rule_builder.py" line="633"/>
         <source>File name</source>
         <translation>文件名</translation>
     </message>
     <message>
-        <location filename="../../gui/component/rule_builder.py" line="654"/>
+        <location filename="../../gui/component/rule_builder.py" line="677"/>
         <source>This rule cannot be shown in the visual editor ({reason}). Edit it in the advanced section below.</source>
         <translation>该规则无法在可视化编辑器中显示（{reason}），请在下方的高级区域中编辑。</translation>
     </message>
     <message>
-        <location filename="../../gui/component/rule_builder.py" line="703"/>
+        <location filename="../../gui/component/rule_builder.py" line="726"/>
         <source>Level {number}</source>
         <translation>第 {number} 层</translation>
     </message>
@@ -4015,32 +4015,32 @@ ISP：{isp}</translation>
 <context>
     <name>RuleLevelRow</name>
     <message>
-        <location filename="../../gui/component/rule_builder.py" line="407"/>
+        <location filename="../../gui/component/rule_builder.py" line="421"/>
         <source>Add fragment</source>
         <translation>添加片段</translation>
     </message>
     <message>
-        <location filename="../../gui/component/rule_builder.py" line="417"/>
+        <location filename="../../gui/component/rule_builder.py" line="431"/>
         <source>Move up</source>
         <translation>上移</translation>
     </message>
     <message>
-        <location filename="../../gui/component/rule_builder.py" line="418"/>
+        <location filename="../../gui/component/rule_builder.py" line="432"/>
         <source>Move down</source>
         <translation>下移</translation>
     </message>
     <message>
-        <location filename="../../gui/component/rule_builder.py" line="419"/>
+        <location filename="../../gui/component/rule_builder.py" line="433"/>
         <source>Delete level</source>
         <translation>删除层级</translation>
     </message>
     <message>
-        <location filename="../../gui/component/rule_builder.py" line="460"/>
+        <location filename="../../gui/component/rule_builder.py" line="474"/>
         <source>Empty, will be skipped</source>
         <translation>为空，将被省略</translation>
     </message>
     <message>
-        <location filename="../../gui/component/rule_builder.py" line="488"/>
+        <location filename="../../gui/component/rule_builder.py" line="502"/>
         <source>More variables</source>
         <translation>更多变量</translation>
     </message>
@@ -4049,7 +4049,7 @@ ISP：{isp}</translation>
         <translation type="vanished">插入变量</translation>
     </message>
     <message>
-        <location filename="../../gui/component/rule_builder.py" line="498"/>
+        <location filename="../../gui/component/rule_builder.py" line="512"/>
         <source>Insert text</source>
         <translation>插入文字</translation>
     </message>
@@ -4062,83 +4062,83 @@ ISP：{isp}</translation>
         <translation>命名规则</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/rule_list.py" line="61"/>
+        <location filename="../../gui/dialog/setting/rule_list.py" line="65"/>
         <source>Add</source>
         <translation>添加</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/rule_list.py" line="62"/>
+        <location filename="../../gui/dialog/setting/rule_list.py" line="66"/>
         <source>Duplicate</source>
         <translation>复制</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/rule_list.py" line="63"/>
+        <location filename="../../gui/dialog/setting/rule_list.py" line="67"/>
         <source>Delete</source>
         <translation>删除</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/rule_list.py" line="64"/>
-        <location filename="../../gui/dialog/setting/rule_list.py" line="285"/>
+        <location filename="../../gui/dialog/setting/rule_list.py" line="68"/>
+        <location filename="../../gui/dialog/setting/rule_list.py" line="301"/>
         <source>Reset to Default</source>
         <translation>重置为默认值</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/rule_list.py" line="65"/>
+        <location filename="../../gui/dialog/setting/rule_list.py" line="69"/>
         <source>Help</source>
         <translation>帮助</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/rule_list.py" line="91"/>
+        <location filename="../../gui/dialog/setting/rule_list.py" line="95"/>
         <source>Save</source>
         <translation>保存</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/rule_list.py" line="92"/>
+        <location filename="../../gui/dialog/setting/rule_list.py" line="96"/>
         <source>Close</source>
         <translation>关闭</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/rule_list.py" line="121"/>
+        <location filename="../../gui/dialog/setting/rule_list.py" line="137"/>
         <source>Rule Name</source>
         <translation>规则名称</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/rule_list.py" line="122"/>
+        <location filename="../../gui/dialog/setting/rule_list.py" line="138"/>
         <source>Rule Type</source>
         <translation>规则类型</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/rule_list.py" line="123"/>
+        <location filename="../../gui/dialog/setting/rule_list.py" line="139"/>
         <source>Default</source>
         <translation>默认</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/rule_list.py" line="217"/>
+        <location filename="../../gui/dialog/setting/rule_list.py" line="233"/>
         <source>New rule</source>
         <translation>新建规则</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/rule_list.py" line="233"/>
+        <location filename="../../gui/dialog/setting/rule_list.py" line="249"/>
         <source>{name} (copy)</source>
         <translation>{name}（副本）</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/rule_list.py" line="286"/>
+        <location filename="../../gui/dialog/setting/rule_list.py" line="302"/>
         <source>All custom naming rules will be discarded. Continue?</source>
         <translation>所有自定义命名规则都将被丢弃，是否继续？</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/rule_list.py" line="311"/>
+        <location filename="../../gui/dialog/setting/rule_list.py" line="327"/>
         <source>Naming rules saved</source>
         <translation>命名规则已保存</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/rule_list.py" line="317"/>
+        <location filename="../../gui/dialog/setting/rule_list.py" line="333"/>
         <source>Discard changes?</source>
         <translation>放弃更改？</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/rule_list.py" line="318"/>
+        <location filename="../../gui/dialog/setting/rule_list.py" line="334"/>
         <source>The naming rules have been modified but not saved.</source>
         <translation>命名规则已修改但尚未保存。</translation>
     </message>
@@ -4147,12 +4147,12 @@ ISP：{isp}</translation>
         <translation type="vanished">操作</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/rule_list.py" line="261"/>
+        <location filename="../../gui/dialog/setting/rule_list.py" line="277"/>
         <source>Cannot delete default rule</source>
         <translation>无法删除默认规则</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/rule_list.py" line="262"/>
+        <location filename="../../gui/dialog/setting/rule_list.py" line="278"/>
         <source>Only non-default naming rules can be deleted.</source>
         <translation>只能删除非默认的命名规则。</translation>
     </message>
@@ -4165,17 +4165,17 @@ ISP：{isp}</translation>
         <translation>预览</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="87"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="91"/>
         <source>Multi-part video</source>
         <translation>分P视频</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="90"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="94"/>
         <source>Collection</source>
         <translation>合集</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="93"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="97"/>
         <source>Single video</source>
         <translation>单个视频</translation>
     </message>
@@ -4330,13 +4330,21 @@ ISP：{isp}</translation>
     </message>
     <message>
         <location filename="../../gui/dialog/setting/select_area.py" line="21"/>
-        <source>Mainland China</source>
-        <translation>中国大陆</translation>
+        <source>China (Including Hong Kong, Macau, and Taiwan)</source>
+        <translation>中国（含港澳台地区）</translation>
     </message>
     <message>
         <location filename="../../gui/dialog/setting/select_area.py" line="24"/>
+        <source>Other Regions</source>
+        <translation>其他地区</translation>
+    </message>
+    <message>
+        <source>Mainland China</source>
+        <translation type="vanished">中国大陆</translation>
+    </message>
+    <message>
         <source>Outside Mainland China (Including Hong Kong, Macau, and Taiwan)</source>
-        <translation>中国大陆以外地区（包括香港、澳门和台湾）</translation>
+        <translation type="vanished">中国大陆以外地区（包括香港、澳门和台湾）</translation>
     </message>
 </context>
 <context>
@@ -4777,12 +4785,12 @@ Under no circumstances shall the developer be liable for any direct, indirect, i
 <context>
     <name>TopNavigationDialogBase</name>
     <message>
-        <location filename="../../gui/component/dialog.py" line="203"/>
+        <location filename="../../gui/component/dialog.py" line="209"/>
         <source>OK</source>
         <translation>确定</translation>
     </message>
     <message>
-        <location filename="../../gui/component/dialog.py" line="207"/>
+        <location filename="../../gui/component/dialog.py" line="213"/>
         <source>Cancel</source>
         <translation>取消</translation>
     </message>
