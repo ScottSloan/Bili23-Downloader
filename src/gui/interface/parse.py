@@ -33,6 +33,15 @@ from util.thread.pool import GlobalThreadPoolTask
 from collections import deque
 from threading import Event
 import logging
+import time
+
+# 同一次复制会被 clipboard.changed 触发多次：输入法、剪贴板管理器这类常驻程序会不断改写
+# 剪贴板，Windows 便会针对同一次变更连发若干次 WM_CLIPBOARDUPDATE。实测日志里同一条链接
+# 在几十毫秒内被解析了两遍，也就是两轮完整的网络请求，而用户只按了一次 Ctrl+C。
+#
+# 窗口取 1.5 秒：足够吞掉同一次复制产生的重复通知，又短于手动再复制一次的耗时 ——
+# 用户过一会儿重新复制同一条链接时仍然会照常解析
+CLIPBOARD_DEBOUNCE_S = 1.5
 
 logger = logging.getLogger(__name__)
 
@@ -54,6 +63,10 @@ class ParseInterface(QFrame):
 
         self._triggered_by_clipboard = False
         self.download_options_dialog_opened = False
+
+        # 剪贴板去抖用：上一次自动解析的链接与时刻，见 CLIPBOARD_DEBOUNCE_S
+        self._last_clipboard_url = None
+        self._last_clipboard_parse_at = 0.0
 
         self.setObjectName("ParseInterface")
 
@@ -348,10 +361,21 @@ class ParseInterface(QFrame):
 
         url = self.clipboard.text()
 
+        # 同一次复制产生的重复通知只解析一次，见 CLIPBOARD_DEBOUNCE_S。
+        # 启动补检与 clipboard.changed 走的是同一个入口，因此这里同时也挡掉了
+        # "界面就绪时补检一次、紧接着 changed 又触发一次"的重复解析
+        now = time.monotonic()
+
+        if url == self._last_clipboard_url and now - self._last_clipboard_parse_at < CLIPBOARD_DEBOUNCE_S:
+            return None
+
         for parser_type, pattern in url_patterns:
             if pattern.search(url):
                 # 置标志位，表示接下来的解析是由监控剪贴板触发的
                 self._triggered_by_clipboard = True
+
+                self._last_clipboard_url = url
+                self._last_clipboard_parse_at = now
 
                 self.url_box.setText(url)
                 self.on_parse()

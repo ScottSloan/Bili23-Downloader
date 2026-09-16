@@ -188,7 +188,13 @@ class TopNavigationDialogBase(FluentDialogBase):
     顶部导航对话框基类，适用于需要在对话框顶部显示导航栏的场景。
     """
     def __init__(self, size: QSize, parent = None):
-        super().__init__(size, parent = None)
+        # parent 必须原样传给 QWidget。传 None 会让对话框变成"没有父窗口的顶层窗口"，
+        # 而 Qt 的自动退出判定（QGuiApplicationPrivate::lastWindowClosed()）只认这种窗口，
+        # 带 parent 的对话框因为有 transient parent 会被排除在外。
+        #
+        # 后果：主窗口不可见时（关闭时最小化到托盘、静默启动）只要关掉这个对话框，
+        # Qt 就认定"最后一个窗口已关闭"，直接结束事件循环，整个进程随之退出。
+        super().__init__(size, parent)
 
         self._setup_widget()
 

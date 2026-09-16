@@ -242,6 +242,13 @@ class MainWindow(MSFluentWindow):
 
         super().closeEvent(e)
 
+        # setup_app() 关掉了 quitOnLastWindowClosed：托盘程序不能让 Qt 在"最后一个窗口关闭"时
+        # 自行结束事件循环（那会让主窗口不可见时关掉任意无父窗口也把整个进程带走），
+        # 于是退出必须由这里显式声明。少了这一句，窗口消失后进程会一直留在后台，
+        # shutdown_process() 永远等不到 app.exec() 返回，托盘菜单的"退出"也就失效了
+        if e.isAccepted():
+            QApplication.quit()
+
     def resizeEvent(self, e):
         if hasattr(self, "parse_interface"):
             self.parse_interface.adjust_column_width()
