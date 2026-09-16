@@ -136,10 +136,6 @@ class Merger(QObject):
                 # 将 m4a 转换为 mp3
                 self.m4a_to_mp3()
                 return
-            
-            # else:
-            #     # 对 m4a 文件进行修复
-            #     self.fix_mp4_box()
 
             self.rename_output_file()
 
@@ -521,29 +517,6 @@ class Merger(QObject):
                 f.write(f"file '{part_file_name}'\n")
 
         return lists_path.name
-
-    def fix_mp4_box(self):
-        cwd = self.get_cwd()
-
-        if Path(cwd, self.temp_audio_file_name).exists():
-            self.task_info.Download.status = DownloadStatus.CONVERTING
-            signal_bus.download.update_downloading_item.emit(self.task_info)
-
-            temp_output_audio_file_name = "output_{task_id}.m4a".format(task_id = self.task_info.Basic.task_id)
-
-            self._output_audio_file = temp_output_audio_file_name
-
-            fix_command = FFmpegCommand.fix_mp4_box(
-                input_path = self.temp_audio_file_name,
-                output_path = temp_output_audio_file_name
-            )
-
-            self._start_ffmpeg(fix_command, cwd, self.on_convert_completed)
-        else:
-            self.set_error_message(
-                Translator.ERROR_MESSAGES("DOWNLOAD_FAILED"),
-                Translator.ERROR_MESSAGES("M4A_NOT_FOUND")
-            )
 
     @property
     def temp_video_file_name(self):
