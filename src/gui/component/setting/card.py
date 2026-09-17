@@ -583,11 +583,11 @@ class MediaOptionsCard(ExpandGroupSettingCard):
         self.original_files_type_choice = ComboBox(parent = self)
         self.original_files_type_choice.addItems([self.tr("Both"), self.tr("Video Only"), self.tr("Audio Only")])
 
-        self.addGroup("", self.tr("Download standalone video stream"), self.tr("Download a video stream without audio"), self.download_video_stream_switch)
-        self.addGroup("", self.tr("Download standalone audio stream"), self.tr("Download an audio stream without video"), self.download_audio_stream_switch)
-        self.merge_video_audio_group = self.addGroup("", self.tr("Merge video and audio"), self.tr("Merge separate video and audio streams into a single file"), self.merge_video_audio_switch)
-        self.keep_original_files_group = self.addGroup("", self.tr("Keep original files"), self.tr("Keep the original separate stream files after merging"), self.keep_original_files_switch)
-        self.keep_original_files_type_group = self.addGroup("", self.tr("Original file type to keep"), self.tr("Choose which original stream files to keep when keeping original files"), self.original_files_type_choice)
+        self.addGroup("", self.tr("Download standalone video stream"), self.tr("Turn this off to download the audio track only"), self.download_video_stream_switch)
+        self.addGroup("", self.tr("Download standalone audio stream"), self.tr("Turning this off leaves the downloaded video silent"), self.download_audio_stream_switch)
+        self.merge_video_audio_group = self.addGroup("", self.tr("Merge video and audio"), self.tr("Turning this off saves video and audio as two separate files"), self.merge_video_audio_switch)
+        self.keep_original_files_group = self.addGroup("", self.tr("Keep original files"), self.tr("Keep the unmerged stream files in addition to the merged one"), self.keep_original_files_switch)
+        self.keep_original_files_type_group = self.addGroup("", self.tr("Original file type to keep"), self.tr("Choose which original file to keep"), self.original_files_type_choice)
 
         self.showHyperLinkLabel(self.tr("About Media Options"))
 

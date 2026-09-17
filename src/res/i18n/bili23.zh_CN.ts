@@ -2835,9 +2835,14 @@ Download functionality will be limited if you&apos;re not logged in.</source>
         <translation>下载独立视频流</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="586"/>
-        <source>Download a video stream without audio</source>
-        <translation>下载不包含音频的视频流</translation>
+        <location filename="../../gui/component/setting/card.py" line="589"/>
+        <source>Keep the unmerged stream files in addition to the merged one</source>
+        <translation>合并后额外保留合并前的原始文件</translation>
+    </message>
+    <message>
+        <location filename="../../gui/component/setting/card.py" line="590"/>
+        <source>Choose which original file to keep</source>
+        <translation>选择留下哪一份原始文件</translation>
     </message>
     <message>
         <location filename="../../gui/component/setting/card.py" line="587"/>
@@ -2845,29 +2850,9 @@ Download functionality will be limited if you&apos;re not logged in.</source>
         <translation>下载独立音频流</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="587"/>
-        <source>Download an audio stream without video</source>
-        <translation>下载不包含视频的音频流</translation>
-    </message>
-    <message>
-        <location filename="../../gui/component/setting/card.py" line="588"/>
-        <source>Merge separate video and audio streams into a single file</source>
-        <translation>将独立的视频流和音频流合并为一个文件</translation>
-    </message>
-    <message>
-        <location filename="../../gui/component/setting/card.py" line="589"/>
-        <source>Keep the original separate stream files after merging</source>
-        <translation>在合并视频和音频后保留原始的独立流文件</translation>
-    </message>
-    <message>
         <location filename="../../gui/component/setting/card.py" line="590"/>
         <source>Original file type to keep</source>
         <translation>要保留的原始文件类型</translation>
-    </message>
-    <message>
-        <location filename="../../gui/component/setting/card.py" line="590"/>
-        <source>Choose which original stream files to keep when keeping original files</source>
-        <translation>选择在保留原始文件时要保留哪些原始流文件</translation>
     </message>
     <message>
         <location filename="../../gui/component/setting/card.py" line="592"/>
@@ -2883,6 +2868,21 @@ Download functionality will be limited if you&apos;re not logged in.</source>
         <location filename="../../gui/component/setting/card.py" line="588"/>
         <source>Merge video and audio</source>
         <translation>合并视频和音频</translation>
+    </message>
+    <message>
+        <location filename="../../gui/component/setting/card.py" line="586"/>
+        <source>Turn this off to download the audio track only</source>
+        <translation>仅下载音频时请关闭此项</translation>
+    </message>
+    <message>
+        <location filename="../../gui/component/setting/card.py" line="587"/>
+        <source>Turning this off leaves the downloaded video silent</source>
+        <translation>关闭后下载的视频会没有声音</translation>
+    </message>
+    <message>
+        <location filename="../../gui/component/setting/card.py" line="588"/>
+        <source>Turning this off saves video and audio as two separate files</source>
+        <translation>关闭后视频和音频会存成两个文件</translation>
     </message>
     <message>
         <location filename="../../gui/component/setting/card.py" line="589"/>
