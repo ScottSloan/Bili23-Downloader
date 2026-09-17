@@ -107,6 +107,10 @@ class MediaInfoCard(ExpandGroupSettingCard):
         self.video_quality_group.setContent(self.tr("Fetching..."))
         self.video_codec_group.setContent(self.tr("Fetching..."))
 
+        # 上一次查询留下的回退提示属于上一组画质/编码，重新查询期间先撤下，
+        # 免得它挂在那里与新结果对不上
+        self.video_codec_group.setWarningContent()
+
     def pre_query_audio_info(self):
         self.audio_quality_group.setContent(self.tr("Fetching..."))
 
@@ -119,6 +123,8 @@ class MediaInfoCard(ExpandGroupSettingCard):
         else:
             self.video_quality_group.setContent(self.tr("Video quality will be automatically selected based on priority settings"))
             self.video_codec_group.setContent(self.tr("Video codec will be automatically selected based on priority settings"))
+
+            self.video_codec_group.setWarningContent()
 
     def on_query_audio_info(self, info: dict):
         # 处理获取到的音频媒体信息并更新界面显示
@@ -173,12 +179,46 @@ class MediaInfoCard(ExpandGroupSettingCard):
         self.audio_quality_group.setContent(", ".join([label for label in label_list if label]))
 
     def update_video_codec_description(self, info: dict):
-        codec_label_list = [
-            reversed_video_codec_map.get(info["codec_id"], self.tr("Unknown Video Codec")),
-            self.get_codec_tip(info["codec_id"])
-        ]
+        codec_id = info["codec_id"]
+        fallback_message = self.get_codec_fallback_message(codec_id)
+
+        if fallback_message:
+            # 回退时这一行让给「实际编码 + 为什么不是它」，省略掉体积/兼容性那句
+            # 通用说明：三者串成一行会把右侧的编码下拉框挤出卡片（实测中文多出
+            # 一截就会挡住，英文更是整条越界），而此刻用户要知道的正是前两件事
+            codec_label_list = [reversed_video_codec_map.get(codec_id, self.tr("Unknown Video Codec"))]
+
+        else:
+            codec_label_list = [
+                reversed_video_codec_map.get(codec_id, self.tr("Unknown Video Codec")),
+                self.get_codec_tip(codec_id)
+            ]
 
         self.video_codec_group.setContent(", ".join(codec_label_list))
+
+        self.video_codec_group.setWarningContent(fallback_message)
+
+    def get_codec_fallback_message(self, codec_id: int):
+        """
+        用户指定了编码、而稿件里没有这一路流时，生成那句要显示的提示，否则返回空串
+
+        这一行显示的从来都是**实际**会用到的编码，但只有一行灰字，与画质、码率、
+        文件大小并排放在一起，看不出「这和你选的不一样」。Issue #465 的报告者选了
+        AV1、下载到 AVC/H.264，全程没有任何地方告诉他这个稿件里没有 AV1。
+
+        刻意不重复实际编码的名字：它就写在这句话前面，再说一遍只会把行撑长。
+
+        「自动（按优先级）」不算回退：按优先级挑编码本来就是它的行为
+        """
+        requested_codec_id = self.video_codec_id
+
+        # 20 即「自动（按优先级）」，见 media_info.py 的 video_codec_map
+        if requested_codec_id in (None, 20) or requested_codec_id == codec_id:
+            return ""
+
+        return Translator.TIP_MESSAGES("VIDEO_CODEC_FALLBACK").format(
+            requested = Translator.VIDEO_CODEC(reversed_video_codec_map.get(requested_codec_id, ""))
+        )
 
     def get_codec_tip(self, video_codec_id: int):
         match video_codec_id:

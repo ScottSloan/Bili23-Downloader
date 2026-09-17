@@ -27,6 +27,26 @@ class TipCaptionLabel(CaptionLabel):
         self.setStyleSheet('QLabel{color: ' + color.name() + '}')
         self.setText(text)
 
+class WarningLabel(CaptionLabel):
+    """
+    WarningLabel 用于显示警示信息，字体颜色为警示色。
+
+    与 TipCaptionLabel 的区别只在颜色：需要用户真正注意到、而不是当作
+    普通媒体信息一扫而过的内容（例如所选编码不可用、实际下载的是另一种编码）
+    必须与周围的灰色小字区分开，否则会重蹈 Issue #465 —— 报告者盯着那行灰字
+    看了半天，仍以为下载的是自己选的 AV1。
+
+    取的是 Fluent 的 Caution 前景色，随明暗主题切换。
+    """
+
+    def __init__(self, text = "", parent = None):
+        super().__init__(parent)
+
+        color = QColor(252, 225, 0) if isDarkTheme() else QColor(157, 93, 0)
+
+        self.setStyleSheet('QLabel{color: ' + color.name() + '}')
+        self.setText(text)
+
 class TipBodyLabel(BodyLabel):
     """
     TipBodyLabel 用于显示提示信息，字体颜色为灰色。

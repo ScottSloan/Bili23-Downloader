@@ -11,6 +11,7 @@ from qfluentwidgets.components.settings.expand_setting_card import GroupWidget a
 
 from .widget import SettingSwitchButton, SettingComboBox, SettingSlider
 from ..widget.spinbox import SpinBox
+from ..widget.label import WarningLabel
 
 from util.common.enum import VideoContainer, ToastNotificationCategory
 from util.common.config import config, isWin11, APPConfig
@@ -64,6 +65,27 @@ class GuideSettingCardBase:
         self.contentLayout.addWidget(contentLabel, 0, Qt.AlignmentFlag.AlignLeft)
 
         vBoxLayout.addLayout(self.contentLayout)
+
+        self.warningLabel = None
+
+    def setWarningContent(self, text: str = ""):
+        """
+        在描述文字后面接一句警示色提示，text 为空时隐藏
+
+        接在同一行而不是另起一行：分组的高度是按单行算的，多出一行会把这一格
+        顶得比左右邻居都高，整张卡片看起来是错位的。
+
+        标签按需创建，绝大多数分组不会用到它；插在描述之后、超链接之前，
+        免得落到 showHyperLinkLabel() 追加的 stretch 右边被推到行尾
+        """
+        if self.warningLabel is None:
+            self.warningLabel = WarningLabel(parent = self.contentLayout.parentWidget())
+
+            self.contentLayout.insertSpacing(1, 8)
+            self.contentLayout.insertWidget(2, self.warningLabel, 0, Qt.AlignmentFlag.AlignLeft)
+
+        self.warningLabel.setText(text)
+        self.warningLabel.setVisible(bool(text))
 
 class GroupWidget(_GroupWidget, GuideSettingCardBase):
     def __init__(self, icon, title, content, widget, stretch = 0):

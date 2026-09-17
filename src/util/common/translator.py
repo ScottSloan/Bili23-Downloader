@@ -32,7 +32,7 @@ class Translator:
     @get_map_method
     def VIDEO_QUALITY(key = None):
         return {
-            "auto": translate("VIDEO_QUALITY", "Auto (by priority)"),
+            "auto": translate("VIDEO_QUALITY", "Auto"),
             "8K": translate("VIDEO_QUALITY", "8K UHD"),
             "DOLBY_VISION": translate("VIDEO_QUALITY", "Dolby Vision"),
             "HDR": translate("VIDEO_QUALITY", "HDR True Color"),
@@ -51,7 +51,7 @@ class Translator:
     @get_map_method
     def AUDIO_QUALITY(key = None):
         return {
-            "auto": translate("AUDIO_QUALITY", "Auto (by priority)"),
+            "auto": translate("AUDIO_QUALITY", "Auto"),
             "HI_RES": translate("AUDIO_QUALITY", "Hi-Res Audio"),
             "DOLBY_ATMOS": translate("AUDIO_QUALITY", "Dolby Atmos"),
             "192K": translate("AUDIO_QUALITY", "192 kbps"),
@@ -63,7 +63,7 @@ class Translator:
     @get_map_method
     def VIDEO_CODEC(key = None):
         return {
-            "auto": translate("VIDEO_CODEC", "Auto (by priority)"),
+            "auto": translate("VIDEO_CODEC", "Auto"),
             "AVC/H.264": translate("VIDEO_CODEC", "AVC/H.264"),
             "HEVC/H.265": translate("VIDEO_CODEC", "HEVC/H.265"),
             "AV1": translate("VIDEO_CODEC", "AV1")
@@ -336,6 +336,15 @@ class Translator:
             "PARSING_LINK": translate("TIP_MESSAGES", "Parsing link {link}, total {total_links} links, progress: {progress}%"),
             "MEDIA_INFO_UPDATED": translate("TIP_MESSAGES", "Media info updated"),
             "ADDED_TO_DOWNLOAD_QUEUE": translate("TIP_MESSAGES", "Added to download queue"),
+            # 用户指定的视频编码在该稿件里不存在时的回退提示（Issue #465）。
+            #
+            # 分两条是因为两处能用的字数差得很远，措辞压不压缩是两回事：
+            # VIDEO_CODEC_FALLBACK 接在「视频编码」那一行的实际编码之后，同一行
+            # 还要放编码下拉框，多一个词就会把下拉框挤出卡片可视范围（实测），
+            # 因此不再重复紧挨着的实际编码名；开始下载后的提示条独立成句，
+            # 没有上下文，必须把「改用了哪个编码」说出来
+            "VIDEO_CODEC_FALLBACK": translate("TIP_MESSAGES", "This video has no {requested}"),
+            "VIDEO_CODEC_FALLBACK_MESSAGE": translate("TIP_MESSAGES", "This video has no {requested}, using {actual}"),
             "SEARCH_KEYWORD": translate("TIP_MESSAGES", "Search: {keyword}"),
         }
 
