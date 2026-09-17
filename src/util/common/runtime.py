@@ -46,23 +46,20 @@ class FFmpegState:
 
 class DownloadOptionsState:
     """
-    下载选项对话框中当前选定的值。
+    下载选项对话框中当前选定的画质与编码。
 
     这些是"下一个任务用什么参数"的暂存，创建任务时会被固化进 TaskInfo，
     此后修改不再影响已入队的任务（2.15.0 起的行为）。
+
+    同一张卡片上的「下载哪几路流、下完之后怎么处理」不在这里 —— 它们既是
+    本次选择也是用户的长期偏好，已改为 config 上的配置项，详见 config.py
+    里 download_video_stream 那一段
     """
 
     def __init__(self):
         self.video_quality_id: int = 200
         self.audio_quality_id: int = 30300
         self.video_codec_id: int = 20
-
-        self.download_video_stream: bool = True
-        self.download_audio_stream: bool = True
-        self.merge_video_audio: bool = True
-
-        self.keep_original_files: bool = False
-        self.keep_original_files_type: int = 0
 
 
 class MCPState:

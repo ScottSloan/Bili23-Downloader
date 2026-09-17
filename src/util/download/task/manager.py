@@ -88,8 +88,10 @@ class TaskManager:
         task_info.Download.video_quality_id = pick_option(options, "video_quality_id", runtime.download.video_quality_id)
         task_info.Download.audio_quality_id = pick_option(options, "audio_quality_id", runtime.download.audio_quality_id)
         task_info.Download.video_codec_id = pick_option(options, "video_codec_id", runtime.download.video_codec_id)
-        task_info.Download.merge_video_audio = pick_option(options, "merge_video_audio", runtime.download.merge_video_audio)
-        task_info.Download.keep_original_files = pick_option(options, "keep_original_files", runtime.download.keep_original_files)
+        # 这两项与下面 __determine_download_type 里的「下载哪几路流」一样，
+        # 回落源是 config 上的配置项（设置界面与下载选项对话框改的是同一份值）
+        task_info.Download.merge_video_audio = pick_option(options, "merge_video_audio", config.get(config.merge_video_audio))
+        task_info.Download.keep_original_files = pick_option(options, "keep_original_files", config.get(config.keep_original_files))
 
         # EpisodeInfo
         task_info.Episode.from_dict(self.__update_episode_info(episode_info, number))
@@ -120,8 +122,8 @@ class TaskManager:
     def __determine_download_type(self, options: dict = None):
         # 确定下载类型
         attr_dict = {
-            DownloadType.VIDEO: pick_option(options, "download_video_stream", runtime.download.download_video_stream),
-            DownloadType.AUDIO: pick_option(options, "download_audio_stream", runtime.download.download_audio_stream),
+            DownloadType.VIDEO: pick_option(options, "download_video_stream", config.get(config.download_video_stream)),
+            DownloadType.AUDIO: pick_option(options, "download_audio_stream", config.get(config.download_audio_stream)),
             DownloadType.DANMAKU: pick_option(options, "download_danmaku", config.get(config.download_danmaku)),
             DownloadType.SUBTITLE: pick_option(options, "download_subtitle", config.get(config.download_subtitle)),
             DownloadType.COVER: pick_option(options, "download_cover", config.get(config.download_cover)),

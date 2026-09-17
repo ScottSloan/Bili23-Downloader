@@ -3,7 +3,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QFontMetrics
 
 from qfluentwidgets import (
-    FluentIcon, SwitchButton, IndicatorPosition, SettingCard, ComboBox
+    FluentIcon, SettingCard, ComboBox
 )
 
 from gui.component.setting.card import ExpandGroupSettingCard
@@ -14,7 +14,6 @@ from util.common.data import (
     reversed_video_quality_map, reversed_audio_quality_map, reversed_video_codec_map, reversed_audio_codec_map,
     reversed_convention_type_map
 )
-from util.common.icon import ExtendedFluentIcon
 from util.common.naming_rules import display_name
 from util.common.translator import Translator
 from util.common.enum import MediaType
@@ -242,94 +241,6 @@ class MediaInfoCard(ExpandGroupSettingCard):
     @property
     def video_codec_id(self):
         return self.video_codec_widget.choice.currentData()
-
-class MediaOptionsCard(ExpandGroupSettingCard):
-    def __init__(self, parent_window, parent = None):
-        super().__init__(ExtendedFluentIcon.OPTIONS, self.tr("Media Options"), self.tr("Configure download behavior for video and audio streams"), parent)
-
-        self.parent_window = parent_window
-
-        self.download_video_stream_switch = SwitchButton(parent = self, indicatorPos = IndicatorPosition.RIGHT)
-        self.download_audio_stream_switch = SwitchButton(parent = self, indicatorPos = IndicatorPosition.RIGHT)
-
-        self.merge_video_audio_switch = SwitchButton(parent = self, indicatorPos = IndicatorPosition.RIGHT)
-        self.keep_original_files_switch = SwitchButton(parent = self, indicatorPos = IndicatorPosition.RIGHT)
-
-        self.original_files_type_choice = ComboBox(parent = self)
-        self.original_files_type_choice.addItems([self.tr("Both"), self.tr("Video Only"), self.tr("Audio Only")])
-
-        self.addGroup("", self.tr("Download standalone video stream"), self.tr("Download a video stream without audio"), self.download_video_stream_switch)
-        self.addGroup("", self.tr("Download standalone audio stream"), self.tr("Download an audio stream without video"), self.download_audio_stream_switch)
-        self.merge_video_audio_group = self.addGroup("", self.tr("Merge video and audio"), self.tr("Merge separate video and audio streams into a single file"), self.merge_video_audio_switch)
-        self.keep_original_files_group = self.addGroup("", self.tr("Keep original files"), self.tr("Keep the original separate stream files after merging"), self.keep_original_files_switch)
-        self.keep_original_files_type_group = self.addGroup("", self.tr("Original file type to keep"), self.tr("Choose which original stream files to keep when keeping original files"), self.original_files_type_choice)
-
-        self.showHyperLinkLabel(self.tr("About Media Options"))
-
-        self.connect_signals()
-
-        self.on_load()
-
-    def connect_signals(self):
-        self.download_video_stream_switch.checkedChanged.connect(self.on_change_download_stream_options)
-        self.download_audio_stream_switch.checkedChanged.connect(self.on_change_download_stream_options)
-        self.merge_video_audio_switch.checkedChanged.connect(self.on_change_merge_option)
-        self.keep_original_files_switch.checkedChanged.connect(self.on_change_keep_original_files_option)
-
-        self.hyper_label.clicked.connect(lambda: self.showGuideMessageBox(self.tr("Instructions"), Translator.MEDIA_OPTIONS_GUIDE()))
-
-    def on_load(self):
-        self.download_video_stream_switch.setChecked(runtime.download.download_video_stream)
-        self.download_audio_stream_switch.setChecked(runtime.download.download_audio_stream)
-        self.merge_video_audio_switch.setChecked(runtime.download.merge_video_audio)
-        self.keep_original_files_switch.setChecked(runtime.download.keep_original_files)
-        self.original_files_type_choice.setCurrentIndex(runtime.download.keep_original_files_type)
-
-        self.on_change_keep_original_files_option()
-
-    def on_change_download_stream_options(self):
-        enable = self.download_video_stream_switch.isChecked() and self.download_audio_stream_switch.isChecked()
-
-        self.merge_video_audio_switch.setEnabled(enable)
-        self.merge_video_audio_switch.setChecked(enable)
-        self.merge_video_audio_group.setEnabled(enable)
-
-        keep_original_enable = enable and self.merge_video_audio_switch.isChecked()
-        self.keep_original_files_switch.setEnabled(keep_original_enable)
-        self.keep_original_files_group.setEnabled(keep_original_enable)
-
-        if not keep_original_enable:
-            self.keep_original_files_switch.setChecked(False)
-
-    def on_change_merge_option(self):
-        enable = self.merge_video_audio_switch.isChecked()
-
-        self.keep_original_files_switch.setEnabled(enable)
-        self.keep_original_files_group.setEnabled(enable)
-
-        if not enable:
-            self.keep_original_files_switch.setChecked(False)
-
-    def on_change_keep_original_files_option(self):
-        enable = self.keep_original_files_switch.isChecked()
-
-        self.keep_original_files_type_group.setEnabled(enable)
-
-    @property
-    def download_video_stream(self):
-        return self.download_video_stream_switch.isChecked()
-    
-    @property
-    def download_audio_stream(self):
-        return self.download_audio_stream_switch.isChecked()
-    
-    @property
-    def merge_video_audio(self):
-        return self.merge_video_audio_switch.isChecked()
-    
-    @property
-    def keep_original_files(self):
-        return self.keep_original_files_switch.isChecked()
 
 def fill_rule_choice(choice: ComboBox, type_id: int):
     """

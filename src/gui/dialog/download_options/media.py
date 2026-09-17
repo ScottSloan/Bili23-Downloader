@@ -3,7 +3,8 @@ from PySide6.QtCore import QTimer, Signal
 
 from qfluentwidgets import MessageBox
 
-from gui.dialog.download_options.card import MediaInfoCard, MediaOptionsCard
+from gui.dialog.download_options.card import MediaInfoCard
+from gui.component.setting import MediaOptionsCard
 from gui.component.widget.scroll import ScrollArea
 
 from util.parse.preview.info import PreviewerInfo
@@ -83,12 +84,9 @@ class MediaSettingsPage(ScrollArea):
         runtime.download.audio_quality_id = self.media_info_card.audio_quality_id
         runtime.download.video_codec_id = self.media_info_card.video_codec_id
 
-        runtime.download.download_video_stream = self.media_options_card.download_video_stream
-        runtime.download.download_audio_stream = self.media_options_card.download_audio_stream
-        runtime.download.merge_video_audio = self.media_options_card.merge_video_audio
-        runtime.download.keep_original_files = self.media_options_card.keep_original_files
-
-        runtime.download.keep_original_files_type = self.media_options_card.original_files_type_choice.currentIndex()
+        # 媒体选项存的是 config，不是 runtime —— 对话框只是它的两个入口之一，
+        # 因此同样在这里统一落盘；关掉对话框等于取消，那时不会走到这里
+        self.media_options_card.save()
 
     def on_check(self):
         # 只下载独立视频流会导致没有声音，提示用户确认

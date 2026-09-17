@@ -9,7 +9,7 @@ from .serializer import LanguageSerializer, ScalingSerializer
 from .enum import (
     Language, WhenClose, DanmakuType, SubtitleType, CoverType, MetadataType, ProxyMode, ProxyType, FFmpegSource,
     NumberingType, Scaling, FileConflictResolution, VideoContainer, AutoSelectMode, Area, DuplicateDownloadResolution,
-    ConventionType
+    ConventionType, OriginalFileType
 )
 from ._json import json_loads
 
@@ -368,6 +368,22 @@ class APPConfig(QConfig):
 
     video_container = OptionsConfigItem("Download", "video_container", VideoContainer.MP4, OptionsValidator(VideoContainer), EnumSerializer(VideoContainer))
     m4a_to_mp3 = ConfigItem("Download", "m4a_to_mp3", False)
+
+    # 下载哪几路流、下完之后怎么处理。
+    #
+    # 这几个值原先放在 runtime.download 上（下载选项对话框的「本次选择」），
+    # 3cfb1a4d 把进程级运行时状态从 APPConfig 剥离时一并迁了过去，理由是
+    # 「它们只是下一个任务用什么参数的暂存」。但它们同样是用户实打实的偏好：
+    # 只想收音频的人不该每下载一个稿件都去对话框里勾一次，而对话框本身
+    # 也只有下载时才打得开。改为配置项后两个入口改的是同一份值，重启后仍保留。
+    #
+    # 单次下载仍由下载选项对话框的值固化进 TaskInfo（见 task/options.py），
+    # 改动这里不会波及已经排进队列的任务
+    download_video_stream = ConfigItem("Download", "download_video_stream", True, BoolValidator())
+    download_audio_stream = ConfigItem("Download", "download_audio_stream", True, BoolValidator())
+    merge_video_audio = ConfigItem("Download", "merge_video_audio", True, BoolValidator())
+    keep_original_files = ConfigItem("Download", "keep_original_files", False, BoolValidator())
+    keep_original_files_type = OptionsConfigItem("Download", "keep_original_files_type", OriginalFileType.BOTH, OptionsValidator(OriginalFileType), EnumSerializer(OriginalFileType))
 
     # Additional
     download_danmaku = ConfigItem("Additional", "download_danmaku", False, BoolValidator())

@@ -107,13 +107,17 @@ class TestConfigBoundary:
         )
 
     def test_migrated_attributes_are_gone(self):
-        # 逐个确认已迁走的属性不会因为合并冲突等原因被还原回来
+        # 逐个确认已迁走的属性不会因为合并冲突等原因被还原回来。
+        #
+        # 注意 download_video_stream / download_audio_stream / merge_video_audio /
+        # keep_original_files / keep_original_files_type 不在这个清单里：它们后来
+        # 回到了 APPConfig，但身份变了 —— 当初是语义不明的裸属性，现在是正经的
+        # ConfigItem，两个入口（设置界面与下载选项对话框）改的是同一份落盘值。
+        # 上面那条用例保证它们没有以裸属性的形式回来
         migrated = [
             "is_expired", "user_uname", "user_uid", "user_avatar_pixmap",
             "ffmpeg_executable", "bundle_ffmpeg_exist", "no_ffmpeg_available",
             "video_quality_id", "audio_quality_id", "video_codec_id",
-            "download_video_stream", "download_audio_stream", "merge_video_audio",
-            "keep_original_files", "keep_original_files_type",
             "mcp_running", "mcp_last_error",
             "target_naming_rule_id", "global_starting_number", "current_starting_number",
             "main_window_ready",
@@ -122,6 +126,14 @@ class TestConfigBoundary:
         still_there = [name for name in migrated if name in vars(APPConfig)]
 
         assert not still_there, f"这些属性已迁往 runtime，不应再出现在 APPConfig：{still_there}"
+
+    def test_media_options_are_config_items(self):
+        # 媒体选项从 runtime 回到了 APPConfig（既按次指定也是长期偏好），
+        # 但必须是 ConfigItem：退回成裸属性就又变成「看着像设置、实则重启即失」，
+        # 那正是 3cfb1a4d 要消除的混淆
+        for name in ("download_video_stream", "download_audio_stream", "merge_video_audio",
+                     "keep_original_files", "keep_original_files_type"):
+            assert isinstance(vars(APPConfig)[name], ConfigItem), f"{name} 应是 ConfigItem"
 
 
 class TestSignalBusDecoupled:

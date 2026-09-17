@@ -60,7 +60,9 @@ class TestSettingCards:
     @pytest.mark.parametrize(
         "name",
         ["DanmakuSettingCard", "SubtitleSettingCard", "CoverSettingCard",
-         "ChapterSettingCard", "MetadataSettingCard", "DownloadFormatCard"],
+         "ChapterSettingCard", "MetadataSettingCard", "DownloadFormatCard",
+         # 同时被设置界面与下载选项对话框复用，两边构筑路径不同，都过一遍
+         "MediaOptionsCard"],
     )
     def test_card_constructs(self, parent, name):
         from gui.component import setting

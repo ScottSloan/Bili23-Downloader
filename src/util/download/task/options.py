@@ -1,6 +1,5 @@
-from ...common.enum import DanmakuType, SubtitleType, CoverType, MetadataType, VideoContainer
+from ...common.enum import DanmakuType, SubtitleType, CoverType, MetadataType, VideoContainer, OriginalFileType
 from ...common.config import config
-from ...common.runtime import runtime
 
 from qfluentwidgets import ConfigItem
 
@@ -37,7 +36,7 @@ _OPTION_SPEC = {
     # 保留原始文件时保留哪一路流。它的两个同伴 merge_video_audio 与
     # keep_original_files 早就固化在 DownloadInfo 里了，唯独它一直是在合并阶段
     # 才去读全局状态，放在这里是为了沿用「缺失即回落全局设置」的兼容处理
-    "keep_original_files_type": None,
+    "keep_original_files_type": OriginalFileType,
 }
 
 def pick_option(options: dict, key: str, fallback):
@@ -51,23 +50,10 @@ def pick_option(options: dict, key: str, fallback):
 
     return fallback
 
-# 回落源不在 config 上的选项 —— 键 → 取值函数。
-#
-# 3cfb1a4d 把进程级运行时状态从 APPConfig 剥离到 runtime 之后，用户当前选中的
-# 「保留哪一路原始流」就不再是 config 上的属性了。它是 _OPTION_SPEC 里唯一一个
-# 回落源在 runtime 的选项，单独列出来而不是把回落源塞进 _OPTION_SPEC，是为了让
-# 「配置项」与「运行时状态」的界线在这个文件里仍然一眼可见。
-#
-# 往 _OPTION_SPEC 加新选项时，若它的回落源不是 config 上的 ConfigItem，必须同时加在这里，
-# 否则取值会抛 AttributeError（历史上正是这么漏掉的，且一路藏到任务创建才炸）
-_RUNTIME_FALLBACK = {
-    "keep_original_files_type": lambda: runtime.download.keep_original_files_type,
-}
-
 def _global_value(key: str):
-    if getter := _RUNTIME_FALLBACK.get(key):
-        return getter()
-
+    # 回落源一律是 config 上的同名 ConfigItem。往 _OPTION_SPEC 加新选项时，
+    # 若 config 上没有同名的项，这里会抛 AttributeError —— 历史上正是这么
+    # 漏掉过一次，且一路藏到任务创建才炸（见 test_download_options.py）
     item = getattr(config, key)
 
     return config.get(item) if isinstance(item, ConfigItem) else item

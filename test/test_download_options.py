@@ -8,21 +8,26 @@
 （弹「下载失败」的 toast，不崩溃）。当时整个测试套件都是绿的，因为没人断言过这条接缝。
 
 因此这里钉住的核心是：`_OPTION_SPEC` 里的每一项都必须能取到全局值。
+
+回落源后来统一收敛回了 config：媒体选项既能按次指定、也是用户的长期偏好，设置界面
+与下载选项对话框改的是同一份值（详见 config.py 里 download_video_stream 那一段）。
+`_RUNTIME_FALLBACK` 那张表随之取消，「回落源是 config 上的同名 ConfigItem」不再有例外，
+上面那条用例因此比以前更有约束力。
 """
 
 import pytest
 
 
 @pytest.fixture
-def restore_runtime_option():
-    # 这一项是进程级运行时状态，用例改完必须还原，否则会漏给后面的用例
-    from util.common.runtime import runtime
+def restore_option():
+    # config.set() 会落盘并在本场测试内一直生效，用例改完必须还原
+    from util.common.config import config
 
-    original = runtime.download.keep_original_files_type
+    original = config.get(config.keep_original_files_type)
 
-    yield runtime.download
+    yield config
 
-    runtime.download.keep_original_files_type = original
+    config.set(config.keep_original_files_type, original)
 
 
 class TestGlobalFallback:
@@ -40,31 +45,38 @@ class TestGlobalFallback:
         assert set(snapshot()) == set(_OPTION_SPEC)
 
 
-class TestRuntimeBackedOption:
-    def test_snapshot_freezes_runtime_value(self, restore_runtime_option):
+class TestKeepOriginalFilesType:
+    """
+    `keep_original_files_type` 是 _OPTION_SPEC 里唯一需要转成枚举再存的一项，
+    也是回落源从 runtime 改回 config 的那一项，单独钉住它的取值链
+    """
+
+    def test_snapshot_freezes_config_value(self, restore_option):
+        from util.common.enum import OriginalFileType
         from util.download.task.options import snapshot
 
-        restore_runtime_option.keep_original_files_type = 2
+        restore_option.set(restore_option.keep_original_files_type, OriginalFileType.AUDIO)
 
-        assert snapshot()["keep_original_files_type"] == 2
+        assert snapshot()["keep_original_files_type"] == OriginalFileType.AUDIO.value
 
-    def test_missing_option_falls_back_to_runtime(self, restore_runtime_option):
+    def test_missing_option_falls_back_to_config(self, restore_option):
         # 旧版本创建的任务没有 Options 这一组，各项都是 None，此时读用户当前的全局设置
-        from util.download.task.info import TaskInfo
-        from util.download.task.options import resolve
-
-        restore_runtime_option.keep_original_files_type = 2
-
-        assert resolve(TaskInfo(), "keep_original_files_type") == 2
-
-    def test_frozen_option_wins_over_runtime(self, restore_runtime_option):
         from util.common.enum import OriginalFileType
         from util.download.task.info import TaskInfo
         from util.download.task.options import resolve
 
-        restore_runtime_option.keep_original_files_type = 2
+        restore_option.set(restore_option.keep_original_files_type, OriginalFileType.AUDIO)
+
+        assert resolve(TaskInfo(), "keep_original_files_type") == OriginalFileType.AUDIO
+
+    def test_frozen_option_wins_over_config(self, restore_option):
+        from util.common.enum import OriginalFileType
+        from util.download.task.info import TaskInfo
+        from util.download.task.options import resolve
+
+        restore_option.set(restore_option.keep_original_files_type, OriginalFileType.AUDIO)
 
         task_info = TaskInfo()
         task_info.Options.keep_original_files_type = OriginalFileType.VIDEO.value
 
-        assert resolve(task_info, "keep_original_files_type") == OriginalFileType.VIDEO.value
+        assert resolve(task_info, "keep_original_files_type") == OriginalFileType.VIDEO

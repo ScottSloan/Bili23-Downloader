@@ -11,7 +11,7 @@ from gui.component.setting import (
     PrioritySettingCard, DanmakuSettingCard, SubtitleSettingCard, CoverSettingCard, ChapterSettingCard, MetadataSettingCard, CDNSettingCard, ProxySettingCard,
     FFmpegSettingCard, NumberSettingCard, DownloadFormatCard, DownloadPathSettingCard, ParsingSettingCard, WindowBehaviorSettingCard,
     DownloadHandlingSettingCard, DownloadConcurrencySettingCard, PersonalizationCard, CheckUpdateSettingCard, OtherAdvancedSettingCard,
-    MCPSettingCard
+    MCPSettingCard, MediaOptionsCard
 )
 
 from util.common.data import video_quality_map, audio_quality_map, video_codec_map
@@ -61,6 +61,7 @@ class SettingInterface(ScrollArea):
 
         self.download_path_card = DownloadPathSettingCard(self.main_window, save = True, parent = self)
         self.download_currency_card = DownloadConcurrencySettingCard(self)
+        self.media_options_card = MediaOptionsCard(self.main_window, parent = self)
         self.priority_setting_card = PrioritySettingCard(self.main_window, parent = self)
         self.download_format_card = DownloadFormatCard(self)
 
@@ -107,6 +108,7 @@ class SettingInterface(ScrollArea):
         # Download
         self.download_group.addSettingCard(self.download_path_card)
         self.download_group.addSettingCard(self.download_currency_card)
+        self.download_group.addSettingCard(self.media_options_card)
         self.download_group.addSettingCard(self.priority_setting_card)
         self.download_group.addSettingCard(self.download_format_card)
 
@@ -168,6 +170,11 @@ class SettingInterface(ScrollArea):
 
         # Download
         self.download_currency_card.download_speed_limit_btn.clicked.connect(self.on_custom_speed_limit_settings)
+
+        # 设置界面没有「确定」按钮，媒体选项改一下立即落盘；
+        # 同一个卡片在下载选项对话框里则要等到点确定才写回
+        self.media_options_card.changed.connect(self.media_options_card.save)
+
         self.priority_setting_card.video_quality_btn.clicked.connect(self.on_adjust_video_quality_priority)
         self.priority_setting_card.audio_quality_btn.clicked.connect(self.on_adjust_audio_quality_priority)
         self.priority_setting_card.video_codec_btn.clicked.connect(self.on_adjust_video_codec_priority)
