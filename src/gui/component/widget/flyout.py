@@ -1,15 +1,15 @@
 from PySide6.QtWidgets import QVBoxLayout, QWidget, QHBoxLayout
-from PySide6.QtGui import QColor, QPainter, QPen
 from PySide6.QtCore import Signal, QSize
 
 from qfluentwidgets import (
-    FlyoutViewBase, FluentIcon, isDarkTheme, ComboBox, PopUpAniStackedWidget, NavigationWidget
+    FlyoutViewBase, FluentIcon, ComboBox, PopUpAniStackedWidget
 )
 
 from ..entry_list.list_view import EntryListView
 from .button import TransparentToolButton
 from .navigation import NavigationPanel
 from .pager import Pager
+from .separator import Separator
 
 from util.parse.parser.favorite import FavoriteParser
 from util.common.icon import ExtendedFluentIcon
@@ -17,26 +17,6 @@ from util.common.signal_bus import signal_bus
 from util.common.runtime import runtime
 
 import webbrowser
-
-class Separator(NavigationWidget):
-    def __init__(self, parent = None):
-        super().__init__(False, parent = parent)
-
-        self.setFixedWidth(5)
-
-        self.update()
-
-    def paintEvent(self, e):
-        painter = QPainter(self)
-
-        c = 255 if isDarkTheme() else 0
-
-        pen = QPen(QColor(c, c, c, 25))
-        pen.setCosmetic(True)
-
-        painter.setPen(pen)
-
-        painter.drawLine(2, 0, 2, self.height())
 
 class EntryWidget(QWidget):
     def __init__(self, parent: 'FavoriteFlyoutWidget'):
@@ -296,8 +276,7 @@ class FavoriteFlyoutWidget(FlyoutViewBase):
         else:
             height = 475
 
-        self.separator.setFixedHeight(height - 25)
-
+        # 分割线的高度由布局给出，这里不再手动 setFixedHeight
         self.setFixedSize(width, height)
 
     def on_category_changed(self, index: int):

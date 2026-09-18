@@ -1,10 +1,11 @@
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QFrame, QApplication
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QApplication
 from PySide6.QtCore import Qt
 
 from qfluentwidgets import (
     MessageBox, CommandBar, Action, FluentIcon, PrimaryPushButton, PushButton
 )
 
+from gui.component.widget.separator import Separator
 from gui.component.widget.tree_widget import ColumnTreeWidget
 from gui.component.dialog import Base, FluentWidget
 from .edit_rule import EditRuleDialog
@@ -79,9 +80,7 @@ class RuleListDialog(Base, FluentWidget):
         left_layout.addWidget(self.command_bar)
         left_layout.addWidget(self.rule_list)
 
-        separator = QFrame(self)
-        separator.setFrameShape(QFrame.Shape.VLine)
-        separator.setFrameShadow(QFrame.Shadow.Plain)
+        separator = Separator(self)
 
         self.editor = EditRuleDialog(self)
 
