@@ -47,6 +47,15 @@ class RulePreviewPanel(QWidget):
 
         self.caption_lab = StrongBodyLabel(self.tr("Preview"), self)
 
+        # 预览只给相对路径。不说明一句，用户会以为这就是最终落盘的位置
+        self.hint_lab = CaptionLabel(self.tr("Relative to the download folder"), self)
+
+        caption_layout = QHBoxLayout()
+        caption_layout.setContentsMargins(0, 0, 0, 0)
+        caption_layout.addWidget(self.caption_lab)
+        caption_layout.addStretch()
+        caption_layout.addWidget(self.hint_lab)
+
         self.grid_layout = QGridLayout()
         self.grid_layout.setContentsMargins(0, 0, 0, 0)
         self.grid_layout.setHorizontalSpacing(12)
@@ -55,7 +64,7 @@ class RulePreviewPanel(QWidget):
 
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(0, 0, 0, 0)
-        main_layout.addWidget(self.caption_lab)
+        main_layout.addLayout(caption_layout)
         main_layout.addLayout(self.grid_layout)
 
     def set_type(self, type_id):
@@ -176,12 +185,24 @@ class EditRuleDialog(Base, QWidget):
         self.error_lab.setTextColor("#c42b1c", "#ff99a4")
         self.error_lab.hide()
 
+        # 校验失败时编辑器改不动也走不掉（切走会被挪回来），得给一个明确的
+        # 「回到上一次提交的状态」的入口，否则用户只能自己把错误改好才能脱身。
+        # 与错误提示同一行，不额外占高度 —— 右栏的最小高度本来就卡得很紧
+        self.discard_btn = HyperlinkButton(url = "", text = self.tr("Discard changes"), parent = self)
+        self.discard_btn.hide()
+        self.discard_btn.clicked.connect(self.on_discard)
+
+        error_layout = QHBoxLayout()
+        error_layout.setContentsMargins(0, 0, 0, 0)
+        error_layout.addWidget(self.error_lab, 1)
+        error_layout.addWidget(self.discard_btn, 0, Qt.AlignmentFlag.AlignRight)
+
         self.advanced_widget = QWidget(self)
 
         advanced_layout = QVBoxLayout(self.advanced_widget)
         advanced_layout.setContentsMargins(0, 0, 0, 0)
         advanced_layout.addWidget(self.rule_box)
-        advanced_layout.addWidget(self.error_lab)
+        advanced_layout.addLayout(error_layout)
 
         self.advanced_widget.hide()
 
@@ -196,8 +217,20 @@ class EditRuleDialog(Base, QWidget):
             parent = self
         )
 
+        # 变量表是常驻的参考手册，三十来行会把可视化编辑器挤扁，得能收起来。
+        # 默认展开 —— 折叠的价值在于用户想专心改规则时收走它，默认收起只会让
+        # 新用户找不到变量在哪。
+        #
+        # 按钮挤在下面这一行里而不是自己占一行：右栏最小高度卡得很死，
+        # test_editor_does_not_overlap_at_minimum_height 会当场抓住多出来的那 30px
+        self.variable_btn = TransparentTogglePushButton(
+            FluentIcon.TAG, self.tr("Variable reference"), self
+        )
+        self.variable_btn.setChecked(True)
+
         link_layout = QHBoxLayout()
         link_layout.setContentsMargins(0, 0, 0, 0)
+        link_layout.addWidget(self.variable_btn)
         link_layout.addWidget(self.set_default_chk)
         link_layout.addStretch()
         link_layout.addWidget(self.guide_btn)
@@ -248,6 +281,7 @@ class EditRuleDialog(Base, QWidget):
         self.type_choice.currentIndexChanged.connect(self.on_type_changed)
 
         self.advanced_btn.toggled.connect(self.advanced_widget.setVisible)
+        self.variable_btn.toggled.connect(self.variable_list.setVisible)
 
         self.guide_btn.clicked.connect(self.on_guide)
 
@@ -394,6 +428,7 @@ class EditRuleDialog(Base, QWidget):
 
         if valid:
             self.error_lab.hide()
+            self.discard_btn.hide()
             self.rule_box.setError(False)
 
             self.preview_panel.update_preview(rule)
@@ -401,6 +436,7 @@ class EditRuleDialog(Base, QWidget):
         else:
             self.error_lab.setText(message)
             self.error_lab.show()
+            self.discard_btn.show()
             self.rule_box.setError(True)
 
             self.preview_panel.update_preview("")
@@ -440,16 +476,47 @@ class EditRuleDialog(Base, QWidget):
 
         return True, None
 
-    def validate(self):
-        """保存前的整体校验，返回 (是否通过, 出错的控件, 提示文案)"""
-        if not self.name_box.text():
+    def show_discard_hint(self):
+        """
+        把「放弃修改」摆出来
+
+        只管规则串出错这一条路径：按钮住在高级区里，规则名出错时那一区是收着的，
+        硬把它摆出来用户也看不见。名字为空有红框和焦点，重打一遍就是了
+        """
+        self.discard_btn.show()
+
+    def on_discard(self):
+        """放弃未提交的修改，回到上一次提交的状态"""
+        self.load(self.rule_data)
+
+        # 列表行的回显要跟着退回已提交的名字/类型（dirty 由工作副本与配置的
+        # 差值算出来，这里不必也不能手动清）
+        self.changed.emit()
+
+    def validate(self, other_names: set = None):
+        """
+        保存前的整体校验，返回 (是否通过, 出错的控件, 提示文案)
+
+        other_names 是同一类型下其他规则的名字。重名只在同一类型内才有害 ——
+        下载选项的下拉框是按类型列规则的，两条同名规则并排出现时用户无从分辨，
+        而不同类型下叫同一个名字完全合法
+        """
+        name = self.name_box.text()
+
+        if not name:
             return False, self.name_box, self.tr("Rule name cannot be empty")
+
+        if other_names and name in other_names:
+            return False, self.name_box, self.tr("Another rule of this type already uses this name")
 
         valid, message = self.validate_rule(self.rule_box.text())
 
         if not valid:
             # 语法问题只在高级区看得见，展开它，免得用户对着可视化区发愣
             self.advanced_btn.setChecked(True)
+
+            # 预览是防抖的，用户可能刚敲完就点了别的规则，红字与这个按钮都还没摆出来
+            self.show_discard_hint()
 
             return False, self.rule_box, message
 

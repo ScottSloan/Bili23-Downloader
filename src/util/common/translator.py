@@ -137,13 +137,16 @@ class Translator:
             "DEFAULT_FOR_INTERACTIVE_VIDEO": translate("DEFAULT_RULE_NAMES", "Preset: Interactive Video"),
             "DEFAULT_FOR_BANGUMI": translate("DEFAULT_RULE_NAMES", "Preset: Film & TV"),
             "DEFAULT_FOR_CHEESE": translate("DEFAULT_RULE_NAMES", "Preset: Courses"),
-            "DEFAULT_FOR_LESSON": translate("DEFAULT_RULE_NAMES", "Preset: Mall Courses"),
             "DEFAULT_FOR_FAVORITE": translate("DEFAULT_RULE_NAMES", "Preset: Favorites"),
             "DEFAULT_FOR_SPACE": translate("DEFAULT_RULE_NAMES", "Preset: Profile"),
             "DEFAULT_FOR_AUDIO": translate("DEFAULT_RULE_NAMES", "Preset: Music"),
             "DEFAULT_FOR_HISTORY": translate("DEFAULT_RULE_NAMES", "Preset: History"),
             "DEFAULT_FOR_WEEKLY": translate("DEFAULT_RULE_NAMES", "Preset: Weekly Picks"),
-            "DEFAULT_FOR_WATCH_LATER": translate("DEFAULT_RULE_NAMES", "Preset: Watch Later")
+            "DEFAULT_FOR_WATCH_LATER": translate("DEFAULT_RULE_NAMES", "Preset: Watch Later"),
+
+            # 不是内置规则的名字，是新建规则时的默认名。存放在这里是为了共用
+            # display_name() 那套「存键不存译名」的机制
+            "NEW_RULE": translate("DEFAULT_RULE_NAMES", "New rule")
         }
 
     @staticmethod
@@ -156,7 +159,6 @@ class Translator:
             "INTERACTIVE_VIDEO": translate("CONVENTION_TYPE", "Interactive Video"),
             "BANGUMI": translate("CONVENTION_TYPE", "Film & TV"),
             "CHEESE": translate("CONVENTION_TYPE", "Courses"),
-            "LESSON": translate("CONVENTION_TYPE", "Mall Courses"),
             "FAVORITE": translate("CONVENTION_TYPE", "Favorites"),
             "SPACE": translate("CONVENTION_TYPE", "Profile"),
             "HISTORY": translate("CONVENTION_TYPE", "History"),
@@ -225,9 +227,8 @@ class Translator:
 
             "SERIES_TITLE_FOR_BANGUMI": translate("VARIABLE_DESCRIPTION", "Series title"),
             "SERIES_TITLE_FOR_CHEESE": translate("VARIABLE_DESCRIPTION", "Courses title"),
-            "SERIES_TITLE_FOR_LESSON": translate("VARIABLE_DESCRIPTION", "Mall courses title"),
-            "SECTION_TITLE_FOR_LESSON": translate("VARIABLE_DESCRIPTION", "Chapter title (courses title if not divided into chapters)"),
-            "EPISODE_TITLE_FOR_LESSON": translate("VARIABLE_DESCRIPTION", "Lesson title"),
+
+            # 下面四条是会员购商城课程独有的标识符，取名时只在商城课程里有值
             "COURSE_ID": translate("VARIABLE_DESCRIPTION", "Mall courses id"),
             "LESSON_ID": translate("VARIABLE_DESCRIPTION", "Mall lesson id"),
             "ITEM_ID": translate("VARIABLE_DESCRIPTION", "Mall item id"),

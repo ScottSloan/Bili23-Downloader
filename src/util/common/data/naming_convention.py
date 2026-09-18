@@ -10,8 +10,9 @@ convention_type_map = {
     "COLLECTION": ConventionType.COLLECTION,
     "INTERACTIVE_VIDEO": ConventionType.INTERACTIVE_VIDEO,
     "BANGUMI": ConventionType.BANGUMI,
+    # 会员购商城课程曾是这里独立的一项（31），现已并入课程：两者的默认规则一字不差，
+    # 分开列只是让用户在规则列表里看到两条同名的预设
     "CHEESE": ConventionType.CHEESE,
-    "LESSON": ConventionType.LESSON,
     "FAVORITE": ConventionType.FAVORITE,
     "SPACE": ConventionType.SPACE,
     "HISTORY": ConventionType.HISTORY,
@@ -45,7 +46,6 @@ SUPPORTED_SHAPES = {
     ConventionType.INTERACTIVE_VIDEO: (SampleShape.SINGLE,),
     ConventionType.BANGUMI: (SampleShape.SINGLE,),
     ConventionType.CHEESE: (SampleShape.SINGLE,),
-    ConventionType.LESSON: (SampleShape.SINGLE,),
     ConventionType.FAVORITE: (SampleShape.SINGLE, SampleShape.MULTI, SampleShape.COLLECTION),
     ConventionType.SPACE: (SampleShape.SINGLE, SampleShape.MULTI, SampleShape.COLLECTION),
     ConventionType.HISTORY: (SampleShape.SINGLE, SampleShape.MULTI, SampleShape.COLLECTION),
@@ -237,9 +237,6 @@ class VariableListFactory:
             case ConventionType.CHEESE:
                 return self._base_variable + self._cheese_variable
 
-            case ConventionType.LESSON:
-                return self._base_variable + self._lesson_variable
-            
             case ConventionType.FAVORITE:
                 return self._base_variable + self._normal_variable + self._favorite_variable
 
@@ -591,32 +588,12 @@ class VariableListFactory:
                 "variable": "{season_id}",
                 "description": "SEASON_ID",
                 "example": "4016"
-            }
-        ]
+            },
 
-    @property
-    def _lesson_variable(self):
-        # 会员购商城课程只有 courseId / lessonId / itemId / sectionId 四个标识，
-        # 没有 aid / cid / ep_id，也没有 UP 主与发布时间
-        return [
-            {
-                "name": "series_title",
-                "variable": "{series_title}",
-                "description": "SERIES_TITLE_FOR_LESSON",
-                "example": "《男性生活化减脂》课程 盗月社沐上&闫帅奇联合出品"
-            },
-            {
-                "name": "section_title",
-                "variable": "{section_title}",
-                "description": "SECTION_TITLE_FOR_LESSON",
-                "example": "第一章 入门"
-            },
-            {
-                "name": "episode_title",
-                "variable": "{episode_title}",
-                "description": "EPISODE_TITLE_FOR_LESSON",
-                "example": "DAY1运动-全身燃脂"
-            },
+            # 下面四个是会员购商城课程独有的定位标识，它并入课程之后跟着一并挪了过来。
+            # 必须留在这张清单里：_all_variable 是遍历各类型清单拼出的全局键空间，
+            # 四个键一旦没有出处就会从编辑器里彻底消失 —— 运行期照样填值，界面却
+            # 把它们当未知变量拒掉
             {
                 "name": "course_id",
                 "variable": "{course_id}",

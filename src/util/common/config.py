@@ -9,7 +9,7 @@ from .serializer import LanguageSerializer, ScalingSerializer
 from .enum import (
     Language, WhenClose, DanmakuType, SubtitleType, CoverType, MetadataType, ProxyMode, ProxyType, FFmpegSource,
     NumberingType, Scaling, FileConflictResolution, VideoContainer, AutoSelectMode, Area, DuplicateDownloadResolution,
-    ConventionType, OriginalFileType
+    OriginalFileType
 )
 from ._json import json_loads
 
@@ -203,13 +203,6 @@ class DefaultValue:
             "id": "d582ec37-d8c2-44cf-bbd7-b709ea5c2042",
             "name": "DEFAULT_FOR_CHEESE",
             "type": 30,
-            "rule": "{series_title}/{episode_title}",
-            "default": True
-        },
-        {
-            "id": "b7a4f0c5-1d2e-4a83-9f61-3c0d7e5b8a19",
-            "name": "DEFAULT_FOR_LESSON",
-            "type": 31,
             "rule": "{series_title}/{episode_title}",
             "default": True
         },
@@ -564,33 +557,12 @@ def patch_config(config_version: int, data: dict):
 
             logger.info("SDR 增强画质已补入画质优先级列表")
 
-    if config_version < 2150:
-        # 2.15.0 起支持会员购商城课程，它是独立的命名类型（31）。命名规则列表是一份完整枚举，
-        # 缺少该类型时 get_rule_from_config() 会返回 None，格式化文件名直接失败，
-        # 任务连名字都取不到。因此为旧配置补上这条默认规则，排在课程之后
-        naming_rule_list = config.get(config.naming_rule_list).copy()
-
-        if not any(entry.get("type") == ConventionType.LESSON for entry in naming_rule_list):
-            lesson_rule = next(
-                entry.copy() for entry in DefaultValue.naming_rule_list
-                if entry["type"] == ConventionType.LESSON
-            )
-
-            # 用户可能为课程建过多条自定义规则，插在最后一条之后，不要把这一组拆开
-            cheese_index = next(
-                (index for index in range(len(naming_rule_list) - 1, -1, -1)
-                 if naming_rule_list[index].get("type") == ConventionType.CHEESE),
-                None
-            )
-
-            if cheese_index is None:
-                naming_rule_list.append(lesson_rule)
-            else:
-                naming_rule_list.insert(cheese_index + 1, lesson_rule)
-
-            config.set(config.naming_rule_list, naming_rule_list)
-
-            logger.info("商城课程命名规则已补入命名规则列表")
+    # 2.15.0 曾在这里为会员购商城课程（31）补一条默认规则。该类型后来并入课程，
+    # 这段迁移连同它的枚举成员与默认规则条目一起删掉了 —— 它引用的符号已经不存在，
+    # 留着会在导入期抛 AttributeError（patch_config 是模块导入时执行的）。
+    #
+    # 不需要补一段迁移去清理旧配置里残留的 31 规则：2.15.0 与 2.20.0 都没有发布，
+    # 没有任何用户的配置里存在这个类型
 
     if config_version < 2160:
         # 2.16.0 起命名规则支持 <> 可选段：段内变量取空值时整段连同字面量前后缀

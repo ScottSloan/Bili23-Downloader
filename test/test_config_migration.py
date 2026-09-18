@@ -6,8 +6,11 @@ util/common/config.py 的 patch_config() —— 配置文件跨版本迁移。
 
 * 2.14.0 的迁移若漏掉，SDR 增强画质（qn 122）不在优先级列表里，
   该画质永远选不中，而且优先级对话框保存一次就会把它彻底删掉；
-* 2.15.0 的迁移若漏掉，商城课程找不到命名规则，get_rule_from_config()
-  返回 None，格式化文件名直接失败 —— 任务连名字都取不到。
+* 2.16.0 的迁移若漏掉，收藏夹、个人空间里多P视频的稿件标题会被丢掉（#461）；
+* 2.20.0 的迁移若漏掉，海外解析每次都要白占一个并发探测位去撞 Akamai 的 403。
+
+2.15.0 那条「为会员购商城课程补默认规则」已经连同该命名类型一起删掉了
+（见 ConventionType 的注释），这里不再有用例。
 
 这类"升级一次性逻辑"最难人工验证：要复现就得手工造一个旧版配置文件再升级。
 因此把每条迁移分支都钉成用例。
@@ -16,7 +19,7 @@ util/common/config.py 的 patch_config() —— 配置文件跨版本迁移。
 """
 
 from util.common.config import config, patch_config, DefaultValue
-from util.common.enum import ProxyMode, ConventionType
+from util.common.enum import ProxyMode
 
 import pytest
 
@@ -116,57 +119,6 @@ class TestVideoQualityMigration:
         assert [q for q in priority if q != 122] == [80, 120, 127]
 
 
-class TestLessonRuleMigration:
-    """2.15.0：命名规则列表需补入会员购商城课程（type 31）"""
-
-    @staticmethod
-    def rules_without_lesson():
-        return [
-            dict(entry) for entry in DefaultValue.naming_rule_list
-            if entry["type"] != ConventionType.LESSON
-        ]
-
-    def test_lesson_rule_added(self):
-        config.set(config.naming_rule_list, self.rules_without_lesson())
-
-        patch_config(2140, {})
-
-        types = [entry["type"] for entry in config.get(config.naming_rule_list)]
-
-        assert ConventionType.LESSON in types
-
-    def test_inserted_after_last_cheese_rule(self):
-        rules = self.rules_without_lesson()
-        # 用户可能为课程建过多条自定义规则，新规则要插在最后一条之后，不拆开这一组
-        cheese = next(r for r in rules if r["type"] == ConventionType.CHEESE)
-        rules.insert(rules.index(cheese) + 1, {**cheese, "id": "custom", "default": False})
-        config.set(config.naming_rule_list, rules)
-
-        patch_config(2140, {})
-
-        types = [entry["type"] for entry in config.get(config.naming_rule_list)]
-        last_cheese = len(types) - 1 - types[::-1].index(ConventionType.CHEESE)
-
-        assert types.index(ConventionType.LESSON) == last_cheese + 1
-
-    def test_appended_when_no_cheese_rule(self):
-        rules = [r for r in self.rules_without_lesson() if r["type"] != ConventionType.CHEESE]
-        config.set(config.naming_rule_list, rules)
-
-        patch_config(2140, {})
-
-        assert config.get(config.naming_rule_list)[-1]["type"] == ConventionType.LESSON
-
-    def test_existing_lesson_rule_not_duplicated(self):
-        config.set(config.naming_rule_list, [dict(e) for e in DefaultValue.naming_rule_list])
-
-        patch_config(2140, {})
-
-        types = [entry["type"] for entry in config.get(config.naming_rule_list)]
-
-        assert types.count(ConventionType.LESSON) == 1
-
-
 class TestOptionalSegmentUpgrade:
     """
     2.16.0：把个人空间等几类的默认规则升级成可选段写法
@@ -250,13 +202,26 @@ class TestVersionBump:
         # 从很旧的版本一路升上来，每条迁移都要生效
         config.set(config.proxy_mode, ProxyMode.SYSTEM)
         config.set(config.video_quality_priority, [127, 120, 80])
-        config.set(config.naming_rule_list, TestLessonRuleMigration.rules_without_lesson())
 
         patch_config(2000, {"Advanced": {"proxy_enabled": True}})
 
         assert config.get(config.proxy_mode) == ProxyMode.MANUAL
         assert 122 in config.get(config.video_quality_priority)
-        assert any(e["type"] == ConventionType.LESSON for e in config.get(config.naming_rule_list))
+
+    def test_oldest_version_does_not_gain_a_lesson_rule(self):
+        """
+        最旧的配置一路升上来，不该凭空多出会员购商城课程（31）的规则
+
+        2.15.0 那段「给旧配置补 31 规则」的迁移已随该类型一起删掉。这条用例是
+        「删掉它是安全的」的形式化证明：删之前它会补一条，删之后一条都不补
+        """
+        config.set(config.naming_rule_list, [
+            dict(entry) for entry in DefaultValue.naming_rule_list
+        ])
+
+        patch_config(2000, {})
+
+        assert not any(entry.get("type") == 31 for entry in config.get(config.naming_rule_list))
 
 
 class TestCDNServerListMigration:

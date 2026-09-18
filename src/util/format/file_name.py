@@ -202,7 +202,14 @@ class FileNameFormatter:
             Attribute.INTERACTIVE_BIT: ConventionType.INTERACTIVE_VIDEO,
             Attribute.BANGUMI_BIT: ConventionType.BANGUMI,
             Attribute.CHEESE_BIT: ConventionType.CHEESE,
-            Attribute.LESSON_BIT: ConventionType.LESSON,
+
+            # 会员购商城课程已并入课程，属性位还留着（预览、取流、去重哈希都靠它分派，
+            # 见 __trim_download_type 等处），只有命名类型要跟着并过去。
+            #
+            # 这一行不能删：单个解析一条会员购链接时条目只带 LESSON_BIT，映射不到任何
+            # 类型就会返回 None，format() 只好回退到 FALLBACK_RULE，落盘文件名全变成
+            # {leaf_title} —— 任务建得出来、全程不报错，只是名字全错
+            Attribute.LESSON_BIT: ConventionType.CHEESE,
 
             # 兜底放在最后：没有结构形态位也没有来源位的纯投稿视频，按单个视频处理。
             # 放在末尾才不会抢走 PART / COLLECTION 的判定，attribute 为 0 时也仍然返回 None

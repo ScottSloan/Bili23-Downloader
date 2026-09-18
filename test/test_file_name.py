@@ -99,7 +99,9 @@ class TestTypeMapping:
         assert formatter.get_type_id_from_attribute(Attribute.FAVLIST_BIT) == ConventionType.FAVORITE
         assert formatter.get_type_id_from_attribute(Attribute.SPACE_BIT) == ConventionType.SPACE
         assert formatter.get_type_id_from_attribute(Attribute.BANGUMI_BIT) == ConventionType.BANGUMI
-        assert formatter.get_type_id_from_attribute(Attribute.LESSON_BIT) == ConventionType.LESSON
+
+        # 会员购商城课程并入课程，属性位还在但命名类型跟着并了过去
+        assert formatter.get_type_id_from_attribute(Attribute.LESSON_BIT) == ConventionType.CHEESE
 
         # 没有结构形态位也没有来源位的纯投稿视频按单个视频处理；
         # 兜底项排在 type_map 末尾，不会抢走 PART 的判定
