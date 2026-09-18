@@ -114,18 +114,34 @@ class TestSampleData:
         assert data["parent_title"]
         assert data["p"] == 4
 
-    def test_label_parent_title_kept_for_single(self, factory):
-        # 历史记录单个条目的 parent_title 是入口标签，不能被形态覆盖清空
-        data = factory.build_variable_data(ConventionType.HISTORY, SampleShape.SINGLE)
+    def test_parent_title_is_structural_only(self, factory):
+        """
+        {parent_title} 从 2.21.0 起只表示稿件标题
 
-        assert data["parent_title"] == "历史记录"
+        此前它兼着「来源列表入口标签」这一层含义（历史记录的单P条目上是
+        「历史记录」），而分P与合集条目上又是稿件标题 —— 同一个变量在同一位置
+        有两种含义。入口标签已挪进 {source_title}
+        """
+        single = factory.build_variable_data(ConventionType.HISTORY, SampleShape.SINGLE)
+        multi = factory.build_variable_data(ConventionType.HISTORY, SampleShape.MULTI)
 
-    def test_label_parent_title_replaced_for_multi(self, factory):
-        # 分P条目经二次解析后，related_titles 会盖掉入口标签，
-        # 此时 parent_title 确实是稿件标题
-        data = factory.build_variable_data(ConventionType.HISTORY, SampleShape.MULTI)
+        assert single["parent_title"] == ""
+        assert multi["parent_title"]
 
-        assert data["parent_title"] != "历史记录"
+    def test_source_title_survives_every_shape(self, factory):
+        # 入口标签与条目形态无关：单P、分P、合集条目都在同一个来源列表里
+        for shape in SampleShape:
+            data = factory.build_variable_data(ConventionType.HISTORY, shape)
+
+            assert data["source_title"] == "历史记录", shape
+
+    def test_source_title_is_empty_outside_the_source_types(self, factory):
+        # 收藏夹/个人空间/合集各有专属变量（favorites_name、space_owner、
+        # collection_title），不重复给一个 source_title
+        for type_id in (ConventionType.NORMAL, ConventionType.FAVORITE, ConventionType.COLLECTION):
+            data = factory.build_variable_data(type_id, SampleShape.SINGLE)
+
+            assert data["source_title"] == "", type_id
 
     def test_numeric_sentinels_survive_number_formatting(self, factory):
         # 哨兵若是空串，{aid:>12} 这类写法会在预览里抛 ValueError，

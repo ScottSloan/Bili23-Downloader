@@ -25,8 +25,9 @@ class PopularEpisodeParser(ListEpisodeParserBase):
             "episode_id": self.episode_id,
             "title": episode_data["title"],
             "related_titles": {
-                # 每周必看没有单独的父级标题，用本期的名称充当
-                "parent_title": self.get_node_title()
+                # 本期名称。每周必看的条目从不二次解析，不会有人来盖它 ——
+                # 它只是「来源列表名称」而不是结构上级，所以归 source_title
+                "source_title": self.get_node_title()
             },
             "url": self.build_video_url(episode_data["bvid"])
         }

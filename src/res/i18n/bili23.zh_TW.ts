@@ -5126,27 +5126,23 @@ Under no circumstances shall the developer be liable for any direct, indirect, i
         <translation>若影片為多P，則為此影片的總標題；否則為空</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="214"/>
         <source>History title</source>
-        <translation>歷史記錄標題</translation>
+        <translation type="vanished">歷史記錄標題</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="215"/>
         <source>Watch Later title</source>
-        <translation>稍後觀看標題</translation>
+        <translation type="vanished">稍後觀看標題</translation>
+    </message>
+    <message>
+        <source>Weekly Picks title</source>
+        <translation type="vanished">每週必看標題</translation>
+    </message>
+    <message>
+        <source>Playlist title</source>
+        <translation type="vanished">歌單標題</translation>
     </message>
     <message>
         <location filename="../../util/common/translator.py" line="216"/>
-        <source>Weekly Picks title</source>
-        <translation>每週必看標題</translation>
-    </message>
-    <message>
-        <location filename="../../util/common/translator.py" line="217"/>
-        <source>Playlist title</source>
-        <translation>歌單標題</translation>
-    </message>
-    <message>
-        <location filename="../../util/common/translator.py" line="218"/>
         <source>Multi-part video main title (if exists)</source>
         <translation>此分P影片總標題（如果存在）</translation>
     </message>
@@ -5155,6 +5151,11 @@ Under no circumstances shall the developer be liable for any direct, indirect, i
         <location filename="../../util/common/translator.py" line="220"/>
         <source>Part number</source>
         <translation>分P序號</translation>
+    </message>
+    <message>
+        <location filename="../../util/common/translator.py" line="218"/>
+        <source>Name of the source list</source>
+        <translation>來源列表的名稱</translation>
     </message>
     <message>
         <location filename="../../util/common/translator.py" line="221"/>
@@ -5203,6 +5204,16 @@ Under no circumstances shall the developer be liable for any direct, indirect, i
         <location filename="../../util/common/translator.py" line="237"/>
         <source>Episode title</source>
         <translation>本集標題</translation>
+    </message>
+    <message>
+        <location filename="../../util/common/translator.py" line="214"/>
+        <location filename="../../util/common/translator.py" line="215"/>
+        <source>Title of the video; only set for multi-part or collection entries</source>
+        <translation>該稿件的標題（僅分P與合集條目有值）</translation>
+    </message>
+    <message>
+        <source>Name of the source list, such as History or Watch Later</source>
+        <translation type="vanished">來源列表的名稱，如「歷史記錄」「稍後再看」</translation>
     </message>
     <message>
         <location filename="../../util/common/translator.py" line="238"/>

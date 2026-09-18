@@ -164,6 +164,7 @@ class FileNameFormatter:
 
             "leaf_title": task_info.Episode.leaf_title,
             "parent_title": task_info.Episode.parent_title,
+            "source_title": task_info.Episode.source_title,
             "section_title": task_info.Episode.section_title,
             "collection_title": task_info.Episode.collection_title,
             "series_title": task_info.Episode.series_title,

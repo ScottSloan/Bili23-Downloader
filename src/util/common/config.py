@@ -224,28 +224,28 @@ class DefaultValue:
             "id": "307ccc8e-ad2f-4195-94f0-162ee9ff1ac0",
             "name": "DEFAULT_FOR_HISTORY",
             "type": 60,
-            "rule": "{parent_title}/<P{p:02d}->{leaf_title}",
+            "rule": "{source_title}/{parent_title}/<P{p:02d}->{leaf_title}",
             "default": True
         },
         {
             "id": "0a72a82b-5684-448e-9db1-a342de933d3e",
             "name": "DEFAULT_FOR_WATCH_LATER",
             "type": 70,
-            "rule": "{parent_title}/<P{p:02d}->{leaf_title}",
+            "rule": "{source_title}/{parent_title}/<P{p:02d}->{leaf_title}",
             "default": True
         },
         {
             "id": "4d28285d-65ca-4c5c-bbb3-b3b5b570c52a",
             "name": "DEFAULT_FOR_WEEKLY",
             "type": 80,
-            "rule": "{parent_title}/{leaf_title}",
+            "rule": "{source_title}/{leaf_title}",
             "default": True
         },
         {
             "id": "dc77bd15-be21-4847-856e-68bb3035042f",
             "name": "DEFAULT_FOR_AUDIO",
             "type": 90,
-            "rule": "{parent_title}/{uploader} - {leaf_title}",
+            "rule": "{source_title}/{uploader} - {leaf_title}",
             "default": True
         }
     ]
@@ -312,7 +312,10 @@ class APPConfig(QConfig):
     app_name = "Bili23 Downloader"
     app_version = "2.20.0"
     app_comparable_version = "2.20.0"
-    app_config_version = 2200
+    # 配置格式版本。**改动必须在 patch_config 里加对应的门禁并把它 +1**，
+    # 否则已有用户配置里那份副本永远不会被更新（DefaultValue 只在配置文件不存在时
+    # 作为初值）。与 app_version 不要求逐字对应
+    app_config_version = 2210
     config_version = ConfigItem("Application", "config_version", app_config_version)
 
     # Interface
@@ -508,6 +511,14 @@ _OPTIONAL_SEGMENT_UPGRADE = {
     "0a72a82b-5684-448e-9db1-a342de933d3e": "{parent_title}/{leaf_title}",
 }
 
+# {parent_title} 拆分前的四条默认规则。同样是内容完全一致才替换
+_SOURCE_TITLE_UPGRADE = {
+    "307ccc8e-ad2f-4195-94f0-162ee9ff1ac0": "{parent_title}/<P{p:02d}->{leaf_title}",
+    "0a72a82b-5684-448e-9db1-a342de933d3e": "{parent_title}/<P{p:02d}->{leaf_title}",
+    "4d28285d-65ca-4c5c-bbb3-b3b5b570c52a": "{parent_title}/{leaf_title}",
+    "dc77bd15-be21-4847-856e-68bb3035042f": "{parent_title}/{uploader} - {leaf_title}",
+}
+
 def check_need_patch():
     # 检查是否需要修补配置文件
     if config_path.exists():
@@ -611,6 +622,38 @@ def patch_config(config_version: int, data: dict):
             config.set(config.ov_cdn_server_list, filtered_list)
 
             logger.info("已从海外 CDN 服务器列表中移除 Akamai")
+
+    if config_version < 2210:
+        # 2.21.0 起 {parent_title} 只表示稿件标题，入口固定标签（「历史记录」
+        # 「稍后再看」「第377期」「歌单名称」）挪进了新变量 {source_title}。
+        #
+        # 此前这个变量兼着两种含义：单P条目上是入口标签，分P与合集条目上又是稿件
+        # 标题 —— 后者由二次解析的 related_titles 盖出来（见 __update_episode_info
+        # 的合并顺序）。同一个变量在同一个位置有两种含义，命名规则编辑器里一行显示
+        # 入口标签、另一行显示稿件标题，用户无从判断该按哪种写。
+        #
+        # 与 2.16.0 那段一样，只替换与旧写法**完全一致**的那条：用户改过的规则一律
+        # 不动，哪怕只改了一个字。上面那段若已把规则换成新串，这里匹配不到旧串，
+        # 安静放过 —— 两条路都通向新默认值，且各自幂等
+        naming_rule_list = deepcopy(config.get(config.naming_rule_list))
+
+        upgraded = []
+
+        for entry in naming_rule_list:
+            previous = _SOURCE_TITLE_UPGRADE.get(entry.get("id"))
+
+            if previous is not None and entry.get("rule") == previous:
+                entry["rule"] = next(
+                    default["rule"] for default in DefaultValue.naming_rule_list
+                    if default["id"] == entry.get("id")
+                )
+
+                upgraded.append(entry.get("name"))
+
+        if upgraded:
+            config.set(config.naming_rule_list, naming_rule_list)
+
+            logger.info("以下默认命名规则已改用 source_title：%s", "、".join(upgraded))
 
     # 完成修补，写入新的 config_version
     config.set(config.config_version, config.app_config_version)

@@ -174,6 +174,22 @@ class TestWatchLaterParser:
 
         assert root.count() == 0
 
+    def test_entry_label_written_to_source_title(self, parse_result):
+        """
+        入口标签写进 source_title，不写 parent_title
+
+        parent_title 只留给二次解析产出的稿件标题 —— 两个含义共用一个变量时，
+        分P条目上的 related_titles 会把入口标签盖掉，编辑器的预览看不出所以然
+        """
+        from util.parse.episode.watch_later import WatchLaterEpisodeParser
+
+        _, _, root = run(WatchLaterEpisodeParser(self.DATA, "WATCH_LATER"), parse_result)
+
+        data = EpisodeData.get_episode_data(root.child(0).episode_id)
+
+        assert data["source_title"] == "Watch Later"
+        assert "parent_title" not in data
+
 
 class TestFavlistParser:
     DATA = {
@@ -294,6 +310,17 @@ class TestHistoryParser:
         for i in range(3):
             assert root.child(i).has_attribute(Attribute.HISTORY_BIT)
 
+    def test_entry_label_written_to_source_title(self, parse_result):
+        # 入口标签走 source_title，parent_title 留给二次解析产出的稿件标题
+        from util.parse.episode.history import HistoryEpisodeParser
+
+        _, _, root = run(HistoryEpisodeParser(self.DATA, "HISTORY"), parse_result)
+
+        data = EpisodeData.get_episode_data(root.child(0).episode_id)
+
+        assert data["source_title"] == "History"
+        assert "parent_title" not in data
+
     def test_unknown_business_still_gets_a_media_bit(self, parse_result):
         """
         business 是 B 站自己的判别字段，取值会陆续增加
@@ -344,6 +371,36 @@ class TestPopularParser:
 
         assert root.child(0).has_attribute(Attribute.VIDEO_BIT)
         assert root.child(0).has_attribute(Attribute.WEEKLY_BIT)
+
+    def test_issue_label_written_to_source_title(self, parse_result):
+        # 每周必看的条目从不二次解析，没有结构上级 —— 期号是「来源列表名称」
+        from util.parse.episode.popular import PopularEpisodeParser
+
+        _, _, root = run(PopularEpisodeParser(self.DATA, "WEEKLY"), parse_result)
+
+        assert root.child(0).related_titles["source_title"] == "每周必看 第1期"
+
+
+class TestAudioParser:
+    # AudioEpisodeParser 取 info_data["data"] 之后再取里面的 data ——
+    # menu_title 与歌曲列表是同一层的兄弟键
+    DATA = {
+        "data": {
+            "menu_title": "我的歌单",
+            "data": [
+                {"cover": "c1", "duration": 60, "passtime": 1700000000, "title": "歌曲A",
+                 "author": "歌手", "statistic": {"sid": 111}},
+            ],
+        }
+    }
+
+    def test_song_title_written_to_source_title(self, parse_result):
+        # 音频走 related_titles（它没有 episode_id，不经过 EpisodeData）
+        from util.parse.episode.audio import AudioEpisodeParser
+
+        _, _, root = run(AudioEpisodeParser(self.DATA, "AUDIO"), parse_result)
+
+        assert root.child(0).related_titles["source_title"] == "我的歌单"
 
 
 class TestListParser:

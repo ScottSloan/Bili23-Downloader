@@ -117,19 +117,6 @@ _GENERIC_DESCRIPTION = {
     "episode_title": "EPISODE_TITLE_GENERIC",
 }
 
-# 这几类的 parent_title 是入口固定标签（「历史记录」「稍后再看」「第377期」「歌单名称」），
-# 单个条目时不该被形态覆盖清空。
-#
-# 分P条目则不同：二次解析产生的 related_titles 会盖掉入口标签，此时 parent_title
-# 确实是稿件标题 —— 见 TaskManager.__update_episode_info 的合并顺序，
-# 条目级 related_titles 排在来源级 EpisodeData 之后
-_LABEL_PARENT_TITLE_TYPES = frozenset({
-    ConventionType.HISTORY,
-    ConventionType.WATCH_LATER,
-    ConventionType.WEEKLY,
-    ConventionType.AUDIO,
-})
-
 # 下面这几类的 collection_title 是**归属信息**而不是形态信息，任何形态下都该有值。
 #
 # 形态覆盖里清空它，是因为来源列表里的分P稿件不在任何合集里；但合集条目自己就住在
@@ -211,9 +198,6 @@ class VariableListFactory:
             data[entry["name"]] = entry["example"]
 
         for name, value in _SHAPE_OVERRIDES[shape].items():
-            if name == "parent_title" and shape is SampleShape.SINGLE and type in _LABEL_PARENT_TITLE_TYPES:
-                continue
-
             if name == "collection_title" and type in _SHAPE_KEEPS_COLLECTION_TYPES:
                 continue
 
@@ -733,10 +717,16 @@ class VariableListFactory:
     def _history_variable(self):
         return [
             {
+                "name": "source_title",
+                "variable": "{source_title}",
+                "description": "SOURCE_TITLE",
+                "example": "历史记录"
+            },
+            {
                 "name": "parent_title",
                 "variable": "{parent_title}",
                 "description": "PARENT_TITLE_FOR_HISTORY",
-                "example": "历史记录"
+                "example": "【KEY社20周年音乐专辑】Key BEST SELECTION"
             },
             {
                 "name": "leaf_title",
@@ -762,10 +752,16 @@ class VariableListFactory:
     def _watch_later_variable(self):
         return [
             {
+                "name": "source_title",
+                "variable": "{source_title}",
+                "description": "SOURCE_TITLE",
+                "example": "稍后再看"
+            },
+            {
                 "name": "parent_title",
                 "variable": "{parent_title}",
                 "description": "PARENT_TITLE_FOR_WATCH_LATER",
-                "example": "稍后再看"
+                "example": "【KEY社20周年音乐专辑】Key BEST SELECTION"
             },
             {
                 "name": "leaf_title",
@@ -791,9 +787,10 @@ class VariableListFactory:
     def _weekly_variable(self):
         return [
             {
-                "name": "parent_title",
-                "variable": "{parent_title}",
-                "description": "PARENT_TITLE_FOR_WEEKLY",
+                # 每周必看的条目从不二次解析，没有结构上级，只有这一期的名称
+                "name": "source_title",
+                "variable": "{source_title}",
+                "description": "SOURCE_TITLE",
                 "example": "第377期(0612更新)"
             },
             {
@@ -850,9 +847,10 @@ class VariableListFactory:
                 "example": "歌手"
             },
             {
-                "name": "parent_title",
-                "variable": "{parent_title}",
-                "description": "PARENT_TITLE_FOR_AUDIO",
+                # 音频条目从不二次解析，没有结构上级，只有所属歌单的名称
+                "name": "source_title",
+                "variable": "{source_title}",
+                "description": "SOURCE_TITLE",
                 "example": "歌单名称"
             },
             {

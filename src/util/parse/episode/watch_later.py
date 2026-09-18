@@ -17,7 +17,9 @@ class WatchLaterEpisodeParser(ListEpisodeParserBase):
 
         episode_data = self._init_episode_data()
 
-        episode_data["parent_title"] = self.get_node_type_name()
+        # 入口固定标签。分P与合集条目二次解析后，related_titles 会给出真正的稿件标题
+        # 并写进 parent_title —— 两个含义各归各的变量，不再互相覆盖
+        episode_data["source_title"] = self.get_node_type_name()
 
     def build_item_data(self, episode_data: dict):
         return {

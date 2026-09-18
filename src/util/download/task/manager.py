@@ -228,8 +228,9 @@ class TaskManager:
 
     def __filter_illegal_characters(self, episode_info: dict):
         title_list = [
-            "leaf_title", 
+            "leaf_title",
             "parent_title",
+            "source_title",
             "section_title",
             "collection_title",
             "series_title",

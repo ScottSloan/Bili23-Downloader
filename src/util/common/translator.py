@@ -211,11 +211,11 @@ class Translator:
             "PARENT_TITLE_FOR_PART": translate("VARIABLE_DESCRIPTION", "Multi-part video main title"),
             "PARENT_TITLE_FOR_COLLECTION": translate("VARIABLE_DESCRIPTION", "Main title if video has multiple parts; otherwise empty"),
             "PARENT_TITLE_FOR_INTERACTIVE_VIDEO": translate("VARIABLE_DESCRIPTION", "Interactive video title"),
-            "PARENT_TITLE_FOR_HISTORY": translate("VARIABLE_DESCRIPTION", "History title"),
-            "PARENT_TITLE_FOR_WATCH_LATER": translate("VARIABLE_DESCRIPTION", "Watch Later title"),
-            "PARENT_TITLE_FOR_WEEKLY": translate("VARIABLE_DESCRIPTION", "Weekly Picks title"),
-            "PARENT_TITLE_FOR_AUDIO": translate("VARIABLE_DESCRIPTION", "Playlist title"),
+            "PARENT_TITLE_FOR_HISTORY": translate("VARIABLE_DESCRIPTION", "Title of the video; only set for multi-part or collection entries"),
+            "PARENT_TITLE_FOR_WATCH_LATER": translate("VARIABLE_DESCRIPTION", "Title of the video; only set for multi-part or collection entries"),
             "PARENT_TITLE_FOR_FAVORITE": translate("VARIABLE_DESCRIPTION", "Multi-part video main title (if exists)"),
+
+            "SOURCE_TITLE": translate("VARIABLE_DESCRIPTION", "Name of the source list"),
 
             "PART_NUMBER_FOR_PART": translate("VARIABLE_DESCRIPTION", "Part number"),
             "PART_NUMBER_FOR_COLLECTION": translate("VARIABLE_DESCRIPTION", "Part number (only for multi-part videos)"),

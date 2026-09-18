@@ -152,6 +152,49 @@ class TestHeterogeneousBatch:
         assert bangumi.Naming.rule != favorite.Naming.rule
 
 
+class TestEpisodeTitleMerge:
+    """
+    入口标签与稿件标题各走各的变量，不再互相覆盖
+
+    二次解析产出的 related_titles 排在来源级 EpisodeData **之后**（见
+    __update_episode_info 的合并顺序）。此前 {parent_title} 兼着「来源列表入口标签」
+    与「稿件标题」两种含义，就是被这个顺序决定的：分P条目的稿件标题会把
+    「稍后再看」这个入口标签盖掉，于是同一个变量在同一个位置有两种含义。
+
+    入口标签挪进 {source_title} 后，两条路互不相干：related_titles 里从来不含
+    source_title，合并顺序无需改动
+    """
+
+    @staticmethod
+    def merge(episode_info: dict):
+        class _Stub:
+            # 只把标题里的非法字符换成下划线，与「取谁的标题」无关
+            _TaskManager__filter_illegal_characters = staticmethod(lambda data: None)
+
+        return TaskManager._TaskManager__update_episode_info(_Stub(), episode_info, 1)
+
+    def test_entry_label_survives_a_multi_part_reparse(self):
+        from util.parse.episode.tree import EpisodeData
+
+        episode_id = EpisodeData.add_episode()
+
+        try:
+            # 来源解析器只写入口标签；稿件标题由二次解析的 related_titles 给出
+            EpisodeData.get_episode_data(episode_id)["source_title"] = "稍后再看"
+
+            merged = self.merge({
+                "episode_id": episode_id,
+                "title": "04 アルカテイル",
+                "related_titles": {"parent_title": "【KEY社20周年音乐专辑】Key BEST SELECTION"},
+            })
+
+            assert merged["source_title"] == "稍后再看"
+            assert merged["parent_title"] == "【KEY社20周年音乐专辑】Key BEST SELECTION"
+
+        finally:
+            EpisodeData.table.pop(episode_id, None)
+
+
 class TestFailureHandling:
     def test_unrenderable_rule_raises_instead_of_vanishing(self):
         # 以前是 Path(None) 抛 TypeError 被 create() 外层吞掉，条目静默消失，

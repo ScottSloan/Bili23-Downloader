@@ -190,6 +190,95 @@ class TestOptionalSegmentUpgrade:
             assert isinstance(parse_rule(entry["rule"]), RuleModel), entry["name"]
 
 
+class TestSourceTitleUpgrade:
+    """
+    2.21.0：{parent_title} 只表示稿件标题，入口标签挪进 {source_title}
+
+    此前这几条的默认规则用 {parent_title} 充当「来源列表的入口标签」，而同一个变量
+    在分P与合集条目上又是稿件标题 —— 同一个位置两种含义，预览里一行显示入口标签、
+    另一行显示稿件标题，用户无从判断该按哪种写。
+    """
+
+    UPGRADED_IDS = (
+        "307ccc8e-ad2f-4195-94f0-162ee9ff1ac0",     # 历史记录
+        "0a72a82b-5684-448e-9db1-a342de933d3e",     # 稍后再看
+        "4d28285d-65ca-4c5c-bbb3-b3b5b570c52a",     # 每周必看
+        "dc77bd15-be21-4847-856e-68bb3035042f",     # 歌单
+    )
+
+    @staticmethod
+    def legacy_rules():
+        from util.common.config import _SOURCE_TITLE_UPGRADE
+
+        rules = [dict(entry) for entry in DefaultValue.naming_rule_list]
+
+        for entry in rules:
+            if entry["id"] in _SOURCE_TITLE_UPGRADE:
+                entry["rule"] = _SOURCE_TITLE_UPGRADE[entry["id"]]
+
+        return rules
+
+    def rules_by_id(self):
+        return {entry["id"]: entry for entry in config.get(config.naming_rule_list)}
+
+    def test_untouched_defaults_are_upgraded(self):
+        config.set(config.naming_rule_list, self.legacy_rules())
+
+        patch_config(2200, {})
+
+        rules = self.rules_by_id()
+
+        for rule_id in self.UPGRADED_IDS:
+            assert "{source_title}" in rules[rule_id]["rule"], rule_id
+
+    def test_customized_rules_are_left_alone(self):
+        rules = self.legacy_rules()
+
+        for entry in rules:
+            if entry["id"] == self.UPGRADED_IDS[0]:
+                entry["rule"] = "{parent_title}/我自己的写法/{leaf_title}"
+
+        config.set(config.naming_rule_list, rules)
+
+        patch_config(2200, {})
+
+        assert self.rules_by_id()[self.UPGRADED_IDS[0]]["rule"] == "{parent_title}/我自己的写法/{leaf_title}"
+
+    def test_already_upgraded_is_idempotent(self):
+        config.set(config.naming_rule_list, [dict(entry) for entry in DefaultValue.naming_rule_list])
+
+        patch_config(2200, {})
+
+        rules = self.rules_by_id()
+
+        for rule_id in self.UPGRADED_IDS:
+            assert rules[rule_id]["rule"].count("{source_title}") == 1
+
+    def test_oldest_config_reaches_the_same_rules(self):
+        """
+        2.16.0 之前的老配置要一步到位
+
+        那段迁移的替换源是**运行期**的 DefaultValue，所以它直接把规则换成新串，
+        这里的门禁随后匹配不到旧串、安静放过。两条路终点必须相同
+        """
+        from util.common.config import _OPTIONAL_SEGMENT_UPGRADE
+
+        rules = [dict(entry) for entry in DefaultValue.naming_rule_list]
+
+        for entry in rules:
+            if entry["id"] in _OPTIONAL_SEGMENT_UPGRADE:
+                entry["rule"] = _OPTIONAL_SEGMENT_UPGRADE[entry["id"]]
+
+        config.set(config.naming_rule_list, rules)
+
+        patch_config(2100, {})
+
+        for rule_id in self.UPGRADED_IDS:
+            assert self.rules_by_id()[rule_id]["rule"] == next(
+                entry["rule"] for entry in DefaultValue.naming_rule_list if entry["id"] == rule_id
+            ), rule_id
+
+
 class TestVersionBump:
     def test_version_written_after_patch(self):
         config.set(config.config_version, 2100)
