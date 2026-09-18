@@ -6,7 +6,7 @@ util/common/config.py 的 patch_config() —— 配置文件跨版本迁移。
 
 * 2.14.0 的迁移若漏掉，SDR 增强画质（qn 122）不在优先级列表里，
   该画质永远选不中，而且优先级对话框保存一次就会把它彻底删掉；
-* 2.16.0 的迁移若漏掉，收藏夹、个人空间里多P视频的稿件标题会被丢掉（#461）；
+* 2.20.0 的迁移若漏掉，收藏夹、个人空间里多P视频的稿件标题会被丢掉（#461）；
 * 2.20.0 的迁移若漏掉，海外解析每次都要白占一个并发探测位去撞 Akamai 的 403。
 
 2.15.0 那条「为会员购商城课程补默认规则」已经连同该命名类型一起删掉了
@@ -19,6 +19,7 @@ util/common/config.py 的 patch_config() —— 配置文件跨版本迁移。
 """
 
 from util.common.config import config, patch_config, DefaultValue
+from util.common.runtime import runtime
 from util.common.enum import ProxyMode
 
 import pytest
@@ -33,6 +34,7 @@ def restore_config():
         "naming_rule_list": [dict(entry) for entry in config.get(config.naming_rule_list)],
         "ov_cdn_server_list": [dict(entry) for entry in config.get(config.ov_cdn_server_list)],
         "config_version": config.get(config.config_version),
+        "rules_reset": runtime.naming.rules_reset,
     }
 
     yield
@@ -42,6 +44,7 @@ def restore_config():
     config.set(config.naming_rule_list, saved["naming_rule_list"])
     config.set(config.ov_cdn_server_list, saved["ov_cdn_server_list"])
     config.set(config.config_version, saved["config_version"])
+    runtime.naming.rules_reset = saved["rules_reset"]
 
 
 class TestProxyMigration:
@@ -119,68 +122,68 @@ class TestVideoQualityMigration:
         assert [q for q in priority if q != 122] == [80, 120, 127]
 
 
-class TestOptionalSegmentUpgrade:
+class TestNamingRuleReset:
     """
-    2.16.0：把个人空间等几类的默认规则升级成可选段写法
+    2.20.0：命名规则的内置默认值连着变过两次，整张表换新
 
-    这几类里单P与多P混在一起，旧规则只能顾及一种形态 —— 多P视频会丢掉稿件
-    标题、全部平铺在同一层（GitHub #461）。
+    先是改用 <> 可选段（个人空间、收藏夹这几类里单P与多P混在一起，旧写法只能顾及
+    一种形态 —— 多P视频会丢掉稿件标题、全部平铺在同一层，GitHub #461），随后又把
+    入口标签从 {parent_title} 拆进了 {source_title}（此前它兼着「来源列表入口标签」
+    与「稿件标题」两种含义）。
+
+    不再逐条比对「用户改过没有」：命名规则是用户可见、随时可改的东西，留一条已经
+    用错变量的旧规则在配置里，出问题时比「规则没了」更难排查。代价是用户自建的规则
+    与改过的内置规则一并舍弃，所以必须让用户知道 —— 见下面那条置标志的用例。
     """
 
-    UPGRADED_IDS = (
-        "5913e25f-0bf3-4d3c-a608-8416af778a8a",     # 收藏夹
-        "8c48ac82-14c5-4d48-9de7-225d9b53513f",     # 个人空间
-        "307ccc8e-ad2f-4195-94f0-162ee9ff1ac0",     # 历史记录
-        "0a72a82b-5684-448e-9db1-a342de933d3e",     # 稍后再看
-    )
-
-    @staticmethod
-    def legacy_rules():
-        from util.common.config import _OPTIONAL_SEGMENT_UPGRADE
-
+    def test_any_older_config_gets_the_new_defaults(self):
+        # 改过的内置规则、以及用户自建的规则，都会被覆盖掉
         rules = [dict(entry) for entry in DefaultValue.naming_rule_list]
 
         for entry in rules:
-            if entry["id"] in _OPTIONAL_SEGMENT_UPGRADE:
-                entry["rule"] = _OPTIONAL_SEGMENT_UPGRADE[entry["id"]]
+            if entry["type"] == 70:
+                entry["rule"] = "{parent_title}/我自己的写法"
 
-        return rules
-
-    def rules_by_id(self):
-        return {entry["id"]: entry for entry in config.get(config.naming_rule_list)}
-
-    def test_untouched_defaults_are_upgraded(self):
-        config.set(config.naming_rule_list, self.legacy_rules())
-
-        patch_config(2150, {})
-
-        rules = self.rules_by_id()
-
-        for rule_id in self.UPGRADED_IDS:
-            assert "<P{p:02d}->" in rules[rule_id]["rule"], rule_id
-
-    def test_customized_rules_are_left_alone(self):
-        rules = self.legacy_rules()
-
-        for entry in rules:
-            if entry["id"] == self.UPGRADED_IDS[1]:
-                entry["rule"] = "{space_owner}/我自己的写法/{leaf_title}"
+        rules.append({
+            "id": "5f0f1c2e-0000-4000-8000-000000000001",
+            "name": "自建规则",
+            "type": 11,
+            "rule": "{leaf_title}-{uploader}",
+            "default": False
+        })
 
         config.set(config.naming_rule_list, rules)
 
-        patch_config(2150, {})
+        patch_config(2100, {})
 
-        assert self.rules_by_id()[self.UPGRADED_IDS[1]]["rule"] == "{space_owner}/我自己的写法/{leaf_title}"
+        assert config.get(config.naming_rule_list) == DefaultValue.naming_rule_list
 
-    def test_already_upgraded_is_idempotent(self):
-        config.set(config.naming_rule_list, [dict(entry) for entry in DefaultValue.naming_rule_list])
+    def test_reset_is_flagged_for_the_main_window(self):
+        # patch_config 跑在导入期，那时界面上什么都没有 —— 只能先留个标志。
+        # 少了它，用户会莫名发现规则变回了默认值，而界面上没有任何解释
+        from util.common.runtime import runtime
 
-        patch_config(2150, {})
+        runtime.naming.rules_reset = False
 
-        rules = self.rules_by_id()
+        patch_config(2100, {})
 
-        for rule_id in self.UPGRADED_IDS:
-            assert rules[rule_id]["rule"].count("<P{p:02d}->") == 1
+        assert runtime.naming.rules_reset is True
+
+    def test_already_current_is_not_reset(self):
+        from util.common.runtime import runtime
+
+        runtime.naming.rules_reset = False
+
+        patch_config(config.app_config_version, {})
+
+        assert runtime.naming.rules_reset is False
+
+    def test_the_new_list_is_a_copy(self):
+        # 必须 deepcopy 之后再交给 config.set：把 DefaultValue 上那一份直接装进配置，
+        # 用户此后改一次规则就永久污染了进程内的默认值（conftest 的会话末校验会抓住）
+        patch_config(2100, {})
+
+        assert config.get(config.naming_rule_list) is not DefaultValue.naming_rule_list
 
     def test_all_default_rules_remain_representable(self):
         # 内置规则必须全都能在可视化编辑器里打开，否则用户一进去就看到降级提示
@@ -188,95 +191,6 @@ class TestOptionalSegmentUpgrade:
 
         for entry in DefaultValue.naming_rule_list:
             assert isinstance(parse_rule(entry["rule"]), RuleModel), entry["name"]
-
-
-class TestSourceTitleUpgrade:
-    """
-    2.21.0：{parent_title} 只表示稿件标题，入口标签挪进 {source_title}
-
-    此前这几条的默认规则用 {parent_title} 充当「来源列表的入口标签」，而同一个变量
-    在分P与合集条目上又是稿件标题 —— 同一个位置两种含义，预览里一行显示入口标签、
-    另一行显示稿件标题，用户无从判断该按哪种写。
-    """
-
-    UPGRADED_IDS = (
-        "307ccc8e-ad2f-4195-94f0-162ee9ff1ac0",     # 历史记录
-        "0a72a82b-5684-448e-9db1-a342de933d3e",     # 稍后再看
-        "4d28285d-65ca-4c5c-bbb3-b3b5b570c52a",     # 每周必看
-        "dc77bd15-be21-4847-856e-68bb3035042f",     # 歌单
-    )
-
-    @staticmethod
-    def legacy_rules():
-        from util.common.config import _SOURCE_TITLE_UPGRADE
-
-        rules = [dict(entry) for entry in DefaultValue.naming_rule_list]
-
-        for entry in rules:
-            if entry["id"] in _SOURCE_TITLE_UPGRADE:
-                entry["rule"] = _SOURCE_TITLE_UPGRADE[entry["id"]]
-
-        return rules
-
-    def rules_by_id(self):
-        return {entry["id"]: entry for entry in config.get(config.naming_rule_list)}
-
-    def test_untouched_defaults_are_upgraded(self):
-        config.set(config.naming_rule_list, self.legacy_rules())
-
-        patch_config(2200, {})
-
-        rules = self.rules_by_id()
-
-        for rule_id in self.UPGRADED_IDS:
-            assert "{source_title}" in rules[rule_id]["rule"], rule_id
-
-    def test_customized_rules_are_left_alone(self):
-        rules = self.legacy_rules()
-
-        for entry in rules:
-            if entry["id"] == self.UPGRADED_IDS[0]:
-                entry["rule"] = "{parent_title}/我自己的写法/{leaf_title}"
-
-        config.set(config.naming_rule_list, rules)
-
-        patch_config(2200, {})
-
-        assert self.rules_by_id()[self.UPGRADED_IDS[0]]["rule"] == "{parent_title}/我自己的写法/{leaf_title}"
-
-    def test_already_upgraded_is_idempotent(self):
-        config.set(config.naming_rule_list, [dict(entry) for entry in DefaultValue.naming_rule_list])
-
-        patch_config(2200, {})
-
-        rules = self.rules_by_id()
-
-        for rule_id in self.UPGRADED_IDS:
-            assert rules[rule_id]["rule"].count("{source_title}") == 1
-
-    def test_oldest_config_reaches_the_same_rules(self):
-        """
-        2.16.0 之前的老配置要一步到位
-
-        那段迁移的替换源是**运行期**的 DefaultValue，所以它直接把规则换成新串，
-        这里的门禁随后匹配不到旧串、安静放过。两条路终点必须相同
-        """
-        from util.common.config import _OPTIONAL_SEGMENT_UPGRADE
-
-        rules = [dict(entry) for entry in DefaultValue.naming_rule_list]
-
-        for entry in rules:
-            if entry["id"] in _OPTIONAL_SEGMENT_UPGRADE:
-                entry["rule"] = _OPTIONAL_SEGMENT_UPGRADE[entry["id"]]
-
-        config.set(config.naming_rule_list, rules)
-
-        patch_config(2100, {})
-
-        for rule_id in self.UPGRADED_IDS:
-            assert self.rules_by_id()[rule_id]["rule"] == next(
-                entry["rule"] for entry in DefaultValue.naming_rule_list if entry["id"] == rule_id
-            ), rule_id
 
 
 class TestVersionBump:

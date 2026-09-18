@@ -2625,63 +2625,73 @@ Bilibili 的影片通常將影片串流與音訊串流分開儲存與傳輸，�
         <translation>設定</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="440"/>
+        <location filename="../../gui/interface/main_window.py" line="441"/>
         <source>Welcome to Bili23 Downloader</source>
         <translation>歡迎使用 Bili23 Downloader</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="441"/>
+        <location filename="../../gui/interface/main_window.py" line="442"/>
         <source>It is recommended to read the user guide and FAQs when using for the first time, to help you get started quickly and make full use of all features.</source>
         <translation>首次使用時建議先查看使用說明與常見問題，幫助您更快上手並充分利用各項功能。</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="444"/>
+        <location filename="../../gui/interface/main_window.py" line="445"/>
         <source>View</source>
         <translation>查看</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="445"/>
+        <location filename="../../gui/interface/main_window.py" line="446"/>
         <source>Skip</source>
         <translation>跳過</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="457"/>
+        <location filename="../../gui/interface/main_window.py" line="458"/>
         <source>Log in to your account</source>
         <translation>登入帳號</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="458"/>
+        <location filename="../../gui/interface/main_window.py" line="459"/>
         <source>Click the avatar to log in to your Bilibili account. 
 Download functionality will be limited if you&apos;re not logged in.</source>
         <translation>點擊頭像登入嘅 Bilibili 帳號，未登入狀態下下載功能將受到限制。</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="667"/>
+        <location filename="../../gui/interface/main_window.py" line="668"/>
         <source>Download Directory Invalid</source>
         <translation>下載目錄無效</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="668"/>
+        <location filename="../../gui/interface/main_window.py" line="669"/>
         <source>The current download directory is inaccessible or lacks write permissions. Please reset it.</source>
         <translation>目前下載目錄無法存取或沒有寫入權限，請重新設定。</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="677"/>
+        <location filename="../../gui/interface/main_window.py" line="678"/>
         <source>FFmpeg Not Found</source>
         <translation>找不到 FFmpeg</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="678"/>
+        <location filename="../../gui/interface/main_window.py" line="679"/>
         <source>No FFmpeg executable found. Please ensure FFmpeg is installed and configured correctly.</source>
         <translation>找不到 FFmpeg 執行檔。請確保已正確安裝並設定 FFmpeg。</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="687"/>
+        <location filename="../../gui/interface/main_window.py" line="697"/>
+        <source>Naming Rules Were Reset</source>
+        <translation>命名規則已重設</translation>
+    </message>
+    <message>
+        <location filename="../../gui/interface/main_window.py" line="698"/>
+        <source>The built-in naming rules changed in this version, so all of your naming rules have been reset to the defaults. Please set them up again.</source>
+        <translation>此版本修改了內建命名規則，你的命名規則已全部重設為預設值，請重新設定。</translation>
+    </message>
+    <message>
+        <location filename="../../gui/interface/main_window.py" line="707"/>
         <source>Login Required</source>
         <translation>需要登入</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="688"/>
+        <location filename="../../gui/interface/main_window.py" line="708"/>
         <source>Please log in to your account first.</source>
         <translation>請先登入帳號</translation>
     </message>

@@ -126,7 +126,7 @@ class TestTranslationsActuallyResolve:
         ("zh_TW", "Taiwan"),
     ]
 
-    # 命名规则那几个上下文是 2.16.0 重构中新建或大幅改动的，一并纳入端到端校验：
+    # 命名规则那几个上下文是 2.20.0 重构中新建或大幅改动的，一并纳入端到端校验：
     # 静态检查只保证 <name> 对得上类名，保证不了译文真的能查出来
     CONTEXTS = [
         "ParseInterface", "MainWindow",

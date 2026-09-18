@@ -82,6 +82,10 @@ class NamingState:
         self.global_starting_number: int = 1
         self.current_starting_number = None
 
+        # 配置迁移把命名规则整张表重置成了默认值。patch_config 跑在导入期，
+        # 那时界面上什么都没有，只能先在这里记一笔，由主窗口起来后提示用户
+        self.rules_reset: bool = False
+
 
 class AppState:
     """应用生命周期标记"""

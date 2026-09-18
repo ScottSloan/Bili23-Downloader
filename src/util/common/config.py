@@ -12,6 +12,7 @@ from .enum import (
     OriginalFileType
 )
 from ._json import json_loads
+from .runtime import runtime
 
 from threading import Lock
 from typing import ClassVar
@@ -315,7 +316,7 @@ class APPConfig(QConfig):
     # 配置格式版本。**改动必须在 patch_config 里加对应的门禁并把它 +1**，
     # 否则已有用户配置里那份副本永远不会被更新（DefaultValue 只在配置文件不存在时
     # 作为初值）。与 app_version 不要求逐字对应
-    app_config_version = 2210
+    app_config_version = 2200
     config_version = ConfigItem("Application", "config_version", app_config_version)
 
     # Interface
@@ -502,23 +503,6 @@ class APPConfig(QConfig):
                     # 临时文件清理失败不影响主流程，下次保存会覆盖它
                     pass
 
-# 2.16.0 之前这几条默认规则的原始内容。迁移时据此判断用户有没有改过：
-# 内容完全一致才替换成可选段写法，改过一个字都不动
-_OPTIONAL_SEGMENT_UPGRADE = {
-    "5913e25f-0bf3-4d3c-a608-8416af778a8a": "{favorites_owner_id}_{favorites_owner}/{favorites_name}/{leaf_title}",
-    "8c48ac82-14c5-4d48-9de7-225d9b53513f": "{space_owner_id}_{space_owner}/{leaf_title}",
-    "307ccc8e-ad2f-4195-94f0-162ee9ff1ac0": "{parent_title}/{leaf_title}",
-    "0a72a82b-5684-448e-9db1-a342de933d3e": "{parent_title}/{leaf_title}",
-}
-
-# {parent_title} 拆分前的四条默认规则。同样是内容完全一致才替换
-_SOURCE_TITLE_UPGRADE = {
-    "307ccc8e-ad2f-4195-94f0-162ee9ff1ac0": "{parent_title}/<P{p:02d}->{leaf_title}",
-    "0a72a82b-5684-448e-9db1-a342de933d3e": "{parent_title}/<P{p:02d}->{leaf_title}",
-    "4d28285d-65ca-4c5c-bbb3-b3b5b570c52a": "{parent_title}/{leaf_title}",
-    "dc77bd15-be21-4847-856e-68bb3035042f": "{parent_title}/{uploader} - {leaf_title}",
-}
-
 def check_need_patch():
     # 检查是否需要修补配置文件
     if config_path.exists():
@@ -575,36 +559,24 @@ def patch_config(config_version: int, data: dict):
     # 不需要补一段迁移去清理旧配置里残留的 31 规则：2.15.0 与 2.20.0 都没有发布，
     # 没有任何用户的配置里存在这个类型
 
-    if config_version < 2160:
-        # 2.16.0 起命名规则支持 <> 可选段：段内变量取空值时整段连同字面量前后缀
-        # 一并丢弃。个人空间、收藏夹、历史记录、稍后再看这几类里单P与多P混在一起，
-        # 旧默认规则只能顾及一种形态 —— 多P视频会丢掉稿件标题，全部平铺在同一层
-        # （GitHub #461）。此处把它们升级成可选段写法。
-        #
-        # 只替换与旧默认值**完全一致**的那条：用户改过的规则一律不动，
-        # 哪怕只改了一个字
-        naming_rule_list = deepcopy(config.get(config.naming_rule_list))
-
-        upgraded = []
-
-        for entry in naming_rule_list:
-            previous = _OPTIONAL_SEGMENT_UPGRADE.get(entry.get("id"))
-
-            if previous is not None and entry.get("rule") == previous:
-                entry["rule"] = next(
-                    default["rule"] for default in DefaultValue.naming_rule_list
-                    if default["id"] == entry["id"]
-                )
-
-                upgraded.append(entry.get("name"))
-
-        if upgraded:
-            config.set(config.naming_rule_list, naming_rule_list)
-
-            logger.info("以下默认命名规则已升级为可选段写法：%s", "、".join(upgraded))
-
     if config_version < 2200:
-        # 2.20.0 起默认海外 CDN 列表中移除了 Akamai（upos-hz-mirrorakam.akamaized.net）：
+        # 命名规则的内置默认值在本版本连着变过两次：先是改用 <> 可选段（段内变量取
+        # 空值时整段连同字面量前后缀一并丢弃 —— 个人空间、收藏夹这几类里单P与多P
+        # 混在一起，旧写法只能顾及一种形态，多P视频会丢掉稿件标题，GitHub #461），
+        # 随后又把入口标签从 {parent_title} 拆进了 {source_title}（此前这个变量
+        # 兼着「来源列表入口标签」与「稿件标题」两种含义）。
+        #
+        # 这里不再维护「旧默认值」对照表逐条比对、只替换用户没改过的那几条 ——
+        # 命名规则是用户可见、随时可改的东西，留一条已经用错变量的旧规则在配置里，
+        # 出问题时比「规则没了」更难排查。整张表换成新默认值：用户自建的规则与
+        # 改过的内置规则一并舍弃，置一个标志由主窗口起来后提示他重新设置
+        config.set(config.naming_rule_list, deepcopy(DefaultValue.naming_rule_list))
+
+        runtime.naming.rules_reset = True
+
+        logger.info("命名规则已重置为内置默认值")
+
+        # 默认海外 CDN 列表中移除了 Akamai（upos-hz-mirrorakam.akamaized.net）：
         # 它不能作为替换目标 —— 把别的 host 的签名链接改写过去一律返回 403，与出口
         # 地区无关（成因详见 DefaultValue.ov_cdn_server_list 上的那段说明）。
         # 老配置里原样继承下来的那条留着，只会让每次海外解析都白占一个并发探测位
@@ -622,38 +594,6 @@ def patch_config(config_version: int, data: dict):
             config.set(config.ov_cdn_server_list, filtered_list)
 
             logger.info("已从海外 CDN 服务器列表中移除 Akamai")
-
-    if config_version < 2210:
-        # 2.21.0 起 {parent_title} 只表示稿件标题，入口固定标签（「历史记录」
-        # 「稍后再看」「第377期」「歌单名称」）挪进了新变量 {source_title}。
-        #
-        # 此前这个变量兼着两种含义：单P条目上是入口标签，分P与合集条目上又是稿件
-        # 标题 —— 后者由二次解析的 related_titles 盖出来（见 __update_episode_info
-        # 的合并顺序）。同一个变量在同一个位置有两种含义，命名规则编辑器里一行显示
-        # 入口标签、另一行显示稿件标题，用户无从判断该按哪种写。
-        #
-        # 与 2.16.0 那段一样，只替换与旧写法**完全一致**的那条：用户改过的规则一律
-        # 不动，哪怕只改了一个字。上面那段若已把规则换成新串，这里匹配不到旧串，
-        # 安静放过 —— 两条路都通向新默认值，且各自幂等
-        naming_rule_list = deepcopy(config.get(config.naming_rule_list))
-
-        upgraded = []
-
-        for entry in naming_rule_list:
-            previous = _SOURCE_TITLE_UPGRADE.get(entry.get("id"))
-
-            if previous is not None and entry.get("rule") == previous:
-                entry["rule"] = next(
-                    default["rule"] for default in DefaultValue.naming_rule_list
-                    if default["id"] == entry.get("id")
-                )
-
-                upgraded.append(entry.get("name"))
-
-        if upgraded:
-            config.set(config.naming_rule_list, naming_rule_list)
-
-            logger.info("以下默认命名规则已改用 source_title：%s", "、".join(upgraded))
 
     # 完成修补，写入新的 config_version
     config.set(config.config_version, config.app_config_version)

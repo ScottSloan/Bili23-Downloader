@@ -376,6 +376,7 @@ class MainWindow(MSFluentWindow):
 
         QTimer.singleShot(0, self.check_download_path)
         QTimer.singleShot(0, self.check_ffmpeg)
+        QTimer.singleShot(0, self.check_naming_rules_reset)
 
         signal_bus.emit_pending_signals()
 
@@ -677,6 +678,25 @@ class MainWindow(MSFluentWindow):
                 self.tr("FFmpeg Not Found"),
                 self.tr("No FFmpeg executable found. Please ensure FFmpeg is installed and configured correctly.")
             )
+
+    def check_naming_rules_reset(self):
+        """
+        配置迁移把命名规则重置了
+
+        那是一次销毁用户数据的动作（自建规则与改过的内置规则一并没了），不能只写进
+        CHANGELOG 就完事 —— 用户会莫名其妙地发现规则变回默认值，界面上却没有任何解释。
+        这是瞬时事件，提示过就把标志清掉
+        """
+        if not runtime.naming.rules_reset:
+            return
+
+        runtime.naming.rules_reset = False
+
+        signal_bus.toast.show_long_message.emit(
+            ToastNotificationCategory.WARNING,
+            self.tr("Naming Rules Were Reset"),
+            self.tr("The built-in naming rules changed in this version, so all of your naming rules have been reset to the defaults. Please set them up again.")
+        )
 
     def show_favorites_flyout_menu(self):
         from qfluentwidgets import FlyoutAnimationType, FlyoutAnimationManager, MessageBox

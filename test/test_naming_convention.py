@@ -116,7 +116,7 @@ class TestSampleData:
 
     def test_parent_title_is_structural_only(self, factory):
         """
-        {parent_title} 从 2.21.0 起只表示稿件标题
+        {parent_title} 从 2.20.0 起只表示稿件标题
 
         此前它兼着「来源列表入口标签」这一层含义（历史记录的单P条目上是
         「历史记录」），而分P与合集条目上又是稿件标题 —— 同一个变量在同一位置
