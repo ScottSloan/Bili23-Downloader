@@ -66,13 +66,21 @@ class HistoryEpisodeParser(ListEpisodeParserBase):
 
     def set_episode_attribute(self, episode_data: dict, item: TreeItem):
         match episode_data["history"]["business"]:
-            case "archive":
-                item.set_attribute(Attribute.VIDEO_BIT)
-
             case "pgc":
                 item.set_attribute(Attribute.BANGUMI_BIT)
 
             case "cheese":
                 item.set_attribute(Attribute.CHEESE_BIT)
+
+            case _:
+                # archive，以及一切没见过的 business —— B 站会陆续加新的取值，
+                # 「直播」「专栏」之类都会从这里过。
+                #
+                # 必须给出一个形态位：条目标着 NEED_PARSE_BIT 却没有任何形态位时，
+                # 二次解析走到无分支可走的那一步，抛出的 UnboundLocalError 会被
+                # 原样塞进提示框，用户只看到一个 Python 变量名。
+                # 按稿件处理是这里唯一能给的合理默认：真是视频就正常下载，
+                # 真不是视频的会在取流时失败，那种失败有明确的提示
+                item.set_attribute(Attribute.VIDEO_BIT)
 
         item.set_attribute(Attribute.HISTORY_BIT | Attribute.NEED_PARSE_BIT)

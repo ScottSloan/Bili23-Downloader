@@ -11,9 +11,9 @@ from gui.component.widget.tree_widget import ColumnTreeWidget
 from gui.component.dialog import Base
 from gui.component.rule_builder import RuleBuilderWidget
 
-from util.common.data import convention_type_map, VariableListFactory
-from util.common.data.naming_convention import SampleShape, SUPPORTED_SHAPES
-from util.common.enum import ToastNotificationCategory
+from util.common.data import convention_type_map, reversed_convention_type_map, VariableListFactory
+from util.common.data.naming_convention import SampleShape, SUPPORTED_SHAPES, MIXED_ENTRY_TYPES
+from util.common.enum import ConventionType, ToastNotificationCategory
 from util.common.translator import Translator
 from util.format.file_name import FileNameFormatter
 from util.format.rule_template import compile_rule, RuleSyntaxError
@@ -32,6 +32,10 @@ class RulePreviewPanel(QWidget):
 
     三种条目形态**并排**显示而不是切页：一条规则同时吃下单P与多P正是可选段
     存在的全部理由，并排才看得出哪一段在哪种形态下会收缩。
+
+    来源类（收藏夹、历史记录、稍后再看、个人空间）还要多列一行，说明混在其中
+    的影视、课程条目走的是它们自己的规则。不写出来，用户看着三行清一色的路径
+    会以为整份列表都归当前这条管。
 
     渲染一律走 FileNameFormatter.format()，不另写一套 —— 否则预览与真正落盘
     的结果会分叉，非法字符净化、路径规范化的效果也看不见。
@@ -82,8 +86,10 @@ class RulePreviewPanel(QWidget):
 
         self.rows = {}
 
-        for row, shape in enumerate(SUPPORTED_SHAPES.get(type_id, (SampleShape.SINGLE,))):
-            name_lab = CaptionLabel(self.shape_label(shape), self)
+        shapes = SUPPORTED_SHAPES.get(type_id, (SampleShape.SINGLE,))
+
+        for row, shape in enumerate(shapes):
+            name_lab = CaptionLabel(self.shape_label(shape, type_id), self)
             path_lab = BodyLabel("", self)
             path_lab.setWordWrap(True)
 
@@ -92,9 +98,49 @@ class RulePreviewPanel(QWidget):
 
             self.rows[shape] = path_lab
 
-    def shape_label(self, shape):
+        self.add_mixed_entry_row(type_id, len(shapes))
+
+    def add_mixed_entry_row(self, type_id, row: int):
+        """来源类列表里混着的影视、课程条目 —— 它们不归当前这条规则管"""
+        mixed = MIXED_ENTRY_TYPES.get(type_id, ())
+
+        if not mixed:
+            return
+
+        name_lab = CaptionLabel(self.mixed_entry_label(mixed), self)
+        # 灰字，与形态行那一列有值的路径区分开：这一行说的不是「渲染成什么」，
+        # 而是「哪些条目根本不看这条规则」
+        note_lab = CaptionLabel(self.tr("Named by its own type's rule, not by this one"), self)
+        note_lab.setWordWrap(True)
+
+        self.grid_layout.addWidget(name_lab, row, 0, Qt.AlignmentFlag.AlignTop)
+        self.grid_layout.addWidget(note_lab, row, 1)
+
+    def mixed_entry_label(self, mixed):
+        # 必须与 shape_label 一样是本类的方法：tr() 的查表上下文取实例所属的类名
+        names = []
+
+        for type_id in mixed:
+            # 与下载选项的 MultiTypeNamingConventionCard 用同一套词，两处不能各叫各的
+            name = Translator.CONVENTION_TYPE(reversed_convention_type_map.get(type_id))
+
+            if name:
+                names.append(name)
+
+        return " / ".join(names)
+
+    def shape_label(self, shape, type_id = None):
         # 必须是本类的方法：tr() 的查表上下文取实例所属的类名，
         # 写成模块级 lambda 的话，上下文会变成 lambda 的参数名
+
+        # 合集类型下两行说的是「这一集在稿件内部是单P还是多P」，通用的
+        # 单个视频 / 合集 会把两行都说成一集，看不出哪一行才是多P那个
+        if type_id == ConventionType.COLLECTION:
+            if shape == SampleShape.COLLECTION:
+                return self.tr("Multi-part entry")
+
+            return self.tr("Single-part entry")
+
         match shape:
             case SampleShape.MULTI:
                 return self.tr("Multi-part video")

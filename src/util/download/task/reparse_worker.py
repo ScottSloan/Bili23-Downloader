@@ -57,6 +57,13 @@ class ReparseWorker(QRunnable, ParserBase):
         elif self.episode_info.get("attribute", 0) & Attribute.CHEESE_BIT:
             episode_parser = self.parse_cheese_info()
 
+        else:
+            # 条目标了 NEED_PARSE_BIT 却一个媒体形态位都没有，解析器认不出这是什么。
+            # 这里以前没有分支：episode_parser 未绑定，抛出的 UnboundLocalError
+            # 被 run() 的 except 原样塞进提示框，用户看到的是「局部变量
+            # episode_parser 未绑定」—— 一句对定位毫无帮助的 Python 内部信息
+            raise RuntimeError(Translator.ERROR_MESSAGES("UNSUPPORTED_ENTRY_TYPE"))
+
         return episode_parser.parse(update_episode_list = False)
 
     def parse_video_info(self):

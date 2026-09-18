@@ -188,18 +188,17 @@ class FileNameFormatter:
         return self.get_type_id_from_attribute(task_info.Episode.attribute)
 
     def get_type_id_from_attribute(self, attribute: int):
-        type_map = {
-            Attribute.FAVLIST_BIT: ConventionType.FAVORITE,
-            Attribute.SPACE_BIT: ConventionType.SPACE,
-            Attribute.HISTORY_BIT: ConventionType.HISTORY,
-            Attribute.WATCH_LATER_BIT: ConventionType.WATCH_LATER,
-            Attribute.WEEKLY_BIT: ConventionType.WEEKLY,
-            Attribute.AUDIO_BIT: ConventionType.AUDIO,
+        """
+        取条目该用的命名类型
 
-            Attribute.NORMAL_BIT: ConventionType.NORMAL,
-            Attribute.PART_BIT: ConventionType.PART,
-            Attribute.COLLECTION_BIT: ConventionType.COLLECTION,
-            Attribute.INTERACTIVE_BIT: ConventionType.INTERACTIVE_VIDEO,
+        表是**有序**的，遍历时第一个命中的位胜出，因此分三段排列，段间次序即优先级。
+        来源列表（收藏夹、历史记录、稍后再看、个人空间）里混着影视与课程条目，
+        解析器给它们**同时**打上来源位与媒体形态位，只靠位本身分不出该用哪条规则。
+        """
+        type_map = {
+            # 第一段：媒体形态位。影视与课程的变量集（season_title / episode_title /
+            # series_title …）与投稿视频完全不同 —— 套用来源规则的话，这些变量在
+            # 这类条目上全是空的，落盘只剩一个标题。所以它们一律走自己的规则
             Attribute.BANGUMI_BIT: ConventionType.BANGUMI,
             Attribute.CHEESE_BIT: ConventionType.CHEESE,
 
@@ -210,6 +209,26 @@ class FileNameFormatter:
             # 类型就会返回 None，format() 只好回退到 FALLBACK_RULE，落盘文件名全变成
             # {leaf_title} —— 任务建得出来、全程不报错，只是名字全错
             Attribute.LESSON_BIT: ConventionType.CHEESE,
+
+            # 第二段：来源位。排在形态位之前，是为了让来源类型**吞下**列表里的
+            # 普通视频、分P与合集条目 —— 形态差异由命名规则的可选段在来源类型内部
+            # 消化（见 naming_convention.py 的 SUPPORTED_SHAPES）
+            Attribute.FAVLIST_BIT: ConventionType.FAVORITE,
+            Attribute.SPACE_BIT: ConventionType.SPACE,
+            Attribute.HISTORY_BIT: ConventionType.HISTORY,
+            Attribute.WATCH_LATER_BIT: ConventionType.WATCH_LATER,
+            Attribute.WEEKLY_BIT: ConventionType.WEEKLY,
+            Attribute.AUDIO_BIT: ConventionType.AUDIO,
+
+            # 第三段：结构形态位。合集排在最前 —— 二次解析会给合集里的条目补上
+            # NORMAL 或 PART（video.py 的 single_parser / pages_parser），那是它在
+            # 稿件内部的结构，改变不了「它属于某个合集」这件事，而合集列表
+            # （list.py）里的条目一概如此。归属由 {collection_title} 表达，
+            # 稿件内部的分P差异交给 {parent_title}/{leaf_title} 消化
+            Attribute.COLLECTION_BIT: ConventionType.COLLECTION,
+            Attribute.NORMAL_BIT: ConventionType.NORMAL,
+            Attribute.PART_BIT: ConventionType.PART,
+            Attribute.INTERACTIVE_BIT: ConventionType.INTERACTIVE_VIDEO,
 
             # 兜底放在最后：没有结构形态位也没有来源位的纯投稿视频，按单个视频处理。
             # 放在末尾才不会抢走 PART / COLLECTION 的判定，attribute 为 0 时也仍然返回 None

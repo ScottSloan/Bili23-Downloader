@@ -242,22 +242,37 @@ class TestNamingRuleEditor:
 
         assert not stray
 
-    def test_editor_does_not_overlap_at_minimum_height(self, parent):
+    @pytest.mark.parametrize("case", ["favorite", "collection"])
+    def test_editor_does_not_overlap_at_minimum_height(self, parent, case):
         """
         窗口压到最小尺寸时右栏不能重叠
 
         右栏把可视化编辑器、预览、变量表叠在一栏里，各块的最小高度之和一旦超过
         窗口能给的，Qt 就不再理会最小值继续压，带硬性下限的滚动区会画到分配区
         之外、直接盖住「文件名」那一行。以后往这一栏里再加东西，先看这条用例。
+
+        按预览行数取两个类型：收藏夹三行形态加一行混入提示，合集两行形态 ——
+        预览越高，留给可视化编辑器的高度越少，重叠就是从那里开始的
         """
         from gui.dialog.setting.edit_rule import EditRuleDialog
         from util.common.enum import ConventionType
 
+        cases = {
+            "favorite": (
+                ConventionType.FAVORITE,
+                "{favorites_owner_id}_{favorites_owner}/{favorites_name}/{parent_title}/<P{p:02d}->{leaf_title}"
+            ),
+            "collection": (
+                ConventionType.COLLECTION,
+                "{collection_title}/{section_title}/{parent_title}/{leaf_title}"
+            ),
+        }
+
+        type_id, rule = cases[case]
+
         panel = EditRuleDialog(parent)
         panel.load({
-            "id": "x", "name": "n", "type": ConventionType.FAVORITE,
-            "rule": "{favorites_owner_id}_{favorites_owner}/{favorites_name}/{parent_title}/<P{p:02d}->{leaf_title}",
-            "default": False
+            "id": "x", "name": "n", "type": type_id, "rule": rule, "default": False
         })
 
         # 最坏组合：最小窗口高度减去标题栏与按钮行 + 高级区展开 + 规则报错多出一行红字

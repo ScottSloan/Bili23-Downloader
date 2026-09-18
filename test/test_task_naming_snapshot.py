@@ -131,12 +131,16 @@ class TestRaceCondition:
 class TestHeterogeneousBatch:
     def test_each_item_uses_its_own_type_rule(self):
         # 界面上只为收藏夹指定了规则，剧集条目必须落到剧集自己的默认规则，
-        # 绝不能套用收藏夹那条
+        # 绝不能套用收藏夹那条。
+        #
+        # 剧集那条用的是**解析器真实产出的**属性组合（favlist.py 对 ogv 条目
+        # 同时打上 BANGUMI_BIT 与 FAVLIST_BIT）。曾经这里造的是裸 BANGUMI_BIT，
+        # 现实中不存在，于是这条测试一直在替一个不成立的行为背书
         favorite_rule_id = default_rule_id(ConventionType.FAVORITE)
         options = {"naming_rule_ids": {ConventionType.FAVORITE: favorite_rule_id}}
 
         favorite = make_task(Attribute.FAVLIST_BIT | Attribute.VIDEO_BIT | Attribute.NORMAL_BIT)
-        bangumi = make_task(Attribute.BANGUMI_BIT)
+        bangumi = make_task(Attribute.FAVLIST_BIT | Attribute.BANGUMI_BIT | Attribute.NEED_PARSE_BIT)
 
         freeze(favorite, options)
         freeze(bangumi, options)

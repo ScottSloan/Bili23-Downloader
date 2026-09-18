@@ -110,6 +110,77 @@ class TestTypeMapping:
             Attribute.VIDEO_BIT | Attribute.PART_BIT
         ) == ConventionType.PART
 
+    def test_media_kind_outranks_the_source(self):
+        """
+        收藏夹、历史记录、稍后再看、个人空间里混着影视与课程条目，解析器给它们
+        **同时**打上来源位与媒体形态位，只靠位本身分不出该用哪条规则。
+
+        命名类型必须取媒体形态：套用来源规则的话，{season_title}、{episode_title}
+        这些变量在这些条目上全是空的，落盘剩下的只有标题
+        """
+        from util.parse.episode.tree import Attribute
+        from util.common.enum import ConventionType
+
+        formatter = FileNameFormatter()
+
+        assert formatter.get_type_id_from_attribute(
+            Attribute.FAVLIST_BIT | Attribute.BANGUMI_BIT | Attribute.NEED_PARSE_BIT
+        ) == ConventionType.BANGUMI
+
+        assert formatter.get_type_id_from_attribute(
+            Attribute.WATCH_LATER_BIT | Attribute.BANGUMI_BIT | Attribute.NEED_PARSE_BIT
+        ) == ConventionType.BANGUMI
+
+        assert formatter.get_type_id_from_attribute(
+            Attribute.HISTORY_BIT | Attribute.BANGUMI_BIT | Attribute.NEED_PARSE_BIT
+        ) == ConventionType.BANGUMI
+
+        assert formatter.get_type_id_from_attribute(
+            Attribute.HISTORY_BIT | Attribute.CHEESE_BIT | Attribute.NEED_PARSE_BIT
+        ) == ConventionType.CHEESE
+
+        assert formatter.get_type_id_from_attribute(
+            Attribute.SPACE_BIT | Attribute.CHEESE_BIT
+        ) == ConventionType.CHEESE
+
+    def test_structure_bits_do_not_outrank_the_source(self):
+        """
+        来源类型要吞下列表里的普通视频、分P与合集 —— 形态差异由命名规则的可选段
+        在来源类型内部消化（见 naming_convention.py 的 SUPPORTED_SHAPES）。
+        来源位一旦排到形态位后面，收藏夹里的分P就会用上分P自己的规则
+        """
+        from util.parse.episode.tree import Attribute
+        from util.common.enum import ConventionType
+
+        formatter = FileNameFormatter()
+
+        for shape in (Attribute.NORMAL_BIT, Attribute.PART_BIT, Attribute.COLLECTION_BIT):
+            assert formatter.get_type_id_from_attribute(
+                Attribute.FAVLIST_BIT | Attribute.VIDEO_BIT | shape | Attribute.NEED_PARSE_BIT
+            ) == ConventionType.FAVORITE
+
+    def test_collection_entries_stay_collection_after_reparse(self):
+        """
+        合集列表（list.py）的条目在二次解析后会被补上 NORMAL 或 PART —— 那是它
+        在稿件内部的结构。归属某个合集这件事没变，命名类型必须仍是 COLLECTION，
+        否则下载选项对话框按第一遍属性给出的 COLLECTION 规则会被静默忽略：
+        用户在对话框里为合集选的那条规则，一个条目都没用上
+        """
+        from util.parse.episode.tree import Attribute
+        from util.common.enum import ConventionType
+
+        formatter = FileNameFormatter()
+
+        # list.py 打上的位；reparse_worker 的 get_kwargs 只摘掉 NEED_PARSE_BIT
+        resolved = (
+            Attribute.COLLECTION_LIST_BIT | Attribute.COLLECTION_BIT | Attribute.VIDEO_BIT
+        )
+
+        for shape in (Attribute.NORMAL_BIT, Attribute.PART_BIT):
+            assert formatter.get_type_id_from_attribute(
+                resolved | shape
+            ) == ConventionType.COLLECTION
+
     def test_unknown_attribute_returns_none(self):
         assert FileNameFormatter().get_type_id_from_attribute(0) is None
 

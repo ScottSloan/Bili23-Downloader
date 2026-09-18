@@ -288,6 +288,7 @@ class Translator:
             "DOWNLOAD_FAILED": translate("ERROR_MESSAGES", "Download failed"),
             "RENAME_FAILED": translate("ERROR_MESSAGES", "Failed to rename file"),
             "PARSE_FAILED": translate("ERROR_MESSAGES", "Failed to parse download information"),
+            "UNSUPPORTED_ENTRY_TYPE": translate("ERROR_MESSAGES", "This item's type is not recognized, so it cannot be downloaded"),
             "MEDIA_INFO_FAILED": translate("ERROR_MESSAGES", "Failed to retrieve media information"),
             "LOGIN_EXPIRED": translate("ERROR_MESSAGES", "Login status expired"),
             "COOKIE_FORMAT_INVALID": translate("ERROR_MESSAGES", "Invalid Cookies format"),

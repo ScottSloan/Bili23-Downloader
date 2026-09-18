@@ -131,6 +131,9 @@ class TestTranslationsActuallyResolve:
     CONTEXTS = [
         "ParseInterface", "MainWindow",
         "RuleListDialog", "EditRuleDialog", "RuleBuilderWidget", "FragmentEditView",
+        # 预览面板单独成类，译文就登记在它自己名下（不是 EditRuleDialog），
+        # 漏在名单外的话新串漏重新生成不会有任何报错
+        "RulePreviewPanel",
         # 提示消息由 Translator 显式指定上下文，散落在解析、下载各处上报。
         # 这一类字符串改完最容易漏掉重新生成：界面上只会退回英文原文，
         # 而英文原文本身是通顺的，不盯着看根本发现不了

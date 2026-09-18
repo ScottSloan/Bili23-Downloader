@@ -294,6 +294,27 @@ class TestHistoryParser:
         for i in range(3):
             assert root.child(i).has_attribute(Attribute.HISTORY_BIT)
 
+    def test_unknown_business_still_gets_a_media_bit(self, parse_result):
+        """
+        business 是 B 站自己的判别字段，取值会陆续增加
+
+        漏掉它的时候（这里的分支曾经没有 default），条目只带 HISTORY|NEED_PARSE，
+        一个媒体形态位都没有 —— 二次解析走到无分支可走的那一步，抛出的
+        UnboundLocalError 被原样塞进提示框，用户只看到一个 Python 变量名
+        """
+        from util.parse.episode.history import HistoryEpisodeParser
+
+        data = {"data": {"list": [
+            {"title": "某种新内容", "cover": "c9", "duration": 30, "badge": "",
+             "view_at": 1700000009, "uri": "", "show_title": "",
+             "history": {"bvid": "BV9", "cid": 99, "epid": 0, "business": "live"}},
+        ]}}
+
+        _, _, root = run(HistoryEpisodeParser(data, "HISTORY"), parse_result)
+
+        assert root.child(0).has_attribute(Attribute.VIDEO_BIT)
+        assert root.child(0).has_attribute(Attribute.HISTORY_BIT)
+
 
 class TestPopularParser:
     DATA = {

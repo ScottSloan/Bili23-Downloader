@@ -36,7 +36,8 @@ class SampleShape(StrEnum):
     COLLECTION = "collection"           # 合集中的一集
 
 # 各规则类型实际可能遇到的条目形态。
-# 收藏夹、个人空间、历史记录、稍后再看都是「来源」，里面什么都可能有；
+# 收藏夹、个人空间、历史记录、稍后再看都是「来源」，里面混着普通视频、分P与合集，
+# 这三种形态由命名规则的可选段在来源类型内部消化。
 # 剧集、课程、音乐则没有分P与合集之分。
 # 每周必看的条目不带 NEED_PARSE_BIT，从不二次解析，因此也没有分P形态
 SUPPORTED_SHAPES = {
@@ -46,12 +47,32 @@ SUPPORTED_SHAPES = {
     ConventionType.INTERACTIVE_VIDEO: (SampleShape.SINGLE,),
     ConventionType.BANGUMI: (SampleShape.SINGLE,),
     ConventionType.CHEESE: (SampleShape.SINGLE,),
+    # 合集类型的两种形态说的是「这一集在稿件内部是单P还是多P」：合集列表里的条目
+    # 多数只有合集标题 + 标题，{section_title}/{parent_title}/{p} 都是空的
+    ConventionType.COLLECTION: (SampleShape.SINGLE, SampleShape.COLLECTION),
     ConventionType.FAVORITE: (SampleShape.SINGLE, SampleShape.MULTI, SampleShape.COLLECTION),
     ConventionType.SPACE: (SampleShape.SINGLE, SampleShape.MULTI, SampleShape.COLLECTION),
     ConventionType.HISTORY: (SampleShape.SINGLE, SampleShape.MULTI, SampleShape.COLLECTION),
     ConventionType.WATCH_LATER: (SampleShape.SINGLE, SampleShape.MULTI, SampleShape.COLLECTION),
     ConventionType.WEEKLY: (SampleShape.SINGLE,),
     ConventionType.AUDIO: (SampleShape.SINGLE,),
+}
+
+# 混在「来源」列表里的其他类型条目
+#
+# 它们**不**套用来源类型的命名规则，而是走自己类型的规则 —— 见
+# FileNameFormatter.get_type_id_from_attribute 里「媒体形态位优先于来源位」那一段。
+# 编辑器的预览据此多列一行，免得用户以为整份列表都归当前这条规则管。
+#
+# 每一格都在解析器里对得上：
+#   收藏夹按 ogv 判影视（favlist.py）、稍后再看按 bangumi 判影视（watch_later.py）、
+#   历史记录按 business 三分（history.py）、个人空间按 is_lesson_video 判课程（space.py）。
+# 课程不在收藏夹与稍后再看里，影视不在个人空间里。
+MIXED_ENTRY_TYPES = {
+    ConventionType.FAVORITE: (ConventionType.BANGUMI,),
+    ConventionType.HISTORY: (ConventionType.BANGUMI, ConventionType.CHEESE),
+    ConventionType.WATCH_LATER: (ConventionType.BANGUMI,),
+    ConventionType.SPACE: (ConventionType.CHEESE,),
 }
 
 # 变量的数据类型。只有这几个变量做数字格式化（{number:02d} 之类）有意义，
@@ -109,6 +130,12 @@ _LABEL_PARENT_TITLE_TYPES = frozenset({
     ConventionType.AUDIO,
 })
 
+# 下面这几类的 collection_title 是**归属信息**而不是形态信息，任何形态下都该有值。
+#
+# 形态覆盖里清空它，是因为来源列表里的分P稿件不在任何合集里；但合集条目自己就住在
+# 合集里，清空等于告诉用户 {collection_title} 取不到值
+_SHAPE_KEEPS_COLLECTION_TYPES = frozenset({ConventionType.COLLECTION})
+
 _SHAPE_OVERRIDES = {
     # 只清空形态相关的键，leaf_title 留给各类型自己的样例
     SampleShape.SINGLE: {
@@ -130,6 +157,18 @@ _SHAPE_OVERRIDES = {
         "parent_title": "全收集、全流程、全剧情攻略",
         "p": 3,
         "leaf_title": "03【墓地平原-西+艾拉克河】",
+    },
+}
+
+# 通用形态覆盖之上的按类型补丁
+#
+# 通用覆盖是按形态写的，够不着「同一个形态在某类型下另有说法」的情况。
+# 合集就是这种：_collection_variable 里的 leaf_title 例子带着「03」这样的分P
+# 序号（它伺候的是「合集中的一集」那个形态），拿来当单P条目的样本会让人以为
+# 标题本身就长这样。这里换成一个普通稿件标题，与单个视频类型用的是同一个
+_SHAPE_OVERRIDES_BY_TYPE = {
+    (ConventionType.COLLECTION, SampleShape.SINGLE): {
+        "leaf_title": "游戏科学新作《黑神话：钟馗》先导预告",
     },
 }
 
@@ -175,6 +214,12 @@ class VariableListFactory:
             if name == "parent_title" and shape is SampleShape.SINGLE and type in _LABEL_PARENT_TITLE_TYPES:
                 continue
 
+            if name == "collection_title" and type in _SHAPE_KEEPS_COLLECTION_TYPES:
+                continue
+
+            data[name] = value
+
+        for name, value in _SHAPE_OVERRIDES_BY_TYPE.get((type, shape), {}).items():
             data[name] = value
 
         # 时间变量必须是 datetime，否则 {pub_time:%Y-%m-%d} 会抛异常

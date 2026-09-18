@@ -13,10 +13,12 @@ get_variable_data_from_task_info 是无条件填齐全部键的。GitHub issue #
 """
 
 from util.common.data.naming_convention import (
-    VariableListFactory, SampleShape, SUPPORTED_SHAPES
+    VariableListFactory, SampleShape, SUPPORTED_SHAPES, MIXED_ENTRY_TYPES
 )
 from util.common.enum import ConventionType, VariableType
 from util.common.translator import Translator
+
+from util.parse.episode.tree import Attribute
 
 from util.format.file_name import FileNameFormatter
 from util.download.task.info import TaskInfo
@@ -134,11 +136,75 @@ class TestSampleData:
 
         assert formatter.format() is not None
 
+    def test_collection_shape_keeps_the_collection_title(self, factory):
+        """
+        合集条目的 collection_title 是归属信息，不是形态信息
+
+        形态覆盖里会清空它（来源列表里的分P稿件不在任何合集里），但合集条目
+        自己就住在合集里，清空等于告诉用户 {collection_title} 取不到值
+        """
+        single = factory.build_variable_data(ConventionType.COLLECTION, SampleShape.SINGLE)
+
+        assert single["collection_title"]
+        assert single["leaf_title"]
+
+        # 单P条目没有稿件标题、页码与章节，这几项该空 —— 两行样本的差别正在这里
+        assert single["parent_title"] == ""
+        assert single["p"] == 0
+        assert single["section_title"] == ""
+
+    def test_collection_shapes_differ(self, factory):
+        single = factory.build_variable_data(ConventionType.COLLECTION, SampleShape.SINGLE)
+        full = factory.build_variable_data(ConventionType.COLLECTION, SampleShape.COLLECTION)
+
+        assert single["collection_title"] == full["collection_title"]
+        assert single["leaf_title"] != full["leaf_title"]
+
     def test_datetime_variables_are_datetime(self, factory):
         data = factory.build_variable_data(ConventionType.NORMAL, SampleShape.SINGLE)
 
         for name in ("pub_time", "create_time", "fav_time", "last_watched_time"):
             assert hasattr(data[name], "strftime"), name
+
+
+class TestMixedEntryTypes:
+    """
+    MIXED_ENTRY_TYPES 是给编辑器预览用的声明
+
+    预览多列的那一行据此告诉用户「影视、课程条目不归当前这条规则管」，写错了
+    界面就会替一个错误的行为背书 —— 而它只是一张手写的表，没有任何东西保证
+    它与 FileNameFormatter 里那条优先级规则一致，所以在这里钉住。
+    """
+
+    SOURCE_BITS = {
+        ConventionType.FAVORITE: Attribute.FAVLIST_BIT,
+        ConventionType.SPACE: Attribute.SPACE_BIT,
+        ConventionType.HISTORY: Attribute.HISTORY_BIT,
+        ConventionType.WATCH_LATER: Attribute.WATCH_LATER_BIT,
+    }
+
+    KIND_BITS = {
+        ConventionType.BANGUMI: Attribute.BANGUMI_BIT,
+        ConventionType.CHEESE: Attribute.CHEESE_BIT,
+    }
+
+    def test_declared_mixed_entries_match_the_type_mapping(self):
+        formatter = FileNameFormatter()
+
+        for source, mixed in MIXED_ENTRY_TYPES.items():
+            # 来源类型不在 SOURCE_BITS 里时这里会 KeyError —— 表里冒出一个
+            # 没人认识的来源类型本该让测试挂掉，而不是静默跳过
+            for kind in mixed:
+                attribute = self.SOURCE_BITS[source] | self.KIND_BITS[kind] | Attribute.NEED_PARSE_BIT
+
+                assert formatter.get_type_id_from_attribute(attribute) == kind, (source, kind)
+
+    def test_only_multi_shape_types_declare_mixed_entries(self):
+        # 混进别的类型是对「来源类列表」才成立的说法 —— 只有装着多种形态条目的
+        # 类型才会同时装着投稿视频与影视、课程。只声明一种形态的类型（单个视频、
+        # 音乐、影视自己）不该出现在这张表里
+        for type_id in MIXED_ENTRY_TYPES:
+            assert len(SUPPORTED_SHAPES[type_id]) > 1, type_id
 
 
 class TestIssue461:

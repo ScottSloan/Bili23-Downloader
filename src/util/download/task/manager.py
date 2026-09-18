@@ -173,6 +173,9 @@ class TaskManager:
         一次解析里混有多种类型时（收藏夹里既有普通视频又有剧集），单个 rule_id
         会让剧集条目用上收藏夹的规则。这里是真正的收口点，界面只负责让用户
         看得见、选得到。
+
+        条目的类型由 get_type_id_from_attribute 按属性位算出来，那里媒体形态位
+        优先于来源位：收藏夹里的剧集条目算剧集，不算收藏夹。
         """
         formatter = FileNameFormatter()
 
