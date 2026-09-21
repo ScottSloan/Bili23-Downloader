@@ -4,7 +4,7 @@ version = "2.20.0"
 description = "开源、免费、跨平台的 B 站视频下载工具，支持多线程加速、音视频分离、弹幕元数据获取、自定义命名与分类等功能。Open Source, Free, Cross-Platform Bilibili Video Downloader."
 readme = "README.md"
 license = "GPL-3.0"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 dependencies = [
     "PySide6==6.10.3",
     "PySide6-Fluent-Widgets==1.11.3",
@@ -53,7 +53,7 @@ filterwarnings = [
 # --------------------------------------------------------------------------
 
 [tool.ruff]
-target-version = "py310"    # 与 requires-python 保持一致
+target-version = "py311"    # 与 requires-python 保持一致
 line-length = 160           # 项目现有风格偏长行，取一个不会制造噪声的上限
 
 exclude = [
