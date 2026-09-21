@@ -359,6 +359,12 @@ class APPConfig(QConfig):
     speed_limit_enabled = ConfigItem("Download", "speed_limit_enabled", False, BoolValidator())
     speed_limit_rate = ConfigItem("Download", "speed_limit_rate", 10.0)
 
+    # 任务级自动重试（Issue #469）。只对网络类可重试错误生效，403/404 这类永久错误
+    # 仍直接进终态，因此默认开启是安全的 —— 网络差的用户不必先去设置里找开关。
+    # 退避节奏写死在 Downloader 里，不在这里暴露：它与分片级重试是两层概念
+    auto_retry_enabled = ConfigItem("Download", "auto_retry_enabled", True, BoolValidator())
+    auto_retry_max_count = RangeConfigItem("Download", "auto_retry_max_count", 5, RangeValidator(1, 20))
+
     video_quality_priority = ConfigItem("Download", "video_quality_priority", DefaultValue.video_quality_priority)
     audio_quality_priority = ConfigItem("Download", "audio_quality_priority", DefaultValue.audio_quality_priority)
     video_codec_priority = ConfigItem("Download", "video_codec_priority", DefaultValue.video_codec_priority)
@@ -551,13 +557,6 @@ def patch_config(config_version: int, data: dict):
             config.set(config.video_quality_priority, video_quality_priority)
 
             logger.info("SDR 增强画质已补入画质优先级列表")
-
-    # 2.15.0 曾在这里为会员购商城课程（31）补一条默认规则。该类型后来并入课程，
-    # 这段迁移连同它的枚举成员与默认规则条目一起删掉了 —— 它引用的符号已经不存在，
-    # 留着会在导入期抛 AttributeError（patch_config 是模块导入时执行的）。
-    #
-    # 不需要补一段迁移去清理旧配置里残留的 31 规则：2.15.0 与 2.20.0 都没有发布，
-    # 没有任何用户的配置里存在这个类型
 
     if config_version < 2200:
         # 命名规则的内置默认值在本版本连着变过两次：先是改用 <> 可选段（段内变量取

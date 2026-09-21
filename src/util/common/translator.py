@@ -338,6 +338,7 @@ class Translator:
             "PARSING_LINK": translate("TIP_MESSAGES", "Parsing link {link}, total {total_links} links, progress: {progress}%"),
             "MEDIA_INFO_UPDATED": translate("TIP_MESSAGES", "Media info updated"),
             "ADDED_TO_DOWNLOAD_QUEUE": translate("TIP_MESSAGES", "Added to download queue"),
+            "AUTO_RETRY_PENDING": translate("TIP_MESSAGES", "Retrying in {seconds}s ({current}/{total})"),
             # 用户指定的视频编码在该稿件里不存在时的回退提示（Issue #465）。
             #
             # 分两条是因为两处能用的字数差得很远，措辞压不压缩是两回事：

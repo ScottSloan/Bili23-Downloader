@@ -117,7 +117,7 @@ class ChunkWorker(QRunnable):
         self.on_chunk_start = on_chunk_start
         self.on_chunk_end = on_chunk_end
 
-    def _invoke_download_error(self, message: str):
+    def _invoke_download_error(self, message: str, retryable: bool):
         if self.parent:
             logger.error(message)
 
@@ -125,7 +125,8 @@ class ChunkWorker(QRunnable):
                 self.parent,
                 "on_download_error",
                 Qt.ConnectionType.QueuedConnection,
-                Q_ARG(str, message)
+                Q_ARG(str, message),
+                Q_ARG(bool, retryable)
             )
 
     def _is_retryable_exception(self, exc: Exception):
@@ -174,7 +175,9 @@ class ChunkWorker(QRunnable):
             message = f"分片 {self.chunk_index + 1} 遇到不可重试错误：{reason}"
 
         self.stop_event.set()
-        self._invoke_download_error(message)
+        # retryable 一路带到 Downloader：任务级自动重试只认网络类错误，
+        # 403/404 这类永久错误必须直接进终态，重试只会原样再失败一次
+        self._invoke_download_error(message, retryable)
 
     def _notify_chunk_finished(self):
         QMetaObject.invokeMethod(
@@ -513,9 +516,29 @@ class Downloader(QObject):
         self.speed_timer.setInterval(1000)
         self.speed_timer.timeout.connect(self._calculate_speed)
 
+        # 任务级自动重试。分片级重试（ChunkWorker.max_retries）解决的是单个分片的瞬时抖动，
+        # 而 CDN 在几 KB 处反复掐断连接时，整条链路会把 5 次配额一次性耗光并把任务钉死在
+        # FAILED，此后只能靠用户手动点击恢复（Issue #469）。这里补的是任务这一层的重排队。
+        self._auto_retry_count = 0
+        self._retry_pending = False
+        self._retry_remaining = 0
+        # 安排重试时的代次快照。暂停、删除、退出都会提升代次，据此判断这次重试是否已作废
+        self._retry_generation = 0
+        # 安排重试时的已下载量。下次失败时若已超过它，说明这中间确有新数据落盘，
+        # 不是同一次失败的延续，重试配额应当归零 —— 否则网络只是时好时坏的用户
+        # 会在几次抖动之后永久失去自动重试能力
+        self._retry_baseline_size = 0
+
+        # 与 speed_timer 同理，必须挂 parent，见上方注释
+        self._retry_timer = QTimer(self)
+        self._retry_timer.setInterval(1000)
+        self._retry_timer.timeout.connect(self._on_retry_tick)
+
     def start(self):
         if self.session is None:
             self.init_session()
+
+        self._cancel_auto_retry()
 
         self._completion_triggered = False
         self._download_error_triggered = False
@@ -585,8 +608,8 @@ class Downloader(QObject):
             error_message
         )
 
-    @Slot(str)
-    def on_download_error(self, error_message: str):
+    @Slot(str, bool)
+    def on_download_error(self, error_message: str, retryable: bool):
         if self._download_error_triggered:
             return
 
@@ -603,16 +626,111 @@ class Downloader(QObject):
         self._close_session()
         self.speed_timer.stop()
 
+        scheduled = self._schedule_auto_retry(retryable)
+
         self.update_item(self.task_info)
 
         signal_bus.download.auto_manage_concurrent_downloads.emit()
 
-        # 
-        signal_bus.toast.show_long_message.emit(
-            ToastNotificationCategory.ERROR,
-            Translator.ERROR_MESSAGES("DOWNLOAD_FAILED"),
-            error_message
+        # 已安排自动重试时不弹提示：网络差的用户往往几十个任务一起失败，
+        # 每轮重试都弹一次比手动点重试还吵。只有真正进终态才提示一次
+        if not scheduled:
+            signal_bus.toast.show_long_message.emit(
+                ToastNotificationCategory.ERROR,
+                Translator.ERROR_MESSAGES("DOWNLOAD_FAILED"),
+                error_message
+            )
+
+    def _schedule_auto_retry(self, retryable: bool):
+        # 返回是否已安排重试。未安排时调用方维持原有的终态失败处理。
+        #
+        # 先无条件清掉上一轮的倒计时：本次若不再安排重试（配额耗尽、错误不可重试），
+        # 残留的定时器和倒计时文案会让一个已经放弃的任务在界面上继续显示「N 秒后重试」
+        self._cancel_auto_retry()
+
+        if not retryable or not config.get(config.auto_retry_enabled):
+            return False
+
+        # 已下载量与上次安排重试时不同，说明这不是同一次失败的延续，配额归零：
+        # 变多是网络时好时坏，中间确有数据落盘；变少则是任务被重新下载清零过。
+        # 两种都该重新给一份配额，否则抖动几次就耗光，长时间挂机反而更早放弃
+        if self.task_info.Download.downloaded_size != self._retry_baseline_size:
+            self._auto_retry_count = 0
+
+        max_count = config.get(config.auto_retry_max_count)
+
+        if self._auto_retry_count >= max_count:
+            logger.info("任务 %s 自动重试已达上限（%s 次），转为等待用户处理", self.task_info.Basic.task_id, max_count)
+
+            return False
+
+        self._auto_retry_count += 1
+
+        # 退避节奏 30s → 60s → 120s → 240s → 300s 封顶。刻意与分片级那套
+        # （秒级、封顶 8 秒）拉开量级：分片级容忍的是瞬时抖动，任务级面对的是
+        # CDN 持续掐断，间隔太短只是把同一个失败更密集地重放一遍
+        self._retry_remaining = min(30 * 2 ** (self._auto_retry_count - 1), 300)
+        self._retry_baseline_size = self.task_info.Download.downloaded_size
+        self._retry_generation = self.download_generation
+        self._retry_pending = True
+
+        self._update_retry_label()
+        self._retry_timer.start()
+
+        logger.info(
+            "任务 %s 将在 %s 秒后自动重试（第 %s/%s 次）",
+            self.task_info.Basic.task_id, self._retry_remaining, self._auto_retry_count, max_count
         )
+
+        return True
+
+    def _update_retry_label(self):
+        self.task_info.Download.status_label = Translator.TIP_MESSAGES("AUTO_RETRY_PENDING").format(
+            seconds = self._retry_remaining,
+            current = self._auto_retry_count,
+            total = config.get(config.auto_retry_max_count)
+        )
+
+    def _cancel_auto_retry(self):
+        self._retry_timer.stop()
+        self._retry_pending = False
+
+        # 销毁流程里 task_info 会被置空，而本方法在 on_delete 开头也会被调到
+        if self.task_info is not None:
+            self.task_info.Download.status_label = ""
+
+    @Slot()
+    def _on_retry_tick(self):
+        # 暂停、删除、退出都会提升代次；手动重试会把状态改走。任一条命中即作废
+        if (
+            not self._retry_pending
+            or self.task_info is None
+            or not self.is_generation_active(self._retry_generation)
+            or self.task_info.Download.status != DownloadStatus.FAILED
+        ):
+            self._cancel_auto_retry()
+
+            return
+
+        self._retry_remaining -= 1
+
+        if self._retry_remaining > 0:
+            self._update_retry_label()
+
+            # 倒计时是瞬态的，只刷界面不落盘：每秒往 task.db 写一次纯属浪费
+            signal_bus.download.update_downloading_item.emit(self.task_info)
+
+            return
+
+        self._cancel_auto_retry()
+
+        # 不直接 start()：并发上限是 _manageConcurrentDownloads 在外部数槽位控制的，
+        # 自己 start 会突破 download_parallel。改回排队状态后交还给调度器决定何时跑
+        self.task_info.Download.status = DownloadStatus.QUEUED
+
+        self.update_item(self.task_info)
+
+        signal_bus.download.auto_manage_concurrent_downloads.emit()
 
     @Slot()
     def start_download(self):
@@ -634,7 +752,8 @@ class Downloader(QObject):
             self._dispatch_start_worker()
 
         except Exception as e:
-            self.on_download_error(str(e))
+            # 兜底捕获的是准备阶段的异常（磁盘、预分配等），不是网络抖动，不自动重试
+            self.on_download_error(str(e), False)
 
     @Slot()
     def _dispatch_start_worker(self):
@@ -678,7 +797,7 @@ class Downloader(QObject):
         except Exception as e:
             with self.start_worker_lock:
                 self.start_worker_pending = False
-            self.on_download_error(str(e))
+            self.on_download_error(str(e), False)
 
     def _start_worker_in_background(self, generation: int):
         try:
@@ -691,7 +810,8 @@ class Downloader(QObject):
                 self,
                 "on_download_error",
                 Qt.ConnectionType.QueuedConnection,
-                Q_ARG(str, str(e))
+                Q_ARG(str, str(e)),
+                Q_ARG(bool, False)
             )
         finally:
             with self.start_worker_lock:
@@ -857,6 +977,8 @@ class Downloader(QObject):
             return True
 
     def pause(self):
+        self._cancel_auto_retry()
+
         with self.start_worker_lock:
             self.download_generation += 1
             self.start_worker_requested = False
@@ -876,6 +998,10 @@ class Downloader(QObject):
         self.start()
 
     def retry(self):
+        # 用户手动介入，重新给一份完整的自动重试配额。
+        # 自动重试走的是「改回 QUEUED 交给调度器」那条路，不经过这里，不会把自己的配额刷掉
+        self._auto_retry_count = 0
+
         match self.task_info.Download.status:
             case DownloadStatus.FAILED:
                 self.start()
@@ -1027,7 +1153,8 @@ class Downloader(QObject):
 
         logger.error("%s，文件：%s", message, self.download_list.get(file_key, {}).get("file_path", file_key))
 
-        self.on_download_error(message)
+        # 分片写满却校验不过，是断点表被写坏这类内部不变量问题，重试会在同样的坏状态上空转
+        self.on_download_error(message, False)
 
         return False
 
@@ -1253,6 +1380,7 @@ class Downloader(QObject):
             self.start_worker_requested = False
 
         self.speed_timer.stop()
+        self._cancel_auto_retry()
 
         pool = self.thread_pool
 
@@ -1269,6 +1397,8 @@ class Downloader(QObject):
     def on_delete(self):
         # 在移出管理器之前先登记，保证销毁期间始终有一份来自 GUI 线程的引用
         _pending_delete.add(self)
+
+        self._cancel_auto_retry()
 
         self._stop_event.set()
 

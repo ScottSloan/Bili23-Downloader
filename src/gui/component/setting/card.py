@@ -726,18 +726,22 @@ class WindowBehaviorSettingCard(ExpandGroupSettingCard):
 
 class DownloadHandlingSettingCard(ExpandGroupSettingCard):
     def __init__(self, parent_window, parent = None):
-        super().__init__(FluentIcon.DOWNLOAD, self.tr("Download Handling"), self.tr("Configure download prompts, notifications, and file conflict handling"), parent)
+        super().__init__(FluentIcon.DOWNLOAD, self.tr("Download Handling"), self.tr("Configure download prompts, notifications, automatic retries, and file conflict handling"), parent)
 
         self.parent_window = parent_window
 
         self.show_download_options_dialog_switch = SettingSwitchButton(config.show_download_options_dialog, parent = self)
         self.show_notification_switch = SettingSwitchButton(config.show_notification, parent = self)
+        self.auto_retry_switch = SettingSwitchButton(config.auto_retry_enabled, parent = self)
+        self.auto_retry_count_slider = SettingSlider(config.auto_retry_max_count, self)
         self.duplicate_download_resolution_choice = SettingComboBox(config.duplicate_download_resolution, [self.tr("Continue"), self.tr("Skip"), self.tr("Always ask")], parent = self)
         self.file_conflict_resolution_choice = SettingComboBox(config.file_conflict_resolution, [self.tr("Auto-rename"), self.tr("Overwrite")], parent = self)
         self.prelocation_switch = SettingSwitchButton(config.preallocate_file_space, parent = self)
 
         self.addGroup("", self.tr("Show Download Options Dialog"), self.tr("Show a dialog before starting the download to customize settings for this task"), self.show_download_options_dialog_switch)
         self.addGroup("", self.tr("Show Notifications"), self.tr("Show notifications when downloads complete"), self.show_notification_switch)
+        self.addGroup("", self.tr("Retry Failed Downloads Automatically"), self.tr("Re-queue a task after a network error, with an increasing delay between attempts"), self.auto_retry_switch)
+        self.addGroup("", self.tr("Maximum Retry Attempts"), self.tr("Give up and wait for manual action after this many consecutive failed retries (default: 5)"), self.auto_retry_count_slider)
         preallocate_group = self.addGroup("", self.tr("Preallocate File Space"), self.tr("Preallocate file space before downloading to improve performance"), self.prelocation_switch)
         duplicate_group = self.addGroup("", self.tr("Duplicate Download Resolution"), self.tr("Choose the action when a duplicate download is detected"), self.duplicate_download_resolution_choice)
 
