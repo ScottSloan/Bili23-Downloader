@@ -600,6 +600,9 @@ def _main():
         app_args.extend(["-platform", "windows:nodirectwrite"])
 
     app = Application(app_args)
+    if sys.platform == "darwin":
+        from util.misc.macos import install_accessibility_ownership_fix
+        install_accessibility_ownership_fix()
     app.setup_app()
     
     from gui.interface.main_window import MainWindow

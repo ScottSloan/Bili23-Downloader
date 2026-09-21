@@ -629,6 +629,8 @@ jobs:
 
           cp -r src/* Bili23-Downloader/script/
 
+          python scripts/build_macos_compat.py --output Bili23-Downloader/script/util/misc/qt_cocoa_ownership.dylib
+
           python -m compileall Bili23-Downloader
 
       - name: Package macOS version

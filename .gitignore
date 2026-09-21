@@ -38,3 +38,7 @@ sync.ps1
 
 # playwright
 /.playwright-mcp
+
+# Locally built macOS compatibility library and native regression probe
+/src/util/misc/qt_cocoa_ownership.dylib
+/tests/native/qt_cocoa_probe.dylib
