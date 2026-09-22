@@ -158,11 +158,28 @@ class FragmentEditView(FlyoutViewBase):
         self.right_btn.setEnabled(can_right)
 
     def _init_variable_choice(self):
+        """
+        重填变量下拉框
+
+        跟「插入变量」菜单一样只给推荐变量：其余字段对当前类型永远取不到值，
+        列出来只是噪音（原因见 RuleBuilderWidget.on_add 的注释）。
+
+        但片段当下用着的变量若恰好不在推荐清单里 —— 多半是从高级模式手写或
+        旧规则迁移过来的 —— 下拉框必须仍然能显示、选中它，不能让用户以为
+        规则被静默改掉了，因此单独补在分隔线之后
+        """
         self.variable_choice.blockSignals(True)
 
         try:
+            current = self.variables.get(self.fragment.variable)
+
             for entry in self.variables.values():
-                self.variable_choice.addItem(variable_label(entry), userData = entry["name"])
+                if entry.get("group") != "MORE":
+                    self.variable_choice.addItem(variable_label(entry), userData = entry["name"])
+
+            if current and current.get("group") == "MORE":
+                self._add_variable_choice_separator()
+                self.variable_choice.addItem(variable_label(current), userData = current["name"])
 
             index = self.variable_choice.findData(self.fragment.variable)
 
@@ -171,6 +188,12 @@ class FragmentEditView(FlyoutViewBase):
 
         finally:
             self.variable_choice.blockSignals(False)
+
+    def _add_variable_choice_separator(self):
+        index = self.variable_choice.count()
+
+        self.variable_choice.addItem(self.tr("Other available variables"))
+        self.variable_choice.setItemEnabled(index, False)
 
     def _init_format_choice(self):
         """
@@ -487,25 +510,18 @@ class RuleLevelRow(QWidget):
 
         以前是先插一个「变量表里的第一个变量」，再让用户点开芯片改成想要的那个 ——
         插进来的东西和用户想插的毫无关系，这一步才是最让人发懵的地方。
+
+        只列该类型的推荐变量（group != "MORE"）：`self.variables` 里其余变量是
+        别的规则类型专属的字段，对当前类型永远取不到值（来源列表混入的剧集/课程
+        条目会整条改用它们自己的规则，见 naming_convention.py 的 MIXED_ENTRY_TYPES
+        注释），列出来只会让用户插进一个注定空白的变量。`self.variables` 本身仍是
+        全键空间，不然已有规则里引用了这些字段就会被可视化编辑器判成无法表示。
         """
         menu = RoundMenu(parent = self)
 
-        more = []
-
         for entry in self.variables.values():
-            if entry.get("group") == "MORE":
-                more.append(entry)
-            else:
+            if entry.get("group") != "MORE":
                 menu.addAction(self._variable_action(entry, menu))
-
-        if more:
-            sub_menu = RoundMenu(self.tr("More variables"), self)
-            sub_menu.setIcon(FluentIcon.MORE)
-
-            for entry in more:
-                sub_menu.addAction(self._variable_action(entry, sub_menu))
-
-            menu.addMenu(sub_menu)
 
         menu.addSeparator()
 

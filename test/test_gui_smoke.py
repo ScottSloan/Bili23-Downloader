@@ -361,6 +361,60 @@ class TestNamingRuleEditor:
         assert view.format_choice.isEnabled()
         assert not view.format_box.isEnabled()
 
+    def test_fragment_edit_view_variable_choice_only_offers_recommended_variables(self, parent):
+        """
+        变量下拉框不该把其它类型的字段也摆出来当选项
+
+        「其余变量」对当前类型永远取不到值（来源列表混入的剧集/课程条目改用
+        它们自己的规则，见 naming_convention.py 的 MIXED_ENTRY_TYPES 注释），
+        列出来只会让用户插进一个注定空白的变量
+        """
+        from gui.component.rule_builder import FragmentEditView, RuleBuilderWidget
+        from util.common.enum import ConventionType
+        from util.format.rule_model import Fragment
+
+        builder = RuleBuilderWidget(parent)
+        builder.set_type(ConventionType.SPACE)
+
+        fragment = Fragment(variable = "leaf_title")
+
+        view = FragmentEditView(fragment, builder.variables, parent)
+
+        primary_names = {entry["name"] for entry in builder.variables.values() if entry.get("group") == "PRIMARY"}
+        offered = {view.variable_choice.itemData(i) for i in range(view.variable_choice.count())}
+
+        assert offered == primary_names
+        assert all(item.isEnabled for item in view.variable_choice.items)
+
+    def test_fragment_edit_view_variable_choice_keeps_a_foreign_current_variable(self, parent):
+        """
+        片段已经用着的「外来」变量不能被下拉框悄悄丢掉
+
+        这类片段多半来自高级模式手写或历史规则迁移，可视化编辑器不认识它就该
+        显示成「无法可视化」，绝不能默默把它换成清单里第一个推荐变量
+        """
+        from gui.component.rule_builder import FragmentEditView, RuleBuilderWidget
+        from util.common.enum import ConventionType
+        from util.format.rule_model import Fragment
+
+        builder = RuleBuilderWidget(parent)
+        builder.set_type(ConventionType.SPACE)
+
+        # "p" 对个人空间类型是 MORE 分组（见 test_naming_convention.py 的
+        # test_groups_are_tagged），却仍是这条片段当下引用的变量
+        fragment = Fragment(variable = "p")
+
+        view = FragmentEditView(fragment, builder.variables, parent)
+
+        index = view.variable_choice.findData("p")
+
+        assert index != -1
+        assert view.variable_choice.currentIndex() == index
+        assert not view.variable_choice.items[index - 1].isEnabled
+
+        # 其它「更多变量」字段（如课程 ID）不该混进来凑数
+        assert view.variable_choice.findData("course_id") == -1
+
 
 class TestCDNServerDialog:
     """

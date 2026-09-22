@@ -1812,22 +1812,22 @@ Reminder: Due to Bilibili&apos;s anti-abuse mechanism, parsing too many pages or
         <translation type="vanished">操作</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="502"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="484"/>
         <source>Unmatched &apos;&lt;&apos; or &apos;&gt;&apos; at position {position}</source>
         <translation>位置 {position} 处的 &apos;&lt;&apos; 或 &apos;&gt;&apos; 没有配对</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="515"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="497"/>
         <source>Unknown variable: {name}</source>
         <translation>未知变量：{name}</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="518"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="500"/>
         <source>An optional segment must contain at least one variable</source>
         <translation>可选段中必须至少包含一个变量</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="553"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="535"/>
         <source>Rule name cannot be empty</source>
         <translation>规则名称不能为空</translation>
     </message>
@@ -1838,12 +1838,12 @@ File name: {filename}</source>
 文件名：{filename}</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="573"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="555"/>
         <source>Naming Rule Guide</source>
         <translation>简要说明</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="493"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="475"/>
         <source>Naming rule cannot be empty</source>
         <translation>命名规则不能为空</translation>
     </message>
@@ -1863,42 +1863,40 @@ File name: {filename}</source>
         <translation>变量参考</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="430"/>
         <source>Recommended for this type</source>
-        <translation>当前类型推荐使用</translation>
+        <translation type="vanished">当前类型推荐使用</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="430"/>
         <source>Other available variables</source>
-        <translation>其余可用变量</translation>
+        <translation type="vanished">其余可用变量</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="496"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="478"/>
         <source>Rule must not start or end with &apos;/&apos; or &apos;.&apos;</source>
         <translation>命名规则不能以 &apos;/&apos; 或 &apos;.&apos; 开头或结尾</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="507"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="489"/>
         <source>Rule contains illegal characters: &lt;&gt;:\&quot;|?* or control characters</source>
         <translation>命名规则包含非法字符：&lt;&gt;:\&quot;|?* 或控制字符</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="521"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="503"/>
         <source>Invalid naming rule</source>
         <translation>命名规则无效</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="556"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="538"/>
         <source>Another rule of this type already uses this name</source>
         <translation>该类型下已有同名规则</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="587"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="569"/>
         <source>Copy Variable</source>
         <translation>复制变量</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="602"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="584"/>
         <source>Copied: {variable}</source>
         <translation>已复制：{variable}</translation>
     </message>
@@ -2116,27 +2114,27 @@ File name: {filename}</source>
 <context>
     <name>FragmentChip</name>
     <message>
-        <location filename="../../gui/component/rule_builder.py" line="334"/>
+        <location filename="../../gui/component/rule_builder.py" line="357"/>
         <source>(empty)</source>
         <translation>（空）</translation>
     </message>
     <message>
-        <location filename="../../gui/component/rule_builder.py" line="369"/>
+        <location filename="../../gui/component/rule_builder.py" line="392"/>
         <source>Edit</source>
         <translation>编辑</translation>
     </message>
     <message>
-        <location filename="../../gui/component/rule_builder.py" line="372"/>
+        <location filename="../../gui/component/rule_builder.py" line="395"/>
         <source>Move left</source>
         <translation>左移</translation>
     </message>
     <message>
-        <location filename="../../gui/component/rule_builder.py" line="376"/>
+        <location filename="../../gui/component/rule_builder.py" line="399"/>
         <source>Move right</source>
         <translation>右移</translation>
     </message>
     <message>
-        <location filename="../../gui/component/rule_builder.py" line="380"/>
+        <location filename="../../gui/component/rule_builder.py" line="403"/>
         <source>Remove</source>
         <translation>移除</translation>
     </message>
@@ -2199,17 +2197,22 @@ File name: {filename}</source>
         <translation>文字</translation>
     </message>
     <message>
-        <location filename="../../gui/component/rule_builder.py" line="193"/>
+        <location filename="../../gui/component/rule_builder.py" line="195"/>
+        <source>Other available variables</source>
+        <translation>其余可用变量</translation>
+    </message>
+    <message>
+        <location filename="../../gui/component/rule_builder.py" line="216"/>
         <source>Not available for this variable</source>
         <translation>该变量没有可选格式</translation>
     </message>
     <message>
-        <location filename="../../gui/component/rule_builder.py" line="202"/>
+        <location filename="../../gui/component/rule_builder.py" line="225"/>
         <source>As is</source>
         <translation>原样</translation>
     </message>
     <message>
-        <location filename="../../gui/component/rule_builder.py" line="206"/>
+        <location filename="../../gui/component/rule_builder.py" line="229"/>
         <source>Custom…</source>
         <translation>自定义…</translation>
     </message>
@@ -4073,32 +4076,32 @@ ISP：{isp}</translation>
 <context>
     <name>RuleBuilderWidget</name>
     <message>
-        <location filename="../../gui/component/rule_builder.py" line="594"/>
+        <location filename="../../gui/component/rule_builder.py" line="610"/>
         <source>Directory structure</source>
         <translation>目录结构</translation>
     </message>
     <message>
-        <location filename="../../gui/component/rule_builder.py" line="600"/>
+        <location filename="../../gui/component/rule_builder.py" line="616"/>
         <source>Add level</source>
         <translation>添加层级</translation>
     </message>
     <message>
-        <location filename="../../gui/component/rule_builder.py" line="604"/>
+        <location filename="../../gui/component/rule_builder.py" line="620"/>
         <source>At most {count} directory levels</source>
         <translation>最多 {count} 层目录</translation>
     </message>
     <message>
-        <location filename="../../gui/component/rule_builder.py" line="633"/>
+        <location filename="../../gui/component/rule_builder.py" line="649"/>
         <source>File name</source>
         <translation>文件名</translation>
     </message>
     <message>
-        <location filename="../../gui/component/rule_builder.py" line="677"/>
+        <location filename="../../gui/component/rule_builder.py" line="693"/>
         <source>This rule cannot be shown in the visual editor ({reason}). Edit it in the advanced section below.</source>
         <translation>该规则无法在可视化编辑器中显示（{reason}），请在下方的高级区域中编辑。</translation>
     </message>
     <message>
-        <location filename="../../gui/component/rule_builder.py" line="726"/>
+        <location filename="../../gui/component/rule_builder.py" line="742"/>
         <source>Level {number}</source>
         <translation>第 {number} 层</translation>
     </message>
@@ -4106,41 +4109,40 @@ ISP：{isp}</translation>
 <context>
     <name>RuleLevelRow</name>
     <message>
-        <location filename="../../gui/component/rule_builder.py" line="421"/>
+        <location filename="../../gui/component/rule_builder.py" line="444"/>
         <source>Add fragment</source>
         <translation>添加片段</translation>
     </message>
     <message>
-        <location filename="../../gui/component/rule_builder.py" line="431"/>
+        <location filename="../../gui/component/rule_builder.py" line="454"/>
         <source>Move up</source>
         <translation>上移</translation>
     </message>
     <message>
-        <location filename="../../gui/component/rule_builder.py" line="432"/>
+        <location filename="../../gui/component/rule_builder.py" line="455"/>
         <source>Move down</source>
         <translation>下移</translation>
     </message>
     <message>
-        <location filename="../../gui/component/rule_builder.py" line="433"/>
+        <location filename="../../gui/component/rule_builder.py" line="456"/>
         <source>Delete level</source>
         <translation>删除层级</translation>
     </message>
     <message>
-        <location filename="../../gui/component/rule_builder.py" line="474"/>
+        <location filename="../../gui/component/rule_builder.py" line="497"/>
         <source>Empty, will be skipped</source>
         <translation>为空，将被省略</translation>
     </message>
     <message>
-        <location filename="../../gui/component/rule_builder.py" line="502"/>
         <source>More variables</source>
-        <translation>更多变量</translation>
+        <translation type="vanished">更多变量</translation>
     </message>
     <message>
         <source>Insert variable</source>
         <translation type="vanished">插入变量</translation>
     </message>
     <message>
-        <location filename="../../gui/component/rule_builder.py" line="512"/>
+        <location filename="../../gui/component/rule_builder.py" line="528"/>
         <source>Insert text</source>
         <translation>插入文字</translation>
     </message>

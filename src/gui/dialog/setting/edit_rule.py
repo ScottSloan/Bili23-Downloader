@@ -404,34 +404,16 @@ class EditRuleDialog(Base, QWidget):
     def init_variable_list(self, type_id):
         self.variable_list.clear()
 
-        group = None
-
-        # 推荐变量在前、其余在后，但清单本身是完整的：按类型裁剪只是界面上的
-        # 「推荐」，键空间恒等于运行期，否则编辑器会拒绝一条运行期可用的规则
-        for entry in self.variable_list_factory.build(type_id):
-            if entry.get("group") != group:
-                group = entry.get("group")
-
-                self._add_group_item(group)
-
+        # 只给该类型的推荐变量（full = False）：其余字段对当前类型永远取不到值
+        # ——来源列表混入的剧集/课程条目会整条改用它们自己的规则，见
+        # naming_convention.py 的 MIXED_ENTRY_TYPES 注释——列出来只是噪音。
+        # 键空间本身不受影响，运行期仍然认识全部变量，这里裁剪的只是参考表
+        for entry in self.variable_list_factory.build(type_id, full = False):
             description = Translator.VARIABLE_DESCRIPTION(entry["description"]) or entry["description"]
 
             self._add_item(entry["variable"], description, str(entry["example"]))
 
         self.variable_list.header().setSectionResizeMode(0, self.variable_list.header().ResizeMode.Stretch)
-
-    def _add_group_item(self, group: str):
-        """
-        分组标题行
-
-        三十来条变量平铺成一张表，用户分不出哪些是这个类型真正用得上的。
-        标题行只是个视觉分隔，不可选中、不可复制
-        """
-        text = self.tr("Recommended for this type") if group == "PRIMARY" else self.tr("Other available variables")
-
-        item = self.variable_list.addRow(text)
-        item.setFlags(Qt.ItemFlag.ItemIsEnabled)
-        item.setFirstColumnSpanned(True)
 
     def on_type_changed(self):
         if self._loading:
