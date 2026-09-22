@@ -91,16 +91,21 @@
     </message>
     <message>
         <location filename="../../gui/dialog/main_window/about.py" line="35"/>
+        <source>Privacy Policy</source>
+        <translation>隱私政策</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialog/main_window/about.py" line="36"/>
         <source>Documentation</source>
         <translation>幫助文件</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/main_window/about.py" line="36"/>
+        <location filename="../../gui/dialog/main_window/about.py" line="37"/>
         <source>Github</source>
         <translation>GitHub</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/main_window/about.py" line="37"/>
+        <location filename="../../gui/dialog/main_window/about.py" line="38"/>
         <source>Sponsor</source>
         <translation>贊助作者</translation>
     </message>
@@ -291,7 +296,7 @@
 <context>
     <name>BATCH_SELECT_GUIDE</name>
     <message>
-        <location filename="../../util/common/translator.py" line="452"/>
+        <location filename="../../util/common/translator.py" line="462"/>
         <source>Press Ctrl + A to select all items, Ctrl + D to deselect all items
 You can also press shift + click to select a range of items.</source>
         <translation>按 Ctrl + A 全選，Ctrl + D 取消全選
@@ -902,7 +907,7 @@ You can also press shift + click to select a range of items.</source>
 <context>
     <name>DUPLICATE_DOWNLOAD_GUIDE</name>
     <message>
-        <location filename="../../util/common/translator.py" line="447"/>
+        <location filename="../../util/common/translator.py" line="457"/>
         <source>This feature detects duplicates based on unique video identifiers (e.g., BV/av IDs), not filenames.
 Please note that download history is the sole basis for recognizing downloaded videos. Clearing it will prevent the system from identifying existing downloads, which may result in duplicate downloads.</source>
         <translation>本功能透過影片唯一識別碼（如 BV號、av號）判斷是否重複，與檔案名稱無關。
@@ -1386,7 +1391,7 @@ If you continue, please disable the &quot;Preallocate file space&quot; option. (
 <context>
     <name>Downloader</name>
     <message>
-        <location filename="../../util/download/downloader/downloader.py" line="1200"/>
+        <location filename="../../util/download/downloader/downloader.py" line="1206"/>
         <source>Audio</source>
         <translation>音訊</translation>
     </message>
@@ -1515,12 +1520,12 @@ If you continue, please disable the &quot;Preallocate file space&quot; option. (
 <context>
     <name>ERROR_CODE_EXPLANATION</name>
     <message>
-        <location filename="../../util/common/translator.py" line="459"/>
+        <location filename="../../util/common/translator.py" line="469"/>
         <source>Request blocked, client IP has been banned</source>
         <translation>請求遭封鎖，用戶端IP已被禁止</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="460"/>
+        <location filename="../../util/common/translator.py" line="470"/>
         <source>Paid content requires purchasing</source>
         <translation>付費內容需要購買</translation>
     </message>
@@ -3178,7 +3183,7 @@ For advanced usage, see the help documentation.</source>
 <context>
     <name>NUMBERING_GUIDE</name>
     <message>
-        <location filename="../../util/common/translator.py" line="430"/>
+        <location filename="../../util/common/translator.py" line="440"/>
         <source>This setting affects the value of the {number} variable in the naming rule. By default, the program’s preset naming rule does not include {number}. If you want to use numbering, please add {number} to your naming rule first.
 
 The meaning of each &quot;Numbering Mode&quot; option is as follows:
@@ -3376,7 +3381,7 @@ The meaning of each &quot;Numbering Mode&quot; option is as follows:
 <context>
     <name>PREALLOCATE_GUIDE</name>
     <message>
-        <location filename="../../util/common/translator.py" line="441"/>
+        <location filename="../../util/common/translator.py" line="451"/>
         <source>Preallocating file space can improve download performance, especially for large files. When enabled, the program will allocate the required disk space before the download starts, reducing performance overhead caused by repeatedly expanding the file during download and minimizing disk fragmentation.
 
 Note: If the download path is on an external storage device such as a USB drive, and the file system does not support sparse files (e.g., FAT32 or exFAT), please disable this feature—otherwise, the program may become unresponsive.</source>
@@ -3388,13 +3393,33 @@ Note: If the download path is on an external storage device such as a USB drive,
 <context>
     <name>PRIORITY_GUIDE</name>
     <message>
-        <location filename="../../util/common/translator.py" line="424"/>
+        <location filename="../../util/common/translator.py" line="434"/>
         <source>The program will attempt downloads in the order of your configured priority. The actual video quality, audio quality, or codec you can download still depends on what is available in the video itself—priority only determines which option is tried first among multiple available choices.
 
 For example, if you set the video quality priority to 720P &gt; 1080P &gt; 4K, the program will first try to download 720P; if 720P is unavailable, it will then try 1080P and then 4K in sequence.</source>
         <translation>程式會依照設定的優先順序依序嘗試下載。最終可下載的畫質、音質或編碼仍取決於影片本身是否提供，優先順序僅決定在多個可用選項中優先選擇哪一個。
 
 例如，若將畫質優先順序設為 720P &gt; 1080P &gt; 4K，程式會先嘗試下載 720P 畫質；若 720P 不可用，則依序嘗試 1080P、4K。</translation>
+    </message>
+</context>
+<context>
+    <name>PRIVACY_POLICY</name>
+    <message>
+        <location filename="../../util/common/translator.py" line="424"/>
+        <source>&lt;html&gt;This software is a local desktop application. &lt;b&gt;It does not collect, analyze, or upload your browsing behavior, download history, or any other usage data to the developer or any third party.&lt;/b&gt;
+&lt;br&gt;&lt;br&gt;
+Login credentials (cookies) obtained through your own Bilibili account are &lt;b&gt;stored only on your local device&lt;/b&gt; and are used solely to access content you are authorized to view. Download tasks, application settings, and logs are likewise saved only in local files on your device and are never transmitted elsewhere.
+&lt;br&gt;&lt;br&gt;
+When parsing or downloading content, this software communicates directly with Bilibili&apos;s own servers using your local credentials; that traffic is subject to Bilibili&apos;s own privacy policy, not this one. The only data sent to a third party is the operating system platform and version number, transmitted to the update-check service when this software checks for new versions — &lt;b&gt;no personally identifiable information is included.&lt;/b&gt;
+&lt;br&gt;&lt;br&gt;
+This software contains no advertisements, trackers, or analytics SDKs of any kind. If this policy changes in a future version, the updated text will be shown here.&lt;/html&gt;</source>
+        <translation>&lt;html&gt;本軟體是一款本機桌面應用程式。&lt;b&gt;它不會收集、分析您的瀏覽行為、下載歷史等任何使用資料，也不會將其上傳給開發者或任何第三方。&lt;/b&gt;
+&lt;br&gt;&lt;br&gt;
+透過您自己的嗶哩嗶哩帳號取得的登入憑證（Cookie）&lt;b&gt;僅保存在您本機裝置上&lt;/b&gt;，且僅用於存取您有權存取的內容。下載任務、程式設定與記錄同樣只保存在您裝置本機的檔案中，不會被傳輸至其他任何地方。
+&lt;br&gt;&lt;br&gt;
+在解析或下載內容時，本軟體會使用您本機的登入憑證直接與嗶哩嗶哩自身的伺服器通訊，該部分流量適用嗶哩嗶哩自身的隱私政策，不在本政策約束範圍內。本軟體傳送給第三方的資料僅有作業系統平台與版本號，用於檢查更新時請求更新服務——&lt;b&gt;其中不包含任何可用於識別您個人身分的資訊。&lt;/b&gt;
+&lt;br&gt;&lt;br&gt;
+本軟體不含任何形式的廣告、追蹤器或數據統計 SDK。若本政策在後續版本中發生變化，更新後的內容將在此處展示。&lt;/html&gt;</translation>
     </message>
 </context>
 <context>
@@ -3847,6 +3872,14 @@ For example, if you set the video quality priority to 720P &gt; 1080P &gt; 4K, t
         <location filename="../../gui/component/setting/card.py" line="257"/>
         <source>Instructions</source>
         <translation>說明</translation>
+    </message>
+</context>
+<context>
+    <name>PrivacyPolicyDialog</name>
+    <message>
+        <location filename="../../gui/dialog/main_window/privacy.py" line="14"/>
+        <source>Privacy Policy</source>
+        <translation>隱私政策</translation>
     </message>
 </context>
 <context>

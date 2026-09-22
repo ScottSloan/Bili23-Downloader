@@ -420,6 +420,16 @@ Under no circumstances shall the developer be liable for any direct, indirect, i
 <b>Continuing to use this software indicates that you have read, understood, and agreed to comply with all the terms stated above.</b></html>""")
 
     @staticmethod
+    def PRIVACY_POLICY():
+        return translate("PRIVACY_POLICY", """<html>This software is a local desktop application. <b>It does not collect, analyze, or upload your browsing behavior, download history, or any other usage data to the developer or any third party.</b>
+<br><br>
+Login credentials (cookies) obtained through your own Bilibili account are <b>stored only on your local device</b> and are used solely to access content you are authorized to view. Download tasks, application settings, and logs are likewise saved only in local files on your device and are never transmitted elsewhere.
+<br><br>
+When parsing or downloading content, this software communicates directly with Bilibili's own servers using your local credentials; that traffic is subject to Bilibili's own privacy policy, not this one. The only data sent to a third party is the operating system platform and version number, transmitted to the update-check service when this software checks for new versions — <b>no personally identifiable information is included.</b>
+<br><br>
+This software contains no advertisements, trackers, or analytics SDKs of any kind. If this policy changes in a future version, the updated text will be shown here.</html>""")
+
+    @staticmethod
     def PRIORITY_GUIDE():
         return translate("PRIORITY_GUIDE", """The program will attempt downloads in the order of your configured priority. The actual video quality, audio quality, or codec you can download still depends on what is available in the video itself—priority only determines which option is tried first among multiple available choices.
 

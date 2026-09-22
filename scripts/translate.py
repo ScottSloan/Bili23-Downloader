@@ -72,6 +72,7 @@ sources = [
     "src/gui/dialog/download_options/preview.py",
     "src/gui/dialog/main_window/about.py",
     "src/gui/dialog/main_window/exit.py",
+    "src/gui/dialog/main_window/privacy.py",
     "src/gui/dialog/main_window/terms.py",
     "src/gui/dialog/misc/auto_parse.py",
     "src/gui/dialog/misc/batch_parse.py",
