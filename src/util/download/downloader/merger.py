@@ -356,6 +356,10 @@ class Merger(QObject):
             return
 
         self.task_info.Download.status = DownloadStatus.COMPLETED
+        # 合并阶段把 progress 覆盖成了 FFmpeg 的进度（runner 侧封顶 99），完成时须收回 100：
+        # 这个值会被 build_record 一并序列化进已完成记录，也会被下载列表直接画成进度条，
+        # 留着 FFmpeg 的中间值就是已完成任务的进度条停在半途，且重启后依旧
+        self.task_info.Download.progress = 100
         self.task_info.Basic.completed_time = get_timestamp()
 
         # 必须等这条写入落盘再往下走。下面的 remove_from_downloading_list 会一路同步
