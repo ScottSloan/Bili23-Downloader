@@ -995,10 +995,10 @@ class MCPSettingCard(ExpandGroupSettingCard):
         signal_bus.toast.show.emit(ToastNotificationCategory.SUCCESS, "", self.tr("Access token regenerated"))
 
     def _copy_config(self, entry: dict):
-        import json
+        from util.common._json import json_dumps
 
         QApplication.clipboard().setText(
-            json.dumps({"mcpServers": {"bili23-downloader": entry}}, indent = 2)
+            json_dumps({"mcpServers": {"bili23-downloader": entry}}, indent = 2)
         )
 
         signal_bus.toast.show.emit(ToastNotificationCategory.SUCCESS, "", self.tr("Client configuration copied"))

@@ -11,7 +11,7 @@ from .enum import (
     NumberingType, Scaling, FileConflictResolution, VideoContainer, AutoSelectMode, Area, DuplicateDownloadResolution,
     OriginalFileType
 )
-from ._json import json_loads
+from ._json import json_loads, std_json_dumps
 from .runtime import runtime
 
 from threading import Lock
@@ -19,7 +19,6 @@ from typing import ClassVar
 from pathlib import Path
 from copy import deepcopy
 import logging
-import json
 import sys
 import os
 
@@ -495,7 +494,7 @@ class APPConfig(QConfig):
 
             try:
                 with open(temp_path, "w", encoding = "utf-8") as f:
-                    json.dump(self._cfg.toDict(), f, ensure_ascii = False, indent = 4)
+                    f.write(std_json_dumps(self._cfg.toDict(), indent = 4))
 
                 os.replace(temp_path, self._cfg.file)
 

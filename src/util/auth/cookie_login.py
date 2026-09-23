@@ -6,8 +6,6 @@ from ..network.request import NetworkRequestWorker, set_client_cookies, delete_c
 from ..thread.async_ import AsyncTask
 from .base import AuthBase
 
-import json
-
 # 登录相关的 Cookie 字段
 LOGIN_COOKIE_KEYS = ("SESSDATA", "bili_jct", "DedeUserID", "DedeUserID__ckMd5")
 
@@ -51,7 +49,9 @@ class CookieLogin(AuthBase, QObject):
 
         try:
             # 尝试解析为 JSON 对象
-            data = json.loads(text)
+            from ..common._json import json_loads
+
+            data = json_loads(text)
 
             if isinstance(data, dict):
                 for key, value in data.items():

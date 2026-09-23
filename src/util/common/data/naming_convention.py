@@ -659,6 +659,12 @@ class VariableListFactory:
                 "example": "【KEY社20周年音乐专辑】Key BEST SELECTION"
             },
             {
+                "name": "p",
+                "variable": "{p}",
+                "description": "PART_NUMBER_FOR_COLLECTION",
+                "example": 3
+            },
+            {
                 "name": "favorites_name",
                 "variable": "{favorites_name}",
                 "description": "FAVORITES_NAME",

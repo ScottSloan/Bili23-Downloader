@@ -1,5 +1,6 @@
 from ..common.config import config
 from ..common.runtime import runtime
+from ..common._json import json_loads, json_dumps, JSONDecodeError
 
 from .protocol import (
     Dispatcher, make_error, HEADER_MISMATCH, PARSE_ERROR, INVALID_REQUEST,
@@ -12,7 +13,6 @@ import binascii
 import base64
 import secrets
 import logging
-import json
 
 logger = logging.getLogger(__name__)
 
@@ -131,9 +131,9 @@ class MCPRequestHandler(BaseHTTPRequestHandler):
             return
 
         try:
-            message = json.loads(body)
+            message = json_loads(body)
 
-        except (json.JSONDecodeError, UnicodeDecodeError):
+        except (JSONDecodeError, UnicodeDecodeError):
             self._send_json(400, make_error(None, PARSE_ERROR, "Invalid JSON"))
 
             return
@@ -286,7 +286,7 @@ class MCPRequestHandler(BaseHTTPRequestHandler):
         return None
 
     def _send_json(self, status: int, payload: dict):
-        data = json.dumps(payload, ensure_ascii = False).encode("utf-8")
+        data = json_dumps(payload).encode("utf-8")
 
         self.send_response(status)
         self.send_header("Content-Type", "application/json")
