@@ -1,6 +1,6 @@
 from ...common.translator import Translator
 from ...common.enum import SubtitleType
-from ...common._json import json_dumps
+from ...common._json import dumps
 
 from ...network.request import SyncNetWorkRequest
 from ...download.task.info import TaskInfo
@@ -161,7 +161,7 @@ class SubtitlesParser(AdditionalParserBase):
         return ass, "ass"
 
     def _to_json(self, data: dict):
-        return json_dumps(data, indent = 2), "json"
+        return dumps(data, indent = 2), "json"
 
     def _get_subtitles_data_list(self, player_data: dict):
         subtitles_data_list = []

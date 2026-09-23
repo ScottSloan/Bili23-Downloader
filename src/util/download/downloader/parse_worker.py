@@ -7,7 +7,7 @@ from ...parse.parser.lesson import LESSON_PLAY_DETAIL_URL, build_lesson_media_in
 
 from ...common.enum import DownloadType, MediaType
 from ...common.translator import Translator
-from ...common._json import json_dumps
+from ...common._json import dumps
 
 from ..parse.video_info import VideoInfoParser
 from ..parse.audio_info import AudioInfoParser
@@ -79,7 +79,7 @@ class ParseWorker(QRunnable, ParserBase):
                 self.get_info()
 
                 download_info = self.parse_download_info()
-                download_info_json = json_dumps(download_info)
+                download_info_json = dumps(download_info)
 
                 if self.is_stopped():
                     return

@@ -6,7 +6,7 @@ from ...common.data import reversed_video_quality_map
 from ...common.io.directory import Directory
 from ...common.translator import Translator
 from ...common.signal_bus import signal_bus
-from ...common._json import json_loads
+from ...common._json import loads
 from ...common.config import config
 from ...common.io.file import File
 
@@ -579,7 +579,7 @@ class Downloader(QObject):
         if self._stop_event.is_set():
             return
         
-        download_info = json_loads(download_info_json)
+        download_info = loads(download_info_json)
         self.download_list = download_info["download_list"]
         self.task_info.Download.status = DownloadStatus.DOWNLOADING
         self.task_info.Download.total_size = download_info["total_size"]

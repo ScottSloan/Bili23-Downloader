@@ -11,7 +11,7 @@ from .enum import (
     NumberingType, Scaling, FileConflictResolution, VideoContainer, AutoSelectMode, Area, DuplicateDownloadResolution,
     OriginalFileType
 )
-from ._json import json_loads, std_json_dumps
+from ._json import loads, dumps_std
 from .runtime import runtime
 
 from threading import Lock
@@ -494,7 +494,7 @@ class APPConfig(QConfig):
 
             try:
                 with open(temp_path, "w", encoding = "utf-8") as f:
-                    f.write(std_json_dumps(self._cfg.toDict(), indent = 4))
+                    f.write(dumps_std(self._cfg.toDict(), indent = 4))
 
                 os.replace(temp_path, self._cfg.file)
 
@@ -513,7 +513,7 @@ def check_need_patch():
     if config_path.exists():
         with open(config_path, "r", encoding = "utf-8") as f:
             try:
-                data = json_loads(f.read())
+                data = loads(f.read())
 
             except Exception as e:
                 data = {}

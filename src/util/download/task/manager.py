@@ -1,6 +1,6 @@
 from ...common.enum import DownloadStatus, DownloadType, NumberingType, DuplicateDownloadResolution, ToastNotificationCategory
 from ...common.data import reversed_video_quality_map, reversed_audio_quality_map, video_codec_str_map
-from ...common._json import json_dumps, json_loads
+from ...common._json import dumps, loads
 from ...common.timestamp import get_timestamp_ms
 from ...common.translator import Translator
 from ...common.signal_bus import signal_bus
@@ -373,7 +373,7 @@ class TaskManager:
 
     def _build_task_info(self, entry) -> TaskInfo:
         task_info = TaskInfo()
-        task_info.from_dict(json_loads(entry[0]))  # 取 data 列
+        task_info.from_dict(loads(entry[0]))  # 取 data 列
 
         return task_info
 
@@ -384,11 +384,11 @@ class TaskManager:
         # 高频进度更新只保留每个任务最新快照，并由单独线程串行写入数据库。
         task_id = task_info.Basic.task_id
 
-        # 取样必须在锁内完成。若把 json_dumps 放在锁外，同一个任务的两个调用方
+        # 取样必须在锁内完成。若把 dumps 放在锁外，同一个任务的两个调用方
         # （GUI 线程的测速定时器、后台线程的 start_worker）可能先后取样却以相反的
         # 顺序写入 _pending_updates，旧快照覆盖新快照，重启后表现为下载进度倒退。
         with self._update_lock:
-            self._pending_updates[task_id] = (task_id, json_dumps(task_info.to_dict()))
+            self._pending_updates[task_id] = (task_id, dumps(task_info.to_dict()))
 
             if self._update_flush_scheduled:
                 return

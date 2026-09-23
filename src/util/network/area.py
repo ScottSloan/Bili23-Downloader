@@ -1,4 +1,4 @@
-from ..common._json import json_loads
+from ..common._json import loads
 from ..common.config import config
 from ..common.enum import Area
 
@@ -75,7 +75,7 @@ def detect_area() -> Area:
         response = client.get(AREA_ZONE_API, headers = _get_detect_headers())
         response.raise_for_status()
 
-        area = parse_area(json_loads(response.text))
+        area = parse_area(loads(response.text))
 
     if area is None:
         raise RuntimeError("zone 接口的响应无法解析出地区")

@@ -16,7 +16,7 @@ stdio 传输的服务器：它们的配置里只有 command / args，填 url 会
 这里写 `from ..common._json import` 而不是 `from common._json import`——
 后者在本进程里根本不存在，会让 --mcp-stdio 在导入期就崩掉。
 """
-from ..common._json import json_loads, json_dumps, JSONDecodeError, std_json_dumps
+from ..common._json import dumps_bytes, dumps_std, loads, JSONDecodeError
 
 import argparse
 import base64
@@ -130,7 +130,7 @@ def load_config():
 
     try:
         with open(path, "r", encoding = "utf-8") as f:
-            data = json_loads(f.read())
+            data = loads(f.read())
 
     except FileNotFoundError:
         log(f"未找到配置文件：{path}")
@@ -279,7 +279,7 @@ class Bridge:
 
     def forward(self, message):
         """把一条消息转发给 HTTP 端点，返回要写回 stdout 的响应（无则返回 None）"""
-        data = json_dumps(message).encode("utf-8")
+        data = dumps_bytes(message)
 
         request = urllib.request.Request(self.url, data = data, method = "POST")
 
@@ -290,7 +290,7 @@ class Bridge:
             with urllib.request.urlopen(request, timeout = 300) as response:
                 raw = response.read()
 
-                return json_loads(raw) if raw else None
+                return loads(raw) if raw else None
 
         except urllib.error.HTTPError as e:
             raw = e.read()
@@ -298,7 +298,7 @@ class Bridge:
             # 服务端的错误响应本身就是合法的 JSON-RPC error，直接透传，
             # 客户端才能看到真正的原因（版本不支持、头不匹配等）
             try:
-                return json_loads(raw) if raw else None
+                return loads(raw) if raw else None
 
             except JSONDecodeError:
                 return self._error(message, -32603, f"HTTP {e.code}: {raw[:200].decode('utf-8', 'replace')}")
@@ -336,7 +336,7 @@ class Bridge:
                 continue
 
             try:
-                message = json_loads(line)
+                message = loads(line)
 
             except JSONDecodeError:
                 log("收到非法 JSON，已忽略")
@@ -370,7 +370,7 @@ class Bridge:
         # 代价只是消息体积变大，本地管道传输可以忽略。
         #
         # stdio 传输要求一行一条消息，消息内不得含换行
-        sys.stdout.write(std_json_dumps(payload, ensure_ascii = True) + "\n")
+        sys.stdout.write(dumps_std(payload, ensure_ascii = True) + "\n")
         sys.stdout.flush()
 
 def hard_exit(code: int):

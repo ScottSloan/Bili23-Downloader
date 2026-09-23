@@ -1,6 +1,6 @@
 from PySide6.QtCore import Signal, QObject, Slot
 
-from ..common._json import json_loads
+from ..common._json import loads
 from ..common.config import config
 from ..common.enum import ProxyMode
 
@@ -327,7 +327,7 @@ class SyncNetWorkRequest:
                 return response.text
 
             case ResponseType.JSON:
-                return json_loads(response.text)
+                return loads(response.text)
 
             case ResponseType.BYTES:
                 return response.content

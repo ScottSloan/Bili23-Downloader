@@ -134,6 +134,34 @@ def test_main_module_imports_without_qapplication():
     """)
 
 
+def test_stdio_bridge_entry_point_runs_without_gui():
+    """
+    --mcp-stdio 是 main.py 最早期的一条分支，只有真正用 stdio 传输的客户端才走它，
+    其余用例一个都不碰。这里有过一次无声的回归：桥接模块顶部写成
+    `from common._json import ...`，而包根是 src、common 只是 util 的子包，
+    导入期直接 ModuleNotFoundError，整条 stdio 路径作废 —— 567 个用例仍然全绿。
+    也只在这条路径上才会发现：默认走 HTTP 的客户端完全不受影响。
+
+    --no-launch 与一个必然关着的端口保证它只做转发，不会顺手把 GUI 拉起来。
+    """
+    result = subprocess.run(
+        [sys.executable, str(ROOT / "src" / "main.py"), "--mcp-stdio", "--no-launch", "--port", "1", "--token", "smoke"],
+        cwd = ROOT,
+        input = "",
+        capture_output = True,
+        text = True,
+        encoding = "utf-8",
+        errors = "replace",
+        timeout = 120,
+    )
+
+    assert "Traceback" not in result.stderr, f"stdio 桥接启动失败：\n{result.stderr}"
+    assert result.returncode == 0, f"stdio 桥接未正常退出，退出码 {result.returncode}：\n{result.stderr}"
+
+    # stdout 是 MCP 的消息通道，诊断信息一律走 stderr，混进去一行客户端就解析失败
+    assert result.stdout == "", f"stdio 桥接往 stdout 写了非消息内容：{result.stdout!r}"
+
+
 def test_qt_resources_are_registered():
     """
     main.py 的 `import res.resources_rc` 是纯副作用导入 —— 没有任何符号被引用，

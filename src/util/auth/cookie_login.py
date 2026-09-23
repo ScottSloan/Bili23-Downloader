@@ -49,9 +49,9 @@ class CookieLogin(AuthBase, QObject):
 
         try:
             # 尝试解析为 JSON 对象
-            from ..common._json import json_loads
+            from ..common._json import loads
 
-            data = json_loads(text)
+            data = loads(text)
 
             if isinstance(data, dict):
                 for key, value in data.items():

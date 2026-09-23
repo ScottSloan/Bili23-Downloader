@@ -1,5 +1,5 @@
 from ..invoke import MainThreadTimeout
-from ...common._json import json_dumps
+from ...common._json import dumps
 
 from typing import Callable
 import logging
@@ -22,7 +22,7 @@ def text_result(text: str, structured = None, is_error: bool = False) -> dict:
         result["structuredContent"] = structured
         result["content"] = [{
             "type": "text",
-            "text": json_dumps(structured, indent = 2),
+            "text": dumps(structured, indent = 2),
         }]
 
         if text:

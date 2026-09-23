@@ -1,7 +1,7 @@
 from ...network.request import ResponseType, SyncNetWorkRequest
 from ...download.task.info import TaskInfo
 from ...common.translator import Translator
-from ...common._json import json_dumps
+from ...common._json import dumps
 from ...common.enum import DanmakuType
 from ...download.task.options import resolve
 
@@ -62,7 +62,7 @@ class DanmakuParser(AdditionalParserBase):
         return ass, "ass"
 
     def _to_json(self, dict_list: List[dict]) -> tuple:
-        return json_dumps(dict_list, indent = 2), "json"
+        return dumps(dict_list, indent = 2), "json"
 
     def _get_all_protobuf_parts(self):
         if duration := self.task_info.Episode.duration:
