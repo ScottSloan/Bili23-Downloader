@@ -28,6 +28,7 @@ class ListEpisodeParserBase(EpisodeParserBase):
     get_node_title()            节点标题，默认为空（由 update_episode_list 回退
                                 为分类名称，历史记录与稍后再看即依赖这一点）
     episode_data_parser()       写入该次解析共享的 episode 数据，默认不写
+    get_current_episode_data()  链接指向的那一条，默认为空（链接不指向具体条目）
     ==========================  ====================================================
     """
 
@@ -46,7 +47,7 @@ class ListEpisodeParserBase(EpisodeParserBase):
         node = self.build_node()
 
         if update_episode_list:
-            self.update_episode_list(node)
+            self.update_episode_list(node, self.get_current_episode_data())
 
         return node
 
@@ -95,6 +96,16 @@ class ListEpisodeParserBase(EpisodeParserBase):
 
     def episode_data_parser(self):
         pass
+
+    def get_current_episode_data(self) -> tuple:
+        """
+        链接指向的那一条，形如 (TreeItem 的字段名, 值)。
+
+        只有指向具体条目的链接才有内容：个人空间、收藏夹的链接不指向某一集，
+        所以默认返回空；播放页链接（www.bilibili.com/list/{mid}?…）指向列表里
+        的某一个视频，解析列表据此定位并勾选它。
+        """
+        return None
 
     # ------------------------------------------------------------------
     # 供子类复用

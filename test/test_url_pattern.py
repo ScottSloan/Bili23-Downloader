@@ -44,6 +44,12 @@ def match_parser_type(url: str):
         ("https://www.bilibili.com/list/ml456", "favlist"),
         ("https://www.bilibili.com/list/456", "list"),
 
+        # 合集/系列播放页链接：路径里的 oid、bvid 不得把解析类型抢走
+        # （链接里带着 BV 号，若被 /list/{id} 之外的规则先匹配上，就会拿去当单视频解析）
+        ("https://www.bilibili.com/list/456?oid=789&bvid=BV1xx411c7mD", "list"),
+        ("https://www.bilibili.com/list/456?sid=789", "list"),
+        ("https://www.bilibili.com/list/456?sid=789&oid=123&bvid=BV1xx411c7mD", "list"),
+
         # 程序内部使用的伪协议
         ("bili23://watch_later", "watch_later"),
         ("bili23://history", "history"),

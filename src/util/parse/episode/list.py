@@ -23,6 +23,13 @@ class ListEpisodeParser(ListEpisodeParserBase):
 
         episode_data["collection_title"] = self.get_node_title()
 
+    def get_current_episode_data(self):
+        # 播放页链接（www.bilibili.com/list/{mid}?oid=…&bvid=…）指向合集里的
+        # 某一个视频，由解析器写进接口数据里，见 ListParser.parse_play_page
+        bvid = self.info_data.get("_current_bvid")
+
+        return ("bvid", bvid) if bvid else None
+
     def build_item_data(self, episode_data: dict):
         return {
             "aid": episode_data["aid"],
