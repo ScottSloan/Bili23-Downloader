@@ -9,7 +9,15 @@ stdio 传输的服务器：它们的配置里只有 command / args，填 url 会
 本模块**只用标准库**，且不得导入任何 Qt 或 config 相关的东西 ——
 它由 main.py 在最早期调用，此时整个 GUI 栈都还没有加载，
 这也正是 stdio 模式的意义：不启动界面，只做一层转发。
+唯一的例外是下面的 util.common._json：它本身只包着 orjson 与标准库 json，
+拖不动任何 GUI 依赖，而"JSON 怎么写、怎么读"全项目只该有一份约定。
+
+注意导入写法：包根是 src（util 才是顶层包），common 是 util 下的子包，
+这里写 `from ..common._json import` 而不是 `from common._json import`——
+后者在本进程里根本不存在，会让 --mcp-stdio 在导入期就崩掉。
 """
+from ..common._json import json_loads, json_dumps, JSONDecodeError, std_json_dumps
+
 import argparse
 import base64
 import os
@@ -19,7 +27,6 @@ import sys
 import time
 import urllib.error
 import urllib.request
-from common._json import json_loads, json_dumps, JSONDecodeError, std_json_dumps
 
 APP_NAME = "Bili23 Downloader"
 
