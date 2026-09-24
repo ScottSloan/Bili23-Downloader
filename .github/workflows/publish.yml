@@ -194,7 +194,7 @@ jobs:
           files: |
             Bili23-Downloader\Bili23.exe
             uninstaller\uninst-*.e32
-          Description: Bili23 Downloader
+          description: Bili23 Downloader
           url: https://github.com/ScottSloan/Bili23-Downloader
           email: ${{ secrets.CERTUM_EMAIL }}
           otp-seed: ${{ secrets.CERTUM_OTP }}
@@ -219,7 +219,7 @@ jobs:
         with:
           files: |
             Bili23-Downloader_${{ env.VERSION_NAME }}_windows_x64.exe
-          Description: Bili23 Downloader Setup
+          description: Bili23 Downloader Setup
           url: https://github.com/ScottSloan/Bili23-Downloader
           email: ${{ secrets.CERTUM_EMAIL }}
           otp-seed: ${{ secrets.CERTUM_OTP }}
@@ -259,7 +259,7 @@ jobs:
         with:
           files: |
             Bili23-Downloader\Bili23.exe
-          Description: Bili23 Downloader (Windows 7)
+          description: Bili23 Downloader (Windows 7)
           url: https://github.com/ScottSloan/Bili23-Downloader
           email: ${{ secrets.CERTUM_EMAIL }}
           otp-seed: ${{ secrets.CERTUM_OTP }}
@@ -282,7 +282,7 @@ jobs:
         with:
           files: |
             Bili23-Downloader_${{ env.VERSION_NAME }}_windows_x64_for_win7.exe
-          Description: Bili23 Downloader Setup (Windows 7)
+          description: Bili23 Downloader Setup (Windows 7)
           url: https://github.com/ScottSloan/Bili23-Downloader
           email: ${{ secrets.CERTUM_EMAIL }}
           otp-seed: ${{ secrets.CERTUM_OTP }}
