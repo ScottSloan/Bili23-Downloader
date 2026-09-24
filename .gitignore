@@ -26,6 +26,12 @@ uv.toml
 /json
 /bundle
 /.VSCodeCounter
+/test_gists
+
+# launcher 构建产物：build-release 是 scripts/build_release.ps1 的工作目录
+# （app.zip、manifest.bin、cmake 构建树），release 是它铺出来的发布目录
+/build-release
+/release
 
 # webui
 /src/webui/
