@@ -461,9 +461,13 @@ class ParseTreeView(TreeView):
         self._pending_episode_data = None
         self._current_episode_item = target_item
 
-        # 与 update_tree 一样把滚动放到下一轮事件循环：新插入的行此时还没完成布局
+        # 与 update_tree 一样把滚动放到下一轮事件循环：新插入的行此时还没完成布局。
+        #
+        # 必须把 self 一并传成 context：控件若赶在这次回调之前被销毁（退出流程、
+        # 重建解析界面），Qt 会据此把回调丢掉。不传 context 的 lambda 没有可识别的
+        # 接收者，回调照样会跑，然后打在已经析构的 model 上抛 RuntimeError
         if not manual:
-            QTimer.singleShot(0, lambda: self.scroll_to_item(target_item))
+            QTimer.singleShot(0, self, lambda: self.scroll_to_item(target_item))
 
     def _schedule_expand_all(self, callback = None):
         self._expand_queue.clear()
