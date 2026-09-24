@@ -19,6 +19,12 @@ import sys
 import zipfile
 from pathlib import Path
 
+# 输出的编码默认跟着系统 ANSI 代码页走：英文 Windows 是 cp1252，编不了中文，
+# 下面那些 print 会直接抛 UnicodeEncodeError 而不是显示成乱码 —— CI 上正是栽在
+# 这里，本地简中是 cp936 反而一路正常。显式指定，脚本不看环境脸色
+sys.stdout.reconfigure(encoding = "utf-8", errors = "replace")
+sys.stderr.reconfigure(encoding = "utf-8", errors = "replace")
+
 # 不进包的目录：缓存、版本控制、开发期产物
 EXCLUDE_DIRS = {"__pycache__", ".git", ".idea", ".vscode", "node_modules"}
 

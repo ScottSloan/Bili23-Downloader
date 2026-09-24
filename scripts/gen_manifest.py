@@ -23,6 +23,11 @@ import struct
 import sys
 from pathlib import Path
 
+# 同 build_app_zip.py：不显式指定的话，输出编码跟随系统 ANSI 代码页，
+# 英文 Windows（cp1252）上中文 print 会抛 UnicodeEncodeError
+sys.stdout.reconfigure(encoding = "utf-8", errors = "replace")
+sys.stderr.reconfigure(encoding = "utf-8", errors = "replace")
+
 MAGIC = b"PSM1"
 
 # 与 loader 侧的 kCodeExtensions 对照用。清单本身收录发布目录里的**每个**文件，
