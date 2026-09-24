@@ -95,25 +95,13 @@ jobs:
       IS_PRERELEASE: ${{ env.IS_PRERELEASE }}
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v6
-
-      - name: Clean up files
-        run: |
-          # 清理不需要的资源文件以减小安装包体积
-          Remove-Item -Path src\res\icon -Recurse -Force
-          Remove-Item -Path src\res\image -Recurse -Force
-          Remove-Item -Path src\res\i18n\bili23.zh_CN.ts -Force
-          Remove-Item -Path src\res\i18n\bili23.zh_TW.ts -Force
+      - uses: actions/checkout@v7
 
       - name: Setup Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: 3.13
           architecture: x64
-
-      - name: Install dependencies
-        run: |
-          pip install -r requirements.txt
 
       - name: Update Inno Setup script with version
         run: |
@@ -163,23 +151,37 @@ jobs:
 
       - name: Prepare Windows 10/11 runtime
         run: |
-          # 下载 Python 静态运行时环境
-          Invoke-WebRequest -Uri "https://github.com/ScottSloan/Python-Static/releases/download/v0.1.7/windows_x64_runtime.zip" -OutFile windows_x64_runtime.zip
-          
-          Expand-Archive windows_x64_runtime.zip -DestinationPath Bili23-Downloader
+          # 模板只提供 runtime、site-packages、bundle 与随包的 LICENSE，
+          # 启动器由下一步现场编译后放入
+          Invoke-WebRequest -Uri "https://github.com/ScottSloan/Python-Static/releases/download/v0.1.8/windows_x64_runtime.zip" -OutFile windows_x64_runtime.zip
 
-          New-Item -ItemType Directory -Force -Path Bili23-Downloader\script
+          Expand-Archive windows_x64_runtime.zip -DestinationPath runtime-src
 
-          Copy-Item -Path "src\*" -Destination "Bili23-Downloader\script" -Recurse
+      - name: Build Windows Loader
+        run: |
+          # 源码打包 → 生成清单 → 编译并嵌入，顺序不可换：清单覆盖的是随包的
+          # 其他文件，且不含 exe 自己（它没法算自己的哈希，由代码签名保护），
+          # 所以整个流程只需要编译一次
+          .\scripts\build_release.ps1 -RuntimeDir runtime-src -OutputDir Bili23-Downloader -AppVersion $env:VERSION
 
-          python -m compileall Bili23-Downloader
+      - name: Sign Windows Loader
+        uses: IvanHanloth/super-simply-sign@0.1.1
+        with:
+          files: |
+            Bili23-Downloader\Bili23.exe
+          Description: Bili23 Downloader
+          url: https://github.com/ScottSloan/Bili23-Downloader
+          email: ${{ secrets.CERTUM_EMAIL }}
+          otp-seed: ${{ secrets.CERTUM_OTP }}
 
       - name: Package Windows version
         run: |
           # 便携版：直接打包为 zip
           7z a -tzip -mx=9 Bili23-Downloader_${{ env.VERSION_NAME }}_windows_x64_portable.zip Bili23-Downloader\*
 
-          # 安装版：使用 Inno Setup 创建安装程序
+          # 安装版：使用 Inno Setup 创建安装程序。
+          # setup.iss 里的相对路径（.\Bili23-Downloader、.\LICENSE）是相对它
+          # 自身所在目录解析的，所以要先拷到仓库根再调用
           Copy-Item -Path "assets\setup.iss" -Destination ".\"
 
           $inno = $env:INNO_COMPILER
@@ -187,8 +189,21 @@ jobs:
 
           & $inno "$script"
 
+      # 安装程序是用户下载后双击的那个文件，与 loader 是两条独立的信任路径：
+      # 上面那次签名覆盖便携版里的 exe，这次覆盖 setup 本身。
+      # 必须等 ISCC 跑完 —— 签名要在打包之后，反过来安装包里装的就是未签名的 loader
+      - name: Sign Windows Installer
+        uses: IvanHanloth/super-simply-sign@0.1.1
+        with:
+          files: |
+            Bili23-Downloader_${{ env.VERSION_NAME }}_windows_x64.exe
+          Description: Bili23 Downloader Setup
+          url: https://github.com/ScottSloan/Bili23-Downloader
+          email: ${{ secrets.CERTUM_EMAIL }}
+          otp-seed: ${{ secrets.CERTUM_OTP }}
+
       - name: Upload Windows artifacts
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: windows-artifacts
           path: |
@@ -197,6 +212,8 @@ jobs:
 
       - name: Clean up files
         run: |
+          # 刚打好的安装程序必须先删掉：Win7 版用的是同一份 setup.iss，
+          # 输出文件名与它完全相同，会把它直接覆盖掉
           Remove-Item -Path Bili23-Downloader -Recurse -Force -ErrorAction SilentlyContinue
           Remove-Item -Path windows_x64_runtime.zip -Force -ErrorAction SilentlyContinue
           Remove-Item -Path Bili23-Downloader_${{ env.VERSION_NAME }}_windows_x64_portable.zip -Recurse -Force -ErrorAction SilentlyContinue
@@ -205,15 +222,25 @@ jobs:
       - name: Prepare Windows 7 runtime
         run: |
           # 下载 Python 静态运行时环境
-          Invoke-WebRequest -Uri "https://github.com/ScottSloan/Python-Static/releases/download/v0.1.7/windows_x64_runtime_for_win7.zip" -OutFile windows_x64_runtime_for_win7.zip
-          
-          Expand-Archive windows_x64_runtime_for_win7.zip -DestinationPath Bili23-Downloader
+          Invoke-WebRequest -Uri "https://github.com/ScottSloan/Python-Static/releases/download/v0.1.8/windows_x64_runtime_for_win7.zip" -OutFile windows_x64_runtime_for_win7.zip
 
-          New-Item -ItemType Directory -Force -Path Bili23-Downloader\script
+          Expand-Archive windows_x64_runtime_for_win7.zip -DestinationPath runtime-src-win7
 
-          Copy-Item -Path "src\*" -Destination "Bili23-Downloader\script" -Recurse
+      - name: Build Windows 7 Loader
+        run: |
+          # 必须重新编译一次，不能复用上面那个 exe：清单覆盖发布目录里的每个
+          # 文件，而 Win7 用的是另一套 runtime，哈希几乎全不同
+          .\scripts\build_release.ps1 -RuntimeDir runtime-src-win7 -OutputDir Bili23-Downloader -AppVersion $env:VERSION
 
-          python -m compileall Bili23-Downloader
+      - name: Sign Windows 7 Loader
+        uses: IvanHanloth/super-simply-sign@0.1.1
+        with:
+          files: |
+            Bili23-Downloader\Bili23.exe
+          Description: Bili23 Downloader (Windows 7)
+          url: https://github.com/ScottSloan/Bili23-Downloader
+          email: ${{ secrets.CERTUM_EMAIL }}
+          otp-seed: ${{ secrets.CERTUM_OTP }}
 
       - name: Package Windows 7 version
         run: |
@@ -227,8 +254,19 @@ jobs:
           # 重命名文件
           Rename-Item -Path "Bili23-Downloader_${{ env.VERSION_NAME }}_windows_x64.exe" -NewName "Bili23-Downloader_${{ env.VERSION_NAME }}_windows_x64_for_win7.exe"
 
+      # 与正式版同理：先签内嵌的 loader，打完包再签安装程序自己
+      - name: Sign Windows 7 Installer
+        uses: IvanHanloth/super-simply-sign@0.1.1
+        with:
+          files: |
+            Bili23-Downloader_${{ env.VERSION_NAME }}_windows_x64_for_win7.exe
+          Description: Bili23 Downloader Setup (Windows 7)
+          url: https://github.com/ScottSloan/Bili23-Downloader
+          email: ${{ secrets.CERTUM_EMAIL }}
+          otp-seed: ${{ secrets.CERTUM_OTP }}
+
       - name: Upload Windows artifacts
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: windows-artifacts-for-win7
           path: |
@@ -259,7 +297,7 @@ jobs:
 
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Clean up files
         run: |
@@ -270,7 +308,7 @@ jobs:
           rm -rf src/res/i18n/bili23.zh_TW.ts
 
       - name: Setup Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: 3.13
           architecture: ${{ matrix.python_arch }}
@@ -282,7 +320,7 @@ jobs:
       - name: Prepare Linux runtime
         run: |
           # 下载 Python 静态运行时环境
-          wget https://github.com/ScottSloan/Python-Static/releases/download/v0.1.7/linux_${{ matrix.arch }}_runtime.zip
+          wget https://github.com/ScottSloan/Python-Static/releases/download/v0.1.8/linux_${{ matrix.arch }}_runtime.zip
 
           unzip linux_${{ matrix.arch }}_runtime.zip -d Bili23-Downloader
 
@@ -563,7 +601,7 @@ jobs:
             Bili23-Downloader_${{ env.VERSION_NAME }}_linux_${{ matrix.gnu_arch }}.AppImage
 
       - name: Upload Linux artifacts
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: linux-${{ matrix.arch }}-artifacts
           path: |
@@ -594,7 +632,7 @@ jobs:
 
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Clean up files
         run: |
@@ -605,7 +643,7 @@ jobs:
           rm -rf src/res/i18n/bili23.zh_TW.ts
 
       - name: Setup Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: 3.13
           architecture: ${{ matrix.python_arch }}
@@ -618,7 +656,7 @@ jobs:
       - name: Prepare macOS runtime
         run: |
           # 下载 Python 静态运行时环境
-          wget https://github.com/ScottSloan/Python-Static/releases/download/v0.1.7/macos_${{ matrix.arch }}_runtime.zip
+          wget https://github.com/ScottSloan/Python-Static/releases/download/v0.1.8/macos_${{ matrix.arch }}_runtime.zip
 
           unzip macos_${{ matrix.arch }}_runtime.zip -d Bili23-Downloader
 
@@ -693,7 +731,7 @@ jobs:
             "dmg_build/Bili23-Downloader.app/"
 
       - name: Upload macOS artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: macos-${{ matrix.arch }}-artifact
           path: Bili23-Downloader_${{ env.VERSION_NAME }}_macos_${{ matrix.arch }}.dmg
@@ -710,7 +748,7 @@ jobs:
       discussions: write
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Download all artifacts
         uses: actions/download-artifact@v8
