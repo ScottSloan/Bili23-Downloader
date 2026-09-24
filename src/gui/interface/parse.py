@@ -21,7 +21,8 @@ from util.common.data import url_patterns
 from util.common.config import config
 from util.common.runtime import runtime
 
-from util.parse.worker import ParseWorker, ProgressParseWorker
+from util.parse.worker import ParseWorker, ProgressParseWorker, needs_wbi_signature
+from util.parse.parser.base import ensure_wbi_keys, wbi_keys_ready
 from util.parse.search_url import build_search_url
 from util.parse.preview.previewer import Previewer
 from util.parse.preview.info import PreviewerInfo
@@ -42,6 +43,17 @@ import time
 # 窗口取 1.5 秒：足够吞掉同一次复制产生的重复通知，又短于手动再复制一次的耗时 ——
 # 用户过一会儿重新复制同一条链接时仍然会照常解析
 CLIPBOARD_DEBOUNCE_S = 1.5
+
+# 签名密钥还没就绪时最多等这么久。取值与 util/auth/user.py 里 nav 请求的重试预算同量级
+# （5 + 15 + 45 秒）—— 那段重试跑完仍没拿到，再等下去也只是干等
+WBI_WAIT_TIMEOUT_MS = 65_000
+
+# 检查密钥是否到位的间隔。到位后要立刻放行，不该让用户多等
+WBI_WAIT_POLL_MS = 500
+
+# 等待期间每这么多拍主动推一次补取。补取自身有 30 秒节流（见 util/parse/parser/base.py），
+# 这里只是别让等待变成纯粹的干等 —— 启动时那条重试链可能早已耗尽预算放弃了
+WBI_FETCH_KICK_TICKS = 10
 
 logger = logging.getLogger(__name__)
 
@@ -188,6 +200,15 @@ class ParseInterface(QFrame):
     def init_utils(self):
         self.previewer = Previewer()
 
+        # 等待签名密钥用，见 wait_for_wbi_keys
+        self._wbi_wait_timer = QTimer(self)
+        self._wbi_wait_timer.setInterval(WBI_WAIT_POLL_MS)
+        self._wbi_wait_timer.timeout.connect(self._on_wbi_wait_tick)
+
+        self._wbi_wait_deadline = 0.0
+        self._wbi_wait_ticks = 0
+        self._pending_parse_worker = None
+
         self.clipboard = QApplication.clipboard()
         self.clipboard.changed.connect(self.on_copy_url)
 
@@ -202,15 +223,113 @@ class ParseInterface(QFrame):
         self.on_parse()
 
     def on_parse(self, page: int = 1):
-        self.parse_btn.setIndeterminateState(True)
+        # 已在等待密钥：忽略这次触发。等待期间按钮是 indeterminate 状态，
+        # 但回车、粘贴、翻页仍然会打进来，放进来的话会排成第二次解析
+        if self._pending_parse_worker is not None:
+            return
 
         worker = ParseWorker(self.url_box.text(), page)
+
+        try:
+            parser_type = worker.get_parser_type(worker.url)
+
+        except ValueError:
+            # 链接不合法。不在 GUI 线程里抛这个错，交给 worker 走既有的提示路径
+            parser_type = None
+
+        # 只有需要 wbi 签名的类型才等。番剧、课程、音频这些打的是不需要签名的接口，
+        # 弱网下反而更可能成功，不能跟着一起停摆（见 WBI_PARSER_TYPES）
+        if parser_type is not None and needs_wbi_signature(parser_type) and not wbi_keys_ready():
+            self.wait_for_wbi_keys(worker)
+            return
+
+        self.start_parse(worker)
+
+    def start_parse(self, worker: ParseWorker):
+        self.parse_btn.setIndeterminateState(True)
+
         worker.success.connect(self.on_parse_success)
         worker.error.connect(self.on_parse_error)
 
-        logger.info("开始解析，链接: %s, 页码: %d", self.url_box.text(), page)
+        logger.info("开始解析，链接: %s, 页码: %d", worker.url, worker.pn)
 
         AsyncTask.run(worker)
+
+    def wait_for_wbi_keys(self, worker: ParseWorker):
+        """
+        签名密钥还没就绪时先不发起解析，转成等待态。
+
+        弱网下启动时那次 nav 请求会超时，密钥要过几秒才到。此时立刻把解析发出去
+        必然失败，用户看到的是「解析失败」，会当成程序坏了 —— 而这其实只是还没准备好。
+        这里等密钥到位再自动继续，期间给一句明确的提示，并按 Stop 可以放弃等待。
+
+        存的是整个 worker 而不是链接与页码：等待可能持续一分钟，期间用户完全可能改掉
+        链接框里的内容，而这次要接着跑的显然是他当初点下去的那一个请求。
+        """
+        self._pending_parse_worker = worker
+        self._wbi_wait_deadline = time.monotonic() + WBI_WAIT_TIMEOUT_MS / 1000
+        self._wbi_wait_ticks = 0
+
+        self.parse_btn.setIndeterminateState(True)
+
+        self.progress_widget._trigger_stop_callback = self.cancel_wbi_wait
+        self.progress_widget.show_tip()
+        self.progress_widget.update_text(Translator.TIP_MESSAGES("WBI_KEY_WAITING"))
+
+        self._kick_wbi_fetch()
+        self._wbi_wait_timer.start()
+
+    def cancel_wbi_wait(self):
+        """退出等待态并恢复界面。Stop 按钮与等待超时都走这里"""
+        self._wbi_wait_timer.stop()
+        self._pending_parse_worker = None
+
+        self.parse_btn.setIndeterminateState(False)
+        self.progress_widget.hide_tip()
+
+    def _on_wbi_wait_tick(self):
+        if wbi_keys_ready():
+            self._resume_pending_parse()
+            return
+
+        if time.monotonic() >= self._wbi_wait_deadline:
+            self.cancel_wbi_wait()
+
+            # 标题指向网络而不是解析：这一次压根没发起解析，说「解析失败」是误导
+            signal_bus.toast.show.emit(
+                ToastNotificationCategory.ERROR,
+                Translator.ERROR_MESSAGES("WBI_KEY_UNAVAILABLE_TITLE"),
+                Translator.ERROR_MESSAGES("WBI_KEY_UNAVAILABLE")
+            )
+
+            return
+
+        self._wbi_wait_ticks += 1
+
+        if self._wbi_wait_ticks % WBI_FETCH_KICK_TICKS == 0:
+            self._kick_wbi_fetch()
+
+    def _resume_pending_parse(self):
+        worker = self._pending_parse_worker
+
+        self.cancel_wbi_wait()
+
+        logger.info("签名密钥已就绪，继续解析，链接: %s, 页码: %d", worker.url, worker.pn)
+
+        self.start_parse(worker)
+
+    def _kick_wbi_fetch(self):
+        # 主动推一把补取：启动时那条重试链可能早已耗尽预算放弃，光等它是等不到的。
+        # 补取自身有节流，这里多叫几次没有代价
+        def fetch():
+            try:
+                ensure_wbi_keys()
+
+            except Exception:
+                # 失败由等待超时统一上报，这里每几秒就会推一次，不该每次都记一条错误
+                logger.debug("等待密钥期间补取未成功", exc_info = True)
+
+        GlobalThreadPoolTask.run_func(fetch)
 
     def on_parse_success(self, category_name: str, extra_data: dict):
         self.parse_list._model._set_category_name(category_name)

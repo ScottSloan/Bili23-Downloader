@@ -4,7 +4,7 @@ from ..common.translator import Translator
 
 from ..network.request import NetworkRequestWorker, set_client_cookies, delete_client_cookies, update_cookies as sync_cookies_from_config
 from ..thread.async_ import AsyncTask
-from .base import AuthBase
+from .base import AuthBase, store_wbi_keys
 
 # 登录相关的 Cookie 字段
 LOGIN_COOKIE_KEYS = ("SESSDATA", "bili_jct", "DedeUserID", "DedeUserID__ckMd5")
@@ -107,7 +107,12 @@ class CookieLogin(AuthBase, QObject):
         if self._cleaned_up:
             return
 
-        data: dict = response.get("data", {})
+        data: dict = response.get("data") or {}
+
+        # 顺手回写签名密钥：这里打的正是 nav 接口，一份响应白拿两个 key。
+        # 放在 isLogin 判断之外，是因为密钥与登录态无关 —— 校验失败的 Cookie
+        # 一样带得回它们，而启动时那次请求失败恰恰是最需要这一份的时候
+        store_wbi_keys(data)
 
         if data.get("isLogin"):
             self._pending_restore = False

@@ -211,6 +211,7 @@ class MainWindow(MSFluentWindow):
         self.run_post_terms_checks()
 
     def closeEvent(self, e):
+        from util.auth.user import user_manager
         from util.download.downloader.manager import downloader_manager
         from util.download.task.manager import task_manager
         from util.thread.async_ import AsyncTask
@@ -228,6 +229,16 @@ class MainWindow(MSFluentWindow):
         # 先让后台工作真正停下来，再去等线程退出。分片线程阻塞在 socket 读上，
         # 不关掉会话的话，safe_quit 的等待预算会全部耗在读超时上
         downloader_manager.shutdown()
+
+        # 账号信息的重试定时器必须赶在 safe_quit 之前停掉：它此刻若触发，
+        # 会在关停过程中拉起一个新的请求线程，并把结果投递给已经开始析构的主窗口
+        user_manager.shutdown()
+
+        # 等待签名密钥的轮询同理：它超时前会不断往线程池里推补取任务
+        parse_interface = getattr(self, "parse_interface", None)
+
+        if parse_interface is not None:
+            parse_interface.cancel_wbi_wait()
 
         AsyncTask.safe_quit()
 

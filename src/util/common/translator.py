@@ -307,7 +307,11 @@ class Translator:
             "B23_TV_URL_EXPIRED": translate("ERROR_MESSAGES", "The b23.tv short link is invalid or has expired."),
             "INVALID_LINK": translate("ERROR_MESSAGES", "Invalid link format"),
             "PARSING_STOPPED": translate("ERROR_MESSAGES", "Parsing stopped"),
-            "PARSING_STOPPED_MESSAGE": translate("ERROR_MESSAGES", "An error occurred during parsing, and the process has been stopped. Parsing was completed up to page {page}.\n\nReminder: Due to Bilibili's anti-abuse mechanism, parsing too many pages or at too high a frequency may result in failure and IP ban. Please use with caution!\n\n{error}")
+            "PARSING_STOPPED_MESSAGE": translate("ERROR_MESSAGES", "An error occurred during parsing, and the process has been stopped. Parsing was completed up to page {page}.\n\nReminder: Due to Bilibili's anti-abuse mechanism, parsing too many pages or at too high a frequency may result in failure and IP ban. Please use with caution!\n\n{error}"),
+            "WBI_KEY_UNAVAILABLE": translate("ERROR_MESSAGES", "Failed to obtain the signature key, the request cannot be signed. Please check your network connection and try again."),
+            # 等密钥超时时用的标题。问题出在网络侧而不是解析本身，文案要指对方向：
+            # 说成「解析失败」会让用户以为程序坏了
+            "WBI_KEY_UNAVAILABLE_TITLE": translate("ERROR_MESSAGES", "Cannot reach Bilibili")
         }
 
     @staticmethod
@@ -316,6 +320,7 @@ class Translator:
         return {
             "QUEUED": translate("TIP_MESSAGES", "Queued..."),
             "PARSING": translate("TIP_MESSAGES", "Parsing..."),
+            "WBI_KEY_WAITING": translate("TIP_MESSAGES", "Waiting for the signature key..."),
             "PAUSED": translate("TIP_MESSAGES", "Paused"),
             "FFMPEG_QUEUED": translate("TIP_MESSAGES", "Queued for FFmpeg..."),
             "MERGING": translate("TIP_MESSAGES", "Merging..."),

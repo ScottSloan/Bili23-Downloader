@@ -1,3 +1,5 @@
+from PySide6.QtCore import QCoreApplication, QThread
+
 from ...common.enum import ParserType, ToastNotificationCategory
 from ...common.translator import Translator
 from ...common.signal_bus import signal_bus
@@ -9,6 +11,7 @@ from ..search_url import extract_keyword
 
 from functools import reduce
 from hashlib import md5
+from threading import Lock
 import urllib.parse
 import logging
 import time
@@ -25,9 +28,98 @@ mixinKeyEncTab = [
 
 VIDEO_PLAYURL_API = "https://api.bilibili.com/x/player/wbi/playurl"
 
+NAV_API = "https://api.bilibili.com/x/web-interface/nav"
+
+# getMixinKey 按 mixinKeyEncTab 逐位取值，要取到表里最大的那个下标，原始串就不能短于这个长度。
+# 两个 key 正常各 32 位，拼起来 64 位；只有一边拿到、或两边都没拿到时才会短于它
+WBI_KEY_LENGTH = max(mixinKeyEncTab) + 1
+
+# 补取密钥的并发控制。解析线程池里可能同时有几十个线程都发现密钥是空的，
+# 只让第一个真的发请求，其余的在这把锁上等它的结果
+_wbi_fetch_lock = Lock()
+
+# 上次尝试补取的时间戳（time.monotonic）。失败之后短时间内不再打同一个接口：
+# nav 有限流，几十个线程排队重打只会把风控招来
+_last_fetch_attempt = 0.0
+FETCH_THROTTLE_SECONDS = 30.0
+
+def on_gui_thread() -> bool:
+    app = QCoreApplication.instance()
+
+    return app is not None and QThread.currentThread() == app.thread()
+
+def wbi_keys_ready() -> bool:
+    """密钥是否已经就绪。解析界面据此决定是直接发起解析，还是先等密钥到位"""
+    return len(config.get(config.img_key)) + len(config.get(config.sub_key)) >= WBI_KEY_LENGTH
+
+def ensure_wbi_keys():
+    """
+    确保签名密钥就绪，拿不到就抛一句能读的话。
+
+    密钥本该由启动时的 nav 请求写好（util/auth/user.py），但那次请求可能超时，
+    也可能返回一个不带 wbi_img 的响应 —— 弱网下这不是小概率事件。与其让所有
+    带 wbi 签名的接口瘫到用户重启为止，不如在第一次真正需要签名时补取一次。
+
+    拿不到时抛的是可读的提示，而不是让 getMixinKey 下标越界：后者报出来的
+    "string index out of range" 与网络毫无关系，用户无从归因。
+    """
+    if wbi_keys_ready():
+        return
+
+    # 补取要发同步请求，最长可能阻塞十几秒，而本函数可能在 GUI 线程上被调用 ——
+    # 预览面板拼取流地址就是（Previewer.get_video_info 由 GUI 线程的信号驱动）。
+    # 那里必须让路：宁可报错，也不能把界面冻住。
+    #
+    # 正常流程不受影响：解析一定先于预览跑，密钥在解析阶段就补上了，
+    # 真正走到这里的是「解析还没开始就被要求签名」这一类边角情况
+    if on_gui_thread():
+        raise RuntimeError(Translator.ERROR_MESSAGES("WBI_KEY_UNAVAILABLE"))
+
+    with _wbi_fetch_lock:
+        # 等锁期间可能已经有别的线程补好了
+        if wbi_keys_ready():
+            return
+
+        if not _fetch_wbi_keys():
+            raise RuntimeError(Translator.ERROR_MESSAGES("WBI_KEY_UNAVAILABLE"))
+
+def _fetch_wbi_keys() -> bool:
+    global _last_fetch_attempt
+
+    now = time.monotonic()
+
+    if now - _last_fetch_attempt < FETCH_THROTTLE_SECONDS:
+        return False
+
+    _last_fetch_attempt = now
+
+    # 惰性导入：util/parse/parser/base.py 是纯逻辑模块，不希望因为补取密钥这一条
+    # 边角路径，就把网络栈拉进它的顶层导入图
+    from ...auth.base import store_wbi_keys
+    from ...network.request import SyncNetWorkRequest
+
+    try:
+        response = SyncNetWorkRequest(NAV_API).run()
+
+    except Exception:
+        logger.warning("补取 wbi 签名密钥失败", exc_info = True)
+
+        return False
+
+    if not store_wbi_keys(response.get("data") or {}):
+        logger.warning("补取 wbi 签名密钥失败：响应里没有 wbi_img")
+
+        return False
+
+    logger.info("wbi 签名密钥已补取")
+
+    return True
+
 def enc_wbi(params: dict):
     def getMixinKey(orig: str):
         return reduce(lambda s, i: s + orig[i], mixinKeyEncTab, "")[:32]
+
+    ensure_wbi_keys()
 
     mixin_key = getMixinKey(config.get(config.img_key) + config.get(config.sub_key))
     curr_time = round(time.time())
