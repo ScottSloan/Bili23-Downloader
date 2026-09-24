@@ -85,6 +85,7 @@ jobs:
   windows-build:
     if: needs.get-version.outputs.BUILD_WINDOWS == 'true'
     needs: get-version
+    environment: signing
     env:
       VERSION: ${{ needs.get-version.outputs.VERSION }}
       VERSION_NAME: ${{ needs.get-version.outputs.VERSION_NAME }}
