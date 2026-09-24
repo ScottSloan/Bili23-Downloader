@@ -165,12 +165,36 @@ jobs:
           # 所以整个流程只需要编译一次
           .\scripts\build_release.ps1 -RuntimeDir runtime-src -OutputDir Bili23-Downloader -AppVersion $env:VERSION
 
-      - name: Sign Windows Loader
+      # 生成卸载程序签名包
+      - name: Prepare uninstaller for signing
+        run: |
+          # setup.iss 里的相对路径（.\Bili23-Downloader、.\LICENSE）是相对它
+          # 自身所在目录解析的，所以要先拷到仓库根再调用
+          Copy-Item -Path "assets\setup.iss" -Destination ".\"
+
+          $uninstallerDir = Join-Path $PWD "uninstaller"
+          "UNINSTALLER_DIR=$uninstallerDir" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+
+          $log = & $env:INNO_COMPILER "/DSignedUninstallerDir=$uninstallerDir" ".\setup.iss" 2>&1
+
+          $e32 = @(Get-ChildItem $uninstallerDir -Filter "uninst-*.e32" -ErrorAction SilentlyContinue)
+          if ($e32.Count -ne 1) {
+            $log | ForEach-Object { Write-Host $_ }
+            throw "Failed to generate the unsigned uninstaller"
+          }
+          Write-Host "Uninstaller to sign: $($e32[0].FullName)"
+
+          # 这次 ISCC 按设计以非零码中止，须显式归零，否则 runner 按 $LASTEXITCODE 判为失败
+          exit 0
+
+      # loader 与卸载程序一起签，只走一次签名流程
+      - name: Sign Windows Loader and Uninstaller
         uses: IvanHanloth/super-simply-sign@0.1.1
         with:
           files: |
             Bili23-Downloader\Bili23.exe
-          Description: Bili23 Downloader
+            uninstaller\uninst-*.e32
+          description: Bili23 Downloader
           url: https://github.com/ScottSloan/Bili23-Downloader
           email: ${{ secrets.CERTUM_EMAIL }}
           otp-seed: ${{ secrets.CERTUM_OTP }}
@@ -180,15 +204,12 @@ jobs:
           # 便携版：直接打包为 zip
           7z a -tzip -mx=9 Bili23-Downloader_${{ env.VERSION_NAME }}_windows_x64_portable.zip Bili23-Downloader\*
 
-          # 安装版：使用 Inno Setup 创建安装程序。
-          # setup.iss 里的相对路径（.\Bili23-Downloader、.\LICENSE）是相对它
-          # 自身所在目录解析的，所以要先拷到仓库根再调用
-          Copy-Item -Path "assets\setup.iss" -Destination ".\"
-
+          # 安装版：使用 Inno Setup 创建安装程序（setup.iss 已在准备卸载程序时拷到仓库根），
+          # 嵌入上一步签好名的卸载程序
           $inno = $env:INNO_COMPILER
           $script = ".\setup.iss"
 
-          & $inno "$script"
+          & $inno "/DSignedUninstallerDir=$env:UNINSTALLER_DIR" "$script"
 
       # 安装程序是用户下载后双击的那个文件，与 loader 是两条独立的信任路径：
       # 上面那次签名覆盖便携版里的 exe，这次覆盖 setup 本身。
@@ -198,7 +219,7 @@ jobs:
         with:
           files: |
             Bili23-Downloader_${{ env.VERSION_NAME }}_windows_x64.exe
-          Description: Bili23 Downloader Setup
+          description: Bili23 Downloader Setup
           url: https://github.com/ScottSloan/Bili23-Downloader
           email: ${{ secrets.CERTUM_EMAIL }}
           otp-seed: ${{ secrets.CERTUM_OTP }}
@@ -238,19 +259,19 @@ jobs:
         with:
           files: |
             Bili23-Downloader\Bili23.exe
-          Description: Bili23 Downloader (Windows 7)
+          description: Bili23 Downloader (Windows 7)
           url: https://github.com/ScottSloan/Bili23-Downloader
           email: ${{ secrets.CERTUM_EMAIL }}
           otp-seed: ${{ secrets.CERTUM_OTP }}
 
       - name: Package Windows 7 version
         run: |
-          # 使用 Inno Setup 创建安装程序
+          # 使用 Inno Setup 创建安装程序，卸载程序复用正式版那步签好的
 
           $inno = $env:INNO_COMPILER
           $script = ".\setup.iss"
 
-          & $inno "$script"
+          & $inno "/DSignedUninstallerDir=$env:UNINSTALLER_DIR" "$script"
 
           # 重命名文件
           Rename-Item -Path "Bili23-Downloader_${{ env.VERSION_NAME }}_windows_x64.exe" -NewName "Bili23-Downloader_${{ env.VERSION_NAME }}_windows_x64_for_win7.exe"
@@ -261,7 +282,7 @@ jobs:
         with:
           files: |
             Bili23-Downloader_${{ env.VERSION_NAME }}_windows_x64_for_win7.exe
-          Description: Bili23 Downloader Setup (Windows 7)
+          description: Bili23 Downloader Setup (Windows 7)
           url: https://github.com/ScottSloan/Bili23-Downloader
           email: ${{ secrets.CERTUM_EMAIL }}
           otp-seed: ${{ secrets.CERTUM_OTP }}

@@ -24,6 +24,13 @@ AppCopyright=Copyright (C) 2022-2026 Scott Sloan
 AppMutex=B096F0C1-D105-4EF9-86E1-5E87DA884EA4
 DefaultDirName={autopf}\{#MyAppName}
 UninstallDisplayIcon={app}\{#MyAppExeName}
+; 卸载程序随安装包编译嵌入，签安装包签不到它。由 CI 通过 /DSignedUninstallerDir= 传入目录：
+; 首次编译在该目录生成未签名的 uninst-*.e32 后中止，签好名再编译即嵌入已签名的版本。
+; 本地直接编译不传此定义，照旧生成未签名的卸载程序。
+#ifdef SignedUninstallerDir
+SignedUninstaller=yes
+SignedUninstallerDir={#SignedUninstallerDir}
+#endif
 ; "ArchitecturesAllowed=x64compatible" specifies that Setup cannot run
 ; on anything but x64 and Windows 11 on Arm.
 ArchitecturesAllowed=x64compatible
