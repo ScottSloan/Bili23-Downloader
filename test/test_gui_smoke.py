@@ -70,6 +70,43 @@ class TestSettingCards:
         assert getattr(setting, name)(parent) is not None
 
 
+class TestFluentDialogWindowType:
+    """
+    带 parent 构造出来的对话框必须是顶层窗口
+
+    窗口类型是 Qt::Widget 的控件只是"主窗口里的一块"，只有 Qt::Window / Qt::Dialog
+    才是独立窗口 —— 而带 parent 构造的 QWidget 拿到的默认是前者。qfluentwidgets 只在
+    Win11（build >= 22000）上换成自己那套 FramelessWindow，其 updateFrameless() 会
+    显式写入 Qt::Window；Win10 与 Linux、macOS 走的都是 qframelesswindow 的
+    FramelessWindow，那些 updateFrameless() 只把 Qt::FramelessWindowHint OR 进现有
+    标志，而该标志落在 WindowType_Mask（0xFF）之外，改不动窗口类型。
+
+    于是下载选项对话框在 Win11 上一切正常，在另外三个平台上却成了嵌在主窗口里的
+    子控件：没有标题栏、拖不动、超出主窗口的部分被裁掉。CI 的 Linux 任务走的正是
+    这条分支，这条用例在那边是真起作用，在 Win11 开发机上则天然通过。
+    """
+
+    def test_dialog_constructed_with_parent_is_a_toplevel_window(self, app, parent, monkeypatch):
+        from PySide6.QtCore import QSize
+
+        from gui.component.dialog import FluentDialogBase
+
+        # _center_on_parent 读的是 main.py 在 _main 里挂到这个属性上的主窗口，
+        # 测试环境没有它，ShowEvent 会直接 AttributeError
+        monkeypatch.setattr(app, "window", parent, raising = False)
+
+        parent.setAttribute(Qt.WidgetAttribute.WA_DontShowOnScreen, True)
+        parent.resize(800, 600)
+        parent.show()
+
+        dialog = FluentDialogBase(QSize(300, 200), parent)
+
+        assert dialog.isWindow()
+        # parent 要留着：Qt 据此把它记成 transient parent，主窗口不可见时关掉对话框
+        # 不会触发 lastWindowClosed，托盘程序的退出路径依赖这一点
+        assert dialog.parentWidget() is parent
+
+
 class TestStyleDialogs:
     """这两个对话框的 ScrollArea 曾被重复导入，qfluentwidgets 版本被项目版本遮蔽"""
 
