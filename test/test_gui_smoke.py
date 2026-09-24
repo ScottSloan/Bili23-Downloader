@@ -106,6 +106,37 @@ class TestFluentDialogWindowType:
         # 不会触发 lastWindowClosed，托盘程序的退出路径依赖这一点
         assert dialog.parentWidget() is parent
 
+        dialog.close()
+
+    def test_construction_does_not_show_the_dialog(self, app, parent, monkeypatch):
+        """
+        构造期不能把窗口显示出来
+
+        qframelesswindow 的 setStayOnTop() 结尾带一句 self.show()，而基类里正是在 __init__
+        的中间调它 —— 这时窗口是个空标题、默认 500x500、内容还没建的壳（子类要等
+        super().__init__() 返回之后才设标题、定尺寸、搭界面）。DWM 的开窗动画绑定在第一次
+        ShowWindow 上，动画期间画的就是这一刻的快照，于是用户看到"一个没加任何样式的窗口
+        闪一下"，Win10 上这个快照里还带着原生标题栏。
+        """
+        from PySide6.QtCore import QSize
+
+        from gui.component.dialog import FluentDialogBase
+
+        monkeypatch.setattr(app, "window", parent, raising = False)
+
+        parent.setAttribute(Qt.WidgetAttribute.WA_DontShowOnScreen, True)
+        parent.show()
+
+        dialog = FluentDialogBase(QSize(300, 200), parent)
+
+        assert not dialog.isVisible()
+
+        dialog.show()
+
+        assert dialog.isVisible()
+
+        dialog.close()
+
 
 class TestStyleDialogs:
     """这两个对话框的 ScrollArea 曾被重复导入，qfluentwidgets 版本被项目版本遮蔽"""

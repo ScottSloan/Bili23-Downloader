@@ -122,7 +122,7 @@ class FluentDialogBase(Base, _FluentWidget):
 
         self.setMicaEffectEnabled(config.get(config.mica_effect))
         self.setWindowModality(Qt.WindowModality.ApplicationModal)
-        self.setStayOnTop(config.get(config.stay_on_top))
+        self._setup_stay_on_top()
 
         self._event_loop = None
         self._result = False
@@ -152,6 +152,21 @@ class FluentDialogBase(Base, _FluentWidget):
         # 阴影与窗口动画，macOS 重新长出系统标题栏。按各平台自己的实现再跑一遍即可；
         # 窗口标志本来就没变时（Win11，以及不传 parent 的 UpdateDialog）没有窗口要重建，
         # 这一步只是把同样的效果原样刷新一遍。
+        self.updateFrameless()
+
+    def _setup_stay_on_top(self):
+        """
+        按配置把对话框设为置顶。
+
+        等价于 qframelesswindow 的 setStayOnTop()，只少掉它结尾那句 self.show()。那句话放在
+        这里是有害的：此刻还在 __init__ 里，窗口是个空标题、默认 500x500、内容还没建的壳
+        （子类要等 super().__init__() 返回之后才设标题、定尺寸、搭界面），一旦在这里
+        show()，DWM 的开窗动画就绑定在这一刻 —— 动画期间画的是此刻的快照，用户看到的是
+        "一个没加任何样式的窗口闪一下"，Win10 上这个快照里还带着原生标题栏。
+        """
+        self.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint, config.get(config.stay_on_top))
+
+        # 改窗口标志会重建原生窗口，各平台的无边框效果要重新落上去（同 _make_toplevel）
         self.updateFrameless()
 
     def _setup_title_bar(self):
