@@ -990,9 +990,8 @@ Please note that download history is the sole basis for recognizing downloaded v
         <translation>不再提示</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/download_as_single_video.py" line="26"/>
         <source>Got It</source>
-        <translation>知道了</translation>
+        <translation type="vanished">知道了</translation>
     </message>
 </context>
 <context>
@@ -3143,8 +3142,12 @@ To get a single complete video file, please enable &quot;Merge video and audio&q
     </message>
     <message>
         <location filename="../../gui/dialog/download_options/card.py" line="306"/>
+        <source>This batch contains multiple content types, choose a naming rule for each. To add or edit rules, go to Settings → File naming → Naming Convention</source>
+        <translation>本次下載包含多種內容類型，請為每種類型分別選擇命名規則。如需新增或修改規則，請前往 設定 → 檔案命名 → 命名規則</translation>
+    </message>
+    <message>
         <source>This batch contains multiple content types, choose a naming rule for each</source>
-        <translation>本次下載包含多種內容類型，請分別選擇命名規則</translation>
+        <translation type="vanished">本次下載包含多種內容類型，請分別選擇命名規則</translation>
     </message>
     <message>
         <location filename="../../gui/dialog/download_options/card.py" line="321"/>
@@ -3246,9 +3249,13 @@ The meaning of each &quot;Numbering Mode&quot; option is as follows:
         <translation>命名規則</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/download_options/card.py" line="267"/>
         <source>Choose the naming rule to use when downloading</source>
-        <translation>選擇下載時使用的命名規則</translation>
+        <translation type="vanished">選擇下載時使用的命名規則</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialog/download_options/card.py" line="267"/>
+        <source>Choose the naming rule to use when downloading. To add or edit rules, go to Settings → File naming → Naming Convention</source>
+        <translation>選擇下載時使用的命名規則。如需新增或修改規則，請前往 設定 → 檔案命名 → 命名規則</translation>
     </message>
     <message>
         <location filename="../../gui/dialog/download_options/card.py" line="283"/>
@@ -4977,12 +4984,12 @@ Under no circumstances shall the developer be liable for any direct, indirect, i
 <context>
     <name>TopNavigationDialogBase</name>
     <message>
-        <location filename="../../gui/component/dialog.py" line="257"/>
+        <location filename="../../gui/component/dialog.py" line="282"/>
         <source>OK</source>
         <translation>確定</translation>
     </message>
     <message>
-        <location filename="../../gui/component/dialog.py" line="261"/>
+        <location filename="../../gui/component/dialog.py" line="286"/>
         <source>Cancel</source>
         <translation>取消</translation>
     </message>

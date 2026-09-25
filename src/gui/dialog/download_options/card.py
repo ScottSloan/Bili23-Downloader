@@ -264,7 +264,7 @@ def fill_rule_choice(choice: ComboBox, type_id: int):
 
 class NamingConventionCard(SettingCard):
     def __init__(self, type_id = None, parent = None):
-        super().__init__(FluentIcon.DOCUMENT, self.tr("Naming Convention"), self.tr("Choose the naming rule to use when downloading"), parent)
+        super().__init__(FluentIcon.DOCUMENT, self.tr("Naming Convention"), self.tr("Choose the naming rule to use when downloading. To add or edit rules, go to Settings → File naming → Naming Convention"), parent)
 
         # 未指定时回落到链接指向的那个条目，供 MCP 等拿不到勾选列表的调用方使用
         self.type_id = type_id if type_id is not None else FileNameFormatter().get_type_id_from_attribute(PreviewerInfo.attribute)
@@ -303,7 +303,7 @@ class MultiTypeNamingConventionCard(ExpandGroupSettingCard):
         super().__init__(
             FluentIcon.DOCUMENT,
             self.tr("Naming Convention"),
-            self.tr("This batch contains multiple content types, choose a naming rule for each"),
+            self.tr("This batch contains multiple content types, choose a naming rule for each. To add or edit rules, go to Settings → File naming → Naming Convention"),
             parent
         )
 
