@@ -23,8 +23,6 @@ class DownloadAsSingleVideoDialog(DialogBase):
         self.viewLayout.addSpacing(10)
         self.viewLayout.addWidget(self.never_show_check)
 
-        self.yesButton.setText(self.tr("Got It"))
-
         self.widget.setMinimumWidth(350)
 
         self.hideCancelButton()
