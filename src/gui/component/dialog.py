@@ -13,6 +13,8 @@ from util.common.enum import ToastNotificationCategory
 from util.common.style_sheet import StyleSheet
 from util.common.config import config
 
+import sys
+
 class Base:
     def __init__(self):
         self.esc_close = True
@@ -152,7 +154,24 @@ class FluentDialogBase(Base, _FluentWidget):
         # 阴影与窗口动画，macOS 重新长出系统标题栏。按各平台自己的实现再跑一遍即可；
         # 窗口标志本来就没变时（Win11，以及不传 parent 的 UpdateDialog）没有窗口要重建，
         # 这一步只是把同样的效果原样刷新一遍。
+        self._refresh_frameless()
+
+    def _refresh_frameless(self):
+        """
+        重新应用一次无边框效果，macOS 上再补一次内容边距不跟安全区联动。
+
+        qframelesswindow 的 mac 分支在 _initFrameless() 里，除了摆无边框那一套，还专门
+        设了 WA_ContentsMarginsRespectsSafeArea = False —— 不这么做的话，Qt 会自动把系统
+        标题栏的安全区高度算进内容边距，标题栏和下面所有内容整体往下顶开一截，可这个属性
+        只在当时那扇原生窗口上生效。窗口标志一变（_make_toplevel 补窗口类型、
+        _setup_stay_on_top 改置顶）原生窗口跟着重建，新窗口读到的是 Qt 默认值（True），
+        于是自定义标题栏连同内容区一起被系统标题栏的安全区顶下去一截，视觉上就是贴着
+        红绿灯下面一大块空白，直到重建后重新按这里再压一次 False 才会消失。
+        """
         self.updateFrameless()
+
+        if sys.platform == "darwin":
+            self.setAttribute(Qt.WidgetAttribute.WA_ContentsMarginsRespectsSafeArea, False)
 
     def _setup_stay_on_top(self):
         """
@@ -167,13 +186,19 @@ class FluentDialogBase(Base, _FluentWidget):
         self.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint, config.get(config.stay_on_top))
 
         # 改窗口标志会重建原生窗口，各平台的无边框效果要重新落上去（同 _make_toplevel）
-        self.updateFrameless()
+        self._refresh_frameless()
 
     def _setup_title_bar(self):
         titleBar = FluentWidgetTitleBar(self)
         titleBar.hBoxLayout.setContentsMargins(0, 0, 0, 0)
         titleBar.hBoxLayout.insertSpacing(0, 12)
-        titleBar.setFixedHeight(36)
+
+        # FluentWidgetTitleBar 在 macOS 上已经把高度收到跟原生标题栏一致的 28，
+        # 图标和标题也被它自己隐藏了（改用系统红绿灯）。这里固定改成 36 是给
+        # Windows / Linux 用的，原样套到 macOS 头上就是一整条没有任何内容的
+        # 空白，把 mac 的高度又撑回了 Windows 的尺寸。
+        if sys.platform != "darwin":
+            titleBar.setFixedHeight(36)
 
         titleBar.minBtn.hide()
         titleBar.maxBtn.hide()
