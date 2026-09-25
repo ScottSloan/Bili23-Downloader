@@ -973,6 +973,29 @@ Please note that download history is the sole basis for recognizing downloaded v
     </message>
 </context>
 <context>
+    <name>DownloadAsSingleVideoDialog</name>
+    <message>
+        <location filename="../../gui/dialog/misc/download_as_single_video.py" line="14"/>
+        <source>Download as Single Video</source>
+        <translation>下載為單個影片</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialog/misc/download_as_single_video.py" line="16"/>
+        <source>This will save the file directly using the video&apos;s title as its name, without applying your configured file naming rules.</source>
+        <translation>該操作會直接以影片標題作為檔案名稱儲存，不受你設定的檔案命名規則約束。</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialog/misc/download_as_single_video.py" line="19"/>
+        <source>Don&apos;t show this again</source>
+        <translation>不再提示</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialog/misc/download_as_single_video.py" line="26"/>
+        <source>Got It</source>
+        <translation>知道了</translation>
+    </message>
+</context>
+<context>
     <name>DownloadConcurrencySettingCard</name>
     <message>
         <location filename="../../gui/component/setting/card.py" line="758"/>
@@ -3567,7 +3590,7 @@ This software contains no advertisements, trackers, or analytics SDKs of any kin
         <translation>下載所選項目</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="355"/>
+        <location filename="../../gui/interface/parse.py" line="358"/>
         <source>Parse Failed</source>
         <translation>解析失敗</translation>
     </message>
@@ -3577,28 +3600,28 @@ This software contains no advertisements, trackers, or analytics SDKs of any kin
         <translation>搜尋</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="436"/>
+        <location filename="../../gui/interface/parse.py" line="439"/>
         <source>{category_name} ({selected_count} selected, {total_count} total)</source>
         <translation>{category_name}（已選取 {selected_count} 項，共 {total_count} 項）</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="442"/>
-        <location filename="../../gui/interface/parse.py" line="714"/>
+        <location filename="../../gui/interface/parse.py" line="445"/>
+        <location filename="../../gui/interface/parse.py" line="717"/>
         <source>{category_name} ({total_count} total)</source>
         <translation>{category_name}（共 {total_count} 項）</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="739"/>
+        <location filename="../../gui/interface/parse.py" line="742"/>
         <source>Auto-parse Pagination</source>
         <translation>自動解析分頁</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="740"/>
+        <location filename="../../gui/interface/parse.py" line="743"/>
         <source>Click here to automatically parse all pages.</source>
         <translation>點擊此處可進行自動解析分頁操作</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="833"/>
+        <location filename="../../gui/interface/parse.py" line="836"/>
         <source>Skipped duplicate download: {task_title}</source>
         <translation>已跳過重複下載的任務：{task_title}</translation>
     </message>
@@ -4954,12 +4977,12 @@ Under no circumstances shall the developer be liable for any direct, indirect, i
 <context>
     <name>TopNavigationDialogBase</name>
     <message>
-        <location filename="../../gui/component/dialog.py" line="209"/>
+        <location filename="../../gui/component/dialog.py" line="257"/>
         <source>OK</source>
         <translation>確定</translation>
     </message>
     <message>
-        <location filename="../../gui/component/dialog.py" line="213"/>
+        <location filename="../../gui/component/dialog.py" line="261"/>
         <source>Cancel</source>
         <translation>取消</translation>
     </message>
@@ -5486,18 +5509,18 @@ Under no circumstances shall the developer be liable for any direct, indirect, i
 <context>
     <name>ViewCoverDialog</name>
     <message>
-        <location filename="../../gui/dialog/misc/view_cover.py" line="17"/>
+        <location filename="../../gui/dialog/misc/view_cover.py" line="21"/>
         <source>Cover</source>
         <translation>封面</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/view_cover.py" line="30"/>
-        <location filename="../../gui/dialog/misc/view_cover.py" line="79"/>
+        <location filename="../../gui/dialog/misc/view_cover.py" line="38"/>
+        <location filename="../../gui/dialog/misc/view_cover.py" line="113"/>
         <source>Save As</source>
         <translation>另存為</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/view_cover.py" line="80"/>
+        <location filename="../../gui/dialog/misc/view_cover.py" line="114"/>
         <source>JPEG Image (*.jpg);;PNG Image (*.png);;WebP Image (*.webp)</source>
         <translation>JPEG 圖像 (*.jpg);;PNG 圖像 (*.png);;WebP 圖像 (*.webp)</translation>
     </message>

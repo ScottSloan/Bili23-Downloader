@@ -346,6 +346,7 @@ class APPConfig(QConfig):
     when_close_window = OptionsConfigItem("Behavior", "when_close_window", WhenClose.ALWAYS_ASK, OptionsValidator(WhenClose), EnumSerializer(WhenClose))
 
     show_download_options_dialog = ConfigItem("Behavior", "show_download_options_dialog", True, BoolValidator())
+    show_download_as_single_video_dialog = ConfigItem("Behavior", "show_download_as_single_video_dialog", True, BoolValidator())
     show_notification = ConfigItem("Behavior", "show_notification", False, BoolValidator())
     preallocate_file_space = ConfigItem("Behavior", "preallocate_file_space", True, BoolValidator())
     duplicate_download_resolution = OptionsConfigItem("Behavior", "duplicate_download_resolution", DuplicateDownloadResolution.ALWAYS_ASK, OptionsValidator(DuplicateDownloadResolution), EnumSerializer(DuplicateDownloadResolution))

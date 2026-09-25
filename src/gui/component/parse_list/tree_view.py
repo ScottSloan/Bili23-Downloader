@@ -686,6 +686,11 @@ class ParseTreeView(TreeView):
         dialog.exec()
 
     def on_download_as_single_video(self, item: TreeItem):
+        if config.get(config.show_download_as_single_video_dialog):
+            from ...dialog.misc.download_as_single_video import DownloadAsSingleVideoDialog
+
+            DownloadAsSingleVideoDialog(self.main_window).exec()
+
         item.downloaded = True
 
         item.set_attribute(Attribute.DOWNLOAD_AS_SINGLE_VIDEO_BIT)

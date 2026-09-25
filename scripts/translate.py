@@ -77,6 +77,7 @@ sources = [
     "src/gui/dialog/misc/auto_parse.py",
     "src/gui/dialog/misc/batch_parse.py",
     "src/gui/dialog/misc/batch_select.py",
+    "src/gui/dialog/misc/download_as_single_video.py",
     "src/gui/dialog/misc/duplicate_download.py",
     "src/gui/dialog/misc/interactive_video.py",
     "src/gui/dialog/misc/jump_to_page.py",
