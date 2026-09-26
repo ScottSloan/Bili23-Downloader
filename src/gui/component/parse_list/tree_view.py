@@ -39,6 +39,10 @@ class ParseTreeView(TreeView):
         # 链接明确指向的那一项，由 update_tree 依据解析结果给出的定位信息确定，
         # 用于自动勾选与获取媒体信息，链接未指向具体视频时为 None
         self._current_episode_item: TreeItem = None
+        # 还没能定位到的链接指向项：链接指向的那一集未必在本次解析的页里
+        # （合集按发布时间排序，链接指向的一集可能落在后面的页），先记住定位信息，
+        # 等后续页追加进来再试
+        self._pending_episode_data: tuple = None
 
         # Shift 范围勾选：锚点为上一次手动点击复选框的项，按对象保存以免排序后失效
         self._check_anchor: TreeItem = None
@@ -408,6 +412,7 @@ class ParseTreeView(TreeView):
         )
 
         self._current_episode_item = target_item
+        self._pending_episode_data = current_episode_data if target_item is None else None
 
         scroll_target = None if manual else target_item
 
@@ -433,6 +438,36 @@ class ParseTreeView(TreeView):
 
         if not self._expand_timer.isActive():
             self._expand_timer.start(0)
+
+        self._locate_pending_episode_item()
+
+    def _locate_pending_episode_item(self):
+        # 链接指向的那一项此前没在树里（多半是落在还没解析的分页上），新一页追加
+        # 进来后再找一次，找到就勾选并滚动过去，与首屏解析走的是同一套定位逻辑
+        if not self._pending_episode_data:
+            return
+
+        manual = config.get(config.auto_select_mode) == AutoSelectMode.MANUAL
+
+        target_item = self.locate_to_item_by_episode_data(
+            self._pending_episode_data,
+            scroll = False,
+            check = not manual
+        )
+
+        if target_item is None:
+            return
+
+        self._pending_episode_data = None
+        self._current_episode_item = target_item
+
+        # 与 update_tree 一样把滚动放到下一轮事件循环：新插入的行此时还没完成布局。
+        #
+        # 必须把 self 一并传成 context：控件若赶在这次回调之前被销毁（退出流程、
+        # 重建解析界面），Qt 会据此把回调丢掉。不传 context 的 lambda 没有可识别的
+        # 接收者，回调照样会跑，然后打在已经析构的 model 上抛 RuntimeError
+        if not manual:
+            QTimer.singleShot(0, self, lambda: self.scroll_to_item(target_item))
 
     def _schedule_expand_all(self, callback = None):
         self._expand_queue.clear()
@@ -517,6 +552,15 @@ class ParseTreeView(TreeView):
         total_items = self.get_all_items()
 
         return total_items[0].to_dict() if total_items else None
+
+    def get_current_episode_item(self):
+        """
+        链接明确指向的那一项，链接未指向具体视频（或没能在列表中定位到）时为 None
+
+        外部只应把它当作"这一项"的身份用于比对，不要缓存：解析新链接后整棵树
+        会被替换，此处返回的对象随即失效
+        """
+        return self._current_episode_item
 
     def get_preview_item_info(self):
         # 链接明确指向某个视频时，用该视频的信息作为媒体信息预览的来源，
@@ -642,6 +686,11 @@ class ParseTreeView(TreeView):
         dialog.exec()
 
     def on_download_as_single_video(self, item: TreeItem):
+        if config.get(config.show_download_as_single_video_dialog):
+            from ...dialog.misc.download_as_single_video import DownloadAsSingleVideoDialog
+
+            DownloadAsSingleVideoDialog(self.main_window).exec()
+
         item.downloaded = True
 
         item.set_attribute(Attribute.DOWNLOAD_AS_SINGLE_VIDEO_BIT)

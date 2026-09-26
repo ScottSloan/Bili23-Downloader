@@ -1,5 +1,5 @@
-from ...common._json import json_loads, json_dumps
-from ...common.config import appdata_path, config
+from ...common._json import loads, dumps
+from ...common.config import appdata_path
 from ...common.timestamp import get_timestamp
 from ...common.database import Database
 from .hash_id import calc_hash_id, HASH_ID_VERSION
@@ -66,7 +66,7 @@ class TaskDatabase(Database):
             for task_id, data in self.query(f"SELECT task_id, data FROM {table_name}"):
                 try:
                     task_info = TaskInfo()
-                    task_info.from_dict(json_loads(data))
+                    task_info.from_dict(loads(data))
 
                 except Exception:
                     # 单条记录损坏时跳过，不影响其余记录的重算
@@ -179,7 +179,7 @@ class TaskDatabase(Database):
             task_info.Basic.cover_id,                                   # cover_id
             task_info.Basic.show_title,                                 # title
             timestamp,                                                  # created_time or completed_time
-            json_dumps(task_info.to_dict())                             # data
+            dumps(task_info.to_dict())                                  # data
         )
 
     def add_tasks(self, task_info_list: List[TaskInfo], completed: bool = False):
@@ -205,7 +205,7 @@ class TaskDatabase(Database):
     def update_task(self, task_info: TaskInfo):
         self.execute("""
             UPDATE download_task SET data = ? WHERE task_id = ?
-        """, (json_dumps(task_info.to_dict()), task_info.Basic.task_id))
+        """, (dumps(task_info.to_dict()), task_info.Basic.task_id))
 
     def update_task_json(self, task_id: str, data: str):
         self.execute("""
@@ -274,7 +274,7 @@ class TaskDatabase(Database):
 
             for entry in result:
                 task_info = TaskInfo()
-                task_info.from_dict(json_loads(entry[0]))
+                task_info.from_dict(loads(entry[0]))
 
                 _task_info_list.append(task_info)
 
@@ -306,7 +306,7 @@ class TaskDatabase(Database):
                     task_info.Basic.cover_id,
                     task_info.Basic.show_title,
                     timestamp,
-                    json_dumps(task_info.to_dict())
+                    dumps(task_info.to_dict())
                 ))
 
             return records

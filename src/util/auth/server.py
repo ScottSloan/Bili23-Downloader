@@ -1,4 +1,4 @@
-from ..common._json import json_dumps, json_loads
+from ..common._json import dumps, loads
 from ..common.signal_bus import signal_bus
 from .captcha import CaptchaInfo
 
@@ -32,7 +32,7 @@ def run_server(host, port, req_queue, res_queue, stop_event):
                                 "challenge": msg["challenge"],
                                 "gt": msg["gt"],
                             }
-                            self.make_response(200, json_dumps(data), is_json = True)
+                            self.make_response(200, dumps(data), is_json = True)
                             break
                     except queue.Empty:
                         continue
@@ -47,7 +47,7 @@ def run_server(host, port, req_queue, res_queue, stop_event):
                 
                 if self.headers.get("Content-Type") == "application/json;charset=UTF-8":
                     post_data = self.rfile.read(content_length).decode("utf-8")
-                    json_data = json_loads(post_data)
+                    json_data = loads(post_data)
 
                     # 发送回主进程保存，并触发信号
                     req_queue.put({

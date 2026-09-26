@@ -32,7 +32,7 @@ class Translator:
     @get_map_method
     def VIDEO_QUALITY(key = None):
         return {
-            "auto": translate("VIDEO_QUALITY", "Auto (by priority)"),
+            "auto": translate("VIDEO_QUALITY", "Auto"),
             "8K": translate("VIDEO_QUALITY", "8K UHD"),
             "DOLBY_VISION": translate("VIDEO_QUALITY", "Dolby Vision"),
             "HDR": translate("VIDEO_QUALITY", "HDR True Color"),
@@ -51,7 +51,7 @@ class Translator:
     @get_map_method
     def AUDIO_QUALITY(key = None):
         return {
-            "auto": translate("AUDIO_QUALITY", "Auto (by priority)"),
+            "auto": translate("AUDIO_QUALITY", "Auto"),
             "HI_RES": translate("AUDIO_QUALITY", "Hi-Res Audio"),
             "DOLBY_ATMOS": translate("AUDIO_QUALITY", "Dolby Atmos"),
             "192K": translate("AUDIO_QUALITY", "192 kbps"),
@@ -63,7 +63,7 @@ class Translator:
     @get_map_method
     def VIDEO_CODEC(key = None):
         return {
-            "auto": translate("VIDEO_CODEC", "Auto (by priority)"),
+            "auto": translate("VIDEO_CODEC", "Auto"),
             "AVC/H.264": translate("VIDEO_CODEC", "AVC/H.264"),
             "HEVC/H.265": translate("VIDEO_CODEC", "HEVC/H.265"),
             "AV1": translate("VIDEO_CODEC", "AV1")
@@ -137,13 +137,16 @@ class Translator:
             "DEFAULT_FOR_INTERACTIVE_VIDEO": translate("DEFAULT_RULE_NAMES", "Preset: Interactive Video"),
             "DEFAULT_FOR_BANGUMI": translate("DEFAULT_RULE_NAMES", "Preset: Film & TV"),
             "DEFAULT_FOR_CHEESE": translate("DEFAULT_RULE_NAMES", "Preset: Courses"),
-            "DEFAULT_FOR_LESSON": translate("DEFAULT_RULE_NAMES", "Preset: Mall Courses"),
             "DEFAULT_FOR_FAVORITE": translate("DEFAULT_RULE_NAMES", "Preset: Favorites"),
             "DEFAULT_FOR_SPACE": translate("DEFAULT_RULE_NAMES", "Preset: Profile"),
             "DEFAULT_FOR_AUDIO": translate("DEFAULT_RULE_NAMES", "Preset: Music"),
             "DEFAULT_FOR_HISTORY": translate("DEFAULT_RULE_NAMES", "Preset: History"),
             "DEFAULT_FOR_WEEKLY": translate("DEFAULT_RULE_NAMES", "Preset: Weekly Picks"),
-            "DEFAULT_FOR_WATCH_LATER": translate("DEFAULT_RULE_NAMES", "Preset: Watch Later")
+            "DEFAULT_FOR_WATCH_LATER": translate("DEFAULT_RULE_NAMES", "Preset: Watch Later"),
+
+            # 不是内置规则的名字，是新建规则时的默认名。存放在这里是为了共用
+            # display_name() 那套「存键不存译名」的机制
+            "NEW_RULE": translate("DEFAULT_RULE_NAMES", "New rule")
         }
 
     @staticmethod
@@ -156,7 +159,6 @@ class Translator:
             "INTERACTIVE_VIDEO": translate("CONVENTION_TYPE", "Interactive Video"),
             "BANGUMI": translate("CONVENTION_TYPE", "Film & TV"),
             "CHEESE": translate("CONVENTION_TYPE", "Courses"),
-            "LESSON": translate("CONVENTION_TYPE", "Mall Courses"),
             "FAVORITE": translate("CONVENTION_TYPE", "Favorites"),
             "SPACE": translate("CONVENTION_TYPE", "Profile"),
             "HISTORY": translate("CONVENTION_TYPE", "History"),
@@ -191,6 +193,15 @@ class Translator:
             "EP_ID": translate("VARIABLE_DESCRIPTION", "Episode id"),
             "SEASON_ID": translate("VARIABLE_DESCRIPTION", "Season id"),
 
+            # 「更多变量」分组用的通用描述。同一个变量在不同规则类型下含义不同，
+            # 下面那些 _FOR_XXX 描述只在对应类型的推荐清单里才准确
+            "LEAF_TITLE_GENERIC": translate("VARIABLE_DESCRIPTION", "Item title"),
+            "PARENT_TITLE_GENERIC": translate("VARIABLE_DESCRIPTION", "Parent title"),
+            "PART_NUMBER_GENERIC": translate("VARIABLE_DESCRIPTION", "Part number"),
+            "SECTION_TITLE_GENERIC": translate("VARIABLE_DESCRIPTION", "Section title (empty if not divided into sections)"),
+            "SERIES_TITLE_GENERIC": translate("VARIABLE_DESCRIPTION", "Series title"),
+            "EPISODE_TITLE_GENERIC": translate("VARIABLE_DESCRIPTION", "Episode title"),
+
             "LEAF_TITLE_FOR_NORMAL": translate("VARIABLE_DESCRIPTION", "Full video title"),
             "LEAF_TITLE_FOR_PART": translate("VARIABLE_DESCRIPTION", "Current part's title"),
             "LEAF_TITLE_FOR_COLLECTION": translate("VARIABLE_DESCRIPTION", "Content title (video title for single videos, part title for multi-part)"),
@@ -200,11 +211,11 @@ class Translator:
             "PARENT_TITLE_FOR_PART": translate("VARIABLE_DESCRIPTION", "Multi-part video main title"),
             "PARENT_TITLE_FOR_COLLECTION": translate("VARIABLE_DESCRIPTION", "Main title if video has multiple parts; otherwise empty"),
             "PARENT_TITLE_FOR_INTERACTIVE_VIDEO": translate("VARIABLE_DESCRIPTION", "Interactive video title"),
-            "PARENT_TITLE_FOR_HISTORY": translate("VARIABLE_DESCRIPTION", "History title"),
-            "PARENT_TITLE_FOR_WATCH_LATER": translate("VARIABLE_DESCRIPTION", "Watch Later title"),
-            "PARENT_TITLE_FOR_WEEKLY": translate("VARIABLE_DESCRIPTION", "Weekly Picks title"),
-            "PARENT_TITLE_FOR_AUDIO": translate("VARIABLE_DESCRIPTION", "Playlist title"),
+            "PARENT_TITLE_FOR_HISTORY": translate("VARIABLE_DESCRIPTION", "Title of the video; only set for multi-part or collection entries"),
+            "PARENT_TITLE_FOR_WATCH_LATER": translate("VARIABLE_DESCRIPTION", "Title of the video; only set for multi-part or collection entries"),
             "PARENT_TITLE_FOR_FAVORITE": translate("VARIABLE_DESCRIPTION", "Multi-part video main title (if exists)"),
+
+            "SOURCE_TITLE": translate("VARIABLE_DESCRIPTION", "Name of the source list"),
 
             "PART_NUMBER_FOR_PART": translate("VARIABLE_DESCRIPTION", "Part number"),
             "PART_NUMBER_FOR_COLLECTION": translate("VARIABLE_DESCRIPTION", "Part number (only for multi-part videos)"),
@@ -216,9 +227,8 @@ class Translator:
 
             "SERIES_TITLE_FOR_BANGUMI": translate("VARIABLE_DESCRIPTION", "Series title"),
             "SERIES_TITLE_FOR_CHEESE": translate("VARIABLE_DESCRIPTION", "Courses title"),
-            "SERIES_TITLE_FOR_LESSON": translate("VARIABLE_DESCRIPTION", "Mall courses title"),
-            "SECTION_TITLE_FOR_LESSON": translate("VARIABLE_DESCRIPTION", "Chapter title (courses title if not divided into chapters)"),
-            "EPISODE_TITLE_FOR_LESSON": translate("VARIABLE_DESCRIPTION", "Lesson title"),
+
+            # 下面四条是会员购商城课程独有的标识符，取名时只在商城课程里有值
             "COURSE_ID": translate("VARIABLE_DESCRIPTION", "Mall courses id"),
             "LESSON_ID": translate("VARIABLE_DESCRIPTION", "Mall lesson id"),
             "ITEM_ID": translate("VARIABLE_DESCRIPTION", "Mall item id"),
@@ -264,6 +274,8 @@ class Translator:
         return {
             "FFMPEG_FAILED": translate("ERROR_MESSAGES", "An error occurred while running FFmpeg"),
             "FFMPEG_FAILED_WITH_CODE": translate("ERROR_MESSAGES", "FFmpeg failed with exit code {code}"),
+            "FFMPEG_NO_RESPONSE": translate("ERROR_MESSAGES", "FFmpeg stopped responding and has been terminated. The output file may be locked by another program (such as antivirus software), or the destination drive may be unavailable."),
+            "FFMPEG_STILL_RUNNING": translate("ERROR_MESSAGES", "The previous FFmpeg task has not exited yet. Please try again later."),
             "FILE_NOT_FOUND": translate("ERROR_MESSAGES", "The specified file or folder does not exist, you may need to download it again."),
             "FILE_NOT_FOUND_TITLE": translate("ERROR_MESSAGES", "File Not Found"),
             "FILE_NOT_FOUND_DETAIL": translate("ERROR_MESSAGES", "The file may have been moved or deleted. Please download it again."),
@@ -276,6 +288,7 @@ class Translator:
             "DOWNLOAD_FAILED": translate("ERROR_MESSAGES", "Download failed"),
             "RENAME_FAILED": translate("ERROR_MESSAGES", "Failed to rename file"),
             "PARSE_FAILED": translate("ERROR_MESSAGES", "Failed to parse download information"),
+            "UNSUPPORTED_ENTRY_TYPE": translate("ERROR_MESSAGES", "This item's type is not recognized, so it cannot be downloaded"),
             "MEDIA_INFO_FAILED": translate("ERROR_MESSAGES", "Failed to retrieve media information"),
             "LOGIN_EXPIRED": translate("ERROR_MESSAGES", "Login status expired"),
             "COOKIE_FORMAT_INVALID": translate("ERROR_MESSAGES", "Invalid Cookies format"),
@@ -294,7 +307,11 @@ class Translator:
             "B23_TV_URL_EXPIRED": translate("ERROR_MESSAGES", "The b23.tv short link is invalid or has expired."),
             "INVALID_LINK": translate("ERROR_MESSAGES", "Invalid link format"),
             "PARSING_STOPPED": translate("ERROR_MESSAGES", "Parsing stopped"),
-            "PARSING_STOPPED_MESSAGE": translate("ERROR_MESSAGES", "An error occurred during parsing, and the process has been stopped. Parsing was completed up to page {page}.\n\nReminder: Due to Bilibili's anti-abuse mechanism, parsing too many pages or at too high a frequency may result in failure and IP ban. Please use with caution!\n\n{error}")
+            "PARSING_STOPPED_MESSAGE": translate("ERROR_MESSAGES", "An error occurred during parsing, and the process has been stopped. Parsing was completed up to page {page}.\n\nReminder: Due to Bilibili's anti-abuse mechanism, parsing too many pages or at too high a frequency may result in failure and IP ban. Please use with caution!\n\n{error}"),
+            "WBI_KEY_UNAVAILABLE": translate("ERROR_MESSAGES", "Failed to obtain the signature key, the request cannot be signed. Please check your network connection and try again."),
+            # 等密钥超时时用的标题。问题出在网络侧而不是解析本身，文案要指对方向：
+            # 说成「解析失败」会让用户以为程序坏了
+            "WBI_KEY_UNAVAILABLE_TITLE": translate("ERROR_MESSAGES", "Cannot reach Bilibili")
         }
 
     @staticmethod
@@ -303,6 +320,7 @@ class Translator:
         return {
             "QUEUED": translate("TIP_MESSAGES", "Queued..."),
             "PARSING": translate("TIP_MESSAGES", "Parsing..."),
+            "WBI_KEY_WAITING": translate("TIP_MESSAGES", "Waiting for the signature key..."),
             "PAUSED": translate("TIP_MESSAGES", "Paused"),
             "FFMPEG_QUEUED": translate("TIP_MESSAGES", "Queued for FFmpeg..."),
             "MERGING": translate("TIP_MESSAGES", "Merging..."),
@@ -325,6 +343,16 @@ class Translator:
             "PARSING_LINK": translate("TIP_MESSAGES", "Parsing link {link}, total {total_links} links, progress: {progress}%"),
             "MEDIA_INFO_UPDATED": translate("TIP_MESSAGES", "Media info updated"),
             "ADDED_TO_DOWNLOAD_QUEUE": translate("TIP_MESSAGES", "Added to download queue"),
+            "AUTO_RETRY_PENDING": translate("TIP_MESSAGES", "Retrying in {seconds}s ({current}/{total})"),
+            # 用户指定的视频编码在该稿件里不存在时的回退提示（Issue #465）。
+            #
+            # 分两条是因为两处能用的字数差得很远，措辞压不压缩是两回事：
+            # VIDEO_CODEC_FALLBACK 接在「视频编码」那一行的实际编码之后，同一行
+            # 还要放编码下拉框，多一个词就会把下拉框挤出卡片可视范围（实测），
+            # 因此不再重复紧挨着的实际编码名；开始下载后的提示条独立成句，
+            # 没有上下文，必须把「改用了哪个编码」说出来
+            "VIDEO_CODEC_FALLBACK": translate("TIP_MESSAGES", "This video has no {requested}"),
+            "VIDEO_CODEC_FALLBACK_MESSAGE": translate("TIP_MESSAGES", "This video has no {requested}, using {actual}"),
             "SEARCH_KEYWORD": translate("TIP_MESSAGES", "Search: {keyword}"),
         }
 
@@ -369,19 +397,19 @@ Videos on Bilibili typically store and transmit video and audio streams separate
 
     @staticmethod
     def NAMING_RULE_GUIDE():
-        return translate("NAMING_RULE_GUIDE", """Customize the file name and folder structure using variables.
+        return translate("NAMING_RULE_GUIDE", """Build the folder structure and file name visually: each row is one folder level, and the last row is the file name.
 
-Rules:
-1. Use {variable} to insert dynamic values (e.g., {uploader}, {leaf_title}).
-2. Use "/" to create folders — don't start or end with "/".
-3. The part after the last "/" is the file name; before it is the directory.
-4. Available variables depend on the naming rule type (see list below).
-5. File extensions (.mp4, .m4a, etc.) are added automatically — don’t include them.
+Basics:
+1. A row holds a sequence of fragments. A fragment is either a variable or a piece of plain text.
+2. Click a fragment to change its variable, format, prefix and suffix.
+3. A prefix or suffix disappears together with its variable. This is what lets one rule fit both single-part and multi-part videos: with the prefix "P" and the suffix "-", a multi-part item becomes "P01-Part Title", while a single video is just "Title".
+4. A folder level that ends up empty is skipped automatically, so there is no need to mark levels as optional.
+5. File extensions (.mp4, .m4a, etc.) are added automatically - don't include them.
 
-Examples:
-• {uploader}/{leaf_title} → Saves as "Video Title" inside "Uploader" folder
-• {uploader}_{leaf_title} → Saves directly as "Uploader_Video Title"
-                         
+The preview shows the same rule applied to a single video, a multi-part video and a collection side by side, so you can see which fragments collapse in which case.
+
+The advanced section shows the rule as text. There, a fragment with a prefix or suffix is written as an optional segment, for example <P{p:02d}->. Everything inside is dropped when any variable in it has no value. "<" and ">" are reserved for this purpose and cannot appear in file names anyway.
+
 For advanced usage, see the help documentation.""")
     
     @staticmethod
@@ -395,6 +423,16 @@ This software operates exclusively based on the user's own legitimate account ac
 Under no circumstances shall the developer be liable for any direct, indirect, incidental, or consequential damages resulting from the use of or inability to use this software. By using this software, you acknowledge that you fully understand the above risks and voluntarily accept all associated responsibilities.
 <br><br>
 <b>Continuing to use this software indicates that you have read, understood, and agreed to comply with all the terms stated above.</b></html>""")
+
+    @staticmethod
+    def PRIVACY_POLICY():
+        return translate("PRIVACY_POLICY", """<html>This software is a local desktop application. <b>It does not collect, analyze, or upload your browsing behavior, download history, or any other usage data to the developer or any third party.</b>
+<br><br>
+Login credentials (cookies) obtained through your own Bilibili account are <b>stored only on your local device</b> and are used solely to access content you are authorized to view. Download tasks, application settings, and logs are likewise saved only in local files on your device and are never transmitted elsewhere.
+<br><br>
+When parsing or downloading content, this software communicates directly with Bilibili's own servers using your local credentials; that traffic is subject to Bilibili's own privacy policy, not this one. The only data sent to a third party is the operating system platform and version number, transmitted to the update-check service when this software checks for new versions — <b>no personally identifiable information is included.</b>
+<br><br>
+This software contains no advertisements, trackers, or analytics SDKs of any kind. If this policy changes in a future version, the updated text will be shown here.</html>""")
 
     @staticmethod
     def PRIORITY_GUIDE():

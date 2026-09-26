@@ -50,6 +50,16 @@ video_codec_map = {
     "AV1": 13
 }
 
+# support_formats 中每档声明的 codecs 是 RFC 6381 编码串（如 avc1.640032、hev1.1.6.L120.90），
+# 取小数点前的前缀即可对应到 codecid
+video_codec_prefix_map = {
+    "avc1": 7,
+    "hev1": 12,
+    "hvc1": 12,
+    "dvh1": 12,
+    "av01": 13
+}
+
 video_codec_str_map = {
     7: "AVC",
     12: "HEVC",

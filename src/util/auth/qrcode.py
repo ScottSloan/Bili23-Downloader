@@ -32,9 +32,11 @@ class QRCode(AuthBase, QObject):
 
         self.stop_polling()
 
+        # 信号源已被 C++ 侧析构时 disconnect 抛 RuntimeError；
+        # 断开未连接的信号不会抛异常，因此只捕获这一种
         try:
             self.timer.timeout.disconnect(self.check_scan_status)
-        except Exception:
+        except RuntimeError:
             pass
 
     def on_error(self, message: str):

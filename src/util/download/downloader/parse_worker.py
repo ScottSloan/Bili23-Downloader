@@ -7,7 +7,7 @@ from ...parse.parser.lesson import LESSON_PLAY_DETAIL_URL, build_lesson_media_in
 
 from ...common.enum import DownloadType, MediaType
 from ...common.translator import Translator
-from ...common._json import json_dumps
+from ...common._json import dumps
 
 from ..parse.video_info import VideoInfoParser
 from ..parse.audio_info import AudioInfoParser
@@ -79,7 +79,7 @@ class ParseWorker(QRunnable, ParserBase):
                 self.get_info()
 
                 download_info = self.parse_download_info()
-                download_info_json = json_dumps(download_info)
+                download_info_json = dumps(download_info)
 
                 if self.is_stopped():
                     return
@@ -164,16 +164,15 @@ class ParseWorker(QRunnable, ParserBase):
             self.task_info.Download.media_type = MediaType.M4A
 
     def get_video_info(self):
-        params = {
-            "bvid": self.task_info.Episode.bvid,
-            "cid": self.task_info.Episode.cid,
-            "qn": self.task_info.Download.video_quality_id,
-            "fnver": 0,
-            "fnval": 4048,
-            "fourk": 1,
-        }
+        quality_id = self.task_info.Download.video_quality_id
 
-        url = f"https://api.bilibili.com/x/player/wbi/playurl?{self.enc_wbi(params)}"
+        # 自动选择时先请求最高支持档，才能拿到账号实际可用的最高画质。
+        # 少数稿件的响应只包含这一档，缺失的档位由 VideoInfoParser 在选定后按需补取
+        url = self._build_video_info_url(
+            self.task_info.Episode.bvid,
+            self.task_info.Episode.cid,
+            127 if quality_id == 200 else quality_id
+        )
 
         request = SyncNetWorkRequest(url)
         response = request.run()

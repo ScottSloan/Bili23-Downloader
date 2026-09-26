@@ -1,3 +1,5 @@
+from PySide6.QtCore import QObject, Slot
+
 from ..common.timestamp import get_timestamp, get_timestamp_next_day
 from ..common.data import get_exclimbwuzhi_payload
 from ..common.config import config
@@ -12,9 +14,10 @@ import struct
 import hmac
 import io
 
-class CookieManager(AuthBase):
+class CookieManager(AuthBase, QObject):
     def __init__(self):
-        super().__init__()
+        AuthBase.__init__(self)
+        QObject.__init__(self)
 
     def init_cookie_info(self):
         self.get_buvid()
@@ -23,35 +26,39 @@ class CookieManager(AuthBase):
         self.exclimbwuzhi()
 
     def get_buvid(self):
-        def on_success(response: dict):
-            self.check_response(response)
-
-            config.set(config.buvid3, response["data"]["b_3"])
-            config.set(config.buvid4, response["data"]["b_4"])
-            config.set(config.buvid_expires, get_timestamp_next_day())
-
-            self.get_uuid()
-            self.get_b_lsid()
-            self.get_b_nut()
-            self.get_buvid_fp(config.get(config.user_agent), 31)
-
-            update_cookies()
-
-            self.exclimbwuzhi()
-
-        def on_error(error_message: str):
-            self.show_toast_error("获取 buvid 失败", error_message)
-
         if get_timestamp() < config.get(config.buvid_expires):
             return True
 
         url = "https://api.bilibili.com/x/frontend/finger/spi"
 
         worker = NetworkRequestWorker(url)
-        worker.success.connect(on_success)
-        worker.error.connect(on_error)
+        # 连到本对象的方法而非闭包，Qt 会把回调排队回 GUI 线程；
+        # 闭包没有可识别的接收者线程，连接会退化成直连，就地跑在网络请求的子线程里
+        worker.success.connect(self.on_get_buvid_success)
+        worker.error.connect(self.on_get_buvid_error)
 
         AsyncTask.run(worker)
+
+    @Slot(object)
+    def on_get_buvid_success(self, response: dict):
+        self.check_response(response)
+
+        config.set(config.buvid3, response["data"]["b_3"])
+        config.set(config.buvid4, response["data"]["b_4"])
+        config.set(config.buvid_expires, get_timestamp_next_day())
+
+        self.get_uuid()
+        self.get_b_lsid()
+        self.get_b_nut()
+        self.get_buvid_fp(config.get(config.user_agent), 31)
+
+        update_cookies()
+
+        self.exclimbwuzhi()
+
+    @Slot(str)
+    def on_get_buvid_error(self, error_message: str):
+        self.show_toast_error("获取 buvid 失败", error_message)
 
     def get_buvid_fp(self, key: str, seed: int):
         def rotate_left(x: int, k: int):
@@ -150,17 +157,6 @@ class CookieManager(AuthBase):
         config.set(config.buvid_fp, "{}{}".format(hex(m & (MOD - 1))[2:], hex(m >> 64)[2:]))
 
     def get_bili_ticket(self):
-        def on_success(response: dict):
-            self.check_response(response)
-
-            config.set(config.bili_ticket, response["data"]["ticket"])
-            config.set(config.bili_ticket_expires, self.timedelta_3_days())
-
-            update_cookies()
-
-        def on_error(error_message: str):
-            self.show_toast_error("获取 bili_ticket 失败", error_message)
-
         if get_timestamp() < config.get(config.bili_ticket_expires):
             return
 
@@ -174,10 +170,23 @@ class CookieManager(AuthBase):
         }
 
         worker = NetworkRequestWorker(url, request_type = RequestType.POST, params = params)
-        worker.success.connect(on_success)
-        worker.error.connect(on_error)
+        worker.success.connect(self.on_get_bili_ticket_success)
+        worker.error.connect(self.on_get_bili_ticket_error)
 
         AsyncTask.run(worker)
+
+    @Slot(object)
+    def on_get_bili_ticket_success(self, response: dict):
+        self.check_response(response)
+
+        config.set(config.bili_ticket, response["data"]["ticket"])
+        config.set(config.bili_ticket_expires, self.timedelta_3_days())
+
+        update_cookies()
+
+    @Slot(str)
+    def on_get_bili_ticket_error(self, error_message: str):
+        self.show_toast_error("获取 bili_ticket 失败", error_message)
 
     def get_uuid(self):
         t = get_timestamp() % 100000
@@ -202,15 +211,6 @@ class CookieManager(AuthBase):
         config.set(config.b_nut, get_timestamp())
 
     def exclimbwuzhi(self):
-        def on_success(response: dict):
-            code = response.get("code")
-
-            if code != 0:
-                on_error(code)
-
-        def on_error(error_message: str):
-            self.show_toast_error("请求 ExClimbWuzhi 失败", error_message)
-
         # 用于激活 buvid3
         url = "https://api.bilibili.com/x/internal/gaia-gateway/ExClimbWuzhi"
 
@@ -220,10 +220,21 @@ class CookieManager(AuthBase):
         )
 
         worker = NetworkRequestWorker(url, request_type = RequestType.POST, data = payload, content_type = "application/json")
-        worker.success.connect(on_success)
-        worker.error.connect(on_error)
+        worker.success.connect(self.on_exclimbwuzhi_success)
+        worker.error.connect(self.on_exclimbwuzhi_error)
 
         AsyncTask.run(worker)
+
+    @Slot(object)
+    def on_exclimbwuzhi_success(self, response: dict):
+        code = response.get("code")
+
+        if code != 0:
+            self.on_exclimbwuzhi_error(code)
+
+    @Slot(str)
+    def on_exclimbwuzhi_error(self, error_message: str):
+        self.show_toast_error("请求 ExClimbWuzhi 失败", error_message)
 
     def hmac_sha256(self, key: str, message: str):
         key = key.encode("utf-8")

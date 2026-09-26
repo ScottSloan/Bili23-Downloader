@@ -1,11 +1,12 @@
 from ...common.enum import DownloadStatus, DownloadType, NumberingType, DuplicateDownloadResolution, ToastNotificationCategory
 from ...common.data import reversed_video_quality_map, reversed_audio_quality_map, video_codec_str_map
-from ...common._json import json_dumps, json_loads
+from ...common._json import dumps, loads
 from ...common.timestamp import get_timestamp_ms
 from ...common.translator import Translator
 from ...common.signal_bus import signal_bus
 from ...common.io.file import safe_remove
 from ...common.config import config
+from ...common.runtime import runtime
 
 from ...parse.episode.tree import EpisodeData, Attribute
 from ...format.file_name import FileNameFormatter
@@ -84,11 +85,13 @@ class TaskManager:
         task_info.Download.status = DownloadStatus.QUEUED
         task_info.Download.type = self.__determine_download_type(options)
 
-        task_info.Download.video_quality_id = pick_option(options, "video_quality_id", config.video_quality_id)
-        task_info.Download.audio_quality_id = pick_option(options, "audio_quality_id", config.audio_quality_id)
-        task_info.Download.video_codec_id = pick_option(options, "video_codec_id", config.video_codec_id)
-        task_info.Download.merge_video_audio = pick_option(options, "merge_video_audio", config.merge_video_audio)
-        task_info.Download.keep_original_files = pick_option(options, "keep_original_files", config.keep_original_files)
+        task_info.Download.video_quality_id = pick_option(options, "video_quality_id", runtime.download.video_quality_id)
+        task_info.Download.audio_quality_id = pick_option(options, "audio_quality_id", runtime.download.audio_quality_id)
+        task_info.Download.video_codec_id = pick_option(options, "video_codec_id", runtime.download.video_codec_id)
+        # 这两项与下面 __determine_download_type 里的「下载哪几路流」一样，
+        # 回落源是 config 上的配置项（设置界面与下载选项对话框改的是同一份值）
+        task_info.Download.merge_video_audio = pick_option(options, "merge_video_audio", config.get(config.merge_video_audio))
+        task_info.Download.keep_original_files = pick_option(options, "keep_original_files", config.get(config.keep_original_files))
 
         # EpisodeInfo
         task_info.Episode.from_dict(self.__update_episode_info(episode_info, number))
@@ -104,6 +107,9 @@ class TaskManager:
         # 下载目录在生成 TaskInfo 时就确定，后续即便修改了下载目录的设置，也不会影响已生成的 TaskInfo 中的下载目录，避免下载过程中下载目录发生变化导致的问题
         task_info.File.download_path = config.get(config.download_path)
 
+        # NamingInfo
+        self.__freeze_naming_rule(task_info, options)
+
         self.__update_file_name_info(task_info)
 
         return task_info
@@ -116,8 +122,8 @@ class TaskManager:
     def __determine_download_type(self, options: dict = None):
         # 确定下载类型
         attr_dict = {
-            DownloadType.VIDEO: pick_option(options, "download_video_stream", config.download_video_stream),
-            DownloadType.AUDIO: pick_option(options, "download_audio_stream", config.download_audio_stream),
+            DownloadType.VIDEO: pick_option(options, "download_video_stream", config.get(config.download_video_stream)),
+            DownloadType.AUDIO: pick_option(options, "download_audio_stream", config.get(config.download_audio_stream)),
             DownloadType.DANMAKU: pick_option(options, "download_danmaku", config.get(config.download_danmaku)),
             DownloadType.SUBTITLE: pick_option(options, "download_subtitle", config.get(config.download_subtitle)),
             DownloadType.COVER: pick_option(options, "download_cover", config.get(config.download_cover)),
@@ -159,14 +165,52 @@ class TaskManager:
 
         return data
 
+    def __freeze_naming_rule(self, task_info: TaskInfo, options: dict = None):
+        """
+        固化本条任务要用的命名规则
+
+        规则按**条目自己的类型**查，而不是把界面上选中的那一条无差别套给整批 ——
+        一次解析里混有多种类型时（收藏夹里既有普通视频又有剧集），单个 rule_id
+        会让剧集条目用上收藏夹的规则。这里是真正的收口点，界面只负责让用户
+        看得见、选得到。
+
+        条目的类型由 get_type_id_from_attribute 按属性位算出来，那里媒体形态位
+        优先于来源位：收藏夹里的剧集条目算剧集，不算收藏夹。
+        """
+        formatter = FileNameFormatter()
+
+        type_id = formatter.get_type_id_from_attribute(task_info.Episode.attribute)
+
+        rule_map = pick_option(options, "naming_rule_ids", runtime.naming.target_rule_ids) or {}
+
+        rule_id = rule_map.get(type_id) if type_id is not None else None
+
+        rule = formatter.get_rule_by_id(rule_id) if rule_id else None
+
+        if rule is None:
+            rule = formatter.get_rule_from_config(type_id)
+
+        task_info.Naming.rule_id = rule_id
+        task_info.Naming.rule = rule
+        task_info.Naming.type_id = int(type_id) if type_id is not None else None
+
     def __update_file_name_info(self, task_info: TaskInfo):
         formatter = FileNameFormatter()
         formatter.set_variable_data(task_info)
 
-        if config.target_naming_rule_id is not None:
-            formatter.set_rule(formatter.get_rule_by_id(config.target_naming_rule_id))
+        if task_info.Naming.rule:
+            # 只读建任务时固化下来的规则。下载开始后的二次格式化绝不能再回头
+            # 去看全局状态，否则排队期间用户的新选择会改写这条任务的落盘路径
+            formatter.set_rule(task_info.Naming.rule)
 
-        path = Path(formatter.format())
+        path_str = formatter.format()
+
+        if not path_str:
+            # 以前这里是 Path(None)，抛 TypeError 被 create() 外层吞掉，
+            # 条目静默消失，用户只看到数量对不上
+            raise ValueError("命名规则无法生成文件名：{rule!r}".format(rule = task_info.Naming.rule))
+
+        path = Path(path_str)
 
         task_info.File.name = str(path.name)
         task_info.File.folder = str(path.parent)
@@ -184,8 +228,9 @@ class TaskManager:
 
     def __filter_illegal_characters(self, episode_info: dict):
         title_list = [
-            "leaf_title", 
+            "leaf_title",
             "parent_title",
+            "source_title",
             "section_title",
             "collection_title",
             "series_title",
@@ -205,22 +250,40 @@ class TaskManager:
         match config.get(config.numbering_type):
             case NumberingType.CONTINUOUS:
                 # 全局顺序编号
-                return config.global_starting_number
+                return runtime.naming.global_starting_number
 
             case NumberingType.FROM_SPECIFIED:
                 # 返回 current_starting_number，然后自增
-                _current = config.current_starting_number
-                config.current_starting_number += 1
+                _current = runtime.naming.current_starting_number
+                runtime.naming.current_starting_number += 1
 
                 return _current
 
             case _:
                 return episode_info.get("number", "")
 
+    def __rollback_number(self, token):
+        """
+        任务没建成，把刚取走的编号还回去
+
+        只有没人在我们之后取过号时才能安全回退，否则会和已经分配出去的编号
+        撞上 —— 宁可在序号里留个洞，也不能发出重号。
+        """
+        if token is None:
+            return
+
+        before, after = token
+
+        with self._numbering_lock:
+            if (runtime.naming.global_starting_number, runtime.naming.current_starting_number) == after:
+                runtime.naming.global_starting_number, runtime.naming.current_starting_number = before
+
     def create(self, episode_info_list: List[dict], show_toast: bool = False, options: dict = None):
         task_info_list = []
 
         for episode_info in episode_info_list:
+            numbering_token = None
+
             try:
                 # 判断是否需要重新解析
                 if self.__check_reparse_needed(episode_info, show_toast, options):
@@ -233,10 +296,18 @@ class TaskManager:
                 # 先判断重复下载，再分配编号。
                 # 取号与自增必须在同一把锁内完成，否则并发创建任务时会分配出重复的编号
                 with self._numbering_lock:
+                    before = (runtime.naming.global_starting_number, runtime.naming.current_starting_number)
+
                     number = self.__get_number(episode_info)
 
                     # 全局起始编号自增
-                    config.global_starting_number += 1
+                    runtime.naming.global_starting_number += 1
+
+                    # 任务建失败时据此把号还回去
+                    numbering_token = (
+                        before,
+                        (runtime.naming.global_starting_number, runtime.naming.current_starting_number)
+                    )
 
                 task_info = self.__episode_info_to_task_info(episode_info, number, options)
 
@@ -245,6 +316,8 @@ class TaskManager:
             except Exception as error:
                 title = episode_info.get("title", "")
                 logger.exception("创建下载任务失败：%s", title)
+
+                self.__rollback_number(numbering_token)
 
                 signal_bus.toast.show_long_message.emit(
                     ToastNotificationCategory.ERROR,
@@ -300,7 +373,7 @@ class TaskManager:
 
     def _build_task_info(self, entry) -> TaskInfo:
         task_info = TaskInfo()
-        task_info.from_dict(json_loads(entry[0]))  # 取 data 列
+        task_info.from_dict(loads(entry[0]))  # 取 data 列
 
         return task_info
 
@@ -311,11 +384,11 @@ class TaskManager:
         # 高频进度更新只保留每个任务最新快照，并由单独线程串行写入数据库。
         task_id = task_info.Basic.task_id
 
-        # 取样必须在锁内完成。若把 json_dumps 放在锁外，同一个任务的两个调用方
+        # 取样必须在锁内完成。若把 dumps 放在锁外，同一个任务的两个调用方
         # （GUI 线程的测速定时器、后台线程的 start_worker）可能先后取样却以相反的
         # 顺序写入 _pending_updates，旧快照覆盖新快照，重启后表现为下载进度倒退。
         with self._update_lock:
-            self._pending_updates[task_id] = (task_id, json_dumps(task_info.to_dict()))
+            self._pending_updates[task_id] = (task_id, dumps(task_info.to_dict()))
 
             if self._update_flush_scheduled:
                 return
@@ -453,14 +526,37 @@ class TaskManager:
             except Exception:
                 logger.exception("删除下载任务临时文件失败: %s", task_id)
 
-    def mark_as_completed(self, task_info: TaskInfo):
-        # 由 Merger 在 GUI 线程调用，改为投递到写线程，避免两次同步数据库写入阻塞界面。
-        # 记录在调用方线程上组装，保证写入的是此刻的任务快照。
+    def mark_as_completed(self, task_info: TaskInfo, wait: bool = False, timeout: float = 5.0):
+        """
+        把任务移入已完成表
+
+        记录在调用方线程上组装，保证写入的是此刻的任务快照；写入本身投递到写线程，
+        避免同步的数据库写入阻塞界面。
+
+        wait 为 True 时阻塞到本条写入落盘为止。调用方紧接着要做的事（发出
+        remove_from_downloading_list，进而触发 Downloader 销毁）是整个下载流程中
+        最容易出现原生崩溃的一段，此时若写入还排在队列里，进程一旦没了这条记录就
+        彻底丢失 —— 磁盘上躺着合并好的成品文件，库里却还停在「下载中」，重启后
+        任务显示未完成，重复下载判定也会失效。这条写入只有一次，代价是可接受的。
+        """
         self._discard_pending_updates([task_info.Basic.task_id])
 
         record = self.db_manager.build_record(task_info, completed = True)
 
-        self._update_executor.submit(self._mark_as_completed_storage, record)
+        future = self._update_executor.submit(self._mark_as_completed_storage, record)
+
+        if not wait:
+            return
+
+        try:
+            # 写线程只做数据库操作，其中的 emit 是跨线程排队、不会回等 GUI 线程，
+            # 因此这里不存在互相等待的可能。超时通常意味着前面排着一批大的写入，
+            # 或 SQLite 正在等写锁（busy_timeout 30s），此时放弃等待继续走流程，
+            # 写入仍会在写线程上完成，只是不再有落盘保证
+            future.result(timeout = timeout)
+
+        except Exception:
+            logger.exception("等待标记下载任务为已完成的写入落盘超时: %s", record[0])
 
     def _mark_as_completed_storage(self, record: tuple):
         self._flush_pending_snapshots()

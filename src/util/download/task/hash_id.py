@@ -1,4 +1,4 @@
-from ...common._json import json_dumps_stable
+from ...common._json import dumps_stable
 from ...parse.episode.tree import Attribute
 
 import hashlib
@@ -90,4 +90,4 @@ def calc_hash_id(attribute: int, aid = None, bvid = None, cid = None, ep_id = No
             "task_id": task_id
         }
 
-    return hashlib.md5(json_dumps_stable(metadata).encode("utf-8")).hexdigest()
+    return hashlib.md5(dumps_stable(metadata).encode("utf-8")).hexdigest()

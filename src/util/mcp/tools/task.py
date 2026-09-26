@@ -1,4 +1,5 @@
 from ...common.config import config
+from ...common.runtime import runtime
 
 from ..invoke import call_in_main_thread
 
@@ -207,9 +208,9 @@ def tool_get_login_status(arguments: dict) -> dict:
     def collect():
         return {
             "logged_in": bool(config.get(config.is_login)),
-            "username": config.user_uname,
-            "uid": config.user_uid,
-            "session_expired": bool(config.is_expired),
+            "username": runtime.auth.uname,
+            "uid": runtime.auth.uid,
+            "session_expired": bool(runtime.auth.is_expired),
         }
 
     info = call_in_main_thread(collect, timeout = 5.0)

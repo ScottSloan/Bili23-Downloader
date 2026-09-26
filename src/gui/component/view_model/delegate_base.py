@@ -354,12 +354,17 @@ class CoverQueryDelegateBase(ContextMenuDelegateBase):
 
         painter.restore()
 
-    def _queryCover(self, cover_id: str, cover_url: str, index: QModelIndex):
+    def _queryCover(self, cover_id: str, cover_url: str, index: QModelIndex, device_pixel_ratio: float):
         # 由委托发起查询封面请求
-        return index.model().queryRowCover(cover_id, cover_url, index.row())
+        return index.model().queryRowCover(cover_id, cover_url, index.row(), device_pixel_ratio)
     
     def _drawCover(self, painter: QPainter, rect: QRect, option: QStyleOptionViewItem, index: QModelIndex, cover_id: str, cover_url: str):
+        # 设备像素比取自 painter 的绘制目标：它才是本次光栅化的真实落点，
+        # 比取控件自身的 DPR 更准确，也和 _drawCachedIcon 的做法一致
+        device = painter.device()
+        device_pixel_ratio = device.devicePixelRatioF() if device else 1.0
+
         # 先绘制占位图
-        pixmap, isPlaceholder = self._queryCover(cover_id, cover_url, index)
+        pixmap, isPlaceholder = self._queryCover(cover_id, cover_url, index, device_pixel_ratio)
 
         self._drawPixmap(painter, rect, option, pixmap, isPlaceholder)

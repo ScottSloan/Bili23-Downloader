@@ -1,10 +1,10 @@
 [project]
 name = "bili23-downloader"
-version = "2.15.0"
+version = "2.20.0"
 description = "开源、免费、跨平台的 B 站视频下载工具，支持多线程加速、音视频分离、弹幕元数据获取、自定义命名与分类等功能。Open Source, Free, Cross-Platform Bilibili Video Downloader."
 readme = "README.md"
 license = "GPL-3.0"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 dependencies = [
     "PySide6==6.10.3",
     "PySide6-Fluent-Widgets==1.11.3",
@@ -18,3 +18,105 @@ authors = [
     {name = "ScottSloan", email = "world1019@sina.com"},
 ]
 encoding = "utf-8"
+
+[project.optional-dependencies]
+# 开发与 CI 所需，不进入发行包
+dev = [
+    "pytest==9.1.1",
+    "ruff==0.16.7",
+]
+
+# --------------------------------------------------------------------------
+# pytest
+# --------------------------------------------------------------------------
+
+[tool.pytest.ini_options]
+testpaths = ["test"]
+
+# 除默认的 test_*.py 外额外收集 smoke_*.py：
+# src/main.py 的注释按名字引用了 test/smoke_startup.py，改名会让那条注释再次失真
+python_files = ["test_*.py", "smoke_*.py"]
+
+# -r a 列出所有非通过用例的原因；--strict-markers 防止标记拼写错误被静默忽略
+addopts = "-ra --strict-markers --strict-config"
+
+# 把警告当错误，PySide6 的弃用警告不该悄悄积累。
+# 已知的第三方噪声在下方逐条豁免，新增豁免需要写明理由
+filterwarnings = [
+    "error",
+    # qfluentwidgets 1.11.3 在导入期使用了已弃用的 sipPyTypeDict
+    "ignore::DeprecationWarning:qfluentwidgets.*",
+]
+
+# --------------------------------------------------------------------------
+# ruff
+# --------------------------------------------------------------------------
+
+[tool.ruff]
+target-version = "py311"    # 与 requires-python 保持一致
+line-length = 160           # 项目现有风格偏长行，取一个不会制造噪声的上限
+
+exclude = [
+    "src/res/resources_rc.py",  # pyside6-rcc 生成
+    "src/util/misc/dm_pb2.py",  # protoc 生成
+]
+
+[tool.ruff.lint]
+# 门禁规则集：这些是**无歧义的破坏性错误**（语法错误、引用未定义名、
+# 永远为真的比较、遗留的断点调用等），当前全项目为 0，CI 对其零容忍。
+#
+# 有意不包含风格类规则。项目现有代码大量使用 `foo(a = 1)` 这类带空格的关键字实参，
+# 与 PEP 8 不符但全局一致，属于作者的既定风格，不是债务，不该由 lint 推翻。
+#
+# 阶段 1 已清零并纳入门禁：F401 / F811 / F841 / F522 / F541。
+#
+# 有意不启用 BLE001（裸 except Exception，28 处）：本项目是带工作线程的 GUI 程序，
+# 线程边界上「捕获任何异常并转成错误信号交给界面」正是正确写法 —— ruff 认不出
+# signal.emit()、写入结果对象这类上报方式，于是恰好在惯用且正确的模式上报警。
+# 逐处核实过：真正无声吞掉异常的只有两处（封面 URL 查询、urlparse），已分别
+# 补上日志与收窄异常类型；其余均有日志、重新抛出或上报到界面。
+# 若强行纳入门禁，代价是给 25 处正确代码加 noqa，并对日后每个新工作线程制造摩擦。
+#
+# 有意不启用 I001（导入排序）：本项目的导入顺序是一套贯彻始终的约定 ——
+# 第三方 → 本项目 → 标准库（标准库在最后，98 个文件如此，仅 5 个相反），
+# 且各分组之间用空行按子系统隔开。isort 无论怎么配都会把这套语义分组打散、
+# 按字母序重排，并把多行导入压成超长单行。那是 200 个文件的装饰性 diff，
+# 结果比现状更难读，因此不纳入。
+select = [
+    "E9",       # 语法错误、缩进错误
+    "F821",     # 引用未定义的名字
+    "F632",     # 用 is 比较字面量
+    "F502",     # % 格式化参数错误
+    "F501", "F506", "F507", "F509",
+    "F601", "F602",     # 对元组等使用 in 比较
+    "F621", "F622",     # 星号解包错误
+    "F701", "F702", "F704", "F706", "F707",     # break/continue/return/yield 位置错误
+    "PLE",      # pylint 的 Error 类，均为确定性错误
+    "B002",     # 已不存在的 ++ 运算
+    "B012",     # finally 中的 break/return 会吞掉异常
+    "B018",     # 无副作用的表达式语句（写了等于没写）
+    "T100",     # 遗留的 breakpoint() / pdb.set_trace()
+    "S102",     # exec
+    "S307",     # eval
+    "ASYNC",    # async 函数中的阻塞调用
+
+    # 以下为阶段 1 清理完成后纳入，均已清零
+    "F401",     # 未使用的导入（__init__.py 的再导出见下方豁免）
+    "F811",     # 重复定义 / 重复导入
+    "F841",     # 未使用的局部变量
+    "F522",     # format 传入了模板里不存在的具名参数（会被静默丢弃）
+    "F541",     # 没有占位符的 f-string
+
+    # 阶段 4 清理完成后纳入
+    "S110",     # try/except/pass —— 无声吞掉异常
+    "RUF012",   # 可变的类属性默认值（有意为之的类级共享状态需标注 ClassVar）
+]
+
+[tool.ruff.lint.per-file-ignores]
+# SLF001：测试里需要访问 EpisodeData._active_parsers 等私有成员来断言并发状态
+# RUF012：把夹具数据声明为类属性是测试的惯用写法，不涉及共享可变状态的风险
+"test/*" = ["SLF001", "RUF012"]
+
+# 包的 __init__.py 汇总子模块符号供外部导入，这些"未使用"的导入正是包的公开 API。
+# 不在此豁免的话，F401 会有 71 处误报，把真正的未用导入淹没掉
+"src/**/__init__.py" = ["F401"]

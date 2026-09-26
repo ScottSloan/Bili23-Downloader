@@ -1,13 +1,12 @@
-from PySide6.QtCore import QObject
+from PySide6.QtCore import QLocale, QObject, Signal, Slot
 
-from ..common.enum import ToastNotificationCategory
+from ..common.enum import Language, ToastNotificationCategory
 from ..common.signal_bus import signal_bus
 from ..common.translator import Translator
-from ..network.request import NetworkRequestWorker, RequestType
 from ..thread.async_ import AsyncTask
 from ..common.config import config
 
-import sys
+from typing import Optional, Tuple
 import logging
 
 logger = logging.getLogger(__name__)
@@ -15,95 +14,165 @@ logger = logging.getLogger(__name__)
 VERHUB_BASE_URL = "https://verhub.hanloth.cn/api/v1"
 VERHUB_PROJECT_KEY = "scottsloan-bili23-downloader"
 
-# 客户端来源声明，仅供服务端统计使用，不影响接口返回内容
-PLATFORM_HEADER = "x-verhub-platform"
-PLATFORM_VERSION_HEADER = "x-verhub-platform-version"
+LOCALE_ZH_CN = "zh-CN"
+LOCALE_ZH_TW = "zh-TW"
+LOCALE_EN_US = "en-US"
 
-# 系统版本明细的长度上限，与服务端一致，超出直接截断
-MAX_PLATFORM_VERSION_LENGTH = 32
+TRADITIONAL_CHINESE_SUBTAGS = {"tw", "hk", "mo", "hant"}
 
-# 老 Windows 的 NT 内核号 → 市场版本号，Win10 / Win11 均为 10.0，另按构建号区分
-WINDOWS_NT_TO_MARKET = {
-    (6, 1): "7",
-    (6, 2): "8",
-    (6, 3): "8.1"
-}
+def get_ui_language() -> str:
+    """
+    界面实际显示的语言
 
-def get_platform():
-    # 只区分服务端契约中的取值，认不出时返回 others
-    if sys.platform.startswith("win"):
-        return "windows"
+    设为跟随系统时，main.py 按 `QLocale()` 装载翻译文件，这里同样取系统语言，
+    更新说明才会与界面是同一种语言
+    """
+    language = config.get(config.language)
 
-    if sys.platform == "darwin":
-        return "macos"
+    # Language 的枚举值是 QLocale（见 enum.py），要取 .name() 才是字符串；
+    # 直接返回 .value 会在非"跟随系统"时把 QLocale 对象传下去，
+    # 下面 to_verhub_locale() 一调 .strip() 就炸
+    return QLocale.system().name() if language == Language.AUTO else language.value.name()
 
-    if sys.platform.startswith("linux"):
-        return "linux"
+def to_verhub_locale(language: Optional[str]) -> Optional[str]:
+    """
+    把界面语言换成提交给服务端的语言标签
 
-    return "others"
+    接受 config.json 里的字面量（`zh_CN`、`Auto`）、Qt 的 `QLocale.name()`（`zh_HK`）
+    与浏览器的 BCP-47 标签（`zh-Hant-TW`、`en`）
 
-def get_platform_version():
-    # 版本探测纯属锦上添花，取不到就返回空串，交给服务端从 User-Agent 兜底推断
+    `Auto` 与空值返回 None，即不提语言偏好，服务端给默认内容
+    """
+    tag = (language or "").strip().replace("_", "-").lower()
+
+    if not tag or tag == "auto":
+        return None
+
+    subtags = tag.split("-")
+
+    if subtags[0] == "zh":
+        return LOCALE_ZH_TW if TRADITIONAL_CHINESE_SUBTAGS.intersection(subtags[1:]) else LOCALE_ZH_CN
+
+    return LOCALE_EN_US
+
+def _create_client():
+    """
+    按当前的代理设置建一个客户端
+
+    每次检查都新建：代理可以在运行中改，检查更新又是低频操作，缓存客户端
+    反而要处理「代理改了连接池没跟上」。连接走应用自己的代理与证书配置，
+    不用全局那个 client —— 那上面带着 B 站的 Cookie，没必要让它经过别的服务
+    """
+    import httpx
+
+    from verhub_sdk import VerhubClient
+
+    from ..network.request import get_proxy_mounts, get_ssl_context, get_timeout
+
+    http_client = httpx.Client(
+        timeout = get_timeout(),
+        mounts = get_proxy_mounts(),
+        follow_redirects = True,
+        verify = get_ssl_context()
+    )
+
+    client = VerhubClient(
+        VERHUB_BASE_URL,
+        VERHUB_PROJECT_KEY,
+        timeout = get_timeout(),
+        http_client = http_client,
+        # 保留 SDK 自己的 User-Agent，后面追加应用标识，服务端统计两边都看得到
+        app_identifier = f"Bili23-Downloader/{config.app_version}",
+        # 只用检查更新，不做事件采集。显式关掉本地持久化，保证 SDK 不在用户设备上写任何东西
+        analytics = {"persistence": "none"}
+    )
+
+    return client, http_client
+
+def parse_response(response: dict) -> dict:
+    """把服务端的响应摊成界面要用的那几个字段"""
+    latest = response["latest_version"]
+
+    return {
+        "should_update": bool(response["should_update"]),
+        "required": bool(response["required"]),
+        "version": latest["version"],
+        "content": latest.get("content") or "",
+        "update_url": latest.get("download_url") or "",
+    }
+
+def check_for_update(include_preview: bool = False, locale: Optional[str] = None) -> Tuple[Optional[dict], Optional[str]]:
+    """
+    阻塞地问一次服务端。返回 (结果, 出错说明)，两者必有其一为 None
+
+    `locale` 是界面语言（写法见 `to_verhub_locale`），决定更新说明用哪个语言。
+    桌面侧在 Qt 线程里调，WebUI 后端扔进后台线程池调
+    """
+    client = http_client = None
+
     try:
-        if sys.platform.startswith("win"):
-            info = sys.getwindowsversion()
+        # 建客户端也放进 try：SDK 缺失（运行时模板没带上）时只算这次没问成，不能让后台线程崩掉
+        client, http_client = _create_client()
 
-            # Win11 仍上报内核 10.0，只有构建号 >= 22000 能区分出来
-            if info.major == 10 and info.minor == 0:
-                return "11" if info.build >= 22000 else "10"
+        response = client.public.check_update(
+            current_version = config.app_version,
+            current_comparable_version = config.app_comparable_version,
+            include_preview = include_preview,
+            locale = to_verhub_locale(locale)
+        )
 
-            return WINDOWS_NT_TO_MARKET.get((info.major, info.minor), "")
+        return parse_response(response), None
 
-        if sys.platform == "darwin":
-            import platform
+    except Exception as e:
+        logger.warning("检查更新失败：%s", e)
 
-            return platform.mac_ver()[0]
+        return None, str(e) or Translator.ERROR_MESSAGES("UNKNOWN_ERROR")
 
-        if sys.platform.startswith("linux"):
-            import platform
+    finally:
+        if client:
+            client.close()
 
-            data = platform.freedesktop_os_release()
+        if http_client:
+            http_client.close()
 
-            return f"{(data.get('ID') or '').strip().lower()} {(data.get('VERSION_ID') or '').strip()}"
+class UpdateCheckWorker(QObject):
+    # manual 随请求一起带上，而不是让 Updater 用一个共享实例属性记«这次是不是手动查»——
+    # 自动检查（启动时）与手动检查（设置页点击）可能同时在飞，谁的响应先回来，
+    # 共享属性就会被后到的那次请求覆盖，导致跳过版本被绕过或"已是最新"提示丢失
+    success = Signal(dict, bool)
+    error = Signal(str)
+    finished = Signal()
 
-    except Exception:
-        return ""
+    def __init__(self, include_preview: bool, locale: str, manual: bool):
+        super().__init__()
 
-    return ""
+        self.include_preview = include_preview
+        self.locale = locale
+        self.manual = manual
 
-def sanitize_platform_version(value: str):
-    # 请求头只能承载 ASCII，非可打印字符一律当作空白处理，折叠连续空白后截断，避免编码请求头时抛出异常
-    ascii_only = "".join(char if " " < char <= "~" else " " for char in value)
+    @Slot()
+    def run(self):
+        try:
+            info, error_message = check_for_update(self.include_preview, self.locale)
 
-    return " ".join(ascii_only.split())[:MAX_PLATFORM_VERSION_LENGTH].rstrip()
+            if error_message:
+                self.error.emit(error_message)
+            else:
+                self.success.emit(info, self.manual)
+
+        finally:
+            self.finished.emit()
 
 class Updater(QObject):
     def __init__(self, parent = None):
         super().__init__(parent)
 
-        self.manual = False
-
-    def check(self, response: dict):
-        # 服务端返回非 2xx 时响应体形如 {"statusCode": 400, "message": "..."}，此处统一按错误处理
-        if error_message := self.get_error_message(response):
-            self.on_error(error_message)
-            return
-
-        latest_version = response["latest_version"]
-
-        version = latest_version["version"]
-
-        info = {
-            "should_update": response["should_update"],
-            "required": response["required"],
-            "version": version,
-            "content": latest_version["content"],
-            "update_url": latest_version["download_url"]
-        }
+    def check(self, info: dict, manual: bool):
+        version = info["version"]
 
         if info.get("should_update"):
 
-            if config.get(config.skip_version) == version and not self.manual:
+            if config.get(config.skip_version) == version and not manual:
                 return
 
             signal_bus.update.show_dialog.emit(info)
@@ -111,7 +180,7 @@ class Updater(QObject):
             logger.info("检测到新版本：%s，当前版本：%s", version, config.app_version)
 
         else:
-            if self.manual:
+            if manual:
                 signal_bus.toast.show.emit(ToastNotificationCategory.SUCCESS, "", Translator.TIP_MESSAGES("ALREADY_LATEST_VERSION"))
 
     def on_error(self, error_message: str):
@@ -124,47 +193,8 @@ class Updater(QObject):
         )
 
     def request_update(self, manual: bool):
-        self.manual = manual
-
-        worker = NetworkRequestWorker(
-            url = f"{VERHUB_BASE_URL}/public/{VERHUB_PROJECT_KEY}/versions/check-update",
-            request_type = RequestType.POST,
-            json_data = {
-                "current_version": config.app_version,
-                "current_comparable_version": config.app_comparable_version,
-                "include_preview": config.get(config.include_prerelease)
-            },
-            raise_for_status = False,
-            content_type = "application/json",
-            extra_headers = self.get_extra_headers()
-        )
+        worker = UpdateCheckWorker(config.get(config.include_prerelease), get_ui_language(), manual)
         worker.success.connect(self.check)
         worker.error.connect(self.on_error)
 
         AsyncTask.run(worker)
-
-    @staticmethod
-    def get_extra_headers():
-        headers = {
-            "User-Agent": f"Bili23-Downloader/{config.app_version}",
-            PLATFORM_HEADER: get_platform()
-        }
-
-        # 取不到系统版本明细时不发这个头
-        if platform_version := sanitize_platform_version(get_platform_version()):
-            headers[PLATFORM_VERSION_HEADER] = platform_version
-
-        return headers
-
-    @staticmethod
-    def get_error_message(response: dict):
-        if isinstance(response, dict) and "should_update" in response:
-            return None
-
-        message = response.get("message") if isinstance(response, dict) else None
-
-        # 校验失败时 message 为字符串数组
-        if isinstance(message, list):
-            return "；".join(str(item) for item in message)
-
-        return str(message) if message else Translator.ERROR_MESSAGES("UNKNOWN_ERROR")

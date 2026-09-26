@@ -1,54 +1,36 @@
-from ...common.translator import Translator
-
 from .tree import TreeItem, Attribute
-from .base import EpisodeParserBase
+from .list_base import ListEpisodeParserBase
 
-class PopularEpisodeParser(EpisodeParserBase):
-    def __init__(self, info_data: dict, category_name: str):
-        super().__init__()
+class PopularEpisodeParser(ListEpisodeParserBase):
+    NODE_TYPE_KEY = "WEEKLY"
 
-        self.info_data = info_data["data"]
-        self.category_name = category_name
+    def get_episode_list(self):
+        return self.info_data["list"]
 
-    def parse(self):
+    def get_node_title(self):
+        return self.info_data["config"]["label"]
+
+    def episode_data_parser(self):
         self._init_episode_data()
 
-        node = self.list_parser()
-
-        self.update_episode_list(node)
-
-    def list_parser(self):
-        weekly_title = self.info_data["config"]["label"]
-        node_data = {
-            "number": Translator.EPISODE_TYPE("WEEKLY"),
-            "title": weekly_title
+    def build_item_data(self, episode_data: dict):
+        return {
+            "aid": episode_data["aid"],
+            "bvid": episode_data["bvid"],
+            "cid": episode_data["cid"],
+            "cover": episode_data["pic"],
+            "duration": self.get_episode_duration(episode_data),
+            "number": self.episode_count,
+            "pubtime": episode_data["pubdate"],
+            "episode_id": self.episode_id,
+            "title": episode_data["title"],
+            "related_titles": {
+                # 本期名称。每周必看的条目从不二次解析，不会有人来盖它 ——
+                # 它只是「来源列表名称」而不是结构上级，所以归 source_title
+                "source_title": self.get_node_title()
+            },
+            "url": self.build_video_url(episode_data["bvid"])
         }
 
-        root_node = TreeItem(node_data)
-        root_node.set_attribute(Attribute.TREE_NODE_BIT)
-
-        for episode in self.info_data["list"]:
-            self.episode_count += 1
-
-            item_data = {
-                "aid": episode["aid"],
-                "bvid": episode["bvid"],
-                "cid": episode["cid"],
-                "cover": episode["pic"],
-                "duration": self.get_episode_duration(episode),
-                "number": self.episode_count,
-                "pubtime": episode["pubdate"],
-                "episode_id": self.episode_id,
-                "title": episode["title"],
-                "related_titles": {
-                    "parent_title": weekly_title
-                },
-                "url": "https://www.bilibili.com/video/{bvid}".format(bvid = episode["bvid"])
-            }
-
-            item = TreeItem(item_data)
-            item.set_attribute(Attribute.VIDEO_BIT | Attribute.WEEKLY_BIT)
-
-            root_node.add_child(item)
-
-        return root_node
+    def set_episode_attribute(self, episode_data: dict, item: TreeItem):
+        item.set_attribute(Attribute.VIDEO_BIT | Attribute.WEEKLY_BIT)

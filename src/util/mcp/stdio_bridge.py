@@ -9,10 +9,17 @@ stdio 传输的服务器：它们的配置里只有 command / args，填 url 会
 本模块**只用标准库**，且不得导入任何 Qt 或 config 相关的东西 ——
 它由 main.py 在最早期调用，此时整个 GUI 栈都还没有加载，
 这也正是 stdio 模式的意义：不启动界面，只做一层转发。
+唯一的例外是下面的 util.common._json：它本身只包着 orjson 与标准库 json，
+拖不动任何 GUI 依赖，而"JSON 怎么写、怎么读"全项目只该有一份约定。
+
+注意导入写法：包根是 src（util 才是顶层包），common 是 util 下的子包，
+这里写 `from ..common._json import` 而不是 `from common._json import`——
+后者在本进程里根本不存在，会让 --mcp-stdio 在导入期就崩掉。
 """
+from ..common._json import dumps_bytes, dumps_std, loads, JSONDecodeError
+
 import argparse
 import base64
-import json
 import os
 import socket
 import subprocess
@@ -123,14 +130,14 @@ def load_config():
 
     try:
         with open(path, "r", encoding = "utf-8") as f:
-            data = json.load(f)
+            data = loads(f.read())
 
     except FileNotFoundError:
         log(f"未找到配置文件：{path}")
 
         return None, None
 
-    except (OSError, json.JSONDecodeError) as e:
+    except (OSError, JSONDecodeError) as e:
         log(f"读取配置文件失败：{e}")
 
         return None, None
@@ -272,7 +279,7 @@ class Bridge:
 
     def forward(self, message):
         """把一条消息转发给 HTTP 端点，返回要写回 stdout 的响应（无则返回 None）"""
-        data = json.dumps(message).encode("utf-8")
+        data = dumps_bytes(message)
 
         request = urllib.request.Request(self.url, data = data, method = "POST")
 
@@ -283,7 +290,7 @@ class Bridge:
             with urllib.request.urlopen(request, timeout = 300) as response:
                 raw = response.read()
 
-                return json.loads(raw) if raw else None
+                return loads(raw) if raw else None
 
         except urllib.error.HTTPError as e:
             raw = e.read()
@@ -291,9 +298,9 @@ class Bridge:
             # 服务端的错误响应本身就是合法的 JSON-RPC error，直接透传，
             # 客户端才能看到真正的原因（版本不支持、头不匹配等）
             try:
-                return json.loads(raw) if raw else None
+                return loads(raw) if raw else None
 
-            except json.JSONDecodeError:
+            except JSONDecodeError:
                 return self._error(message, -32603, f"HTTP {e.code}: {raw[:200].decode('utf-8', 'replace')}")
 
         except urllib.error.URLError as e:
@@ -329,9 +336,9 @@ class Bridge:
                 continue
 
             try:
-                message = json.loads(line)
+                message = loads(line)
 
-            except json.JSONDecodeError:
+            except JSONDecodeError:
                 log("收到非法 JSON，已忽略")
 
                 continue
@@ -363,7 +370,7 @@ class Bridge:
         # 代价只是消息体积变大，本地管道传输可以忽略。
         #
         # stdio 传输要求一行一条消息，消息内不得含换行
-        sys.stdout.write(json.dumps(payload, ensure_ascii = True) + "\n")
+        sys.stdout.write(dumps_std(payload, ensure_ascii = True) + "\n")
         sys.stdout.flush()
 
 def hard_exit(code: int):
@@ -384,7 +391,7 @@ def hard_exit(code: int):
         try:
             stream.flush()
 
-        except Exception:
+        except Exception:    # noqa: S110  退出路径上的尽力而为，失败没有补救手段
             pass
 
     os._exit(code)

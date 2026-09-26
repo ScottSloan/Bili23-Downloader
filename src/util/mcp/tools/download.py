@@ -3,6 +3,7 @@ from ...common.enum import (
     DuplicateDownloadResolution, DanmakuType, SubtitleType, CoverType, MetadataType, VideoContainer
 )
 from ...common.config import config
+from ...common.runtime import runtime
 from ...download.task.options import pick_option
 from ...common.signal_bus import signal_bus
 
@@ -289,7 +290,7 @@ def _split_duplicates(found: list, found_ids: list):
 
     return fresh, fresh_ids, duplicates
 
-# 创建任务同样要互斥：中途会改 config.current_starting_number 这个全局编号，
+# 创建任务同样要互斥：中途会改 runtime.naming.current_starting_number 这个全局编号，
 # 并且依赖"解析列表此刻的内容"，两个请求交叠会算错序号、取错条目
 _create_lock = Lock()
 
@@ -406,7 +407,7 @@ def _create_download_locked(arguments: dict) -> dict:
                     item.downloaded = True
 
         # 起始编号跟着界面的下载入口走，否则文件名里的序号会从上次的位置续下去
-        config.current_starting_number = 1
+        runtime.naming.current_starting_number = 1
 
         signal_bus.download.create_task.emit(found, True, options)
 

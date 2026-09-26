@@ -1,8 +1,10 @@
 from ..common.config import config
+from ..common.runtime import runtime
+from ..common._json import loads, dumps_bytes, JSONDecodeError
 
 from .protocol import (
     Dispatcher, make_error, HEADER_MISMATCH, PARSE_ERROR, INVALID_REQUEST,
-    MODERN_VERSION, SUPPORTED_VERSIONS, is_modern_request, unsupported_version_error,
+    SUPPORTED_VERSIONS, is_modern_request, unsupported_version_error,
 )
 
 from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
@@ -11,7 +13,6 @@ import binascii
 import base64
 import secrets
 import logging
-import json
 
 logger = logging.getLogger(__name__)
 
@@ -130,9 +131,9 @@ class MCPRequestHandler(BaseHTTPRequestHandler):
             return
 
         try:
-            message = json.loads(body)
+            message = loads(body)
 
-        except (json.JSONDecodeError, UnicodeDecodeError):
+        except (JSONDecodeError, UnicodeDecodeError):
             self._send_json(400, make_error(None, PARSE_ERROR, "Invalid JSON"))
 
             return
@@ -285,7 +286,7 @@ class MCPRequestHandler(BaseHTTPRequestHandler):
         return None
 
     def _send_json(self, status: int, payload: dict):
-        data = json.dumps(payload, ensure_ascii = False).encode("utf-8")
+        data = dumps_bytes(payload)
 
         self.send_response(status)
         self.send_header("Content-Type", "application/json")
@@ -401,8 +402,8 @@ class MCPServerManager:
             # 端口被占用不能拖垮程序启动，只记录并让设置界面显示出来
             logger.error("MCP 服务器启动失败，端口 %d：%s", port, e)
 
-            config.mcp_running = False
-            config.mcp_last_error = str(e)
+            runtime.mcp.running = False
+            runtime.mcp.last_error = str(e)
 
             return False
 
@@ -413,8 +414,8 @@ class MCPServerManager:
         self.thread = Thread(target = self._serve, name = "mcp-server", daemon = True)
         self.thread.start()
 
-        config.mcp_running = True
-        config.mcp_last_error = ""
+        runtime.mcp.running = True
+        runtime.mcp.last_error = ""
 
         logger.info("MCP 服务器已启动，监听 127.0.0.1:%d", port)
 
@@ -466,7 +467,7 @@ class MCPServerManager:
         self.stop_event = None
         self.server = None
 
-        config.mcp_running = False
+        runtime.mcp.running = False
 
     def restart(self):
         self.stop()

@@ -39,7 +39,6 @@ class DanmakuXML:
                         date = entry.get("date", 0),
                         uhash = entry.get("uhash", 0),
                         dmid = entry.get("dmid", 0),
-                        weight = entry.get("weight", 1),
                         text = self._filter_invalid_characters(entry.get("text", ""))
                     ),
                     "    "

@@ -3,12 +3,12 @@ from PySide6.QtCore import Qt
 from contextlib import contextmanager
 from threading import RLock
 from enum import IntFlag
-from typing import List
+from typing import ClassVar, List
 import uuid
 
 class EpisodeData:
     # 全局剧集数据表
-    table: dict[str, dict] = {}
+    table: ClassVar[dict[str, dict]] = {}
 
     # 解析界面与分P对话框可以同时存活，两边的解析各自跑在自己的线程里，都会往 table 写。
     # 键是 uuid，条目之间不会冲突，真正危险的是 clear_cache()：它会把另一边刚写进去的

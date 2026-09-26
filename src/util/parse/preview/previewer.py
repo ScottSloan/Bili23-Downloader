@@ -3,7 +3,7 @@ from PySide6.QtCore import QObject, Signal, Slot
 from ...common.enum import MediaType, ToastNotificationCategory
 from ...common.signal_bus import signal_bus
 from ...common.translator import Translator
-from ...common.config import config
+from ...common.runtime import runtime
 
 from ...network.request import NetworkRequestWorker, RequestType
 from ...thread.async_ import AsyncTask
@@ -159,16 +159,12 @@ class Previewer(ParserBase, QObject):
             self.on_init_error(str(e))
 
     def get_video_info(self, episode_data: dict, token: int):
-        params = {
-            "bvid": episode_data["bvid"],
-            "cid": episode_data["cid"],
-            "qn": 80,
-            "fnver": 0,
-            "fnval": 4048,
-            "fourk": 1,
-        }
+        # 请求最高支持档，才能拿到账号实际可用的最高画质。
+        # 少数稿件的响应只包含这一档，缺失的档位由 VideoInfoParser 在用户选中时按需补取
+        PreviewerInfo.bvid = episode_data["bvid"]
+        PreviewerInfo.cid = episode_data["cid"]
 
-        url = f"https://api.bilibili.com/x/player/wbi/playurl?{self.enc_wbi(params)}"
+        url = self._build_video_info_url(PreviewerInfo.bvid, PreviewerInfo.cid, 127)
 
         self._request_media_info(url, "video", token)
 
@@ -315,6 +311,8 @@ class Previewer(ParserBase, QObject):
         PreviewerInfo.attribute = 0
         PreviewerInfo.episode_title = ""
         PreviewerInfo.from_fallback = False
+        PreviewerInfo.bvid = ""
+        PreviewerInfo.cid = 0
         PreviewerInfo.cache = {
             "video": defaultdict(lambda: defaultdict(dict)),
             "audio": defaultdict(dict)
@@ -327,4 +325,4 @@ class Previewer(ParserBase, QObject):
         PreviewerInfo.error_occurred = True
         PreviewerInfo.error_message = ""
 
-        config.target_naming_rule_id = None
+        runtime.naming.target_rule_ids = {}

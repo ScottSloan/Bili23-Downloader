@@ -10,6 +10,10 @@ class HistoryDatabase(Database):
         super().__init__()
 
         self.path = Path(appdata_path) / "Bili23 Downloader" / "history.db"
+        # 与 TaskDatabase、CoverDatabase 保持一致：自己确保目录存在。
+        # history_manager 在模块导入期就建库，此前该目录是靠 main.py 创建
+        # 日志目录时顺带建出来的，等于隐式依赖了启动顺序
+        self.path.parent.mkdir(parents = True, exist_ok = True)
 
         self.max_length = 100
 
@@ -68,7 +72,17 @@ class HistoryDatabase(Database):
 
 class HistoryManager:
     def __init__(self):
-        self.db_manager = HistoryDatabase()
+        # 惰性建库：HistoryDatabase 的构造会连库、建表并切到 WAL 模式，
+        # 而本模块被解析界面在模块级引入，这笔开销原本落在启动路径上。
+        # 解析历史是用户可能整轮都不会打开的功能，推迟到首次真正使用时再付
+        self._db_manager = None
+
+    @property
+    def db_manager(self):
+        if self._db_manager is None:
+            self._db_manager = HistoryDatabase()
+
+        return self._db_manager
 
     def add_history(self, title: str, url: str, type: str):
         self.db_manager.add(title, url, type)

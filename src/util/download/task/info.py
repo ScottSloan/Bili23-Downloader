@@ -60,6 +60,7 @@ class EpisodeInfo(InfoBase):
 
     leaf_title: str = ""
     parent_title: str = ""
+    source_title: str = ""
     section_title: str = ""
     collection_title: str = ""
     series_title: str = ""
@@ -175,12 +176,35 @@ class OptionsInfo(InfoBase):
     keep_original_files_type: int = None
 
 @dataclass
+class NamingInfo(InfoBase):
+    """
+    命名规则快照
+
+    runtime.naming.target_rule_ids 是进程级全局，每次解析都会被重置，而下载
+    开始之后 _update_media_info() 还要拿画质信息再格式化一次文件名 —— 那时
+    读到的可能已经是别的任务选的规则了：任务 A 选了规则 X 进队列排队，用户
+    接着解析视频 B 并选了规则 Y，A 真正开始下载时文件名会按 Y 重算。
+    与 OptionsInfo 同理，在生成 TaskInfo 时就固化。
+
+    存的是**模板字符串本身**而不是 rule_id：用户完全可能在任务排队期间编辑
+    或删掉这条规则，只存 id 等于没固化。rule_id 仅作溯源信息保留。
+
+    全部默认为 None，表示这条记录没有固化过命名规则：旧版本创建的任务反序列化
+    后就是这个状态，读取时回落到按 type_id 查该类型的默认规则，行为与升级前
+    一致。**不要改成具体的默认值**。
+    """
+    rule_id: str = None
+    rule: str = None
+    type_id: int = None
+
+@dataclass
 class TaskInfo:
     Basic: BasicInfo = field(default_factory = BasicInfo)
     File: FileInfo = field(default_factory = FileInfo)
     Episode: EpisodeInfo = field(default_factory = EpisodeInfo)
     Download: DownloadInfo = field(default_factory = DownloadInfo)
     Options: OptionsInfo = field(default_factory = OptionsInfo)
+    Naming: NamingInfo = field(default_factory = NamingInfo)
 
     def to_dict(self):
         return asdict(self)
@@ -192,9 +216,12 @@ class TaskInfo:
         download_data = data.get("Download", {})
         # 旧版本的记录里没有 Options，取到空 dict，各项保持 None 即回落全局设置
         options_data = data.get("Options", {})
+        # Naming 同理：旧任务没有固化过命名规则，回落到按 type_id 查默认规则
+        naming_data = data.get("Naming", {})
 
         self.Basic.from_dict(basic_data)
         self.File.from_dict(file_data)
         self.Episode.from_dict(episode_data)
         self.Download.from_dict(download_data)
         self.Options.from_dict(options_data)
+        self.Naming.from_dict(naming_data)

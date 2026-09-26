@@ -269,7 +269,9 @@ class UIData(QObject):
                 return Translator.TIP_MESSAGES("COMPLETED")
             
             case DownloadStatus.FAILED:
-                return Translator.ERROR_MESSAGES("DOWNLOAD_FAILED")
+                # 等待自动重试期间状态仍是 FAILED，倒计时文案挂在 status_label 上，
+                # 这样并发调度器（只认 QUEUED）完全不受影响，不必新增一个状态枚举
+                return task_info.Download.status_label or Translator.ERROR_MESSAGES("DOWNLOAD_FAILED")
             
             case DownloadStatus.FFMPEG_FAILED:
                 return Translator.ERROR_MESSAGES("FFMPEG_PROCESSING_FAILED")

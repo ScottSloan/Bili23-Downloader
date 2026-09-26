@@ -1,10 +1,55 @@
-from ...common.enum import MediaType, DownloadType
+from ...common.enum import MediaType, DownloadType, ToastNotificationCategory
+from ...common.data import reversed_video_codec_map
+from ...common.translator import Translator
+from ...common.signal_bus import signal_bus
 from ...common.config import config
+
+from ...parse.episode.tree import Attribute
+from ...parse.quality import parse_declared_quality_map, fetch_video_streams, merge_video_streams
 
 from ..parse.query_worker import QueryWorker
 from ..task.info import TaskInfo
 
 from collections import defaultdict
+from threading import Lock
+
+# 已提示过的「所选编码 -> 实际编码」组合，本次运行内不再重复提示。
+#
+# 一批任务里整个合集都缺同一个编码是常态（老番、刚投稿还没转码的稿件），
+# 逐条弹提示会在屏幕上叠满警告条。回退成哪种编码这件事本身与具体是哪个稿件
+# 无关，用户看过一次就已经知道这次的编码回落了，何况下载选项对话框每次都会
+# 重新提示一遍。进程重启后重新计，不落盘。
+#
+# 多个任务会并发走到这里（下载线程池），「查一次、加一次」得整体上锁，
+# 否则两条提示会同时通过检查
+_warned_codec_fallback = set()
+_warned_codec_fallback_lock = Lock()
+
+def warn_codec_fallback(requested_codec_id: int, actual_codec_id: int):
+    """
+    用户指定的编码取不到、实际下载的是另一种编码时提示一次
+
+    两种回退都会被这里捕获：所选编码根本不在该档位的编码列表里（get_video_info），
+    以及按需补取到该档位的流之后发现里面没有这个编码（supplement_video_info）。
+    """
+    # 20 即「自动（按优先级）」，按优先级挑编码本来就是它的行为，不算回退
+    if requested_codec_id in (None, 20) or actual_codec_id == requested_codec_id:
+        return
+
+    with _warned_codec_fallback_lock:
+        if (requested_codec_id, actual_codec_id) in _warned_codec_fallback:
+            return
+
+        _warned_codec_fallback.add((requested_codec_id, actual_codec_id))
+
+    signal_bus.toast.show.emit(
+        ToastNotificationCategory.WARNING,
+        "",
+        Translator.TIP_MESSAGES("VIDEO_CODEC_FALLBACK_MESSAGE").format(
+            requested = Translator.VIDEO_CODEC(reversed_video_codec_map.get(requested_codec_id, "")),
+            actual = Translator.VIDEO_CODEC(reversed_video_codec_map.get(actual_codec_id, ""))
+        )
+    )
 
 class VideoInfoParser:
     def __init__(self, info_data: dict, task_info: TaskInfo):
@@ -12,18 +57,25 @@ class VideoInfoParser:
         self.task_info = task_info
 
         self.video_info_map = defaultdict(lambda: defaultdict(dict))
+        # support_formats 声明的「画质 -> 编码」，缺失时为 None，表示只能以 dash.video 为准
+        self.declared_quality_map = None
+        self.available_quality_list = []
 
     def _get_dash_available_quality_list(self):
-        available_quality_list = []
-
         for entry in self.info_data["dash"]["video"].copy():
-            quality_id = entry["id"]
-            codec_id = entry["codecid"]
+            self.video_info_map[entry["id"]][entry["codecid"]] = entry.copy()
 
-            self.video_info_map[quality_id][codec_id] = entry.copy()
-            available_quality_list.append(quality_id)
+        # 画质列表以 support_formats 的声明为准，而不是响应里实际给到的流：
+        # 少数稿件一次请求拿不全所有档位，据 dash.video 建列表会漏掉可选画质，原因见 quality.py。
+        # 只对普通视频这么做：番剧、课程同样带 support_formats，但它们的流要走各自的接口取，
+        # 缺档时按普通视频的 playurl 去补只会拿到对不上的结果
+        if self.task_info.Episode.attribute & Attribute.VIDEO_BIT:
+            self.declared_quality_map = parse_declared_quality_map(self.info_data)
 
-        return available_quality_list
+        if self.declared_quality_map:
+            return list(self.declared_quality_map.keys())
+
+        return sorted(self.video_info_map.keys(), reverse = True)
     
     def _get_mp4_available_quality_list(self):
         accept_quality_list = self.info_data["accept_quality"].copy()
@@ -52,12 +104,24 @@ class VideoInfoParser:
                 return []
 
     def get_available_codec_list(self, video_quality_id: int):
-        return list(self.video_info_map[video_quality_id].keys())
+        codec_list = list(self.video_info_map[video_quality_id].keys())
+
+        if codec_list:
+            return codec_list
+
+        # 该档位的流尚未取到，用 support_formats 声明的编码顶上，实测两者始终一致
+        return (self.declared_quality_map or {}).get(video_quality_id, [])
 
     def parse_info(self):
-        video_info = self.get_video_info(self.task_info.Download.video_quality_id, self.task_info.Download.video_codec_id)
+        # 所选编码在稿件里不存在时 get_video_info() 会静默回落到别的编码，
+        # 下面这一行马上就会被实际编码覆盖掉，先留一份用于比对（Issue #465）
+        requested_codec_id = self.task_info.Download.video_codec_id
+
+        video_info = self.get_video_info(self.task_info.Download.video_quality_id, requested_codec_id)
 
         if video_info:
+            warn_codec_fallback(requested_codec_id, video_info["codecid"])
+
             self.task_info.Download.video_quality_id = video_info["id"]
             self.task_info.Download.video_codec_id = video_info["codecid"]
             self.task_info.File.video_file_ext = self.get_video_file_ext()
@@ -77,33 +141,64 @@ class VideoInfoParser:
         return []
 
     def get_video_info(self, video_quality_id: int, video_codec_id: int):
-        available_quality_list = self.get_available_quality_list()
+        self.available_quality_list = self.get_available_quality_list()
+
+        if not self.available_quality_list:
+            return {}
 
         if video_quality_id == 200:
             video_quality_id = self.get_video_quality_id_by_priority()
 
-        elif video_quality_id not in available_quality_list:
-            video_quality_id = available_quality_list[0]
-        
+        elif video_quality_id not in self.available_quality_list:
+            video_quality_id = self.available_quality_list[0]
+
         available_codec_list = self.get_available_codec_list(video_quality_id)
 
-        if video_codec_id == 20:
+        if not available_codec_list:
+            return {}
+
+        if video_codec_id == 20 or video_codec_id not in available_codec_list:
             video_codec_id = self.get_video_codec_id_by_priority(video_quality_id)
 
-        elif video_codec_id not in available_codec_list:
-            video_codec_id = available_codec_list[0]
+        video_info = self.video_info_map[video_quality_id][video_codec_id]
 
-        return self.video_info_map[video_quality_id][video_codec_id]
+        if not video_info:
+            # 选定档位的流不在首次响应里，按需补取一次
+            video_info = self.supplement_video_info(video_quality_id, video_codec_id)
+
+        return video_info
+
+    def supplement_video_info(self, video_quality_id: int, video_codec_id: int):
+        stream_list = fetch_video_streams(self.task_info.Episode.bvid, self.task_info.Episode.cid, video_quality_id)
+
+        merge_video_streams(self.video_info_map, stream_list)
+
+        if video_info := self.video_info_map[video_quality_id][video_codec_id]:
+            return video_info
+
+        # 补到的流里没有选定的编码，退回这一档位可用的第一个
+        for entry in self.video_info_map[video_quality_id].values():
+            if entry:
+                return entry
+
+        return {}
 
     def get_video_quality_id_by_priority(self):
+        # 以声明的档位为准，缺流的档位同样参与优先级匹配，否则会错选成更高的画质
         for quality_id in config.get(config.video_quality_priority):
-            if quality_id in self.video_info_map.keys():
+            if quality_id in self.available_quality_list:
                 return quality_id
-            
+
+        return self.available_quality_list[0]
+
     def get_video_codec_id_by_priority(self, video_quality_id: int):
+        available_codec_list = self.get_available_codec_list(video_quality_id)
+
         for codec_id in config.get(config.video_codec_priority):
-            if codec_id in self.video_info_map[video_quality_id].keys():
+            if codec_id in available_codec_list:
                 return codec_id
+
+        return available_codec_list[0]
 
     def check_is_full_video(self, media_info: dict):
         match self.task_info.Download.media_type:

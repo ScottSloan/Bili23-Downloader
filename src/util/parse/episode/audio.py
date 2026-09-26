@@ -41,7 +41,9 @@ class AudioEpisodeParser(EpisodeParserBase):
                 "pubtime": episode["passtime"],
                 "title": episode["title"],
                 "related_titles": {
-                    "parent_title": menu_title
+                    # 歌单名称。音频条目从不二次解析，不会有人来盖它 ——
+                    # 它只是「来源列表名称」而不是结构上级，所以归 source_title
+                    "source_title": menu_title
                 },
                 "url": "https://www.bilibili.com/audio/au{sid}".format(sid = episode["statistic"]["sid"]),
                 "uploader": episode["author"],

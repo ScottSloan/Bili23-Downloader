@@ -14,7 +14,8 @@ def remove_from_queue(thread: QThread, worker: WorkerBase):
     try:
         thread_queue.remove((thread, worker))
 
-    except Exception:
+    except ValueError:
+        # 已被移除过，重复调用是允许的
         pass
 
     finally:

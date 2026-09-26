@@ -12,7 +12,7 @@ from util.parse.parser.video import VideoParser
 from util.parse.episode.tree import TreeItem, Attribute, EpisodeData
 from util.common.signal_bus import signal_bus
 from util.thread.async_ import AsyncTask
-from util.common.config import config
+from util.common.runtime import runtime
 from util.format.units import Units
 
 class ParseWorker(QObject):
@@ -138,7 +138,7 @@ class MultiPartListsDialog(DialogBase):
         if not checked_episodes_list:
             return
 
-        config.current_starting_number = 1
+        runtime.naming.current_starting_number = 1
 
         # 添加到下载队列
         signal_bus.download.create_task.emit(checked_episodes_list, True, None)

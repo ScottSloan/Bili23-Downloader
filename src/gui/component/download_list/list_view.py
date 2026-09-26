@@ -168,7 +168,9 @@ class DownloadListView(ListView):
             self._auto_manage_pending = False
             self._model.manageConcurrentDownloads()
 
-        QTimer.singleShot(0, run_auto_manage)
+        # self 作为 context：闭包没有可识别的接收者，控件先一步销毁时
+        # 不带 context 的回调仍会执行，然后打在已经析构的 model 上
+        QTimer.singleShot(0, self, run_auto_manage)
 
     def onTogglePauseResumeTask(self, index: QModelIndex, task_info: TaskInfo):
         # 与 model 交互以暂停下载任务

@@ -8,7 +8,7 @@ from .widget.label import TipCaptionLabel
 
 from util.common.enum import ToastNotificationCategory
 from util.common.signal_bus  import signal_bus
-from util.common.config import config
+from util.common.runtime import runtime
 from util.auth.user import user_manager
 
 import logging
@@ -30,7 +30,7 @@ class ProfileCard(FlyoutViewBase):
         # 头像请求失败时 user_avatar_pixmap 会保持默认的 None，而 AvatarWidget 的构造函数是
         # singledispatchmethod，None 匹配不到任何重载，会落到只接受 parent 的基础实现上并抛
         # TypeError。异常在 Qt 槽里被吞掉，表现为点击头像毫无反应，因此这里必须兜底
-        avatar_pixmap = config.user_avatar_pixmap
+        avatar_pixmap = runtime.auth.avatar_pixmap
 
         if avatar_pixmap is None or avatar_pixmap.isNull():
             avatar_pixmap = QPixmap(":/bili23/image/noface.jpg")
@@ -38,9 +38,9 @@ class ProfileCard(FlyoutViewBase):
         self.avatar = AvatarWidget(image = avatar_pixmap, parent = self)
         self.avatar.setRadius(24)
 
-        self.uname_lab = BodyLabel(config.user_uname, parent = self)
+        self.uname_lab = BodyLabel(runtime.auth.uname, parent = self)
 
-        self.uid_lab = TipCaptionLabel(f"UID: {config.user_uid}", parent = self)
+        self.uid_lab = TipCaptionLabel(f"UID: {runtime.auth.uid}", parent = self)
 
         self.logout_btn = HyperlinkButton(parent = self)
         self.logout_btn.setText(self.tr("Logout"))
@@ -81,6 +81,6 @@ class ProfileCard(FlyoutViewBase):
     def on_open_profile(self):
         import webbrowser
 
-        url = "https://space.bilibili.com/{uid}".format(uid = config.user_uid)
+        url = "https://space.bilibili.com/{uid}".format(uid = runtime.auth.uid)
 
         webbrowser.open(url)

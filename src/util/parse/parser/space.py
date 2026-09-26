@@ -6,9 +6,10 @@ from .base import ParserBase
 
 from urllib.parse import urlparse
 import math
+from typing import ClassVar
 
 class Data:
-    uname_map: dict[int, str] = {}
+    uname_map: ClassVar[dict[int, str]] = {}
 
 class SpaceParser(ParserBase):
     def __init__(self):
@@ -69,8 +70,12 @@ class SpaceParser(ParserBase):
         self.info_data = response
 
     def get_uname(self):
+        # 命中缓存后必须直接返回。此前缺少 return，缓存形同虚设：
+        # 个人空间每翻一页都会重复请求一次用户名接口
         if self.mid in Data.uname_map:
             self.update_space_owner_info()
+
+            return
 
         url = f"https://api.bilibili.com/x/web-interface/card?mid={self.mid}"
 

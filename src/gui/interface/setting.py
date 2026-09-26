@@ -11,7 +11,7 @@ from gui.component.setting import (
     PrioritySettingCard, DanmakuSettingCard, SubtitleSettingCard, CoverSettingCard, ChapterSettingCard, MetadataSettingCard, CDNSettingCard, ProxySettingCard,
     FFmpegSettingCard, NumberSettingCard, DownloadFormatCard, DownloadPathSettingCard, ParsingSettingCard, WindowBehaviorSettingCard,
     DownloadHandlingSettingCard, DownloadConcurrencySettingCard, PersonalizationCard, CheckUpdateSettingCard, OtherAdvancedSettingCard,
-    MCPSettingCard
+    MCPSettingCard, MediaOptionsCard
 )
 
 from util.common.data import video_quality_map, audio_quality_map, video_codec_map
@@ -20,6 +20,7 @@ from util.common.style_sheet import StyleSheet
 from util.common.signal_bus import signal_bus
 from util.common.translator import Translator
 from util.common.config import config
+from util.common.runtime import runtime
 
 import logging
 
@@ -60,6 +61,7 @@ class SettingInterface(ScrollArea):
 
         self.download_path_card = DownloadPathSettingCard(self.main_window, save = True, parent = self)
         self.download_currency_card = DownloadConcurrencySettingCard(self)
+        self.media_options_card = MediaOptionsCard(self.main_window, parent = self)
         self.priority_setting_card = PrioritySettingCard(self.main_window, parent = self)
         self.download_format_card = DownloadFormatCard(self)
 
@@ -106,6 +108,7 @@ class SettingInterface(ScrollArea):
         # Download
         self.download_group.addSettingCard(self.download_path_card)
         self.download_group.addSettingCard(self.download_currency_card)
+        self.download_group.addSettingCard(self.media_options_card)
         self.download_group.addSettingCard(self.priority_setting_card)
         self.download_group.addSettingCard(self.download_format_card)
 
@@ -167,6 +170,11 @@ class SettingInterface(ScrollArea):
 
         # Download
         self.download_currency_card.download_speed_limit_btn.clicked.connect(self.on_custom_speed_limit_settings)
+
+        # 设置界面没有「确定」按钮，媒体选项改一下立即落盘；
+        # 同一个卡片在下载选项对话框里则要等到点确定才写回
+        self.media_options_card.changed.connect(self.media_options_card.save)
+
         self.priority_setting_card.video_quality_btn.clicked.connect(self.on_adjust_video_quality_priority)
         self.priority_setting_card.audio_quality_btn.clicked.connect(self.on_adjust_audio_quality_priority)
         self.priority_setting_card.video_codec_btn.clicked.connect(self.on_adjust_video_codec_priority)
@@ -269,8 +277,24 @@ class SettingInterface(ScrollArea):
     def on_custom_naming_rule(self):
         from ..dialog.setting.rule_list import RuleListDialog
 
-        dialog = RuleListDialog(self.main_window)
-        dialog.exec()
+        window = getattr(self, "_naming_rule_window", None)
+
+        if window is not None:
+            # FluentWidget 的 Qt parent 是 None，不复用的话每点一次就会开出
+            # 一个新窗口，而且调用方不持引用它还会被 GC 掉
+            window.show()
+            window.raise_()
+            window.activateWindow()
+
+            return
+
+        window = RuleListDialog(self.main_window)
+        window.enable_delete_on_close()
+        window.destroyed.connect(lambda: setattr(self, "_naming_rule_window", None))
+
+        self._naming_rule_window = window
+
+        window.show()
 
     def on_custom_cdn_server_list(self):
         from ..dialog.setting.cdn_server import CDNServerDialog
@@ -279,7 +303,7 @@ class SettingInterface(ScrollArea):
         dialog.exec()
 
     def on_change_ffmpeg_source(self, index: int):
-        if index == 0 and not config.bundle_ffmpeg_exist:
+        if index == 0 and not runtime.ffmpeg.bundle_exist:
             dialog = MessageBox(
                 self.tr("Bundled FFmpeg not found"),
                 self.tr("The bundled FFmpeg executable is missing. Please switch to 'System PATH' or specify a custom path."),
@@ -298,7 +322,7 @@ class SettingInterface(ScrollArea):
             self,
             self.tr("Select FFmpeg executable"),
             config.get(config.custom_ffmpeg_path),
-            self.tr("FFmpeg executable ({executable})").format(executable = config.ffmpeg_executable)
+            self.tr("FFmpeg executable ({executable})").format(executable = runtime.ffmpeg.executable)
         )
         
         if not file_path:
@@ -324,17 +348,17 @@ class SettingInterface(ScrollArea):
             restart_mcp_server()
 
         except Exception:
-            # 端口占用等失败已记入 config.mcp_last_error，由状态行呈现给用户，
+            # 端口占用等失败已记入 runtime.mcp.last_error，由状态行呈现给用户，
             # 不能让它把设置界面一起带崩
             logger.exception("重启 MCP 服务器失败")
 
         self.mcp_card.update_status()
 
-        if config.mcp_last_error:
+        if runtime.mcp.last_error:
             signal_bus.toast.show.emit(
                 ToastNotificationCategory.ERROR,
                 self.tr("MCP server failed to start"),
-                config.mcp_last_error
+                runtime.mcp.last_error
             )
 
     def on_view_logs(self):

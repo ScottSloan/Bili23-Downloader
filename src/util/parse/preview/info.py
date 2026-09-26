@@ -1,7 +1,8 @@
 from ...common.enum import MediaType
+from typing import ClassVar
 
 class PreviewerInfo:
-    info_data = {}
+    info_data: ClassVar[dict] = {}
     media_type = MediaType.UNKNOWN
     attribute = 0
 
@@ -11,6 +12,10 @@ class PreviewerInfo:
     episode_number = ""
     from_fallback = False
 
+    # 当前预览的稿件标识，按需补取缺失画质的视频流时要用来重新请求 playurl
+    bvid = ""
+    cid = 0
+
     # 预览请求的代号，每次切换剧集时递增。异步请求带着发起时的代号回来，
     # 与当前值不一致说明用户已经切到了别的剧集，结果必须丢弃，
     # 否则先发后到的旧响应会把上一个剧集的媒体信息写进当前预览
@@ -19,11 +24,11 @@ class PreviewerInfo:
     error_occurred = True
     error_message = ""
 
-    video_quality_choice_data = {}
-    audio_quality_choice_data = {}
-    video_codec_choice_data = {}
+    video_quality_choice_data: ClassVar[dict] = {}
+    audio_quality_choice_data: ClassVar[dict] = {}
+    video_codec_choice_data: ClassVar[dict] = {}
 
-    cache = {
+    cache: ClassVar[dict] = {
         "video": {},
         "audio": {}
     }

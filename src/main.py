@@ -29,8 +29,6 @@ if sys.platform == "win32":
     def _msw_messagebox(title: str, content: str):
         ctypes.windll.user32.MessageBoxW(0, content, title, 0 | 0x10)
 
-        from PySide6 import __version__
-
     def _get_messages(lang_tag):
         match lang_tag:
             case "zh_CN" | "zh_SG":
@@ -193,7 +191,10 @@ def _on_normal_exit():
 
     _shutting_down = True
 
-    write_crash_log("进程正常退出")
+    # 走到这里说明解释器自行退出了，没有经过 shutdown_process()（例如启动阶段
+    # init_single_instance() 里的 sys.exit(0)）。两条路径分开记，便于区分
+    # "关掉主窗口后正常结束"与"根本没跑起来"
+    write_crash_log("进程正常退出（解释器退出）")
 
 # 正常退出会留下这条记录。崩溃日志末尾若没有它，说明进程是被强行终止的，
 # 据此可以区分"硬崩溃"与"意外走到了正常退出流程"
@@ -213,25 +214,54 @@ def shutdown_process(exit_code: int = 0):
     shiboken 的 invalidate() 拦不住这一步（实测 isValid 仍为 True），
     唯一可靠的办法是不给解释器清理的机会 —— 落盘工作在调用本函数之前均已完成，
     剩下的线程交给操作系统随进程一起回收。
+
+    注意 Windows 上"交给操作系统回收"必须用 TerminateProcess 而不能用 os._exit()，
+    原因见函数末尾的注释。
     """
     global _shutting_down
 
-    # 本函数走 os._exit()，atexit 不会执行，因此在这里置位
+    # 本函数直接终止进程（Windows 走 TerminateProcess），atexit 不会执行，因此在这里置位
     _shutting_down = True
 
-    write_crash_log("进程正常退出")
+    # 带上退出码：app.exec() 的返回值是判断"事件循环为什么结束"的第一手线索，
+    # 非 0 说明有人显式 QCoreApplication::exit(code)，0 多为窗口关闭或 quit()
+    write_crash_log(f"进程正常退出，退出码 {exit_code}")
 
     try:
         logging.shutdown()
 
-    except Exception:
+    except Exception:    # noqa: S110  日志系统本身正在关闭，无处可记录
         pass
 
     for stream in (sys.stdout, sys.stderr):
         try:
             stream.flush()
 
-        except Exception:
+        except Exception:    # noqa: S110  紧接着就是进程结束，刷不出去也无从补救
+            pass
+
+    # Windows 上最后这一步不能用 os._exit()。它是 CRT 的 _exit()，底层是 ExitProcess()，
+    # 而 ExitProcess() 会逐个 DLL 执行 DLL_PROCESS_DETACH 和 TLS 析构 —— 上面那些
+    # 停不下来的线程此刻全都还活着（阻塞在注册表通知上的主题监听、卡在超时前的
+    # 网络请求里的 worker），Qt 的静态数据先被拆掉、线程后到，于是退出阶段先冒出一片
+    # "QThreadStorage: entry N destroyed before end of thread"，紧接着就是
+    # 0xC0000005 访问违例 —— 一次本该干净的退出，在崩溃日志里留下了一份崩溃现场。
+    #
+    # TerminateProcess() 不做任何清理，直接终止进程（连同所有线程）：
+    # 这才是"不给解释器清理的机会"在 Windows 上真正对应的动作。
+    # 需要落盘的内容在上面都已经写完并 flush
+    if sys.platform == "win32":
+        try:
+            import ctypes
+            from ctypes import wintypes
+
+            kernel32 = ctypes.WinDLL("kernel32", use_last_error = True)
+            kernel32.GetCurrentProcess.restype = wintypes.HANDLE
+            kernel32.TerminateProcess.argtypes = [wintypes.HANDLE, wintypes.UINT]
+
+            kernel32.TerminateProcess(kernel32.GetCurrentProcess(), exit_code)
+
+        except Exception:    # noqa: S110  日志系统已经关闭，失败时静默退回末尾的 os._exit()
             pass
 
     os._exit(exit_code)
@@ -309,7 +339,10 @@ from PySide6.QtGui import QFont
 from qfluentwidgets import FluentTranslator
 
 from util.common.config import config
-import res.resources_rc
+
+# 副作用导入：执行时把 :/bili23/... 注册进 Qt 资源系统，
+# 图标、样式表与翻译文件均由此加载，没有任何符号需要被引用
+import res.resources_rc     # noqa: F401
 
 INSTANCE_LOCK_NAME = "instance.lock"
 INSTANCE_LOCK_TIMEOUT_MS = 10_000
@@ -470,6 +503,17 @@ class Application(QApplication):
     def setup_app(self):
         self.setAttribute(Qt.ApplicationAttribute.AA_DontCreateNativeWidgetSiblings)
 
+        # 托盘程序必须关掉它。主窗口被 hide() 进托盘后，Qt 便认为已经没有可见的顶层窗口，
+        # 此时任何一个"无父窗口的顶层窗口"被关闭，都会让 QGuiApplicationPrivate::
+        # lastWindowClosed() 判定成立，直接结束事件循环 —— 外部表现就是程序在后台自己退出，
+        # 而且走的是正常退出流程，日志里只留下"进程正常退出"。
+        #
+        # 带 parent 的对话框因为带上了 transient parent，本就不参与该判定（项目里的对话框
+        # 全是这种），但只要哪个基类把 parent 写错成 None，这条路就会被重新打开
+        # （曾经如此：gui/component/dialog.py 的 TopNavigationDialogBase）。
+        # 退出统一由 MainWindow.closeEvent 显式声明，不再交给 Qt 代劳
+        self.setQuitOnLastWindowClosed(False)
+
         # Qt 默认从 argv[0] 推导应用名与 X11 的 WM_CLASS。打包后入口是 _pystand_static.int，
         # 桌面环境据此无法把窗口与 bili23-downloader.desktop 关联，任务栏里的图标和名称都不对。
         # desktop_file_name 同时决定 Wayland 下的 app_id。
@@ -497,6 +541,24 @@ class Application(QApplication):
 
         self.installTranslator(self.fluent_translator)
         self.installTranslator(self.bili23_translator)
+
+        # 事件循环结束前的最后两条线索。走到 lastWindowClosed 说明有顶层窗口被关闭，
+        # 而在这一刻，触发关闭的那一帧还留在栈上 —— 把全部线程的栈 dump 出来，
+        # 就能直接看到是谁关的，不必再从"进程正常退出"这行标记往回倒推。
+        # 与 qt_message_handler 记录线程安全警告是同一个思路。
+        #
+        # 关闭 setQuitOnLastWindowClosed 不影响本信号的发出，只是不再由它自动退出
+        self.lastWindowClosed.connect(self.on_last_window_closed)
+        self.aboutToQuit.connect(self.on_about_to_quit)
+
+    def on_last_window_closed(self):
+        write_crash_log("最后一个窗口已关闭", dump_traceback = True)
+
+    def on_about_to_quit(self):
+        # 这里在 QCoreApplication::exec() 返回之前触发，栈上只有 _main 一帧，
+        # dump 没有诊断价值，只留一条标记：它之后若没有"进程正常退出"，
+        # 说明进程死在事件循环收尾与 shutdown_process() 之间
+        write_crash_log("事件循环即将退出")
 
     def bootstrap_startup_tasks(self):
         # 网络栈预热与登录态初始化都放到首屏之后，避免阻塞窗口展示
