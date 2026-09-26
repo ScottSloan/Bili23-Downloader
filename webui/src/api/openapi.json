@@ -3881,7 +3881,7 @@
     },
     "/api/update": {
       "get": {
-        "description": "问一次版本服务有没有新版本\n\n**不做缓存也不自动轮询**：调用点只有标题栏那个按钮和进入页面时的一次，\n加一层缓存反而会让「点了没反应」变得难查。\n\n`include_preview` 不传就用共用配置里的 `include_prerelease`，与桌面版一致",
+        "description": "问一次版本服务有没有新版本\n\n**不做缓存也不自动轮询**：调用点只有标题栏那个按钮和进入页面时的一次，\n加一层缓存反而会让「点了没反应」变得难查。\n\n`include_preview` 不传就用共用配置里的 `include_prerelease`，与桌面版一致。\n\n`locale` 是前端当前显示的语言，更新说明按它取译文。**由前端传而不是读配置**：\n配置为跟随系统时，WebUI 跟的是浏览器语言，后端所在机器的系统语言与它无关。\n不传才回落到配置里的语言",
         "operationId": "check_update_api_update_get",
         "parameters": [
           {
@@ -3891,6 +3891,15 @@
             "schema": {
               "title": "Include Preview",
               "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
+            "name": "locale",
+            "required": false,
+            "schema": {
+              "title": "Locale",
+              "type": "string"
             }
           }
         ],

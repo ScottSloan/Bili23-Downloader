@@ -133,6 +133,9 @@ jobs:
 
           cp -r src/* Bili23-Downloader/script/
 
+          test -d Bili23-Downloader/site-packages || { echo "runtime template has no site-packages directory"; exit 1; }
+          pip install --no-deps --target Bili23-Downloader/site-packages verhub-sdk==0.2.10
+
           python -m compileall Bili23-Downloader
 
       - name: Install packaging tools
@@ -468,6 +471,9 @@ jobs:
           mkdir -p Bili23-Downloader/script
 
           cp -r src/* Bili23-Downloader/script/
+          
+          test -d Bili23-Downloader/site-packages || { echo "runtime template has no site-packages directory"; exit 1; }
+          pip install --no-deps --target Bili23-Downloader/site-packages verhub-sdk==0.2.10
 
           python -m compileall Bili23-Downloader
 

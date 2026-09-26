@@ -8,6 +8,7 @@
 
 import { defineStore } from 'pinia'
 import { settings as settingsApi } from '@/api'
+import { currentLocale } from '@/i18n'
 
 interface UpdateState {
   /** 问过了没有。没问过时标题栏什么都不显示 */
@@ -52,7 +53,7 @@ export const useUpdateStore = defineStore('update', {
       this.checking = true
 
       try {
-        const result = await settingsApi.checkUpdate()
+        const result = await settingsApi.checkUpdate(currentLocale())
 
         this.checked = true
         this.error = result.checked ? '' : result.error

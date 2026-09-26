@@ -312,21 +312,24 @@ async def update_settings(payload: UpdateSettingsRequest):
 # ---------------- 检查更新 ----------------
 
 @router.get("/update", response_model = UpdateInfo)
-async def check_update(include_preview: bool = Query(default = None)):
+async def check_update(include_preview: bool = Query(default = None), locale: str = Query(default = None)):
     """
     问一次版本服务有没有新版本
 
     **不做缓存也不自动轮询**：调用点只有标题栏那个按钮和进入页面时的一次，
     加一层缓存反而会让「点了没反应」变得难查。
 
-    `include_preview` 不传就用共用配置里的 `include_prerelease`，与桌面版一致
+    `include_preview` 不传就用共用配置里的 `include_prerelease`，与桌面版一致。
     """
     from util.common.config import config
     from util.misc.update_check import check_for_update
 
     preview = config.get(config.include_prerelease) if include_preview is None else include_preview
 
-    info, error = await asyncio.wrap_future(background.submit(check_for_update, preview))
+    if locale is None:
+        locale = config.get(config.language).value
+
+    info, error = await asyncio.wrap_future(background.submit(check_for_update, preview, locale))
 
     if error:
         # 检查不到不是错误状态 —— 网络不通是常态，用 200 带一个 checked=false，

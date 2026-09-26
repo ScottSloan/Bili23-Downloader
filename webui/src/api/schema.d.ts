@@ -3326,6 +3326,7 @@ export interface operations {
         parameters: {
             query?: {
                 include_preview?: boolean;
+                locale?: string;
             };
             header?: never;
             path?: never;

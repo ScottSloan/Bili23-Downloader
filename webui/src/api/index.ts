@@ -224,8 +224,11 @@ export const tasks = {
 // ---------------- 配置与系统 ----------------
 
 export const settings = {
-  /** 问版本服务有没有新版本。checked 为 false 表示这次没问成，看 error */
-  checkUpdate: () => get<Ok<'/api/update', 'get'>>('/update'),
+  /**
+   * 问版本服务有没有新版本。checked 为 false 表示这次没问成，看 error。
+   * `locale` 是界面当前的语言，更新说明按它取译文
+   */
+  checkUpdate: (locale: string) => get<Ok<'/api/update', 'get'>>('/update', { locale }),
 
   read: () => get<SettingsPayload>('/settings'),
 
