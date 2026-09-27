@@ -1,0 +1,49 @@
+#include <windows.h>
+
+// 版本号由 CMake 从应用侧的唯一来源（util/common/config.py 里 APPConfig 的
+// app_version）注入，生成到构建目录。别在这里写死 —— 手工维护的那阵子，
+// 它跟 manifest 里的版本各错各的。
+#include "version.h"
+
+IDI_ICON1 ICON DISCARDABLE "appicon.ico"
+
+// 同样由 CMake 从 main.manifest.in 生成，好把版本号一并填进去
+1 RT_MANIFEST "main.manifest"
+
+#ifdef PYSTAND_EMBED_APP
+APP_ZIP RCDATA "app.zip"
+
+INTEGRITY RCDATA "manifest.bin"
+#endif
+
+VS_VERSION_INFO VERSIONINFO
+    FILEVERSION APP_VER_CSV
+    PRODUCTVERSION APP_VER_CSV
+    FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+    FILEFLAGS VS_FF_DEBUG
+#else
+    FILEFLAGS 0x0L
+#endif
+    FILEOS VOS__WINDOWS32
+    FILETYPE VFT_APP
+    FILESUBTYPE 0x0L
+    BEGIN
+        BLOCK "StringFileInfo"
+        BEGIN
+            BLOCK "080404b0"
+            BEGIN
+                VALUE "CompanyName", "Scott Sloan"
+                VALUE "FileDescription", "Bili23 Downloader"
+                VALUE "FileVersion", APP_VER_STR
+                VALUE "LegalCopyright", "Copyright (C) 2022-2026 Scott Sloan"
+                VALUE "OriginalFilename", "GUI.exe"
+                VALUE "ProductName", "Bili23 Downloader"
+                VALUE "ProductVersion", APP_VER_STR
+            END
+        END
+        BLOCK "VarFileInfo"
+        BEGIN
+            VALUE "Translation", 0x0804, 1200
+        END
+    END

@@ -1,4 +1,4 @@
-from ...common.enum import DanmakuType, SubtitleType, CoverType, MetadataType, VideoContainer
+from ...common.enum import DanmakuType, SubtitleType, CoverType, MetadataType, VideoContainer, OriginalFileType
 from ...common.config import config
 
 from qfluentwidgets import ConfigItem
@@ -36,7 +36,7 @@ _OPTION_SPEC = {
     # 保留原始文件时保留哪一路流。它的两个同伴 merge_video_audio 与
     # keep_original_files 早就固化在 DownloadInfo 里了，唯独它一直是在合并阶段
     # 才去读全局状态，放在这里是为了沿用「缺失即回落全局设置」的兼容处理
-    "keep_original_files_type": None,
+    "keep_original_files_type": OriginalFileType,
 }
 
 def pick_option(options: dict, key: str, fallback):
@@ -51,10 +51,11 @@ def pick_option(options: dict, key: str, fallback):
     return fallback
 
 def _global_value(key: str):
+    # 回落源一律是 config 上的同名 ConfigItem。往 _OPTION_SPEC 加新选项时，
+    # 若 config 上没有同名的项，这里会抛 AttributeError —— 历史上正是这么
+    # 漏掉过一次，且一路藏到任务创建才炸（见 test_download_options.py）
     item = getattr(config, key)
 
-    # config 里混着两类状态：持久化项要经 get() 取值，纯运行时状态
-    # （keep_original_files_type 等）本身就是普通类属性，直接用
     return config.get(item) if isinstance(item, ConfigItem) else item
 
 def snapshot(overrides: dict = None) -> dict:

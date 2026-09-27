@@ -13,6 +13,8 @@ from util.common.enum import ToastNotificationCategory
 from util.common.style_sheet import StyleSheet
 from util.common.config import config
 
+import sys
+
 class Base:
     def __init__(self):
         self.esc_close = True
@@ -115,21 +117,88 @@ class FluentDialogBase(Base, _FluentWidget):
         Base.__init__(self)
         _FluentWidget.__init__(self, parent)
 
+        self._make_toplevel()
+
         self._size = size
         self._setup_title_bar()
 
         self.setMicaEffectEnabled(config.get(config.mica_effect))
         self.setWindowModality(Qt.WindowModality.ApplicationModal)
-        self.setStayOnTop(config.get(config.stay_on_top))
+        self._setup_stay_on_top()
 
         self._event_loop = None
         self._result = False
+
+    def _make_toplevel(self):
+        """
+        把带 parent 构造出来的对话框还原成顶层窗口。
+
+        窗口是不是独立的窗口由窗口标志里的窗口类型决定：类型为 Qt::Widget 就是主窗口里
+        的一块控件，只有 Qt::Window / Qt::Dialog 才是顶层窗口。而带 parent 构造的 QWidget
+        默认拿到的是前者。
+
+        qfluentwidgets 只在 Win11（build >= 22000）上换成自己那套 FramelessWindow，它的
+        updateFrameless() 会显式写入 Qt::Window；Win10 与 Linux、macOS 走的都是
+        qframelesswindow 的 FramelessWindow，那些 updateFrameless() 只把
+        Qt::FramelessWindowHint OR 进现有标志 —— 该标志落在 WindowType_Mask（0xFF）之外，
+        改不动窗口类型。于是同一份代码在 Win11 上是独立对话框，在另外三个平台却成了嵌在
+        主窗口里的子控件：没有标题栏、拖不动、超出主窗口的部分被裁掉。
+
+        这里补上 Qt::Window。parent 保留不动，Qt 会把它记作 transient parent，
+        lastWindowClosed() 的判定依旧不认这个对话框（见 TopNavigationDialogBase）。
+        """
+        self.setWindowFlag(Qt.WindowType.Window, True)
+
+        # 改窗口类型会让 Qt 销毁并重建原生窗口（setWindowFlags 内部走的是 setParent），
+        # 各平台 _initFrameless() 里做过的无边框处理随之落在旧窗口上 —— Win10 丢掉 DWM
+        # 阴影与窗口动画，macOS 重新长出系统标题栏。按各平台自己的实现再跑一遍即可；
+        # 窗口标志本来就没变时（Win11，以及不传 parent 的 UpdateDialog）没有窗口要重建，
+        # 这一步只是把同样的效果原样刷新一遍。
+        self._refresh_frameless()
+
+    def _refresh_frameless(self):
+        """
+        重新应用一次无边框效果，macOS 上再补一次内容边距不跟安全区联动。
+
+        qframelesswindow 的 mac 分支在 _initFrameless() 里，除了摆无边框那一套，还专门
+        设了 WA_ContentsMarginsRespectsSafeArea = False —— 不这么做的话，Qt 会自动把系统
+        标题栏的安全区高度算进内容边距，标题栏和下面所有内容整体往下顶开一截，可这个属性
+        只在当时那扇原生窗口上生效。窗口标志一变（_make_toplevel 补窗口类型、
+        _setup_stay_on_top 改置顶）原生窗口跟着重建，新窗口读到的是 Qt 默认值（True），
+        于是自定义标题栏连同内容区一起被系统标题栏的安全区顶下去一截，视觉上就是贴着
+        红绿灯下面一大块空白，直到重建后重新按这里再压一次 False 才会消失。
+        """
+        self.updateFrameless()
+
+        if sys.platform == "darwin":
+            self.setAttribute(Qt.WidgetAttribute.WA_ContentsMarginsRespectsSafeArea, False)
+
+    def _setup_stay_on_top(self):
+        """
+        按配置把对话框设为置顶。
+
+        等价于 qframelesswindow 的 setStayOnTop()，只少掉它结尾那句 self.show()。那句话放在
+        这里是有害的：此刻还在 __init__ 里，窗口是个空标题、默认 500x500、内容还没建的壳
+        （子类要等 super().__init__() 返回之后才设标题、定尺寸、搭界面），一旦在这里
+        show()，DWM 的开窗动画就绑定在这一刻 —— 动画期间画的是此刻的快照，用户看到的是
+        "一个没加任何样式的窗口闪一下"，Win10 上这个快照里还带着原生标题栏。
+        """
+        self.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint, config.get(config.stay_on_top))
+
+        # 改窗口标志会重建原生窗口，各平台的无边框效果要重新落上去（同 _make_toplevel）
+        self._refresh_frameless()
 
     def _setup_title_bar(self):
         titleBar = FluentWidgetTitleBar(self)
         titleBar.hBoxLayout.setContentsMargins(0, 0, 0, 0)
         titleBar.hBoxLayout.insertSpacing(0, 12)
-        titleBar.setFixedHeight(36)
+
+        # FluentWidgetTitleBar 在 macOS 上已经把高度收到跟原生标题栏一致的 28，
+        # 图标和标题也被它自己隐藏了（改用系统红绿灯）。这里固定改成 36 是给
+        # Windows / Linux 用的，原样套到 macOS 头上就是一整条没有任何内容的
+        # 空白，把 mac 的高度又撑回了 Windows 的尺寸。
+        if sys.platform != "darwin":
+            titleBar.setFixedHeight(36)
 
         titleBar.minBtn.hide()
         titleBar.maxBtn.hide()
@@ -188,7 +257,17 @@ class TopNavigationDialogBase(FluentDialogBase):
     顶部导航对话框基类，适用于需要在对话框顶部显示导航栏的场景。
     """
     def __init__(self, size: QSize, parent = None):
-        super().__init__(size, parent = None)
+        # parent 必须原样传给 QWidget。传 None 会让对话框变成"没有父窗口的顶层窗口"，
+        # 而 Qt 的自动退出判定（QGuiApplicationPrivate::lastWindowClosed()）只认这种窗口，
+        # 带 parent 的对话框因为有 transient parent 会被排除在外。
+        #
+        # 后果：主窗口不可见时（关闭时最小化到托盘、静默启动）只要关掉这个对话框，
+        # Qt 就认定"最后一个窗口已关闭"，直接结束事件循环，整个进程随之退出。
+        #
+        # 不过 transient parent 这层身份只有对话框本身是顶层窗口时才成立，而带 parent
+        # 构造的 QWidget 默认并不是 —— 补上窗口类型的那一步在 FluentDialogBase
+        # 的 _make_toplevel() 里，两者缺一不可。
+        super().__init__(size, parent)
 
         self._setup_widget()
 

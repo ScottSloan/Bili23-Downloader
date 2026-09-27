@@ -1,383 +1,27 @@
 from PySide6.QtWidgets import QApplication, QWidget
 from PySide6.QtGui import QIcon, QPixmap
-from PySide6.QtCore import Qt, QTimer, QRect
+from PySide6.QtCore import Qt, QTimer, QRect, Signal
 
 from qfluentwidgets import (
     MSFluentWindow, SystemThemeListener, NavigationItemPosition, FluentIcon, InfoBadge, qrouter, setTheme
 )
 
 from util.common.enum import ToastNotificationCategory, WhenClose
-from util.common.signal_bus import signal_bus, config
+from util.common.signal_bus import signal_bus
 from util.common.icon import ExtendedFluentIcon
 from util.common.config import config
+from util.common.runtime import runtime
 from util.misc.macos import activate_app
+from util.thread.pool import GlobalThreadPoolTask
 
 import logging
 
 logger = logging.getLogger(__name__)
 
-class MainWindowBase(MSFluentWindow):
-    def __init__(self):
-        super().__init__()
+class MainWindow(MSFluentWindow):
+    # 地区检测在后台线程执行，结果经信号切回 GUI 线程；传 None 表示这次没能检测出来
+    areaDetected = Signal(object)
 
-    def run_post_terms_checks(self: "MainWindow") -> None:
-        signal_bus.update.check.emit(False)
-
-        if not config.get(config.tutorial_dialog_shown):
-            self.show_tutorial_dialog()
-
-            config.set(config.tutorial_dialog_shown, True)
-
-        if not config.get(config.select_area_dialog_shown):
-            self.show_select_area_dialog()
-
-            config.set(config.select_area_dialog_shown, True)
-
-        if not config.get(config.is_login):
-            self.show_login_teaching_tip()
-
-        QTimer.singleShot(0, self.check_download_path)
-        QTimer.singleShot(0, self.check_ffmpeg)
-
-        signal_bus.emit_pending_signals()
-
-    def _get_toast_function(self, category: ToastNotificationCategory):
-        from gui.component.widget.info_bar import InfoBar
-
-        match category:
-            case ToastNotificationCategory.SUCCESS:
-                func = InfoBar.success
-
-            case ToastNotificationCategory.ERROR:
-                func = InfoBar.error
-
-            case ToastNotificationCategory.WARNING:
-                func = InfoBar.warning
-
-            case ToastNotificationCategory.INFO:
-                func = InfoBar.info
-
-        return func
-
-    def show_toast_notification(self, category: ToastNotificationCategory, title: str, content: str):
-        from gui.component.widget.info_bar import InfoBarPosition
-
-        func = self._get_toast_function(category)
-
-        func(
-            title = title,
-            content = content,
-            orient = Qt.Orientation.Horizontal,
-            isClosable = False,
-            duration = 3000,
-            position = InfoBarPosition.TOP,
-            parent = self
-        )
-
-    def show_toast_notification_long_message(self, category: ToastNotificationCategory, title: str, content: str):
-        from gui.component.widget.info_bar import InfoBarPosition
-
-        func = self._get_toast_function(category)
-
-        func(
-            title = title,
-            content = content,
-            orient = Qt.Orientation.Vertical,
-            isClosable = True,
-            duration = 5000,
-            position = InfoBarPosition.BOTTOM_RIGHT,
-            parent = self,
-            contentMaxHeight = 200
-        )
-
-    def show_tutorial_dialog(self):
-        # 询问用户是否首次使用，建议用户查看文档，充分利用程序功能
-        from qfluentwidgets import MessageBox
-
-        dialog = MessageBox(
-            title = self.tr("Welcome to Bili23 Downloader"),
-            content = self.tr("It is recommended to read the user guide and FAQs when using for the first time, to help you get started quickly and make full use of all features."),
-            parent = self
-        )
-        dialog.yesButton.setText(self.tr("View"))
-        dialog.cancelButton.setText(self.tr("Skip"))
-
-        if dialog.exec():
-            import webbrowser
-
-            webbrowser.open("https://bili23.scott-sloan.cn/doc/introduction.html")
-
-    def show_login_teaching_tip(self):
-        from qfluentwidgets import TeachingTip, TeachingTipTailPosition
-
-        TeachingTip.create(
-            target = self.avatar_widget,
-            title = self.tr("Log in to your account"),
-            content = self.tr("Click the avatar to log in to your Bilibili account. \nDownload functionality will be limited if you're not logged in."),
-            icon = FluentIcon.INFO,
-            isClosable = True,
-            duration = -1,
-            tailPosition = TeachingTipTailPosition.LEFT,
-            parent = self
-        )
-
-    def show_terms_of_use(self):
-        from ..dialog.main_window.terms import TermsOfUseDialog
-
-        dialog = TermsOfUseDialog(self)
-
-        if not dialog.exec():
-            # 用户不接受使用协议，关闭程序
-            self.close()
-
-            logger.warning("用户未接受使用协议，程序已关闭")
-
-            return False
-
-        self.run_post_terms_checks()
-
-        return True
-    
-    def show_update_dialog(self, info: dict):
-        from ..dialog.update import UpdateDialog
-
-        dialog = UpdateDialog(info, self)
-        dialog.exec()
-
-    def show_select_area_dialog(self):
-        from ..dialog.setting.select_area import SelectAreaDialog
-
-        dialog = SelectAreaDialog(self)
-        dialog.exec()
-
-    def center_on_screen(self: "MainWindow", show = True):
-        from PySide6.QtWidgets import QApplication
-
-        desktop = QApplication.screens()[0].availableGeometry()
-        w, h = desktop.width(), desktop.height()
-
-        self.move(w // 2 - self.width() // 2, h // 2 - self.height() // 2)
-
-        if show:
-            self.initialized = True
-            self.show()
-
-    def apply_window_state(self: "MainWindow", show = True):
-        # 开启窗口状态记忆时恢复上次退出时的大小与位置，否则按默认尺寸居中显示
-        state = self.get_saved_window_state()
-
-        if state is None:
-            self.resize(950, 600)
-            self.center_on_screen(show = show)
-
-            return
-
-        # 用 move + resize 而非 setGeometry：保存时取的是 pos()（窗口框架位置），
-        # 两者语义一致，反复保存恢复才不会逐次偏移
-        self.move(state.get("x"), state.get("y"))
-        self.resize(state.get("width"), state.get("height"))
-
-        if show:
-            self.initialized = True
-
-            if state.get("maximized"):
-                self.showMaximized()
-            else:
-                self.show()
-
-    def get_saved_window_state(self: "MainWindow"):
-        # 读取上次保存的窗口状态，未开启记忆或记录不可用时返回 None
-        if not config.get(config.remember_window_state):
-            return None
-
-        state = config.get(config.window_state)
-
-        if not isinstance(state, dict):
-            return None
-
-        try:
-            x, y = int(state.get("x", 0)), int(state.get("y", 0))
-            width, height = int(state.get("width", 0)), int(state.get("height", 0))
-
-        except (TypeError, ValueError):
-            logger.warning("窗口状态记录无效，将使用默认窗口大小和位置")
-
-            return None
-
-        # width 为 0 表示尚无记录；小于最小尺寸的记录同样丢弃
-        if width < self.minimumWidth() or height < self.minimumHeight():
-            return None
-
-        if not self.is_window_position_visible(x, y, width):
-            logger.warning("上次保存的窗口位置不在任何屏幕内，将使用默认窗口位置")
-
-            return None
-
-        return {
-            "x": x,
-            "y": y,
-            "width": width,
-            "height": height,
-            "maximized": bool(state.get("maximized", False))
-        }
-
-    @staticmethod
-    def is_window_position_visible(x: int, y: int, width: int):
-        # 上次使用的显示器可能已被移除，或分辨率、缩放发生了变化，直接沿用保存的位置会让窗口落到屏幕外。
-        # 只要标题栏（顶部 40px）还与某块屏幕的可用区域相交，用户就能把窗口拖回来，即视为可用
-        title_bar_rect = QRect(x, y, width, 40)
-
-        return any(screen.availableGeometry().intersects(title_bar_rect) for screen in QApplication.screens())
-
-    def track_normal_geometry(self: "MainWindow"):
-        # 记录窗口处于普通状态时的几何，供最大化状态下退出时取用。
-        # 不用 Qt 的 normalGeometry()：它返回的是客户区矩形，与 pos() 取到的框架位置差一圈边框，
-        # 「最大化退出 —— 启动恢复」来回几次窗口会逐渐缩小
-        if self.isMaximized() or self.isFullScreen() or self.isMinimized():
-            return
-
-        self.normal_geometry = QRect(self.pos(), self.size())
-
-    def save_window_state(self: "MainWindow"):
-        if not config.get(config.remember_window_state):
-            return
-
-        # 静默启动后从托盘直接退出时窗口从未显示过，此时的几何是构造时的默认值，保存下来会覆盖掉有效记录
-        if not self.initialized:
-            return
-
-        maximized = self.isMaximized() or self.isFullScreen()
-
-        # 最大化时当前几何是铺满屏幕后的值，改用最后一次普通状态下的几何，
-        # 否则下次启动取消最大化会得到一个铺满屏幕的窗口
-        rect = self.normal_geometry if maximized else QRect(self.pos(), self.size())
-
-        if rect is None or rect.width() <= 0 or rect.height() <= 0:
-            return
-
-        config.set(config.window_state, {
-            "x": rect.x(),
-            "y": rect.y(),
-            "width": rect.width(),
-            "height": rect.height(),
-            "maximized": maximized
-        })
-
-    def update_download_btn_badge_info(self: "MainWindow", count: int):
-        if self.download_info_badge.isHidden():
-            self.download_info_badge.show()
-
-        if count > 99:
-            self.download_info_badge.setText("99+")
-        elif count == 0:
-            self.download_info_badge.hide()
-            return
-        else:
-            self.download_info_badge.setText(str(count))
-
-        self.download_info_badge.adjustSize()
-
-        self.download_info_badge.move(self.download_btn.width() - 4, 111)
-
-    def check_download_path(self: "MainWindow"):
-        from util.common.io.directory import Directory
-
-        download_path = config.get(config.download_path)
-
-        accessible = Directory.ensure_directory_accessible(download_path)
-
-        if not accessible:
-            signal_bus.toast.show_long_message.emit(
-                ToastNotificationCategory.ERROR,
-                self.tr("Download Directory Invalid"),
-                self.tr("The current download directory is inaccessible or lacks write permissions. Please reset it.") + f"\n\n{download_path}"
-            )
-
-            logger.error("下载目录不可访问或缺少写入权限：%s", download_path)
-
-    def check_ffmpeg(self: "MainWindow"):
-        if config.no_ffmpeg_available:
-            signal_bus.toast.show_long_message.emit(
-                ToastNotificationCategory.ERROR,
-                self.tr("FFmpeg Not Found"),
-                self.tr("No FFmpeg executable found. Please ensure FFmpeg is installed and configured correctly.")
-            )
-
-    def show_favorites_flyout_menu(self: "MainWindow"):
-        from qfluentwidgets import FlyoutAnimationType, FlyoutAnimationManager, MessageBox
-        from PySide6.QtCore import QPoint
-
-        if not config.get(config.is_login) or config.is_expired:
-            dialog = MessageBox(
-                title = self.tr("Login Required"),
-                content = self.tr("Please log in to your account first."),
-                parent = self
-            )
-            dialog.hideCancelButton()
-            dialog.exec()
-
-            self.reset_route_key()
-
-            return
-        
-        if not self.flyout_initialized:
-            self.flyout_initialized = True
-
-            # 首次显示时加载数据
-            self.flyout_widget.init_flyout()
-
-        self.flyout_widget.adjust_list_widget_width(self.size())
-        
-        manager = FlyoutAnimationManager.make(
-            aniType = FlyoutAnimationType.SLIDE_RIGHT,
-            flyout = self.flyout
-        )
-        target_pos: QPoint = manager.position(self.about_btn)
-        target_pos.setY(max(target_pos.y() + 20, 40))
-
-        self.flyout.exec(
-            target_pos,
-            FlyoutAnimationType.SLIDE_RIGHT
-        )
-
-    def update_route_key(self, key: str):
-        self.current_route_key = key
-
-    def reset_route_key(self: "MainWindow"):
-        self.navigationInterface.setCurrentItem(self.current_route_key)
-
-    def _activate_window(self: "MainWindow"):
-        if not self.initialized:
-            self.apply_window_state(show = True)
-
-        if self.isMinimized():
-            self.showNormal()
-        else:
-            self.show()
-
-        self.raise_()
-        self.activateWindow()
-
-        # macOS 上 Qt 的 activateWindow() 只把窗口 order front，不负责让进程本身变成
-        # 前台应用，需要额外走一次 NSApp 激活
-        activate_app()
-    
-    def _addSubInterface(self: "MainWindow", interface: QWidget):
-        interface.setProperty("isStackedTransparent", False)
-        self.stackedWidget.addWidget(interface)
-
-        routeKey = interface.objectName()
-
-        self.navigationInterface.items[routeKey].clicked.connect(lambda: self.switchTo(interface))
-        
-        if self.stackedWidget.count() == 1:
-            self.stackedWidget.currentChanged.connect(self._onCurrentInterfaceChanged)
-            self.navigationInterface.setCurrentItem(routeKey)
-            qrouter.setDefaultRouteKey(self.stackedWidget, routeKey)
-
-        self._updateStackedBackground()
-
-class MainWindow(MainWindowBase):
     def __init__(self):
         super().__init__()
 
@@ -412,6 +56,8 @@ class MainWindow(MainWindowBase):
         QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
 
         self.setMicaEffectEnabled(config.get(config.mica_effect))
+
+        self.areaDetected.connect(self.on_area_detected)
 
         QTimer.singleShot(0, self.init_utils)
         
@@ -565,6 +211,7 @@ class MainWindow(MainWindowBase):
         self.run_post_terms_checks()
 
     def closeEvent(self, e):
+        from util.auth.user import user_manager
         from util.download.downloader.manager import downloader_manager
         from util.download.task.manager import task_manager
         from util.thread.async_ import AsyncTask
@@ -582,6 +229,16 @@ class MainWindow(MainWindowBase):
         # 先让后台工作真正停下来，再去等线程退出。分片线程阻塞在 socket 读上，
         # 不关掉会话的话，safe_quit 的等待预算会全部耗在读超时上
         downloader_manager.shutdown()
+
+        # 账号信息的重试定时器必须赶在 safe_quit 之前停掉：它此刻若触发，
+        # 会在关停过程中拉起一个新的请求线程，并把结果投递给已经开始析构的主窗口
+        user_manager.shutdown()
+
+        # 等待签名密钥的轮询同理：它超时前会不断往线程池里推补取任务
+        parse_interface = getattr(self, "parse_interface", None)
+
+        if parse_interface is not None:
+            parse_interface.cancel_wbi_wait()
 
         AsyncTask.safe_quit()
 
@@ -601,6 +258,13 @@ class MainWindow(MainWindowBase):
             theme_listener.wait(500)
 
         super().closeEvent(e)
+
+        # setup_app() 关掉了 quitOnLastWindowClosed：托盘程序不能让 Qt 在"最后一个窗口关闭"时
+        # 自行结束事件循环（那会让主窗口不可见时关掉任意无父窗口也把整个进程带走），
+        # 于是退出必须由这里显式声明。少了这一句，窗口消失后进程会一直留在后台，
+        # shutdown_process() 永远等不到 app.exec() 返回，托盘菜单的"退出"也就失效了
+        if e.isAccepted():
+            QApplication.quit()
 
     def resizeEvent(self, e):
         if hasattr(self, "parse_interface"):
@@ -670,7 +334,7 @@ class MainWindow(MainWindowBase):
         dialog.exec()
 
     def on_avatar_click(self):
-        if not config.get(config.is_login) or config.is_expired:
+        if not config.get(config.is_login) or runtime.auth.is_expired:
             # 未登录，点击头像显示登录界面
             from ..dialog.login import LoginDialog
             from util.auth.user import user_manager
@@ -697,7 +361,7 @@ class MainWindow(MainWindowBase):
             avatar_pixmap.loadFromData(pixmap)
 
             pixmap = avatar_pixmap
-            config.user_avatar_pixmap = avatar_pixmap
+            runtime.auth.avatar_pixmap = avatar_pixmap
 
         self.avatar_widget.setAvatar(pixmap)
 
@@ -706,3 +370,415 @@ class MainWindow(MainWindowBase):
             self.navigationInterface.buttons()[0].click()  # 切换到解析界面
 
         self.parse_interface.reparse(url)
+
+    def run_post_terms_checks(self) -> None:
+        signal_bus.update.check.emit(False)
+
+        if not config.get(config.tutorial_dialog_shown):
+            self.show_tutorial_dialog()
+
+            config.set(config.tutorial_dialog_shown, True)
+
+        if not config.get(config.select_area_dialog_shown):
+            self.detect_area()
+
+        if not config.get(config.is_login):
+            self.show_login_teaching_tip()
+
+        QTimer.singleShot(0, self.check_download_path)
+        QTimer.singleShot(0, self.check_ffmpeg)
+        QTimer.singleShot(0, self.check_naming_rules_reset)
+
+        signal_bus.emit_pending_signals()
+
+        # 剪贴板补检必须排在这一切之后：走到这里才说明用户已接受使用协议、
+        # 界面与信号通路均已就绪，解析过程中发出的提示才不会被丢掉
+        QTimer.singleShot(0, self.parse_interface.check_clipboard_on_startup)
+
+    def _get_toast_function(self, category: ToastNotificationCategory):
+        from gui.component.widget.info_bar import InfoBar
+
+        match category:
+            case ToastNotificationCategory.SUCCESS:
+                func = InfoBar.success
+
+            case ToastNotificationCategory.ERROR:
+                func = InfoBar.error
+
+            case ToastNotificationCategory.WARNING:
+                func = InfoBar.warning
+
+            case ToastNotificationCategory.INFO:
+                func = InfoBar.info
+
+        return func
+
+    def show_toast_notification(self, category: ToastNotificationCategory, title: str, content: str):
+        from gui.component.widget.info_bar import InfoBarPosition
+
+        func = self._get_toast_function(category)
+
+        func(
+            title = title,
+            content = content,
+            orient = Qt.Orientation.Horizontal,
+            isClosable = False,
+            duration = 3000,
+            position = InfoBarPosition.TOP,
+            parent = self
+        )
+
+    def show_toast_notification_long_message(self, category: ToastNotificationCategory, title: str, content: str):
+        from gui.component.widget.info_bar import InfoBarPosition
+
+        func = self._get_toast_function(category)
+
+        func(
+            title = title,
+            content = content,
+            orient = Qt.Orientation.Vertical,
+            isClosable = True,
+            duration = 5000,
+            position = InfoBarPosition.BOTTOM_RIGHT,
+            parent = self,
+            contentMaxHeight = 200
+        )
+
+    def show_tutorial_dialog(self):
+        # 询问用户是否首次使用，建议用户查看文档，充分利用程序功能
+        from qfluentwidgets import MessageBox
+
+        dialog = MessageBox(
+            title = self.tr("Welcome to Bili23 Downloader"),
+            content = self.tr("It is recommended to read the user guide and FAQs when using for the first time, to help you get started quickly and make full use of all features."),
+            parent = self
+        )
+        dialog.yesButton.setText(self.tr("View"))
+        dialog.cancelButton.setText(self.tr("Skip"))
+
+        if dialog.exec():
+            import webbrowser
+
+            webbrowser.open("https://bili23.scott-sloan.cn/doc/introduction.html")
+
+    def show_login_teaching_tip(self):
+        from qfluentwidgets import TeachingTip, TeachingTipTailPosition
+
+        TeachingTip.create(
+            target = self.avatar_widget,
+            title = self.tr("Log in to your account"),
+            content = self.tr("Click the avatar to log in to your Bilibili account. \nDownload functionality will be limited if you're not logged in."),
+            icon = FluentIcon.INFO,
+            isClosable = True,
+            duration = -1,
+            tailPosition = TeachingTipTailPosition.LEFT,
+            parent = self
+        )
+
+    def show_terms_of_use(self):
+        from ..dialog.main_window.terms import TermsOfUseDialog
+
+        dialog = TermsOfUseDialog(self)
+
+        if not dialog.exec():
+            # 用户不接受使用协议，关闭程序
+            self.close()
+
+            logger.warning("用户未接受使用协议，程序已关闭")
+
+            return False
+
+        self.run_post_terms_checks()
+
+        return True
+    
+    def show_update_dialog(self, info: dict):
+        from ..dialog.update import UpdateDialog
+
+        dialog = UpdateDialog(info, self)
+        dialog.exec()
+
+    def detect_area(self):
+        # 首次启动时自动判断出口地区，不再直接弹窗打断用户。
+        # 检测要发网络请求，放在全局线程池上跑，结果经 areaDetected 切回 GUI 线程
+        def worker():
+            from util.network.area import detect_area
+
+            try:
+                area = detect_area()
+
+            except Exception as e:
+                # 检测不出来不是异常路径，交给 on_area_detected 退回询问用户。
+                # 这里必须自己接住：GlobalThreadPoolTask.run_func 只记日志不外抛
+                logger.warning("自动检测地区失败：%s", e)
+
+                area = None
+
+            self.areaDetected.emit(area)
+
+        GlobalThreadPoolTask.run_func(worker)
+
+    def on_area_detected(self, area):
+        if area is None:
+            # 检测不出来就退回询问。静默保持默认的国内列表对海外用户是灾难：
+            # 下载全程走错地区的节点，而他们多半不知道设置里有这个开关
+            self.show_select_area_dialog()
+
+        else:
+            config.set(config.area, area)
+
+            logger.info("已根据出口地区自动选择 CDN 区域：%s", area.value)
+
+        config.set(config.select_area_dialog_shown, True)
+
+    def show_select_area_dialog(self):
+        from ..dialog.setting.select_area import SelectAreaDialog
+
+        dialog = SelectAreaDialog(self)
+        dialog.exec()
+
+    def center_on_screen(self, show = True):
+        from PySide6.QtWidgets import QApplication
+
+        desktop = QApplication.screens()[0].availableGeometry()
+        w, h = desktop.width(), desktop.height()
+
+        self.move(w // 2 - self.width() // 2, h // 2 - self.height() // 2)
+
+        if show:
+            self.initialized = True
+            self.show()
+
+    def apply_window_state(self, show = True):
+        # 开启窗口状态记忆时恢复上次退出时的大小与位置，否则按默认尺寸居中显示
+        state = self.get_saved_window_state()
+
+        if state is None:
+            self.resize(950, 600)
+            self.center_on_screen(show = show)
+
+            return
+
+        # 用 move + resize 而非 setGeometry：保存时取的是 pos()（窗口框架位置），
+        # 两者语义一致，反复保存恢复才不会逐次偏移
+        self.move(state.get("x"), state.get("y"))
+        self.resize(state.get("width"), state.get("height"))
+
+        if show:
+            self.initialized = True
+
+            if state.get("maximized"):
+                self.showMaximized()
+            else:
+                self.show()
+
+    def get_saved_window_state(self):
+        # 读取上次保存的窗口状态，未开启记忆或记录不可用时返回 None
+        if not config.get(config.remember_window_state):
+            return None
+
+        state = config.get(config.window_state)
+
+        if not isinstance(state, dict):
+            return None
+
+        try:
+            x, y = int(state.get("x", 0)), int(state.get("y", 0))
+            width, height = int(state.get("width", 0)), int(state.get("height", 0))
+
+        except (TypeError, ValueError):
+            logger.warning("窗口状态记录无效，将使用默认窗口大小和位置")
+
+            return None
+
+        # width 为 0 表示尚无记录；小于最小尺寸的记录同样丢弃
+        if width < self.minimumWidth() or height < self.minimumHeight():
+            return None
+
+        if not self.is_window_position_visible(x, y, width):
+            logger.warning("上次保存的窗口位置不在任何屏幕内，将使用默认窗口位置")
+
+            return None
+
+        return {
+            "x": x,
+            "y": y,
+            "width": width,
+            "height": height,
+            "maximized": bool(state.get("maximized", False))
+        }
+
+    @staticmethod
+    def is_window_position_visible(x: int, y: int, width: int):
+        # 上次使用的显示器可能已被移除，或分辨率、缩放发生了变化，直接沿用保存的位置会让窗口落到屏幕外。
+        # 只要标题栏（顶部 40px）还与某块屏幕的可用区域相交，用户就能把窗口拖回来，即视为可用
+        title_bar_rect = QRect(x, y, width, 40)
+
+        return any(screen.availableGeometry().intersects(title_bar_rect) for screen in QApplication.screens())
+
+    def track_normal_geometry(self):
+        # 记录窗口处于普通状态时的几何，供最大化状态下退出时取用。
+        # 不用 Qt 的 normalGeometry()：它返回的是客户区矩形，与 pos() 取到的框架位置差一圈边框，
+        # 「最大化退出 —— 启动恢复」来回几次窗口会逐渐缩小
+        if self.isMaximized() or self.isFullScreen() or self.isMinimized():
+            return
+
+        self.normal_geometry = QRect(self.pos(), self.size())
+
+    def save_window_state(self):
+        if not config.get(config.remember_window_state):
+            return
+
+        # 静默启动后从托盘直接退出时窗口从未显示过，此时的几何是构造时的默认值，保存下来会覆盖掉有效记录
+        if not self.initialized:
+            return
+
+        maximized = self.isMaximized() or self.isFullScreen()
+
+        # 最大化时当前几何是铺满屏幕后的值，改用最后一次普通状态下的几何，
+        # 否则下次启动取消最大化会得到一个铺满屏幕的窗口
+        rect = self.normal_geometry if maximized else QRect(self.pos(), self.size())
+
+        if rect is None or rect.width() <= 0 or rect.height() <= 0:
+            return
+
+        config.set(config.window_state, {
+            "x": rect.x(),
+            "y": rect.y(),
+            "width": rect.width(),
+            "height": rect.height(),
+            "maximized": maximized
+        })
+
+    def update_download_btn_badge_info(self, count: int):
+        if self.download_info_badge.isHidden():
+            self.download_info_badge.show()
+
+        if count > 99:
+            self.download_info_badge.setText("99+")
+        elif count == 0:
+            self.download_info_badge.hide()
+            return
+        else:
+            self.download_info_badge.setText(str(count))
+
+        self.download_info_badge.adjustSize()
+
+        self.download_info_badge.move(self.download_btn.width() - 4, 111)
+
+    def check_download_path(self):
+        from util.common.io.directory import Directory
+
+        download_path = config.get(config.download_path)
+
+        accessible = Directory.ensure_directory_accessible(download_path)
+
+        if not accessible:
+            signal_bus.toast.show_long_message.emit(
+                ToastNotificationCategory.ERROR,
+                self.tr("Download Directory Invalid"),
+                self.tr("The current download directory is inaccessible or lacks write permissions. Please reset it.") + f"\n\n{download_path}"
+            )
+
+            logger.error("下载目录不可访问或缺少写入权限：%s", download_path)
+
+    def check_ffmpeg(self):
+        if runtime.ffmpeg.unavailable:
+            signal_bus.toast.show_long_message.emit(
+                ToastNotificationCategory.ERROR,
+                self.tr("FFmpeg Not Found"),
+                self.tr("No FFmpeg executable found. Please ensure FFmpeg is installed and configured correctly.")
+            )
+
+    def check_naming_rules_reset(self):
+        """
+        配置迁移把命名规则重置了
+
+        那是一次销毁用户数据的动作（自建规则与改过的内置规则一并没了），不能只写进
+        CHANGELOG 就完事 —— 用户会莫名其妙地发现规则变回默认值，界面上却没有任何解释。
+        这是瞬时事件，提示过就把标志清掉
+        """
+        if not runtime.naming.rules_reset:
+            return
+
+        runtime.naming.rules_reset = False
+
+        signal_bus.toast.show_long_message.emit(
+            ToastNotificationCategory.WARNING,
+            self.tr("Naming Rules Were Reset"),
+            self.tr("The built-in naming rules changed in this version, so all of your naming rules have been reset to the defaults. Please set them up again.")
+        )
+
+    def show_favorites_flyout_menu(self):
+        from qfluentwidgets import FlyoutAnimationType, FlyoutAnimationManager, MessageBox
+        from PySide6.QtCore import QPoint
+
+        if not config.get(config.is_login) or runtime.auth.is_expired:
+            dialog = MessageBox(
+                title = self.tr("Login Required"),
+                content = self.tr("Please log in to your account first."),
+                parent = self
+            )
+            dialog.hideCancelButton()
+            dialog.exec()
+
+            self.reset_route_key()
+
+            return
+        
+        if not self.flyout_initialized:
+            self.flyout_initialized = True
+
+            # 首次显示时加载数据
+            self.flyout_widget.init_flyout()
+
+        self.flyout_widget.adjust_list_widget_width(self.size())
+        
+        manager = FlyoutAnimationManager.make(
+            aniType = FlyoutAnimationType.SLIDE_RIGHT,
+            flyout = self.flyout
+        )
+        target_pos: QPoint = manager.position(self.about_btn)
+        target_pos.setY(max(target_pos.y() + 20, 40))
+
+        self.flyout.exec(
+            target_pos,
+            FlyoutAnimationType.SLIDE_RIGHT
+        )
+
+    def update_route_key(self, key: str):
+        self.current_route_key = key
+
+    def reset_route_key(self):
+        self.navigationInterface.setCurrentItem(self.current_route_key)
+
+    def _activate_window(self):
+        if not self.initialized:
+            self.apply_window_state(show = True)
+
+        if self.isMinimized():
+            self.showNormal()
+        else:
+            self.show()
+
+        self.raise_()
+        self.activateWindow()
+
+        # macOS 上 Qt 的 activateWindow() 只把窗口 order front，不负责让进程本身变成
+        # 前台应用，需要额外走一次 NSApp 激活
+        activate_app()
+    
+    def _addSubInterface(self, interface: QWidget):
+        interface.setProperty("isStackedTransparent", False)
+        self.stackedWidget.addWidget(interface)
+
+        routeKey = interface.objectName()
+
+        self.navigationInterface.items[routeKey].clicked.connect(lambda: self.switchTo(interface))
+        
+        if self.stackedWidget.count() == 1:
+            self.stackedWidget.currentChanged.connect(self._onCurrentInterfaceChanged)
+            self.navigationInterface.setCurrentItem(routeKey)
+            qrouter.setDefaultRouteKey(self.stackedWidget, routeKey)
+
+        self._updateStackedBackground()

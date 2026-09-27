@@ -1,5 +1,4 @@
 from PySide6.QtCore import QStandardPaths
-from PySide6.QtGui import QPixmap
 
 from qfluentwidgets import (
     QConfig, RangeConfigItem, RangeValidator, OptionsValidator, OptionsConfigItem, BoolValidator,
@@ -10,14 +9,16 @@ from .serializer import LanguageSerializer, ScalingSerializer
 from .enum import (
     Language, WhenClose, DanmakuType, SubtitleType, CoverType, MetadataType, ProxyMode, ProxyType, FFmpegSource,
     NumberingType, Scaling, FileConflictResolution, VideoContainer, AutoSelectMode, Area, DuplicateDownloadResolution,
-    ConventionType
+    OriginalFileType
 )
-from ._json import json_loads
+from ._json import loads, dumps_std
+from .runtime import runtime
 
 from threading import Lock
+from typing import ClassVar
 from pathlib import Path
+from copy import deepcopy
 import logging
-import json
 import sys
 import os
 
@@ -27,7 +28,7 @@ def isWin11():
     return sys.platform == "win32" and sys.getwindowsversion().build >= 22000
 
 class DefaultValue:
-    parse_list_column = [
+    parse_list_column: ClassVar = [
         {
             "attr_key": "number",
             "width": 160,
@@ -55,14 +56,14 @@ class DefaultValue:
         }
     ]
 
-    auto_select_conditions = {
+    auto_select_conditions: ClassVar = {
         "user_uploads": 0,
         "bangumi": 0,
         "other": 0
     }
 
     # width 为 0 表示尚无有效记录，此时窗口按默认尺寸居中显示
-    window_state = {
+    window_state: ClassVar = {
         "x": 0,
         "y": 0,
         "width": 0,
@@ -70,7 +71,7 @@ class DefaultValue:
         "maximized": False
     }
 
-    video_quality_priority = [
+    video_quality_priority: ClassVar = [
         127,
         126,
         125,
@@ -85,7 +86,7 @@ class DefaultValue:
         16
     ]
 
-    audio_quality_priority = [
+    audio_quality_priority: ClassVar = [
         30251,
         30250,
         30280,
@@ -93,13 +94,13 @@ class DefaultValue:
         30216
     ]
     
-    video_codec_priority = [
+    video_codec_priority: ClassVar = [
         7,
         12,
         13
     ]
 
-    danmaku_style = {
+    danmaku_style: ClassVar = {
         "font": {
             "name": "黑体",
             "size": 36,
@@ -125,12 +126,12 @@ class DefaultValue:
         }
     }
     
-    subtitle_language = {
+    subtitle_language: ClassVar = {
         "download_specified": False,
         "specified_language": []
     }
 
-    subtitle_style = {
+    subtitle_style: ClassVar = {
         "font": {
             "name": "黑体",
             "size": 36,
@@ -162,7 +163,7 @@ class DefaultValue:
 
     }
 
-    naming_rule_list = [
+    naming_rule_list: ClassVar = [
         {
             "id": "a024c20c-5826-4e65-a1f5-802e3e2dbe4f",
             "name": "DEFAULT_FOR_NORMAL",
@@ -206,58 +207,51 @@ class DefaultValue:
             "default": True
         },
         {
-            "id": "b7a4f0c5-1d2e-4a83-9f61-3c0d7e5b8a19",
-            "name": "DEFAULT_FOR_LESSON",
-            "type": 31,
-            "rule": "{series_title}/{episode_title}",
-            "default": True
-        },
-        {
             "id": "5913e25f-0bf3-4d3c-a608-8416af778a8a",
             "name": "DEFAULT_FOR_FAVORITE",
             "type": 40,
-            "rule": "{favorites_owner_id}_{favorites_owner}/{favorites_name}/{leaf_title}",
+            "rule": "{favorites_owner_id}_{favorites_owner}/{favorites_name}/{parent_title}/<P{p:02d}->{leaf_title}",
             "default": True
         },
         {
             "id": "8c48ac82-14c5-4d48-9de7-225d9b53513f",
             "name": "DEFAULT_FOR_SPACE",
             "type": 50,
-            "rule": "{space_owner_id}_{space_owner}/{leaf_title}",
+            "rule": "{space_owner_id}_{space_owner}/{parent_title}/<P{p:02d}->{leaf_title}",
             "default": True
         },
         {
             "id": "307ccc8e-ad2f-4195-94f0-162ee9ff1ac0",
             "name": "DEFAULT_FOR_HISTORY",
             "type": 60,
-            "rule": "{parent_title}/{leaf_title}",
+            "rule": "{source_title}/{parent_title}/<P{p:02d}->{leaf_title}",
             "default": True
         },
         {
             "id": "0a72a82b-5684-448e-9db1-a342de933d3e",
             "name": "DEFAULT_FOR_WATCH_LATER",
             "type": 70,
-            "rule": "{parent_title}/{leaf_title}",
+            "rule": "{source_title}/{parent_title}/<P{p:02d}->{leaf_title}",
             "default": True
         },
         {
             "id": "4d28285d-65ca-4c5c-bbb3-b3b5b570c52a",
             "name": "DEFAULT_FOR_WEEKLY",
             "type": 80,
-            "rule": "{parent_title}/{leaf_title}",
+            "rule": "{source_title}/{leaf_title}",
             "default": True
         },
         {
             "id": "dc77bd15-be21-4847-856e-68bb3035042f",
             "name": "DEFAULT_FOR_AUDIO",
             "type": 90,
-            "rule": "{parent_title}/{uploader} - {leaf_title}",
+            "rule": "{source_title}/{uploader} - {leaf_title}",
             "default": True
         }
     ]
 
     # 国内 CDN 服务器列表
-    cn_cdn_server_list = [
+    cn_cdn_server_list: ClassVar = [
         {
             "host": "upos-sz-mirror08c.bilivideo.com",
             "provider": "HUAWEI"
@@ -293,11 +287,16 @@ class DefaultValue:
     ]
     
     # 海外 CDN 服务器列表
-    ov_cdn_server_list = [
-        {
-            "host": "upos-hz-mirrorakam.akamaized.net",
-            "provider": "AKAMAI"
-        },
+    #
+    # 这里原先把 Akamai（upos-hz-mirrorakam.akamaized.net）列在首位。它作为**替换目标**
+    # 不可用：把别的 host 的签名链接改写过去，无论直连还是经代理一律返回 403，与出口
+    # 地区无关。而本列表的用途恰恰是替换 host（见 CDN.replace），留着它只会让每次海外
+    # 解析白占一个并发探测位，因此移除。
+    #
+    # 别把结论扩大化：Akamai 拒绝的是"被改写"的请求，不是 upos 链接本身 —— B 站原生
+    # 签发的 Akamai 链接实测返回 206（香港出口下 16MB 读到 10.84 Mbps）。那类链接本来
+    # 就出现在 playurl 返回值里，也不在黑名单中，作为原始候选照常参与探测
+    ov_cdn_server_list: ClassVar = [
         {
             "host": "upos-sz-mirroraliov.bilivideo.com",
             "provider": "ALIYUN"
@@ -311,9 +310,12 @@ class DefaultValue:
 class APPConfig(QConfig):
     # APP
     app_name = "Bili23 Downloader"
-    app_version = "2.15.0"
-    app_comparable_version = "2.15.0"
-    app_config_version = 2150
+    app_version = "2.20.0"
+    app_comparable_version = "2.20.0"
+    # 配置格式版本。**改动必须在 patch_config 里加对应的门禁并把它 +1**，
+    # 否则已有用户配置里那份副本永远不会被更新（DefaultValue 只在配置文件不存在时
+    # 作为初值）。与 app_version 不要求逐字对应
+    app_config_version = 2200
     config_version = ConfigItem("Application", "config_version", app_config_version)
 
     # Interface
@@ -344,6 +346,7 @@ class APPConfig(QConfig):
     when_close_window = OptionsConfigItem("Behavior", "when_close_window", WhenClose.ALWAYS_ASK, OptionsValidator(WhenClose), EnumSerializer(WhenClose))
 
     show_download_options_dialog = ConfigItem("Behavior", "show_download_options_dialog", True, BoolValidator())
+    show_download_as_single_video_dialog = ConfigItem("Behavior", "show_download_as_single_video_dialog", True, BoolValidator())
     show_notification = ConfigItem("Behavior", "show_notification", False, BoolValidator())
     preallocate_file_space = ConfigItem("Behavior", "preallocate_file_space", True, BoolValidator())
     duplicate_download_resolution = OptionsConfigItem("Behavior", "duplicate_download_resolution", DuplicateDownloadResolution.ALWAYS_ASK, OptionsValidator(DuplicateDownloadResolution), EnumSerializer(DuplicateDownloadResolution))
@@ -356,12 +359,34 @@ class APPConfig(QConfig):
     speed_limit_enabled = ConfigItem("Download", "speed_limit_enabled", False, BoolValidator())
     speed_limit_rate = ConfigItem("Download", "speed_limit_rate", 10.0)
 
+    # 任务级自动重试（Issue #469）。只对网络类可重试错误生效，403/404 这类永久错误
+    # 仍直接进终态，因此默认开启是安全的 —— 网络差的用户不必先去设置里找开关。
+    # 退避节奏写死在 Downloader 里，不在这里暴露：它与分片级重试是两层概念
+    auto_retry_enabled = ConfigItem("Download", "auto_retry_enabled", True, BoolValidator())
+    auto_retry_max_count = RangeConfigItem("Download", "auto_retry_max_count", 5, RangeValidator(1, 20))
+
     video_quality_priority = ConfigItem("Download", "video_quality_priority", DefaultValue.video_quality_priority)
     audio_quality_priority = ConfigItem("Download", "audio_quality_priority", DefaultValue.audio_quality_priority)
     video_codec_priority = ConfigItem("Download", "video_codec_priority", DefaultValue.video_codec_priority)
 
     video_container = OptionsConfigItem("Download", "video_container", VideoContainer.MP4, OptionsValidator(VideoContainer), EnumSerializer(VideoContainer))
     m4a_to_mp3 = ConfigItem("Download", "m4a_to_mp3", False)
+
+    # 下载哪几路流、下完之后怎么处理。
+    #
+    # 这几个值原先放在 runtime.download 上（下载选项对话框的「本次选择」），
+    # 3cfb1a4d 把进程级运行时状态从 APPConfig 剥离时一并迁了过去，理由是
+    # 「它们只是下一个任务用什么参数的暂存」。但它们同样是用户实打实的偏好：
+    # 只想收音频的人不该每下载一个稿件都去对话框里勾一次，而对话框本身
+    # 也只有下载时才打得开。改为配置项后两个入口改的是同一份值，重启后仍保留。
+    #
+    # 单次下载仍由下载选项对话框的值固化进 TaskInfo（见 task/options.py），
+    # 改动这里不会波及已经排进队列的任务
+    download_video_stream = ConfigItem("Download", "download_video_stream", True, BoolValidator())
+    download_audio_stream = ConfigItem("Download", "download_audio_stream", True, BoolValidator())
+    merge_video_audio = ConfigItem("Download", "merge_video_audio", True, BoolValidator())
+    keep_original_files = ConfigItem("Download", "keep_original_files", False, BoolValidator())
+    keep_original_files_type = OptionsConfigItem("Download", "keep_original_files_type", OriginalFileType.BOTH, OptionsValidator(OriginalFileType), EnumSerializer(OriginalFileType))
 
     # Additional
     download_danmaku = ConfigItem("Additional", "download_danmaku", False, BoolValidator())
@@ -439,45 +464,12 @@ class APPConfig(QConfig):
     buvid_expires = ConfigItem("Cookie", "buvid_expires", 0)
 
     is_login = ConfigItem("Cookie", "is_login", False, BoolValidator())
-    is_expired = False
 
     # Application
     accepted_terms = ConfigItem("Application", "accepted_terms", False, BoolValidator())
     skip_version = ConfigItem("Application", "skip_version", "")
 
-    # User
-    user_uname: str = ""
-    user_uid: str = ""
-    user_avatar_pixmap: QPixmap = None
-
-    # FFmpeg
-    ffmpeg_executable = ""
-    bundle_ffmpeg_exist = False
-
-    no_ffmpeg_available = True
-
-    # Download Options
-    video_quality_id = 200
-    audio_quality_id = 30300
-    video_codec_id = 20
-
-    download_video_stream = True
-    download_audio_stream = True
-    merge_video_audio = True
-    keep_original_files = False
-    keep_original_files_type = 0
-
-    # MCP 运行时状态，仅供界面展示，不落盘
-    mcp_running = False
-    mcp_last_error = ""
-
     # Misc
-    target_naming_rule_id = None
-    global_starting_number = 1
-    current_starting_number = None
-
-    main_window_ready = False
-
     show_auto_parse_dialog = ConfigItem("Misc", "show_auto_parse_dialog", False, BoolValidator())
     auto_add_to_download_list = ConfigItem("Misc", "auto_add_to_download_list", False, BoolValidator())
     auto_parse_interval = ConfigItem("Misc", "auto_parse_interval", 2.0)
@@ -503,7 +495,7 @@ class APPConfig(QConfig):
 
             try:
                 with open(temp_path, "w", encoding = "utf-8") as f:
-                    json.dump(self._cfg.toDict(), f, ensure_ascii = False, indent = 4)
+                    f.write(dumps_std(self._cfg.toDict(), indent = 4))
 
                 os.replace(temp_path, self._cfg.file)
 
@@ -513,7 +505,8 @@ class APPConfig(QConfig):
                 try:
                     temp_path.unlink(missing_ok = True)
 
-                except Exception:
+                except OSError:
+                    # 临时文件清理失败不影响主流程，下次保存会覆盖它
                     pass
 
 def check_need_patch():
@@ -521,7 +514,7 @@ def check_need_patch():
     if config_path.exists():
         with open(config_path, "r", encoding = "utf-8") as f:
             try:
-                data = json_loads(f.read())
+                data = loads(f.read())
 
             except Exception as e:
                 data = {}
@@ -565,33 +558,41 @@ def patch_config(config_version: int, data: dict):
 
             logger.info("SDR 增强画质已补入画质优先级列表")
 
-    if config_version < 2150:
-        # 2.15.0 起支持会员购商城课程，它是独立的命名类型（31）。命名规则列表是一份完整枚举，
-        # 缺少该类型时 get_rule_from_config() 会返回 None，格式化文件名直接失败，
-        # 任务连名字都取不到。因此为旧配置补上这条默认规则，排在课程之后
-        naming_rule_list = config.get(config.naming_rule_list).copy()
+    if config_version < 2200:
+        # 命名规则的内置默认值在本版本连着变过两次：先是改用 <> 可选段（段内变量取
+        # 空值时整段连同字面量前后缀一并丢弃 —— 个人空间、收藏夹这几类里单P与多P
+        # 混在一起，旧写法只能顾及一种形态，多P视频会丢掉稿件标题，GitHub #461），
+        # 随后又把入口标签从 {parent_title} 拆进了 {source_title}（此前这个变量
+        # 兼着「来源列表入口标签」与「稿件标题」两种含义）。
+        #
+        # 这里不再维护「旧默认值」对照表逐条比对、只替换用户没改过的那几条 ——
+        # 命名规则是用户可见、随时可改的东西，留一条已经用错变量的旧规则在配置里，
+        # 出问题时比「规则没了」更难排查。整张表换成新默认值：用户自建的规则与
+        # 改过的内置规则一并舍弃，置一个标志由主窗口起来后提示他重新设置
+        config.set(config.naming_rule_list, deepcopy(DefaultValue.naming_rule_list))
 
-        if not any(entry.get("type") == ConventionType.LESSON for entry in naming_rule_list):
-            lesson_rule = next(
-                entry.copy() for entry in DefaultValue.naming_rule_list
-                if entry["type"] == ConventionType.LESSON
-            )
+        runtime.naming.rules_reset = True
 
-            # 用户可能为课程建过多条自定义规则，插在最后一条之后，不要把这一组拆开
-            cheese_index = next(
-                (index for index in range(len(naming_rule_list) - 1, -1, -1)
-                 if naming_rule_list[index].get("type") == ConventionType.CHEESE),
-                None
-            )
+        logger.info("命名规则已重置为内置默认值")
 
-            if cheese_index is None:
-                naming_rule_list.append(lesson_rule)
-            else:
-                naming_rule_list.insert(cheese_index + 1, lesson_rule)
+        # 默认海外 CDN 列表中移除了 Akamai（upos-hz-mirrorakam.akamaized.net）：
+        # 它不能作为替换目标 —— 把别的 host 的签名链接改写过去一律返回 403，与出口
+        # 地区无关（成因详见 DefaultValue.ov_cdn_server_list 上的那段说明）。
+        # 老配置里原样继承下来的那条留着，只会让每次海外解析都白占一个并发探测位
+        #
+        # 只按 host 精确匹配剔除这一条。用户自行增删或改过的其他节点一律不动 ——
+        # 这份列表在设置界面里可编辑，不能假设它还是默认值
+        ov_cdn_server_list = deepcopy(config.get(config.ov_cdn_server_list))
 
-            config.set(config.naming_rule_list, naming_rule_list)
+        filtered_list = [
+            entry for entry in ov_cdn_server_list
+            if entry.get("host") != "upos-hz-mirrorakam.akamaized.net"
+        ]
 
-            logger.info("商城课程命名规则已补入命名规则列表")
+        if len(filtered_list) != len(ov_cdn_server_list):
+            config.set(config.ov_cdn_server_list, filtered_list)
+
+            logger.info("已从海外 CDN 服务器列表中移除 Akamai")
 
     # 完成修补，写入新的 config_version
     config.set(config.config_version, config.app_config_version)

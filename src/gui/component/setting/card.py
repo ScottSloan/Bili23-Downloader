@@ -5,16 +5,17 @@ from PySide6.QtGui import QColor
 from qfluentwidgets import (
     PushButton, FluentIcon, PushSettingCard, qconfig, ColorDialog, PrimaryPushButton, setCustomStyleSheet,
     MessageBox, ExpandGroupSettingCard as _ExpandGroupSettingCard, HyperlinkLabel, DropDownPushButton,
-    RoundMenu, Action
+    RoundMenu, Action, SwitchButton, IndicatorPosition, ComboBox
 )
 from qfluentwidgets.components.settings.expand_setting_card import GroupWidget as _GroupWidget
 
 from .widget import SettingSwitchButton, SettingComboBox, SettingSlider
-from ..widget.button import TransparentToolButton
 from ..widget.spinbox import SpinBox
+from ..widget.label import WarningLabel
 
-from util.common.enum import VideoContainer, ToastNotificationCategory
+from util.common.enum import VideoContainer, ToastNotificationCategory, OriginalFileType
 from util.common.config import config, isWin11, APPConfig
+from util.common.runtime import runtime
 from util.thread.pool import GlobalThreadPoolTask
 from util.common.icon import ExtendedFluentIcon
 from util.common.io.directory import Directory
@@ -64,6 +65,27 @@ class GuideSettingCardBase:
         self.contentLayout.addWidget(contentLabel, 0, Qt.AlignmentFlag.AlignLeft)
 
         vBoxLayout.addLayout(self.contentLayout)
+
+        self.warningLabel = None
+
+    def setWarningContent(self, text: str = ""):
+        """
+        在描述文字后面接一句警示色提示，text 为空时隐藏
+
+        接在同一行而不是另起一行：分组的高度是按单行算的，多出一行会把这一格
+        顶得比左右邻居都高，整张卡片看起来是错位的。
+
+        标签按需创建，绝大多数分组不会用到它；插在描述之后、超链接之前，
+        免得落到 showHyperLinkLabel() 追加的 stretch 右边被推到行尾
+        """
+        if self.warningLabel is None:
+            self.warningLabel = WarningLabel(parent = self.contentLayout.parentWidget())
+
+            self.contentLayout.insertSpacing(1, 8)
+            self.contentLayout.insertWidget(2, self.warningLabel, 0, Qt.AlignmentFlag.AlignLeft)
+
+        self.warningLabel.setText(text)
+        self.warningLabel.setVisible(bool(text))
 
 class GroupWidget(_GroupWidget, GuideSettingCardBase):
     def __init__(self, icon, title, content, widget, stretch = 0):
@@ -428,7 +450,7 @@ class NumberSettingCard(ExpandGroupSettingCard):
         self.global_number_group = self.addGroup(
             "",
             self.tr("Global Sequential Starting Number"),
-            self.get_global_starting_number_content(config.global_starting_number),
+            self.get_global_starting_number_content(runtime.naming.global_starting_number),
             self.custom_global_starting_number_btn
         )
 
@@ -450,7 +472,7 @@ class NumberSettingCard(ExpandGroupSettingCard):
         self.global_number_group.setEnabled(type_index == 2)
 
     def set_current_global_starting_number(self, value: int):
-        config.global_starting_number = value
+        runtime.naming.global_starting_number = value
 
         self.global_number_group.setContent(self.get_global_starting_number_content(value))
 
@@ -462,7 +484,7 @@ class NumberSettingCard(ExpandGroupSettingCard):
 
         dialog = StartingNumberDialog(
             self.tr("Customize Global Sequential Starting Number"), 
-            config.global_starting_number, 
+            runtime.naming.global_starting_number, 
             self.parent_window
         )
 
@@ -470,7 +492,7 @@ class NumberSettingCard(ExpandGroupSettingCard):
             self.set_current_global_starting_number(dialog.starting_number)
 
     def _update_global_starting_number(self):
-        self.get_global_starting_number_content(config.global_starting_number)
+        self.get_global_starting_number_content(runtime.naming.global_starting_number)
 
 class CDNSettingCard(ExpandGroupSettingCard):
     def __init__(self, parent_window, parent = None):
@@ -527,6 +549,143 @@ class FFmpegSettingCard(ExpandGroupSettingCard):
 
         self.custom_group.setEnabled(self.source_choice.currentIndex() == 2)
 
+class MediaOptionsCard(ExpandGroupSettingCard):
+    """
+    下载哪几路流、下完之后怎么处理。
+
+    同一个卡片有两个入口：下载选项对话框与设置界面。两者的差别只在何时写回 ——
+    对话框是一个事务，关掉就是取消，改动必须丢掉；设置界面没有「确定」按钮，
+    改一下就该生效。因此这里既不自己决定写回时机，也不直接绑定 ConfigItem，
+    只负责在改动时发 changed、并提供 save() 供调用方在自己认为合适的时机落盘：
+
+        # 设置界面
+        card.changed.connect(card.save)
+        # 下载选项对话框：accept() 时调用一次 card.save()
+
+    这些值存在 config 上而不是 runtime（3cfb1a4d 曾把它们归为运行时状态），
+    理由见 config.py 里 download_video_stream 那一段
+    """
+
+    # 任一开关或下拉框发生变化时发出，on_load() 装载期间不会发
+    changed = Signal()
+
+    def __init__(self, parent_window, parent = None):
+        super().__init__(ExtendedFluentIcon.OPTIONS, self.tr("Media Options"), self.tr("Configure download behavior for video and audio streams"), parent)
+
+        self.parent_window = parent_window
+
+        self.download_video_stream_switch = SwitchButton(parent = self, indicatorPos = IndicatorPosition.RIGHT)
+        self.download_audio_stream_switch = SwitchButton(parent = self, indicatorPos = IndicatorPosition.RIGHT)
+
+        self.merge_video_audio_switch = SwitchButton(parent = self, indicatorPos = IndicatorPosition.RIGHT)
+        self.keep_original_files_switch = SwitchButton(parent = self, indicatorPos = IndicatorPosition.RIGHT)
+
+        self.original_files_type_choice = ComboBox(parent = self)
+        self.original_files_type_choice.addItems([self.tr("Both"), self.tr("Video Only"), self.tr("Audio Only")])
+
+        self.addGroup("", self.tr("Download standalone video stream"), self.tr("Turn this off to download the audio track only"), self.download_video_stream_switch)
+        self.addGroup("", self.tr("Download standalone audio stream"), self.tr("Turning this off leaves the downloaded video silent"), self.download_audio_stream_switch)
+        self.merge_video_audio_group = self.addGroup("", self.tr("Merge video and audio"), self.tr("Turning this off saves video and audio as two separate files"), self.merge_video_audio_switch)
+        self.keep_original_files_group = self.addGroup("", self.tr("Keep original files"), self.tr("Keep the unmerged stream files in addition to the merged one"), self.keep_original_files_switch)
+        self.keep_original_files_type_group = self.addGroup("", self.tr("Original file type to keep"), self.tr("Choose which original file to keep"), self.original_files_type_choice)
+
+        self.showHyperLinkLabel(self.tr("About Media Options"))
+
+        self.connect_signals()
+
+        self.on_load()
+
+    def connect_signals(self):
+        self.download_video_stream_switch.checkedChanged.connect(self.on_change_download_stream_options)
+        self.download_audio_stream_switch.checkedChanged.connect(self.on_change_download_stream_options)
+        self.merge_video_audio_switch.checkedChanged.connect(self.on_change_merge_option)
+        self.keep_original_files_switch.checkedChanged.connect(self.on_change_keep_original_files_option)
+
+        self.hyper_label.clicked.connect(lambda: self.showGuideMessageBox(self.tr("Instructions"), Translator.MEDIA_OPTIONS_GUIDE()))
+
+        for switch in (self.download_video_stream_switch, self.download_audio_stream_switch,
+                       self.merge_video_audio_switch, self.keep_original_files_switch):
+            switch.checkedChanged.connect(self.changed)
+
+        self.original_files_type_choice.currentIndexChanged.connect(self.changed)
+
+    def on_load(self):
+        # 装载期间屏蔽信号：这些赋值会被下面几个 on_change_* 与 changed 收到，
+        # 而它们要表达的是「用户改了」，不是「界面刷新了」
+        widgets = [
+            self.download_video_stream_switch, self.download_audio_stream_switch,
+            self.merge_video_audio_switch, self.keep_original_files_switch,
+            self.original_files_type_choice
+        ]
+
+        for widget in widgets:
+            widget.blockSignals(True)
+
+        try:
+            self.download_video_stream_switch.setChecked(config.get(config.download_video_stream))
+            self.download_audio_stream_switch.setChecked(config.get(config.download_audio_stream))
+            self.merge_video_audio_switch.setChecked(config.get(config.merge_video_audio))
+            self.keep_original_files_switch.setChecked(config.get(config.keep_original_files))
+            self.original_files_type_choice.setCurrentIndex(config.get(config.keep_original_files_type).value)
+
+        finally:
+            for widget in widgets:
+                widget.blockSignals(False)
+
+        self.on_change_keep_original_files_option()
+
+    def save(self):
+        """把界面上的当前选择写回配置"""
+        config.set(config.download_video_stream, self.download_video_stream)
+        config.set(config.download_audio_stream, self.download_audio_stream)
+        config.set(config.merge_video_audio, self.merge_video_audio)
+        config.set(config.keep_original_files, self.keep_original_files)
+        config.set(config.keep_original_files_type, OriginalFileType(self.original_files_type_choice.currentIndex()))
+
+    def on_change_download_stream_options(self):
+        enable = self.download_video_stream_switch.isChecked() and self.download_audio_stream_switch.isChecked()
+
+        self.merge_video_audio_switch.setEnabled(enable)
+        self.merge_video_audio_switch.setChecked(enable)
+        self.merge_video_audio_group.setEnabled(enable)
+
+        keep_original_enable = enable and self.merge_video_audio_switch.isChecked()
+        self.keep_original_files_switch.setEnabled(keep_original_enable)
+        self.keep_original_files_group.setEnabled(keep_original_enable)
+
+        if not keep_original_enable:
+            self.keep_original_files_switch.setChecked(False)
+
+    def on_change_merge_option(self):
+        enable = self.merge_video_audio_switch.isChecked()
+
+        self.keep_original_files_switch.setEnabled(enable)
+        self.keep_original_files_group.setEnabled(enable)
+
+        if not enable:
+            self.keep_original_files_switch.setChecked(False)
+
+    def on_change_keep_original_files_option(self):
+        enable = self.keep_original_files_switch.isChecked()
+
+        self.keep_original_files_type_group.setEnabled(enable)
+
+    @property
+    def download_video_stream(self):
+        return self.download_video_stream_switch.isChecked()
+
+    @property
+    def download_audio_stream(self):
+        return self.download_audio_stream_switch.isChecked()
+
+    @property
+    def merge_video_audio(self):
+        return self.merge_video_audio_switch.isChecked()
+
+    @property
+    def keep_original_files(self):
+        return self.keep_original_files_switch.isChecked()
+
 class DownloadFormatCard(ExpandGroupSettingCard):
     def __init__(self, parent = None):
         super().__init__(FluentIcon.DOCUMENT, self.tr("Download Format"), self.tr("Configure output format settings for downloaded files"), parent)
@@ -567,18 +726,22 @@ class WindowBehaviorSettingCard(ExpandGroupSettingCard):
 
 class DownloadHandlingSettingCard(ExpandGroupSettingCard):
     def __init__(self, parent_window, parent = None):
-        super().__init__(FluentIcon.DOWNLOAD, self.tr("Download Handling"), self.tr("Configure download prompts, notifications, and file conflict handling"), parent)
+        super().__init__(FluentIcon.DOWNLOAD, self.tr("Download Handling"), self.tr("Configure download prompts, notifications, automatic retries, and file conflict handling"), parent)
 
         self.parent_window = parent_window
 
         self.show_download_options_dialog_switch = SettingSwitchButton(config.show_download_options_dialog, parent = self)
         self.show_notification_switch = SettingSwitchButton(config.show_notification, parent = self)
+        self.auto_retry_switch = SettingSwitchButton(config.auto_retry_enabled, parent = self)
+        self.auto_retry_count_slider = SettingSlider(config.auto_retry_max_count, self)
         self.duplicate_download_resolution_choice = SettingComboBox(config.duplicate_download_resolution, [self.tr("Continue"), self.tr("Skip"), self.tr("Always ask")], parent = self)
         self.file_conflict_resolution_choice = SettingComboBox(config.file_conflict_resolution, [self.tr("Auto-rename"), self.tr("Overwrite")], parent = self)
         self.prelocation_switch = SettingSwitchButton(config.preallocate_file_space, parent = self)
 
         self.addGroup("", self.tr("Show Download Options Dialog"), self.tr("Show a dialog before starting the download to customize settings for this task"), self.show_download_options_dialog_switch)
         self.addGroup("", self.tr("Show Notifications"), self.tr("Show notifications when downloads complete"), self.show_notification_switch)
+        self.addGroup("", self.tr("Retry Failed Downloads Automatically"), self.tr("Re-queue a task after a network error, with an increasing delay between attempts"), self.auto_retry_switch)
+        self.addGroup("", self.tr("Maximum Retry Attempts"), self.tr("Give up and wait for manual action after this many consecutive failed retries (default: 5)"), self.auto_retry_count_slider)
         preallocate_group = self.addGroup("", self.tr("Preallocate File Space"), self.tr("Preallocate file space before downloading to improve performance"), self.prelocation_switch)
         duplicate_group = self.addGroup("", self.tr("Duplicate Download Resolution"), self.tr("Choose the action when a duplicate download is detected"), self.duplicate_download_resolution_choice)
 
@@ -777,11 +940,11 @@ class MCPSettingCard(ExpandGroupSettingCard):
         if not config.get(config.mcp_enabled):
             text = self.tr("Disabled")
 
-        elif config.mcp_running:
+        elif runtime.mcp.running:
             text = self.tr("Listening on 127.0.0.1:{port}").format(port = config.get(config.mcp_port))
 
-        elif config.mcp_last_error:
-            text = self.tr("Failed to start: {error}").format(error = config.mcp_last_error)
+        elif runtime.mcp.last_error:
+            text = self.tr("Failed to start: {error}").format(error = runtime.mcp.last_error)
 
         else:
             text = self.tr("Not running")
@@ -832,10 +995,10 @@ class MCPSettingCard(ExpandGroupSettingCard):
         signal_bus.toast.show.emit(ToastNotificationCategory.SUCCESS, "", self.tr("Access token regenerated"))
 
     def _copy_config(self, entry: dict):
-        import json
+        from util.common._json import dumps
 
         QApplication.clipboard().setText(
-            json.dumps({"mcpServers": {"bili23-downloader": entry}}, indent = 2)
+            dumps({"mcpServers": {"bili23-downloader": entry}}, indent = 2)
         )
 
         signal_bus.toast.show.emit(ToastNotificationCategory.SUCCESS, "", self.tr("Client configuration copied"))

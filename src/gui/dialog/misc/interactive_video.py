@@ -1,6 +1,6 @@
 from PySide6.QtWidgets import QVBoxLayout
 
-from qfluentwidgets import SubtitleLabel, BodyLabel, RadioButton, CheckBox
+from qfluentwidgets import SubtitleLabel, BodyLabel, RadioButton
 
 from gui.component.dialog import DialogBase
 

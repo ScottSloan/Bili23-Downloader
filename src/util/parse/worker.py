@@ -11,6 +11,23 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+# 需要 wbi 签名的解析类型。签名密钥没就绪时，这些类型的解析必然失败。
+#
+# 刻意把「不需要签名」也列成一份，而不是简单地用「不在前一份里」判断：
+# 新增解析器时必须在这里明确表态一次，漏了就会被默认归到不需要签名那一侧，
+# 也就是弱网下照样弹出「解析失败」。test_parse_worker.py 会对着源码逐项核对
+WBI_PARSER_TYPES = frozenset({"video", "list", "space", "popular", "watch_later"})
+NO_WBI_PARSER_TYPES = frozenset({"bangumi", "cheese", "lesson", "favlist", "history", "audio"})
+
+def needs_wbi_signature(parser_type: str) -> bool:
+    """
+    该解析类型是否需要 wbi 签名。
+
+    b23 / festival 这两种短链不在此列：真实的解析类型要请求一次才知道，
+    拦下来可能误伤指向番剧的短链，交给 enc_wbi 的按需补取兜底即可。
+    """
+    return parser_type in WBI_PARSER_TYPES
+
 class WorkerBase:
     def get_parser(self, parser_type: str):
         match parser_type:

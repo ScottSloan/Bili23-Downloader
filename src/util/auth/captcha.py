@@ -43,7 +43,11 @@ class Captcha(AuthBase):
 
             if not self.server_running:
                 # 延迟启动服务器，确保在获取到验证码信息后才启动，避免不必要的资源占用
-                from .server import ServerManager
+                # 副作用导入：server 模块在导入期创建 server_manager，
+                # 其 __init__ 中连接了 start_server 信号。必须先完成导入，
+                # 紧接着的 emit 才有接收者，否则验证码服务器不会启动且无任何报错。
+                # 放在函数内是因为 server 模块反过来导入本模块，模块级导入会形成循环
+                from .server import ServerManager   # noqa: F401
 
                 signal_bus.login.start_server.emit()
 

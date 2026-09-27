@@ -3,7 +3,8 @@ from PySide6.QtCore import QTimer, Signal
 
 from qfluentwidgets import MessageBox
 
-from gui.dialog.download_options.card import MediaInfoCard, MediaOptionsCard
+from gui.dialog.download_options.card import MediaInfoCard
+from gui.component.setting import MediaOptionsCard
 from gui.component.widget.scroll import ScrollArea
 
 from util.parse.preview.info import PreviewerInfo
@@ -11,6 +12,7 @@ from util.common.data import video_quality_map, audio_quality_map, video_codec_m
 from util.common.translator import Translator
 from util.common.signal_bus import signal_bus
 from util.common.config import config
+from util.common.runtime import runtime
 
 class MediaSettingsPage(ScrollArea):
     # 下载内容发生变化时发出，用于刷新下载内容预览
@@ -78,16 +80,13 @@ class MediaSettingsPage(ScrollArea):
         )
 
     def on_save(self):
-        config.video_quality_id = self.media_info_card.video_quality_id
-        config.audio_quality_id = self.media_info_card.audio_quality_id
-        config.video_codec_id = self.media_info_card.video_codec_id
+        runtime.download.video_quality_id = self.media_info_card.video_quality_id
+        runtime.download.audio_quality_id = self.media_info_card.audio_quality_id
+        runtime.download.video_codec_id = self.media_info_card.video_codec_id
 
-        config.download_video_stream = self.media_options_card.download_video_stream
-        config.download_audio_stream = self.media_options_card.download_audio_stream
-        config.merge_video_audio = self.media_options_card.merge_video_audio
-        config.keep_original_files = self.media_options_card.keep_original_files
-
-        config.keep_original_files_type = self.media_options_card.original_files_type_choice.currentIndex()
+        # 媒体选项存的是 config，不是 runtime —— 对话框只是它的两个入口之一，
+        # 因此同样在这里统一落盘；关掉对话框等于取消，那时不会走到这里
+        self.media_options_card.save()
 
     def on_check(self):
         # 只下载独立视频流会导致没有声音，提示用户确认

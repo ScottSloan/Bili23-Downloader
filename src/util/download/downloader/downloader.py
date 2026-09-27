@@ -6,7 +6,7 @@ from ...common.data import reversed_video_quality_map
 from ...common.io.directory import Directory
 from ...common.translator import Translator
 from ...common.signal_bus import signal_bus
-from ...common._json import json_loads
+from ...common._json import loads
 from ...common.config import config
 from ...common.io.file import File
 
@@ -80,18 +80,10 @@ class ChunkWorker(QRunnable):
     # 每写满这么多字节就 flush 一次并记录断点。进程崩溃时 Python 缓冲区里的数据会丢，
     # flush 之后数据已交给操作系统，即便进程被强杀也仍在磁盘上，断点因此是可信的。
     flush_interval = 1024 * 1024
-    retryable_status_codes = {408, 429, 500, 502, 503, 504}
-    permanent_status_codes = {400, 401, 403, 404, 405, 410, 416}
-    permanent_errnos = {
-        errno.EACCES,
-        errno.EPERM,
-        errno.ENOENT,
-        errno.ENOSPC,
-        errno.EROFS,
-        errno.EISDIR,
-        errno.ENOTDIR,
-    }
-    retryable_errnos = {
+    # 只做成员判断，用 frozenset 让不可变成为强制约束而非约定
+    retryable_status_codes = frozenset({408, 429, 500, 502, 503, 504})
+    permanent_status_codes = frozenset({400, 401, 403, 404, 405, 410, 416})
+    retryable_errnos = frozenset({
         errno.EAGAIN,
         errno.EWOULDBLOCK,
         errno.EINTR,
@@ -103,7 +95,7 @@ class ChunkWorker(QRunnable):
         errno.ENETUNREACH,
         errno.EHOSTUNREACH,
         errno.EPIPE,
-    }
+    })
 
     def __init__(self, session: httpx.Client, file_key: str, chunk_index: int, chunk_range: tuple[int, int], file_path: Path, url: str, referer: str, task_info: TaskInfo, stop_event: Event, lock: Lock, token_bucket: TokenBucket, generation: int, parent=None, on_chunk_start=None, on_chunk_end=None):
         super().__init__()
@@ -125,7 +117,7 @@ class ChunkWorker(QRunnable):
         self.on_chunk_start = on_chunk_start
         self.on_chunk_end = on_chunk_end
 
-    def _invoke_download_error(self, message: str):
+    def _invoke_download_error(self, message: str, retryable: bool):
         if self.parent:
             logger.error(message)
 
@@ -133,7 +125,8 @@ class ChunkWorker(QRunnable):
                 self.parent,
                 "on_download_error",
                 Qt.ConnectionType.QueuedConnection,
-                Q_ARG(str, message)
+                Q_ARG(str, message),
+                Q_ARG(bool, retryable)
             )
 
     def _is_retryable_exception(self, exc: Exception):
@@ -182,7 +175,9 @@ class ChunkWorker(QRunnable):
             message = f"分片 {self.chunk_index + 1} 遇到不可重试错误：{reason}"
 
         self.stop_event.set()
-        self._invoke_download_error(message)
+        # retryable 一路带到 Downloader：任务级自动重试只认网络类错误，
+        # 403/404 这类永久错误必须直接进终态，重试只会原样再失败一次
+        self._invoke_download_error(message, retryable)
 
     def _notify_chunk_finished(self):
         QMetaObject.invokeMethod(
@@ -261,26 +256,35 @@ class ChunkWorker(QRunnable):
         # 该值同时会写进任务快照，进程崩溃后重启也能从这里继续，而不是退回到上一个整片边界。
         written = self._load_offset()
         attempt = 0
+        # 服务端每轮只给一小段时，续传本身是有进展的，不该计入重试次数，
+        # 但也不能任由它无限空转，这里给总轮数一个上界
+        rounds = 0
+        max_rounds = self.max_retries * 4
 
         while (
             not self.stop_event.is_set()
             and self.parent.is_generation_active(self.generation)
             and attempt < self.max_retries
+            and rounds < max_rounds
         ):
             if written >= self.chunk_size:
-                # 整片已写满。服务端返回的 Content-Length 大于分片实际剩余时会走到这里，
-                # 此时再发请求只会得到一个非法 Range（416），直接按完成处理。
+                # 整片已写满。这是分片完成的唯一判据：只要还没填满，无论服务端本轮给了多少，
+                # 都必须继续续传，否则文件里会留下一段零填充。预分配开启时文件大小恒等于
+                # 目标值，这种空洞在文件大小上看不出来，最终表现为合并后的视频后半段无法播放
                 self._notify_chunk_finished()
 
                 break
+
+            rounds += 1
 
             headers = {
                 "Range": f"bytes={chunk_start + written}-{chunk_end - 1}"
             }
 
+            written_before = written    # 本轮开始时的落盘量，用来判断这一轮是否真有进展
+            remaining = self.chunk_size - written
             downloaded = 0      # 本轮从服务端收到的字节数
             pending = 0         # 已 write 但尚未 flush、因而还不能计入断点的字节数
-            expected_size = 0
             flushed = False
 
             try:
@@ -292,18 +296,27 @@ class ChunkWorker(QRunnable):
                     with self.session.stream("GET", self.url, headers = headers, follow_redirects = True, timeout = 10) as response:
                         response.raise_for_status()
 
-                        if written and response.status_code != 206:
-                            # 服务端忽略了 Range，续传位置无从谈起，只能整片从头重来
-                            with self.lock:
-                                self.task_info.Download.downloaded_size = max(self.task_info.Download.downloaded_size - written, 0)
+                        if response.status_code != 206:
+                            # 服务端忽略了 Range，响应体是整个文件。照着分片起点写下去会盖掉
+                            # 后面所有分片的数据，而那些分片可能正在同时写入。
+                            # 首轮（written 为 0）同样要拦：那时越界写坏的是别人而不是自己
+                            if written:
+                                with self.lock:
+                                    self.task_info.Download.downloaded_size = max(self.task_info.Download.downloaded_size - written, 0)
 
-                            written = 0
-                            self._commit_offset(0)
+                                written = 0
+                                self._commit_offset(0)
 
-                            raise StopIteration("服务端未按 Range 返回 206，分片将从头重新下载")
+                            raise StopIteration(f"服务端未按 Range 返回 206（实际 {response.status_code}），本轮作废")
 
-                        # 获取服务端实际承诺下发的体量。若是最后一个切片且 CDN 数据缩水，它将以实际值为准
-                        expected_size = int(response.headers.get("Content-Length", self.chunk_size - written))
+                        # 服务端承诺下发的体量。仅用于记录异常，不再作为分片完成的判据
+                        expected_size = int(response.headers.get("Content-Length", remaining))
+
+                        if expected_size != remaining:
+                            logger.warning(
+                                "分片 %s 的 Content-Length 与请求的 Range 不符（承诺 %s，请求 %s），文件：%s",
+                                self.chunk_index + 1, expected_size, remaining, self.file_path
+                            )
 
                         for chunk in response.iter_bytes(chunk_size = 8192):
                             if (
@@ -312,27 +325,40 @@ class ChunkWorker(QRunnable):
                             ):
                                 break
 
-                            if chunk:
-                                chunk_len = len(chunk)
-                                if self.token_bucket:
-                                    self.token_bucket.consume(chunk_len, self.stop_event)
+                            if not chunk:
+                                continue
 
-                                f.write(chunk)
-                                downloaded += chunk_len
-                                pending += chunk_len
+                            # 绝不越过分片边界。服务端多给的字节会盖掉下一个分片的数据，
+                            # 多线程下正好撞上对方正在写入，结果就是内容错乱
+                            allowed = self.chunk_size - written - pending
 
-                                with self.lock:
-                                    self.task_info.Download.downloaded_size += chunk_len
+                            if allowed <= 0:
+                                break
 
-                                if pending >= self.flush_interval:
-                                    # 定期把缓冲区交给操作系统并推进断点，
-                                    # 这样崩溃后恢复最多只损失 flush_interval 字节，而不是整个分片
-                                    f.flush()
+                            if len(chunk) > allowed:
+                                chunk = chunk[:allowed]
 
-                                    written += pending
-                                    pending = 0
+                            chunk_len = len(chunk)
 
-                                    self._commit_offset(written)
+                            if self.token_bucket:
+                                self.token_bucket.consume(chunk_len, self.stop_event)
+
+                            f.write(chunk)
+                            downloaded += chunk_len
+                            pending += chunk_len
+
+                            with self.lock:
+                                self.task_info.Download.downloaded_size += chunk_len
+
+                            if pending >= self.flush_interval:
+                                # 定期把缓冲区交给操作系统并推进断点，
+                                # 这样崩溃后恢复最多只损失 flush_interval 字节，而不是整个分片
+                                f.flush()
+
+                                written += pending
+                                pending = 0
+
+                                self._commit_offset(written)
 
                 finally:
                     # 无论正常结束还是中途抛错，都要先关闭文件（隐含 flush）。
@@ -357,14 +383,23 @@ class ChunkWorker(QRunnable):
                 ):
                     break
 
-                # 检查区块是否真下载到了服务端承诺的大小（原为严格检测 self.chunk_size）
-                if downloaded >= expected_size:
+                if written >= self.chunk_size:
                     self._notify_chunk_finished()
 
                     break
-                else:
-                    # 提前结束但没有报错，说明连接意外断开，触发重试
-                    raise StopIteration(f"Chunk mismatch (Expected: {expected_size}, Got: {downloaded}), triggering retry.")
+
+                if written > written_before:
+                    # 没写满，但这一轮确实推进了断点。服务端提前断流或给少了都算这种情况，
+                    # 下一轮带着新的 Range 接着续传即可，不必整片重下，也不计入重试次数
+                    logger.warning(
+                        "分片 %s 本轮未写满（已写 %s/%s，本轮收到 %s），继续续传，文件：%s",
+                        self.chunk_index + 1, written, self.chunk_size, downloaded, self.file_path
+                    )
+
+                    continue
+
+                # 一个字节都没推进，按失败重试处理
+                raise StopIteration(f"Chunk mismatch (Expected: {remaining}, Got: {downloaded}), triggering retry.")
 
             except Exception as exc:
                 if self.stop_event.is_set():
@@ -376,6 +411,17 @@ class ChunkWorker(QRunnable):
                     with self.lock:
                         self.task_info.Download.downloaded_size = max(self.task_info.Download.downloaded_size - pending, 0)
 
+                if written > written_before:
+                    # 传了一段又断开。断点确实推进了，下一轮接着续传即可，
+                    # 不该把这种情况算进重试次数 —— 否则一个每次只传一小段的节点
+                    # 会在分片还没写满时就耗光重试，而重试次数本是留给「毫无进展」的
+                    logger.warning(
+                        "分片 %s 本轮传输中断（已写 %s/%s）：%s，将继续续传",
+                        self.chunk_index + 1, written, self.chunk_size, self._build_error_message(exc)
+                    )
+
+                    continue
+
                 attempt += 1
                 retryable = self._is_retryable_exception(exc)
 
@@ -384,6 +430,22 @@ class ChunkWorker(QRunnable):
                     break
 
                 self._interruptible_sleep(min(2 ** (attempt - 1), 8))
+
+        else:
+            # while 条件不再成立而退出。写满的情况已在循环体里 notify 过，
+            # 走到这里若分片仍未写满，说明续传轮数耗尽，必须报错，
+            # 不能让带着空洞的分片被当作完成
+            if (
+                rounds >= max_rounds
+                and written < self.chunk_size
+                and not self.stop_event.is_set()
+                and self.parent.is_generation_active(self.generation)
+            ):
+                self._report_download_failure(
+                    StopIteration(f"续传 {rounds} 轮后仍未写满（{written}/{self.chunk_size}）"),
+                    attempt,
+                    False
+                )
 
 # 正在销毁流程中的下载器。
 #
@@ -454,9 +516,29 @@ class Downloader(QObject):
         self.speed_timer.setInterval(1000)
         self.speed_timer.timeout.connect(self._calculate_speed)
 
+        # 任务级自动重试。分片级重试（ChunkWorker.max_retries）解决的是单个分片的瞬时抖动，
+        # 而 CDN 在几 KB 处反复掐断连接时，整条链路会把 5 次配额一次性耗光并把任务钉死在
+        # FAILED，此后只能靠用户手动点击恢复（Issue #469）。这里补的是任务这一层的重排队。
+        self._auto_retry_count = 0
+        self._retry_pending = False
+        self._retry_remaining = 0
+        # 安排重试时的代次快照。暂停、删除、退出都会提升代次，据此判断这次重试是否已作废
+        self._retry_generation = 0
+        # 安排重试时的已下载量。下次失败时若已超过它，说明这中间确有新数据落盘，
+        # 不是同一次失败的延续，重试配额应当归零 —— 否则网络只是时好时坏的用户
+        # 会在几次抖动之后永久失去自动重试能力
+        self._retry_baseline_size = 0
+
+        # 与 speed_timer 同理，必须挂 parent，见上方注释
+        self._retry_timer = QTimer(self)
+        self._retry_timer.setInterval(1000)
+        self._retry_timer.timeout.connect(self._on_retry_tick)
+
     def start(self):
         if self.session is None:
             self.init_session()
+
+        self._cancel_auto_retry()
 
         self._completion_triggered = False
         self._download_error_triggered = False
@@ -497,7 +579,7 @@ class Downloader(QObject):
         if self._stop_event.is_set():
             return
         
-        download_info = json_loads(download_info_json)
+        download_info = loads(download_info_json)
         self.download_list = download_info["download_list"]
         self.task_info.Download.status = DownloadStatus.DOWNLOADING
         self.task_info.Download.total_size = download_info["total_size"]
@@ -526,8 +608,8 @@ class Downloader(QObject):
             error_message
         )
 
-    @Slot(str)
-    def on_download_error(self, error_message: str):
+    @Slot(str, bool)
+    def on_download_error(self, error_message: str, retryable: bool):
         if self._download_error_triggered:
             return
 
@@ -544,16 +626,111 @@ class Downloader(QObject):
         self._close_session()
         self.speed_timer.stop()
 
+        scheduled = self._schedule_auto_retry(retryable)
+
         self.update_item(self.task_info)
 
         signal_bus.download.auto_manage_concurrent_downloads.emit()
 
-        # 
-        signal_bus.toast.show_long_message.emit(
-            ToastNotificationCategory.ERROR,
-            Translator.ERROR_MESSAGES("DOWNLOAD_FAILED"),
-            error_message
+        # 已安排自动重试时不弹提示：网络差的用户往往几十个任务一起失败，
+        # 每轮重试都弹一次比手动点重试还吵。只有真正进终态才提示一次
+        if not scheduled:
+            signal_bus.toast.show_long_message.emit(
+                ToastNotificationCategory.ERROR,
+                Translator.ERROR_MESSAGES("DOWNLOAD_FAILED"),
+                error_message
+            )
+
+    def _schedule_auto_retry(self, retryable: bool):
+        # 返回是否已安排重试。未安排时调用方维持原有的终态失败处理。
+        #
+        # 先无条件清掉上一轮的倒计时：本次若不再安排重试（配额耗尽、错误不可重试），
+        # 残留的定时器和倒计时文案会让一个已经放弃的任务在界面上继续显示「N 秒后重试」
+        self._cancel_auto_retry()
+
+        if not retryable or not config.get(config.auto_retry_enabled):
+            return False
+
+        # 已下载量与上次安排重试时不同，说明这不是同一次失败的延续，配额归零：
+        # 变多是网络时好时坏，中间确有数据落盘；变少则是任务被重新下载清零过。
+        # 两种都该重新给一份配额，否则抖动几次就耗光，长时间挂机反而更早放弃
+        if self.task_info.Download.downloaded_size != self._retry_baseline_size:
+            self._auto_retry_count = 0
+
+        max_count = config.get(config.auto_retry_max_count)
+
+        if self._auto_retry_count >= max_count:
+            logger.info("任务 %s 自动重试已达上限（%s 次），转为等待用户处理", self.task_info.Basic.task_id, max_count)
+
+            return False
+
+        self._auto_retry_count += 1
+
+        # 退避节奏 30s → 60s → 120s → 240s → 300s 封顶。刻意与分片级那套
+        # （秒级、封顶 8 秒）拉开量级：分片级容忍的是瞬时抖动，任务级面对的是
+        # CDN 持续掐断，间隔太短只是把同一个失败更密集地重放一遍
+        self._retry_remaining = min(30 * 2 ** (self._auto_retry_count - 1), 300)
+        self._retry_baseline_size = self.task_info.Download.downloaded_size
+        self._retry_generation = self.download_generation
+        self._retry_pending = True
+
+        self._update_retry_label()
+        self._retry_timer.start()
+
+        logger.info(
+            "任务 %s 将在 %s 秒后自动重试（第 %s/%s 次）",
+            self.task_info.Basic.task_id, self._retry_remaining, self._auto_retry_count, max_count
         )
+
+        return True
+
+    def _update_retry_label(self):
+        self.task_info.Download.status_label = Translator.TIP_MESSAGES("AUTO_RETRY_PENDING").format(
+            seconds = self._retry_remaining,
+            current = self._auto_retry_count,
+            total = config.get(config.auto_retry_max_count)
+        )
+
+    def _cancel_auto_retry(self):
+        self._retry_timer.stop()
+        self._retry_pending = False
+
+        # 销毁流程里 task_info 会被置空，而本方法在 on_delete 开头也会被调到
+        if self.task_info is not None:
+            self.task_info.Download.status_label = ""
+
+    @Slot()
+    def _on_retry_tick(self):
+        # 暂停、删除、退出都会提升代次；手动重试会把状态改走。任一条命中即作废
+        if (
+            not self._retry_pending
+            or self.task_info is None
+            or not self.is_generation_active(self._retry_generation)
+            or self.task_info.Download.status != DownloadStatus.FAILED
+        ):
+            self._cancel_auto_retry()
+
+            return
+
+        self._retry_remaining -= 1
+
+        if self._retry_remaining > 0:
+            self._update_retry_label()
+
+            # 倒计时是瞬态的，只刷界面不落盘：每秒往 task.db 写一次纯属浪费
+            signal_bus.download.update_downloading_item.emit(self.task_info)
+
+            return
+
+        self._cancel_auto_retry()
+
+        # 不直接 start()：并发上限是 _manageConcurrentDownloads 在外部数槽位控制的，
+        # 自己 start 会突破 download_parallel。改回排队状态后交还给调度器决定何时跑
+        self.task_info.Download.status = DownloadStatus.QUEUED
+
+        self.update_item(self.task_info)
+
+        signal_bus.download.auto_manage_concurrent_downloads.emit()
 
     @Slot()
     def start_download(self):
@@ -575,7 +752,8 @@ class Downloader(QObject):
             self._dispatch_start_worker()
 
         except Exception as e:
-            self.on_download_error(str(e))
+            # 兜底捕获的是准备阶段的异常（磁盘、预分配等），不是网络抖动，不自动重试
+            self.on_download_error(str(e), False)
 
     @Slot()
     def _dispatch_start_worker(self):
@@ -619,7 +797,7 @@ class Downloader(QObject):
         except Exception as e:
             with self.start_worker_lock:
                 self.start_worker_pending = False
-            self.on_download_error(str(e))
+            self.on_download_error(str(e), False)
 
     def _start_worker_in_background(self, generation: int):
         try:
@@ -632,7 +810,8 @@ class Downloader(QObject):
                 self,
                 "on_download_error",
                 Qt.ConnectionType.QueuedConnection,
-                Q_ARG(str, str(e))
+                Q_ARG(str, str(e)),
+                Q_ARG(bool, False)
             )
         finally:
             with self.start_worker_lock:
@@ -743,32 +922,63 @@ class Downloader(QObject):
     def start_merge(self):
         # 合并失败后可以重试，上一次的 Merger 不再需要。它挂在本对象的 parent 链上，
         # 不主动释放就会一直累积到任务结束
-        self._release_merger()
+        if not self._release_merger():
+            # 上一轮的 FFmpeg 还活着。此刻再起一个，两个进程会同时写同一个输出文件，
+            # 在 Windows 上表现为互相占用，轻则合并失败，重则产出损坏的文件。
+            # 先落到失败态并释放合并额度，由用户稍后重试
+            self.task_info.Download.status = DownloadStatus.FFMPEG_FAILED
+
+            signal_bus.download.update_downloading_item.emit(self.task_info)
+            signal_bus.download.auto_manage_concurrent_downloads.emit()
+            signal_bus.toast.show.emit(
+                ToastNotificationCategory.WARNING,
+                "",
+                Translator.ERROR_MESSAGES("FFMPEG_STILL_RUNNING")
+            )
+
+            return
 
         self.task_info.Download.status = DownloadStatus.MERGING
 
         self.merger = Merger(self.task_info, parent = self)
         self.merger.start()
 
-    def _release_merger(self):
-        # 先停掉 FFmpeg 线程再释放对象：Merger 与其中的 FFmpegRunner 都挂在
-        # 本对象的 parent 链上，销毁 Downloader 会连带析构它们，
-        # 而销毁一个仍在运行的 QThread 会让 Qt 直接 qFatal 中止进程
+    def _release_merger(self, timeout: int = 3000):
+        """
+        停止并释放当前 Merger，返回它是否已经干净收尾
+
+        先停掉 FFmpeg 线程再释放对象：Merger 与其中的 FFmpegRunner 都挂在
+        本对象的 parent 链上，销毁 Downloader 会连带析构它们，
+        而销毁一个仍在运行的 QThread 会让 Qt 直接 qFatal 中止进程。
+
+        线程没能按时退出时不可 deleteLater，改为把整个 Merger 从链上摘走，
+        让它自己等线程结束再回收
+        """
         merger = self.merger
         self.merger = None
 
         if merger is None:
-            return
+            return True
 
         try:
-            merger.stop()
-            merger.deleteLater()
+            if merger.stop(timeout):
+                merger.deleteLater()
+
+                return True
+
+            logger.warning(f"FFmpeg 线程在 {timeout} ms 内未退出，已将 Merger 从任务上摘除")
+
+            merger.detach()
+
+            return False
 
         except RuntimeError:
             # C++ 侧已经析构，无需再处理
-            pass
+            return True
 
     def pause(self):
+        self._cancel_auto_retry()
+
         with self.start_worker_lock:
             self.download_generation += 1
             self.start_worker_requested = False
@@ -788,6 +998,10 @@ class Downloader(QObject):
         self.start()
 
     def retry(self):
+        # 用户手动介入，重新给一份完整的自动重试配额。
+        # 自动重试走的是「改回 QUEUED 交给调度器」那条路，不经过这里，不会把自己的配额刷掉
+        self._auto_retry_count = 0
+
         match self.task_info.Download.status:
             case DownloadStatus.FAILED:
                 self.start()
@@ -889,8 +1103,66 @@ class Downloader(QObject):
         if not self.task_info.Download.queue and self.task_info.Download.status == DownloadStatus.DOWNLOADING:
             self.on_download_completed()
 
+    def _verify_file_complete(self, file_key: str):
+        """
+        文件出队前的最后一道校验，确认每一片都真的写满了。
+
+        不能拿文件大小当判据：预分配开启时文件一创建就是目标大小，中间少写的那几段
+        只是零填充，st_size 完全看不出来，最终表现为合并后的视频后半段无法播放。
+        因此以各分片确认落盘的字节数之和为准。
+        """
+        file_info = self.task_info.Download.files.get(file_key) or {}
+        file_size = self.download_list.get(file_key, {}).get("file_size", 0)
+        total_chunks = file_info.get("total_chunks", 0)
+
+        if file_size <= 0 or total_chunks <= 0:
+            return True
+
+        with self.update_lock:
+            offsets = file_info.get("chunk_offsets") or {}
+
+            if len(offsets) < total_chunks:
+                # 断点表是分片续传一并引入的，更早版本留下的任务快照里没有这份记录，
+                # 已完成的分片自然也就查不到落盘字节数。这种任务无从校验，放行即可，
+                # 它们本来也不会走到新的分片判定逻辑
+                logger.info("任务缺少完整的分片断点表，跳过完整性校验，文件：%s", file_key)
+
+                return True
+
+            written = 0
+
+            for index in range(total_chunks):
+                start = index * self.chunk_size
+                end = min(start + self.chunk_size, file_size)
+
+                try:
+                    offset = int(offsets.get(str(index), 0))
+
+                except (TypeError, ValueError):
+                    offset = 0
+
+                written += max(min(offset, end - start), 0)
+
+        if written >= file_size:
+            return True
+
+        # 走到这里说明有分片没写满却被判成了完成，属于不该出现的情况。
+        # 与其把带空洞的文件送进 FFmpeg 合并出一个能打开但播不完的视频，
+        # 不如直接失败，让用户重试
+        message = f"文件下载不完整（已写入 {written} / {file_size} 字节），请重试该任务"
+
+        logger.error("%s，文件：%s", message, self.download_list.get(file_key, {}).get("file_path", file_key))
+
+        # 分片写满却校验不过，是断点表被写坏这类内部不变量问题，重试会在同样的坏状态上空转
+        self.on_download_error(message, False)
+
+        return False
+
     @Slot(str)
     def on_file_completed(self, file_key: str):
+        if not self._verify_file_complete(file_key):
+            return
+
         # 出队必须与分片状态在同一个快照里落盘。若先写库再出队，崩溃窗口内保存下来的记录
         # 会是「分片全部完成但文件仍在队列中」，重启后该文件会被当作从未下载过而整片重下。
         if file_key in self.task_info.Download.queue:
@@ -1108,6 +1380,7 @@ class Downloader(QObject):
             self.start_worker_requested = False
 
         self.speed_timer.stop()
+        self._cancel_auto_retry()
 
         pool = self.thread_pool
 
@@ -1124,6 +1397,8 @@ class Downloader(QObject):
     def on_delete(self):
         # 在移出管理器之前先登记，保证销毁期间始终有一份来自 GUI 线程的引用
         _pending_delete.add(self)
+
+        self._cancel_auto_retry()
 
         self._stop_event.set()
 

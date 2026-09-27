@@ -1,6 +1,7 @@
 from ..common.io.directory import Directory
 from ..common.enum import FFmpegSource
 from ..common.config import config
+from ..common.runtime import runtime
 
 from pathlib import Path
 import logging
@@ -26,7 +27,7 @@ def set_ffmpeg_environment(path: str):
 
     logger.info(f"已将 FFmpeg 路径 {path} 添加到环境变量")
 
-    config.no_ffmpeg_available = False
+    runtime.ffmpeg.unavailable = False
 
 def try_system_ffmpeg():
     ffmpeg_path = shutil.which(ffmpeg_executable)
@@ -40,7 +41,7 @@ def try_system_ffmpeg():
     return False
 
 def try_bundled_ffmpeg():
-    if config.bundle_ffmpeg_exist:
+    if runtime.ffmpeg.bundle_exist:
         logger.info(f"找到附带的 FFmpeg 可执行文件：{bundle_ffmpeg_path}")
         set_ffmpeg_environment(bundle_ffmpeg_path)
         return True
@@ -53,7 +54,7 @@ def get_bundle_ffmpeg_path():
 
 def on_ffmpeg_not_found():
     logger.error("没有可用的 FFmpeg 可执行文件")
-    config.no_ffmpeg_available = True
+    runtime.ffmpeg.unavailable = True
     return False
 
 def init_ffmpeg():
@@ -66,10 +67,10 @@ def init_ffmpeg():
 
     _initialized = True
 
-    config.ffmpeg_executable = ffmpeg_executable
+    runtime.ffmpeg.executable = ffmpeg_executable
 
     bundle_ffmpeg_path = get_bundle_ffmpeg_path()
-    config.bundle_ffmpeg_exist = bundle_ffmpeg_path.exists()
+    runtime.ffmpeg.bundle_exist = bundle_ffmpeg_path.exists()
 
     match config.get(config.ffmpeg_source):
         case FFmpegSource.BUNDLED:

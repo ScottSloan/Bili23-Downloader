@@ -1,6 +1,6 @@
 from ...common.translator import Translator
 from ...common.enum import MetadataType
-from ...common._json import json_dumps
+from ...common._json import dumps
 from ...download.task.options import resolve
 
 from ...network.request import SyncNetWorkRequest, ResponseType
@@ -51,7 +51,7 @@ class MetadataParser(AdditionalParserBase):
         # 过滤掉空值
         filtered_data = {k: v for k, v in data.items() if v not in [None, "", [], {}, 0]}
 
-        return json_dumps(filtered_data, indent = 2)
+        return dumps(filtered_data, indent = 2)
 
     def _save_poster(self):
         path = Path(self.task_info.File.download_path, self.task_info.File.folder, "poster.jpg")

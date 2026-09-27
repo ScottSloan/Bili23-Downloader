@@ -1,6 +1,6 @@
 from PySide6.QtWidgets import QVBoxLayout
 
-from qfluentwidgets import SubtitleLabel, ScrollArea
+from qfluentwidgets import SubtitleLabel
 
 from gui.component.setting import FontGroup, BorderGroup, AdvancedGroup, ResolutionGroup
 from gui.component.dialog import DialogBase

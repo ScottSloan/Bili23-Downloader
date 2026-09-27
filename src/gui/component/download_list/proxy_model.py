@@ -115,7 +115,7 @@ class DownloadListProxyModel(QSortFilterProxyModel):
     def data(self, index: QModelIndex, role = Qt.ItemDataRole.DisplayRole):
         return super().data(index, role)
 
-    def queryRowCover(self, cover_id: str, cover_url: str, row: int):
+    def queryRowCover(self, cover_id: str, cover_url: str, row: int, device_pixel_ratio: float):
         source = self._source()
 
         if not source:
@@ -125,9 +125,9 @@ class DownloadListProxyModel(QSortFilterProxyModel):
         source_index = self.mapToSource(proxy_index)
 
         if not source_index.isValid():
-            return source.queryRowCover(None, None, 0)
+            return source.queryRowCover(None, None, 0, device_pixel_ratio)
 
-        return source.queryRowCover(cover_id, cover_url, source_index.row())
+        return source.queryRowCover(cover_id, cover_url, source_index.row(), device_pixel_ratio)
 
     def updateRowCover(self, cover_id: str, image):
         source = self._source()

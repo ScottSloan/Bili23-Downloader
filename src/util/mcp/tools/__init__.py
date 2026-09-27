@@ -1,8 +1,8 @@
 from ..invoke import MainThreadTimeout
+from ...common._json import dumps
 
 from typing import Callable
 import logging
-import json
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +22,7 @@ def text_result(text: str, structured = None, is_error: bool = False) -> dict:
         result["structuredContent"] = structured
         result["content"] = [{
             "type": "text",
-            "text": json.dumps(structured, ensure_ascii = False, indent = 2),
+            "text": dumps(structured, indent = 2),
         }]
 
         if text:

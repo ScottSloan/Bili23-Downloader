@@ -18,10 +18,10 @@ class SelectAreaDialog(DialogBase):
         desc_lab.setWordWrap(True)
         tip_lab = BodyLabel(self.tr("Tip: If you are using a proxy, please select the region where the proxy server is located."), self)
 
-        self.cn_radio = RadioButton(self.tr("Mainland China"), self)
+        self.cn_radio = RadioButton(self.tr("China (Including Hong Kong, Macau, and Taiwan)"), self)
         self.cn_radio.setChecked(config.get(config.area) == Area.CN)
-        
-        self.ov_radio = RadioButton(self.tr("Outside Mainland China (Including Hong Kong, Macau, and Taiwan)"), self)
+
+        self.ov_radio = RadioButton(self.tr("Other Regions"), self)
         self.ov_radio.setChecked(config.get(config.area) == Area.OV)
 
         self.viewLayout.addWidget(caption_lab)

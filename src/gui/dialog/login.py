@@ -156,29 +156,32 @@ class LoginDialog(DialogBase):
 
         self.sms_countdown_timer.stop()
 
+        # 对话框关闭时信号源可能已被 C++ 侧析构，此时 disconnect 抛 RuntimeError。
+        # 断开未连接的信号不会抛异常（只发 RuntimeWarning），因此只需捕获这一种，
+        # 槽名写错之类的 AttributeError 应当正常暴露
         try:
             self.sms.sms_sent.disconnect(self.on_verfication_sent)
-        except Exception:
+        except RuntimeError:
             pass
 
         try:
             self.sms.sms_login_success.disconnect(self.on_sms_login_success)
-        except Exception:
+        except RuntimeError:
             pass
 
         try:
             self.sms.error.disconnect(self.show_error_toast_message)
-        except Exception:
+        except RuntimeError:
             pass
 
         try:
             self.qrcode.qrcode_generated.disconnect(self.on_qrcode_update)
-        except Exception:
+        except RuntimeError:
             pass
 
         try:
             self.qrcode.update_scan_status.disconnect(self.on_update_scan_status)
-        except Exception:
+        except RuntimeError:
             pass
 
         self.captcha.cleanup()

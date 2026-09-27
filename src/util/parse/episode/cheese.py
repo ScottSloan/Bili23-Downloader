@@ -1,5 +1,5 @@
 from ...common.translator import Translator
-from ...common._json import json_dumps
+from ...common._json import dumps
 
 from .tree import TreeItem, EpisodeData, Attribute
 from .base import EpisodeParserBase
@@ -111,7 +111,7 @@ class CheeseEpisodeParser(EpisodeParserBase):
         }.get(episode_data["status"])
     
     def get_premiered(self):
-        text = json_dumps(self.info_data)
+        text = dumps(self.info_data)
 
         # 使用正则找到第一条 release_date 字段对应的值
         match = re.search(r'"release_date"\s*:\s*(\d+)', text)

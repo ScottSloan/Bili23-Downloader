@@ -16,20 +16,29 @@ cz.toml
 # uv
 uv.toml
 
+# 测试与 lint 缓存
+.pytest_cache/
+.ruff_cache/
+
 # 其他文件
 .DS_Store
 /demo
-/test
 /json
 /bundle
 /.VSCodeCounter
-/bundle
+/test_gists
+
+# launcher 构建产物：build-release 是 scripts/build_release.ps1 的工作目录
+# （app.zip、manifest.bin、cmake 构建树），release 是它铺出来的发布目录
+/build-release
+/release
 
 # webui
 /src/webui/
 
 # claude
 .claude
+CLAUDE.md
 
 # mutagen
 mutagen.yml

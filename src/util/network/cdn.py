@@ -6,6 +6,7 @@ from threading import Lock
 from copy import deepcopy
 import logging
 import time
+from typing import ClassVar
 
 logger = logging.getLogger(__name__)
 
@@ -20,8 +21,8 @@ HOST_COOLDOWN = 180
 class HostHealth:
     # 节点健康状态，跨任务共享。解析任务跑在全局线程池上，读写一律加锁
     _lock = Lock()
-    _failures: dict[str, int] = {}
-    _cooldown_until: dict[str, float] = {}
+    _failures: ClassVar[dict[str, int]] = {}
+    _cooldown_until: ClassVar[dict[str, float]] = {}
 
     @classmethod
     def report_success(cls, host: str):
@@ -68,11 +69,14 @@ class HostHealth:
 
 class CDN:
     @staticmethod
-    def get_url_tiers(url_list: list[str]) -> tuple[list[str], list[str]]:
-        # 返回两层候选链接：第一层按用户偏好优先尝试，第二层兜底。
-        # 分层的意义在于让兜底层拿到独立的时间预算 —— 原先所有候选共用一份预算，
-        # 替换节点集体超时就会把预算耗光，B 站原始调度链接一次都轮不到，
-        # 明明有可用链接却整个任务失败。具体预算分配见 download_url.resolve_download_url
+    def get_candidate_urls(url_list: list[str]) -> list[str]:
+        # 返回一份**有序**的候选列表：用户偏好的那一层排在前，另一层兜底排在后面。
+        #
+        # 这里刻意只表达顺序，不再像以前那样切成两层、各给一份时间预算。分层预算会把兜底层
+        # 饿死：首选层用满自己的份额时，兜底层连一批请求都发不完就撞上总预算，候选一多就表现
+        # 为"候选 24 个、实际只试了 12 个"直接报错 —— 而那 12 个既不是探测失败也不是被跳过，
+        # 只是根本没来得及发出去。探测侧现在对整份列表做一次滑动窗口扫描，
+        # 见 download_url._probe_candidates
         filtered_url_list = CDN.filter(url_list)
 
         if not filtered_url_list:
@@ -90,10 +94,13 @@ class CDN:
         else:
             primary, fallback = filtered_url_list, replaced_url_list
 
+        # 两次 arrange 分开调用、最后拼接，而不是 arrange(primary + fallback)：
+        # 后者会把两层的冷却节点一起挪到同一个末尾，冷却的首选层链接会排到健康的兜底层链接
+        # 之后，等于把"首选层优先"悄悄换成"健康的优先"。扁平化之后顺序是唯一承载用户偏好的
+        # 东西，不能再被 arrange 重新洗一遍
         primary = CDN.arrange(primary)
-        fallback = CDN.arrange(fallback, exclude = set(primary))
 
-        return primary, fallback
+        return primary + CDN.arrange(fallback, exclude = set(primary))
 
     @staticmethod
     def arrange(url_list: list[str], exclude: set[str] = None) -> list[str]:
@@ -122,6 +129,15 @@ class CDN:
             "pcdn",
             "szbdyd.com",
             "mountaintoys.cn",
+            # mirror14b 虽然挂在 upos- 前缀下，实测却是 P2P 节点而非普通镜像：
+            # 它不响应 HEAD（返回 404），直连 GET 会以 RemoteProtocolError 断开连接，
+            # 只有经由代理才返回正常分片。探测它必然得出失败结论，白白消耗一次往返，
+            # 因此直接在候选阶段剔除。（同批对照的 mirror08c、mirrorcoso1 均正常返回 200）
+            "upos-sz-mirror14b.bilivideo.com",
+            # 以下两个域名取自 bilibili-accelerator 的 P2P 实测名单。本机采样 60 个视频
+            # 未出现，属预防性收录：名单若有偏差也只是这条规则不生效，不会误伤正常节点
+            "nexusedgeio.com",
+            "ahdohpiechei.com",
         ]
 
         for url in url_list:
@@ -183,7 +199,9 @@ class CDN:
         try:
             return urlparse(url).netloc
 
-        except Exception:
+        except ValueError:
+            # 畸形的 IPv6 字面量会让 urlparse 抛 ValueError，取不到就按空处理；
+            # 其余异常（如传入非字符串）属于调用方错误，应当正常暴露
             return ""
 
     @staticmethod

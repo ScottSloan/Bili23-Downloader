@@ -5,13 +5,18 @@ from ..common.enum import ConventionType
 from ..common.config import config
 
 from .time import Time
+from .rule_template import compile_rule
 
 from pathlib import Path
-from typing import List
+from copy import deepcopy
 import re
 import logging
 
 logger = logging.getLogger(__name__)
+
+# 规则表里查不到时的最小可用规则。宁可让文件名退化成一个标题，
+# 也不能让任务带着空文件名建出来
+FALLBACK_RULE = "{leaf_title}"
 
 class FileNameFormatter:
     def __init__(self):
@@ -27,21 +32,16 @@ class FileNameFormatter:
     def set_rule(self, rule: str):
         self.rule = rule
 
-    def set_variable_data(self, data: TaskInfo | List[dict]):
+    def set_variable_data(self, data: TaskInfo | dict):
         if isinstance(data, TaskInfo):
             self.variable_data = self.get_variable_data_from_task_info(data)
 
             self.type_id = self.get_type_id_from_task_info(data)
 
-        elif isinstance(data, list):
-            for entry in data:
-                name = entry.get("name")
-                example = entry.get("example")
-
-                if name in ["pub_time", "create_time", "last_watched_time", "fav_time"]:
-                    example = Time.from_timestamp(1772841600)
-
-                self.variable_data[name] = example
+        elif isinstance(data, dict):
+            # 预览路径：样本数据由 VariableListFactory.build_variable_data 构造，
+            # 键空间与运行期完全一致，不能在这里再做裁剪
+            self.variable_data = dict(data)
 
     def format(self):
         try:
@@ -51,15 +51,24 @@ class FileNameFormatter:
             if self.attribute:
                 self.rule = self.get_special_rule()
 
+            if not self.rule:
+                # 该类型的规则被用户删光了，或是新增的类型还没迁移。
+                # 以前这里会被 get_special_rule 兜成空串，一路走到 File.name
+                # 变空、folder 变 "."，任务建得出来却没有文件名，且全程不报错
+                logger.warning("未找到 type_id = %s 对应的命名规则，已回退到 %s", self.type_id, FALLBACK_RULE)
+
+                self.rule = FALLBACK_RULE
+
             safe_variable_data = {
                 name: self.__sanitize_component(value)
                 for name, value in self.variable_data.items()
             }
 
-            return self.__normalize_path(self.rule.format(**safe_variable_data))
+            return self.__normalize_path(compile_rule(self.rule).render(safe_variable_data))
         
-        except Exception as e:
-            logger.exception(f"格式化文件名时发生错误")
+        except Exception:
+            # logger.exception 已带上完整堆栈，无需再引用异常对象
+            logger.exception("格式化文件名时发生错误")
 
             return None
 
@@ -72,7 +81,9 @@ class FileNameFormatter:
 
     def __normalize_path(self, path_str: str):
         if not path_str:
-            return path_str
+            # 不能返回空串：Path("") 得到的是 "."，会让 File.name 变空、folder 变 "."，
+            # 任务建得出来却没有文件名，且全程不报错
+            return "_"
         
         path_str = path_str.lstrip("/\\")
 
@@ -91,9 +102,8 @@ class FileNameFormatter:
         return str(Path(*normalized_parts))
 
     def get_special_rule(self):
-        if self.rule is None:
-            self.rule = ""
-
+        # 查不到规则时返回 None，由 format() 统一回退 —— 这里再兜一次空串的话，
+        # "".format() 会得到空路径，反而把问题藏起来
         rule_map = {
             Attribute.DOWNLOAD_AS_SINGLE_VIDEO_BIT: "{leaf_title}",
         }
@@ -154,6 +164,7 @@ class FileNameFormatter:
 
             "leaf_title": task_info.Episode.leaf_title,
             "parent_title": task_info.Episode.parent_title,
+            "source_title": task_info.Episode.source_title,
             "section_title": task_info.Episode.section_title,
             "collection_title": task_info.Episode.collection_title,
             "series_title": task_info.Episode.series_title,
@@ -178,7 +189,31 @@ class FileNameFormatter:
         return self.get_type_id_from_attribute(task_info.Episode.attribute)
 
     def get_type_id_from_attribute(self, attribute: int):
+        """
+        取条目该用的命名类型
+
+        表是**有序**的，遍历时第一个命中的位胜出，因此分三段排列，段间次序即优先级。
+        来源列表（收藏夹、历史记录、稍后再看、个人空间）里混着影视与课程条目，
+        解析器给它们**同时**打上来源位与媒体形态位，只靠位本身分不出该用哪条规则。
+        """
         type_map = {
+            # 第一段：媒体形态位。影视与课程的变量集（season_title / episode_title /
+            # series_title …）与投稿视频完全不同 —— 套用来源规则的话，这些变量在
+            # 这类条目上全是空的，落盘只剩一个标题。所以它们一律走自己的规则
+            Attribute.BANGUMI_BIT: ConventionType.BANGUMI,
+            Attribute.CHEESE_BIT: ConventionType.CHEESE,
+
+            # 会员购商城课程已并入课程，属性位还留着（预览、取流、去重哈希都靠它分派，
+            # 见 __trim_download_type 等处），只有命名类型要跟着并过去。
+            #
+            # 这一行不能删：单个解析一条会员购链接时条目只带 LESSON_BIT，映射不到任何
+            # 类型就会返回 None，format() 只好回退到 FALLBACK_RULE，落盘文件名全变成
+            # {leaf_title} —— 任务建得出来、全程不报错，只是名字全错
+            Attribute.LESSON_BIT: ConventionType.CHEESE,
+
+            # 第二段：来源位。排在形态位之前，是为了让来源类型**吞下**列表里的
+            # 普通视频、分P与合集条目 —— 形态差异由命名规则的可选段在来源类型内部
+            # 消化（见 naming_convention.py 的 SUPPORTED_SHAPES）
             Attribute.FAVLIST_BIT: ConventionType.FAVORITE,
             Attribute.SPACE_BIT: ConventionType.SPACE,
             Attribute.HISTORY_BIT: ConventionType.HISTORY,
@@ -186,13 +221,19 @@ class FileNameFormatter:
             Attribute.WEEKLY_BIT: ConventionType.WEEKLY,
             Attribute.AUDIO_BIT: ConventionType.AUDIO,
 
+            # 第三段：结构形态位。合集排在最前 —— 二次解析会给合集里的条目补上
+            # NORMAL 或 PART（video.py 的 single_parser / pages_parser），那是它在
+            # 稿件内部的结构，改变不了「它属于某个合集」这件事，而合集列表
+            # （list.py）里的条目一概如此。归属由 {collection_title} 表达，
+            # 稿件内部的分P差异交给 {parent_title}/{leaf_title} 消化
+            Attribute.COLLECTION_BIT: ConventionType.COLLECTION,
             Attribute.NORMAL_BIT: ConventionType.NORMAL,
             Attribute.PART_BIT: ConventionType.PART,
-            Attribute.COLLECTION_BIT: ConventionType.COLLECTION,
             Attribute.INTERACTIVE_BIT: ConventionType.INTERACTIVE_VIDEO,
-            Attribute.BANGUMI_BIT: ConventionType.BANGUMI,
-            Attribute.CHEESE_BIT: ConventionType.CHEESE,
-            Attribute.LESSON_BIT: ConventionType.LESSON,
+
+            # 兜底放在最后：没有结构形态位也没有来源位的纯投稿视频，按单个视频处理。
+            # 放在末尾才不会抢走 PART / COLLECTION 的判定，attribute 为 0 时也仍然返回 None
+            Attribute.VIDEO_BIT: ConventionType.NORMAL,
         }
 
         for attr, type_id in type_map.items():
@@ -200,13 +241,16 @@ class FileNameFormatter:
                 return type_id
 
     def get_rule_list_from_attribute(self, attribute: int):
-        type_id = self.get_type_id_from_attribute(attribute)
+        return self.get_rule_list_from_type(self.get_type_id_from_attribute(attribute))
 
+    def get_rule_list_from_type(self, type_id: int):
         rule_list = []
 
         for entry in config.get(config.naming_rule_list):
             if entry["type"] == type_id:
-                rule_list.append(entry)
+                # 必须拷贝：直接返回配置里的原字典，调用方顺手改一个字段
+                # 就污染了进程内的配置对象乃至 DefaultValue
+                rule_list.append(deepcopy(entry))
 
         return rule_list
     

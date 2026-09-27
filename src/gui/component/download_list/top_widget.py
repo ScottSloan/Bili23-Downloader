@@ -1,13 +1,12 @@
 from PySide6.QtWidgets import QStackedWidget, QWidget, QHBoxLayout, QGridLayout, QButtonGroup
-from PySide6.QtGui import QPainter, QColor, QPen
 from PySide6.QtCore import Signal
 
 from qfluentwidgets import (
-    PrimaryPushButton, PushButton, FluentIcon, FlyoutViewBase, BodyLabel, ComboBox, Flyout, FlyoutAnimationType,
-    isDarkTheme
+    PrimaryPushButton, PushButton, FluentIcon, FlyoutViewBase, BodyLabel, ComboBox, Flyout, FlyoutAnimationType
 )
 
 from gui.component.widget.button import ToolButton
+from gui.component.widget.separator import Separator
 
 from util.common.icon import ExtendedFluentIcon
 from util.common.io.directory import Directory
@@ -109,28 +108,6 @@ class FilterFlyoutWidget(FlyoutViewBase):
     def init_UI(self):
         pass
 
-class Separator(QWidget):
-    def __init__(self, parent = None):
-        super().__init__(parent = parent)
-
-        self.setFixedWidth(5)
-
-        self.setContentsMargins(10, 5, 10, 5)
-
-        self.update()
-
-    def paintEvent(self, e):
-        painter = QPainter(self)
-
-        c = 255 if isDarkTheme() else 0
-
-        pen = QPen(QColor(c, c, c, 50))
-        pen.setCosmetic(True)
-
-        painter.setPen(pen)
-
-        painter.drawLine(2, 0, 2, self.height())
-
 class TopStackedWidget(QStackedWidget):
     def __init__(self, parent = None):
         super().__init__(parent)
@@ -151,7 +128,7 @@ class TopStackedWidget(QStackedWidget):
         self.open_folder_1_btn = ToolButton(FluentIcon.FOLDER, self)
         self.open_folder_1_btn.setToolTip(self.tr("Open Download Directory"))
 
-        separator_1 = Separator(self)
+        separator_1 = Separator(self, alpha = 50)
 
         self.start_all_btn = PrimaryPushButton(FluentIcon.PLAY, self.tr("Start All"), self)
         self.pause_all_btn = PushButton(FluentIcon.PAUSE, self.tr("Pause All"), self)
@@ -176,7 +153,7 @@ class TopStackedWidget(QStackedWidget):
         self.open_folder_2_btn = ToolButton(FluentIcon.FOLDER, self)
         self.open_folder_2_btn.setToolTip(self.tr("Open Download Directory"))
 
-        separator_2 = Separator(self)
+        separator_2 = Separator(self, alpha = 50)
 
         self.clear_all_btn = PushButton(ExtendedFluentIcon.CLEAR, self.tr("Clear All"))
         self.clear_all_btn.setMinimumWidth(110)

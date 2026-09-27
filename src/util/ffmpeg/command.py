@@ -161,7 +161,18 @@ class FFmpegCommand:
         )
     
     @classmethod
-    def fix_mp4_box(cls, input_path: str, output_path: str):
+    def remux_audio(cls, input_path: str, output_path: str):
+        # 把独立音频流重新封装进标准容器
+        #
+        # B 站的 DASH 独立音频流是 fMP4 **分片**容器：ftyp + moov（不含采样表）+
+        # sidx + [moof + mdat] × N，采样描述在 moof 里按片重复。这套结构是给流式播放
+        # 准备的，只有 VLC/PotPlayer 这类宽容的解复用器愿意读，foobar2000 等严格解析器
+        # 会直接拒绝打开（array access out of range）。而 .m4a/.flac/.ec3 这三个扩展名
+        # 都是向播放器承诺「标准容器」的，只改扩展名交付等于递了个假承诺
+        #
+        # -c copy 只重写容器、不重编码，27 分钟音轨实测约 0.19 秒
+        # -movflags +faststart 把 moov 前置；非 mov 系容器（flac、ec3）下 FFmpeg 会静默
+        # 忽略它，因此三种扩展名可以共用同一条命令，无需按扩展名分支
         return (
             cls()
             .add_input(input_path)

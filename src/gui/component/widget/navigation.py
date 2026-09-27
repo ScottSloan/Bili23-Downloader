@@ -9,8 +9,6 @@ from qfluentwidgets.components.navigation.navigation_panel import (
 )
 from qfluentwidgets.components.navigation.navigation_widget import NavigationIndicator
 
-from typing import Dict
-
 class NavigationPanel(QWidget):
     def __init__(self, parent = None):
         super().__init__(parent = parent)
@@ -19,7 +17,7 @@ class NavigationPanel(QWidget):
 
         self._isIndicatorAnimationEnabled = True
 
-        self.items = {}   # type: Dict[str, NavigationItem]
+        self.items: dict[str, NavigationItem] = {}
         self._currentRouteKey = None
 
         self.vBoxLayout = NavigationItemLayout(self)

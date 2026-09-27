@@ -1,6 +1,6 @@
 from PySide6.QtCore import QSize, Qt, Signal
 
-from qfluentwidgets import ListView, RoundMenu, Action, FluentIcon
+from qfluentwidgets import ListView, RoundMenu, FluentIcon
 
 from .poster_item_delegate import PosterListItemDelegate
 from .entry_item_delegate import EntryListItemDelegate

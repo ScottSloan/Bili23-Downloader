@@ -98,7 +98,6 @@ class ConventionType(IntEnum):
     INTERACTIVE_VIDEO = 14
     BANGUMI = 20
     CHEESE = 30
-    LESSON = 31
     FAVORITE = 40
     SPACE = 50
     HISTORY = 60

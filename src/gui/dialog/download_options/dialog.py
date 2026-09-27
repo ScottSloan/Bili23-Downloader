@@ -12,10 +12,11 @@ from .preview import DownloadPreviewBar
 from util.common.icon import ExtendedFluentIcon
 
 class DownloadOptionsDialog(TopNavigationDialogBase):
-    def __init__(self, parent = None):
+    def __init__(self, parent = None, type_ids = None):
         super().__init__(QSize(750, 500), parent)
 
         self.main_window = parent
+        self.type_ids = type_ids
 
         self.setWindowTitle(self.tr("Download Options"))
         self.setWindowIcon(QIcon(":/bili23/icon/app.svg"))
@@ -31,7 +32,7 @@ class DownloadOptionsDialog(TopNavigationDialogBase):
     def init_UI(self):
         self.media_settings_page = MediaSettingsPage(self)
         self.additional_settings_page = AdditionalSettingsPage(self, self)
-        self.download_settings_page = DownloadSettingsPage(self)
+        self.download_settings_page = DownloadSettingsPage(self, self.type_ids)
 
         self.addItem("media", self.tr("Media Settings"), FluentIcon.MEDIA, self.media_settings_page)
         self.addItem("additional", self.tr("Additional Files"), ExtendedFluentIcon.DOCUMENT, self.additional_settings_page)
