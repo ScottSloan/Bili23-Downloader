@@ -154,7 +154,7 @@ jobs:
         run: |
           # 模板只提供 runtime、site-packages、bundle 与随包的 LICENSE，
           # 启动器由下一步现场编译后放入
-          Invoke-WebRequest -Uri "https://github.com/ScottSloan/Python-Static/releases/download/v0.1.8/windows_x64_runtime.zip" -OutFile windows_x64_runtime.zip
+          Invoke-WebRequest -Uri "https://github.com/ScottSloan/Python-Static/releases/download/v0.1.9/windows_x64_runtime.zip" -OutFile windows_x64_runtime.zip
 
           Expand-Archive windows_x64_runtime.zip -DestinationPath runtime-src
 
@@ -244,7 +244,7 @@ jobs:
       - name: Prepare Windows 7 runtime
         run: |
           # 下载 Python 静态运行时环境
-          Invoke-WebRequest -Uri "https://github.com/ScottSloan/Python-Static/releases/download/v0.1.8/windows_x64_runtime_for_win7.zip" -OutFile windows_x64_runtime_for_win7.zip
+          Invoke-WebRequest -Uri "https://github.com/ScottSloan/Python-Static/releases/download/v0.1.9/windows_x64_runtime_for_win7.zip" -OutFile windows_x64_runtime_for_win7.zip
 
           Expand-Archive windows_x64_runtime_for_win7.zip -DestinationPath runtime-src-win7
 
@@ -342,7 +342,7 @@ jobs:
       - name: Prepare Linux runtime
         run: |
           # 下载 Python 静态运行时环境
-          wget https://github.com/ScottSloan/Python-Static/releases/download/v0.1.8/linux_${{ matrix.arch }}_runtime.zip
+          wget https://github.com/ScottSloan/Python-Static/releases/download/v0.1.9/linux_${{ matrix.arch }}_runtime.zip
 
           unzip linux_${{ matrix.arch }}_runtime.zip -d Bili23-Downloader
 
@@ -678,7 +678,7 @@ jobs:
       - name: Prepare macOS runtime
         run: |
           # 下载 Python 静态运行时环境
-          wget https://github.com/ScottSloan/Python-Static/releases/download/v0.1.8/macos_${{ matrix.arch }}_runtime.zip
+          wget https://github.com/ScottSloan/Python-Static/releases/download/v0.1.9/macos_${{ matrix.arch }}_runtime.zip
 
           unzip macos_${{ matrix.arch }}_runtime.zip -d Bili23-Downloader
 
