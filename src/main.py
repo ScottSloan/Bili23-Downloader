@@ -336,7 +336,7 @@ from PySide6.QtNetwork import QLocalServer, QLocalSocket
 from PySide6.QtWidgets import QApplication
 from PySide6.QtGui import QFont
 
-from qfluentwidgets import FluentTranslator
+from qfluentwidgets import FluentTranslator, setFontFamilies
 
 from util.common.config import config
 
@@ -531,6 +531,16 @@ class Application(QApplication):
         self.default_font.setHintingPreference(QFont.HintingPreference.PreferNoHinting)
 
         self.setFont(self.default_font)
+
+        # qfluentwidgets 的默认字体族是 ['Segoe UI', 'Microsoft YaHei', 'PingFang SC']，
+        # qss 里的 --FontFamilies 与 getFont() 都取自它。macOS 上前两个都不存在，
+        # CoreText 查不到 "Segoe UI" 时会现场构建整张字体别名表（实测约 200 ms，
+        # Qt 还会为此打一条 "Populating font family aliases took ..." 警告）。
+        # 实际渲染本来就回退到了 PingFang SC，这里直接只留它，外观不变，只省掉这次查找。
+        #
+        # 必须早于 MainWindow 构造：样式表在控件创建时就已按当时的字体族展开
+        if sys.platform == "darwin":
+            setFontFamilies(["PingFang SC"])
 
         # 加载翻译文件
         locale: QLocale = config.get(config.language).value
