@@ -3,6 +3,50 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+_accessibility_fix = None
+
+
+def install_accessibility_ownership_fix():
+    """Backport QTBUG-149612 after QApplication loads the Cocoa plugin.
+
+    Keep the callback implementations in native code, including dealloc, so
+    Qt teardown never calls back into a finalizing Python interpreter.
+    """
+    global _accessibility_fix
+    if sys.platform != "darwin":
+        return False
+    if _accessibility_fix is not None:
+        return True
+
+    from PySide6.QtCore import qVersion
+    # These are the bundled macOS runtime and the current source dependency.
+    # Remove/extend this allowlist only after running the native regression.
+    if qVersion() not in ("6.9.3", "6.10.3"):
+        logger.warning("Qt %s 未启用已验证的 Cocoa 所有权修复，请重新验证 QTBUG-149612", qVersion())
+        return False
+
+    import ctypes
+    from pathlib import Path
+    path = Path(__file__).with_name("qt_cocoa_ownership.dylib")
+    try:
+        library = ctypes.CDLL(str(path))
+        install = library.bili23_install_qt_cocoa_ownership_fix
+        install.argtypes = []
+        install.restype = ctypes.c_int
+        result = install()
+        if result not in (0, 1):
+            logger.error("Cocoa 所有权修复未安装，原生布局检查返回 %d", result)
+            return False
+    except (OSError, AttributeError):
+        logger.warning("未找到或无法加载 Cocoa 所有权修复。源码运行前请执行 "
+                       "python scripts/build_macos_compat.py", exc_info = True)
+        return False
+
+    _accessibility_fix = library
+    logger.info("已启用 Qt %s Cocoa 辅助功能所有权修复 (QTBUG-149612)", qVersion())
+    return True
+
+
 def activate_app():
     """
     在 macOS 上把本进程提到前台
