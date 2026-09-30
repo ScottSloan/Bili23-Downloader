@@ -8,10 +8,11 @@
     整个流程只需要编译一次。
 
         1. 铺开 runtime 模板
-        2. 打包应用源码为 app.zip（py + pyc）
-        3. 扫描发布目录生成 manifest.bin
-        4. 编译 exe，把两者一起嵌进资源段
-        5. 放入 exe
+        2. 精简 site-packages，纯 Python 依赖打成 deps.zip（py + pyc）
+        3. 打包应用源码为 app.zip（py + pyc）
+        4. 扫描发布目录生成 manifest.bin
+        5. 编译 exe，把两者一起嵌进资源段
+        6. 放入 exe
 
     产出的是未签名的 exe，签名另做。
 
@@ -116,7 +117,15 @@ Copy-Item -LiteralPath $RuntimeDir -Destination $OutputDir -Recurse -Force
 $OutputDir = (Resolve-Path -LiteralPath $OutputDir).Path
 Write-Host "  $OutputDir"
 
-# ---------- 2. 打包源码 ----------
+# ---------- 2. 精简依赖 ----------
+Step "精简 site-packages"
+
+# 散落的 .py 越少，便携版 zip 越不像"便携 Python + 一堆脚本"的恶意软件形态。
+# 删除与打包都会改动发布目录，所以必须赶在生成清单之前
+& $python (Join-Path $PSScriptRoot "pack_site_packages.py") (Join-Path $OutputDir "site-packages")
+if ($LASTEXITCODE -ne 0) { throw "精简依赖失败" }
+
+# ---------- 3. 打包源码 ----------
 Step "打包应用源码"
 
 New-Item -ItemType Directory -Force -Path $work | Out-Null
@@ -124,14 +133,14 @@ $appZip = Join-Path $work "app.zip"
 & $python (Join-Path $PSScriptRoot "build_app_zip.py") $SourceDir -o $appZip
 if ($LASTEXITCODE -ne 0) { throw "打包源码失败" }
 
-# ---------- 3. 生成清单 ----------
+# ---------- 4. 生成清单 ----------
 Step "生成完整性清单"
 
 $manifest = Join-Path $work "manifest.bin"
 & $python (Join-Path $PSScriptRoot "gen_manifest.py") $OutputDir -o $manifest --exclude $ExeName
 if ($LASTEXITCODE -ne 0) { throw "生成清单失败" }
 
-# ---------- 4. 编译 ----------
+# ---------- 5. 编译 ----------
 Step "编译启动器"
 
 $buildDir = Join-Path $work "cmake"
@@ -157,7 +166,7 @@ $built = @(
 ) | Where-Object { Test-Path $_ } | Select-Object -First 1
 if (-not $built) { throw "没有找到编译产物" }
 
-# ---------- 5. 放入 exe ----------
+# ---------- 6. 放入 exe ----------
 Step "放入启动器"
 
 $final = Join-Path $OutputDir $ExeName

@@ -1035,6 +1035,15 @@ def _pystand_run():
     exec(compile(text, PYSTAND_SCRIPT, 'exec'), environ)
 )PY"
 #endif
+// 纯 Python 依赖由 scripts/pack_site_packages.py 打进了 site-packages\deps.zip，
+// 交给标准 zipimport 加载。zip 里同样是 .py + .pyc 两份，第三方库的异常在
+// 崩溃日志里依旧带着源码行。两种模式都要登记：addsitedir 只认目录，不认 zip。
+// zip 同样在完整性清单里，与其他随包文件一起在加载 Python 之前验过。
+R"PY(
+_deps = os.path.abspath(os.path.join(PYSTAND_HOME, 'site-packages', 'deps.zip'))
+if os.path.isfile(_deps) and _deps not in sys.path:
+    sys.path.append(_deps)
+)PY"
 #ifndef PYSTAND_CONSOLE
 R"PY(
 try:
