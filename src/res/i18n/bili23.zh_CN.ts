@@ -2689,73 +2689,73 @@ B站的视频通常将视频流和音频流分开存储和传输，下载时需�
         <translation>设置</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="452"/>
+        <location filename="../../gui/interface/main_window.py" line="460"/>
         <source>Welcome to Bili23 Downloader</source>
         <translation>欢迎使用 Bili23 Downloader</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="453"/>
+        <location filename="../../gui/interface/main_window.py" line="461"/>
         <source>It is recommended to read the user guide and FAQs when using for the first time, to help you get started quickly and make full use of all features.</source>
         <translation>首次使用时建议先查看使用说明和常见问题，帮助你更快上手并充分利用各项功能。</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="456"/>
+        <location filename="../../gui/interface/main_window.py" line="464"/>
         <source>View</source>
         <translation>查看</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="457"/>
+        <location filename="../../gui/interface/main_window.py" line="465"/>
         <source>Skip</source>
         <translation>跳过</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="469"/>
+        <location filename="../../gui/interface/main_window.py" line="477"/>
         <source>Log in to your account</source>
         <translation>登录账号</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="470"/>
+        <location filename="../../gui/interface/main_window.py" line="478"/>
         <source>Click the avatar to log in to your Bilibili account. 
 Download functionality will be limited if you&apos;re not logged in.</source>
         <translation>点击头像登录哔哩哔哩账号，未登录状态下下载功能将受限</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="679"/>
+        <location filename="../../gui/interface/main_window.py" line="687"/>
         <source>Download Directory Invalid</source>
         <translation>下载目录无效</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="680"/>
+        <location filename="../../gui/interface/main_window.py" line="688"/>
         <source>The current download directory is inaccessible or lacks write permissions. Please reset it.</source>
         <translation>当前下载目录无法访问或没有写入权限，请重新设置。</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="689"/>
+        <location filename="../../gui/interface/main_window.py" line="697"/>
         <source>FFmpeg Not Found</source>
         <translation>未找到 FFmpeg</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="690"/>
+        <location filename="../../gui/interface/main_window.py" line="698"/>
         <source>No FFmpeg executable found. Please ensure FFmpeg is installed and configured correctly.</source>
         <translation>未找到 FFmpeg 可执行文件。请确保已正确安装并配置 FFmpeg。</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="708"/>
+        <location filename="../../gui/interface/main_window.py" line="716"/>
         <source>Naming Rules Were Reset</source>
         <translation>命名规则已重置</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="709"/>
+        <location filename="../../gui/interface/main_window.py" line="717"/>
         <source>The built-in naming rules changed in this version, so all of your naming rules have been reset to the defaults. Please set them up again.</source>
         <translation>此版本修改了内置命名规则，你的命名规则已全部重置为默认值，请重新设置。</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="718"/>
+        <location filename="../../gui/interface/main_window.py" line="726"/>
         <source>Login Required</source>
         <translation>需要登录</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="719"/>
+        <location filename="../../gui/interface/main_window.py" line="727"/>
         <source>Please log in to your account first.</source>
         <translation>请先登录账号</translation>
     </message>
@@ -3514,44 +3514,54 @@ This software contains no advertisements, trackers, or analytics SDKs of any kin
 <context>
     <name>ParseHistoryDialog</name>
     <message>
-        <location filename="../../gui/dialog/misc/parse_history.py" line="25"/>
+        <location filename="../../gui/dialog/misc/parse_history.py" line="27"/>
         <source>Parse History</source>
         <translation>解析记录</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/parse_history.py" line="27"/>
+        <location filename="../../gui/dialog/misc/parse_history.py" line="29"/>
         <source>Only the latest 100 records are kept.</source>
         <translation>仅保留最近 100 条记录</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/parse_history.py" line="32"/>
+        <location filename="../../gui/dialog/misc/parse_history.py" line="34"/>
         <source>Clear History</source>
         <translation>清除记录</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/parse_history.py" line="56"/>
+        <location filename="../../gui/dialog/misc/parse_history.py" line="42"/>
+        <source>Search title or URL...</source>
+        <translation>搜索标题或链接...</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialog/misc/parse_history.py" line="74"/>
         <source>No.</source>
         <translation>序号</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/parse_history.py" line="57"/>
+        <location filename="../../gui/dialog/misc/parse_history.py" line="75"/>
         <source>Title</source>
         <translation>标题</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/parse_history.py" line="58"/>
+        <location filename="../../gui/dialog/misc/parse_history.py" line="76"/>
         <source>Type</source>
         <translation>类型</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/parse_history.py" line="59"/>
+        <location filename="../../gui/dialog/misc/parse_history.py" line="77"/>
         <source>Parse Time</source>
         <translation>解析时间</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/parse_history.py" line="60"/>
+        <location filename="../../gui/dialog/misc/parse_history.py" line="78"/>
         <source>Actions</source>
         <translation>操作</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialog/misc/parse_history.py" line="134"/>
+        <source>All Types</source>
+        <translation>全部类型</translation>
     </message>
 </context>
 <context>
