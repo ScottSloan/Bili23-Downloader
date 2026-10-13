@@ -263,8 +263,16 @@ class MainWindow(MSFluentWindow):
         # 自行结束事件循环（那会让主窗口不可见时关掉任意无父窗口也把整个进程带走），
         # 于是退出必须由这里显式声明。少了这一句，窗口消失后进程会一直留在后台，
         # shutdown_process() 永远等不到 app.exec() 返回，托盘菜单的"退出"也就失效了
+        #
+        # 用 exit() 而不是 quit()：Qt 6 的 quit() 会走平台自己的退出流程，macOS 上即
+        # [NSApp terminate:]，AppKit 随后在这个 closeEvent 内部直接调用 libc 的 exit()。
+        # app.exec() 永远不会返回，shutdown_process() 被整个跳过，C++ 静态析构在主题监听、
+        # 数据库写入线程仍然存活时执行 —— 先是 "QThreadStorage: entry N destroyed before
+        # end of thread"，运行久了 shiboken 析构绑定表时直接段错误（#477）。
+        # exit() 只结束事件循环，退出与否在这里已经决定好了，也不需要 quit() 再发一次
+        # QEvent::Quit 去把所有窗口重新关一遍
         if e.isAccepted():
-            QApplication.quit()
+            QApplication.exit(0)
 
     def resizeEvent(self, e):
         if hasattr(self, "parse_interface"):
