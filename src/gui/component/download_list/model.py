@@ -19,9 +19,6 @@ class DownloadListModel(CoverQueryModelBase):
         self._cover_size = QSize(144, 80)
         self._task_list: List[TaskInfo] = task_list
 
-        self._sorting = False
-        self._sort_by_key = None
-        self._ascending = True
         self._row_by_task_id: dict[str, int] = {}
         self._managing_concurrent = False
         self._managing_merges = False
@@ -30,10 +27,6 @@ class DownloadListModel(CoverQueryModelBase):
 
     def _get_task_id(self, task_info: TaskInfo):
         return task_info.Basic.task_id
-
-    def _applyCurrentSort(self):
-        if self._sorting and self._sort_by_key:
-            self.sortBy(self._sort_by_key, self._ascending)
 
     def _rebuild_row_index(self):
         self._row_by_task_id = {
@@ -71,8 +64,6 @@ class DownloadListModel(CoverQueryModelBase):
 
         self._row_by_task_id[task_info.Basic.task_id] = row
 
-        self._applyCurrentSort()
-
     def appendRows(self, task_info_list: List[TaskInfo]):
         if not task_info_list:
             return
@@ -87,8 +78,6 @@ class DownloadListModel(CoverQueryModelBase):
 
         for row, task_info in enumerate(self._task_list):
             self._row_by_task_id[task_info.Basic.task_id] = row
-
-        self._applyCurrentSort()
 
     def updateRows(self, start_row: int, end_row: int):
         for row in range(start_row, end_row + 1):
@@ -363,45 +352,3 @@ class DownloadListModel(CoverQueryModelBase):
         self.onUpdateData(task_info)
 
         self.manageConcurrentDownloads()
-
-    def sortBy(self, key: str, ascending: bool = True):
-        # 排序列表
-        if not self._sorting:
-            return
-        
-        self._sort_by_key = key
-        self._ascending = ascending
-
-        reverse = not ascending
-
-        self.layoutAboutToBeChanged.emit()
-
-        match key:
-            case "created_time":
-                self._task_list.sort(key = lambda x: x.Basic.created_time, reverse = reverse)
-
-            case "completed_time":
-                self._task_list.sort(key = lambda x: x.Basic.completed_time, reverse = reverse)
-
-            case "show_title":
-                self._task_list.sort(key = lambda x: x.Basic.show_title, reverse = reverse)
-
-            case "file_size":
-                self._task_list.sort(key = lambda x: x.Download.total_size, reverse = reverse)
-
-            case "progress":
-                self._task_list.sort(key = lambda x: x.Download.progress, reverse = reverse)
-
-        self.layoutChanged.emit()
-
-        self._rebuild_row_index()
-
-        self.updateRows(0, self.rowCount() - 1)
-
-    def enableSorting(self, default_key: str):
-        # 启用排序功能
-        self._sorting = True
-        self._sort_by_key = default_key
-
-        self._applyCurrentSort()
-        
