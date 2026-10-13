@@ -8,7 +8,7 @@
     整个流程只需要编译一次。
 
         1. 铺开 runtime 模板
-        2. 精简 site-packages，纯 Python 依赖打成 deps.zip（py + pyc）
+        2. 精简 site-packages，删掉 pywin32 的示例、测试与安装脚本
         3. 打包应用源码为 app.zip（py + pyc）
         4. 扫描发布目录生成 manifest.bin
         5. 编译 exe，把两者一起嵌进资源段
@@ -121,8 +121,8 @@ Write-Host "  $OutputDir"
 Step "精简 site-packages"
 
 # 散落的 .py 越少，便携版 zip 越不像"便携 Python + 一堆脚本"的恶意软件形态。
-# 删除与打包都会改动发布目录，所以必须赶在生成清单之前
-& $python (Join-Path $PSScriptRoot "pack_site_packages.py") (Join-Path $OutputDir "site-packages")
+# 删除会改动发布目录，所以必须赶在生成清单之前
+& $python (Join-Path $PSScriptRoot "strip_site_packages.py") (Join-Path $OutputDir "site-packages")
 if ($LASTEXITCODE -ne 0) { throw "精简依赖失败" }
 
 # ---------- 3. 打包源码 ----------
