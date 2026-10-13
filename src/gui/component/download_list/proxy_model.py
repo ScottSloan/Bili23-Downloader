@@ -165,11 +165,32 @@ class DownloadListProxyModel(QSortFilterProxyModel):
         if source:
             source.appendRow(task_info)
 
+            self._applyCurrentSort()
+
     def appendRows(self, task_info_list: list[TaskInfo]):
         source = self._source()
 
         if source:
             source.appendRows(task_info_list)
+
+            self._applyCurrentSort()
+
+    def _applyCurrentSort(self):
+        """
+        追加之后按当前排序方式重排一次
+
+        dynamicSortFilter 关着（进度更新太频繁，靠 _scheduleRefresh 去抖），代价是新插入的
+        行不会被排进正确位置：Qt 只把这一批行在**批内**排好，整批接在末尾。启动时列表是空的、
+        任务一次性载入，所以看着正常；之后新建的任务、刚下载完移进"已完成"的任务都会停在最底下，
+        降序时尤其显眼，用户得手动再点一次排序才归位。
+
+        这里同步排而不走去抖：任务是成批追加的，一批排一次，代价不大；延后 50 毫秒反而会让
+        新任务先在末尾闪一下再跳走
+        """
+        if self._sorting and self._sort_by_key:
+            order = Qt.SortOrder.AscendingOrder if self._ascending else Qt.SortOrder.DescendingOrder
+
+            self.sort(0, order)
 
     def removeRow(self, row, parent = QModelIndex()):
         source = self._source()
