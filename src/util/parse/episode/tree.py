@@ -266,7 +266,11 @@ class TreeItem(TreeItemBase):
         self.item_id = item_data.get("item_id", 0)
         self.section_id = item_data.get("section_id", 0)
 
+        # 本次会话中已提交下载，列表上显示为灰色
         self.downloaded = False
+        # 解析时已存在于下载记录中（含仍在下载队列里的），列表上显示绿色对勾。
+        # 由解析线程在节点交给 GUI 之前填好，见 download_history.mark_download_history
+        self.in_download_history = False
 
     def set_attribute(self, flag: int):
         self.attribute |= flag

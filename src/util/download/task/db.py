@@ -268,6 +268,31 @@ class TaskDatabase(Database):
 
         return bool(result and result[0][0])
 
+    def filter_existing_hash_ids(self, hash_ids) -> set:
+        """
+        从给定的 hash_id 中筛出已存在于下载记录中的那些，口径与 check_duplicate 一致
+
+        解析列表一次可能有上千条，逐条调用 check_duplicate 就是上千次数据库往返，
+        这里按 IN 批量查询。每批 400 个，两张表合计 800 个参数，
+        低于旧版 SQLite 999 个绑定参数的上限
+        """
+        hash_ids = list(hash_ids)
+        existing = set()
+
+        for start in range(0, len(hash_ids), 400):
+            chunk = hash_ids[start:start + 400]
+            placeholders = ", ".join("?" * len(chunk))
+
+            result = self.query(f"""
+                SELECT hash_id FROM completed_task WHERE hash_id IN ({placeholders})
+                UNION
+                SELECT hash_id FROM download_task WHERE hash_id IN ({placeholders})
+            """, (*chunk, *chunk))
+
+            existing.update(row[0] for row in result)
+
+        return existing
+
     def _upgrade(self):
         def _to_task_list(result):
             _task_info_list = []
