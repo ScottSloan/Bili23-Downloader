@@ -172,15 +172,16 @@ class TestMarkDownloadHistory:
         assert p1.in_download_history
         assert not p2.in_download_history
 
-    def test_need_parse_items_are_skipped(self, task_manager, mark):
-        # 收藏夹等需要二次解析的条目，解析端算出的 hash 与入库时的对不上，一律不标
-        item = make_item(Attribute.VIDEO_BIT | Attribute.FAVLIST_BIT | Attribute.NEED_PARSE_BIT, aid = 1, bvid = "BV1", cid = 1)
+    def test_need_parse_items_are_skipped_by_hash(self, task_manager, mark, monkeypatch):
+        # 需要二次解析的条目缺少 cid，算出的 hash 与入库时的对不上，不能拿去按 hash 查
+        item = make_item(Attribute.VIDEO_BIT | Attribute.FAVLIST_BIT | Attribute.NEED_PARSE_BIT, bvid = "BV1")
 
-        store(task_manager, item, "fav")
+        queried = []
+        monkeypatch.setattr(task_manager.db_manager, "filter_existing_hash_ids", lambda hash_ids: queried.append(list(hash_ids)) or set())
 
         mark([make_tree([item])])
 
-        assert not item.in_download_history
+        assert queried == []
 
     def test_unidentifiable_items_are_skipped(self, task_manager, mark, monkeypatch):
         # 没有任何形态位的条目落在兜底分支，解析端彼此会算出同一个 hash，查了只会误报
@@ -232,6 +233,118 @@ def app():
     import res.resources_rc   # noqa: F401  图标由此注册
 
     return instance
+
+
+def store_parts(task_manager, bvid: str, cids: list, completed: bool = True):
+    """模拟二次解析：为稿件的各分P分别建任务"""
+    for cid in cids:
+        part = make_item(Attribute.VIDEO_BIT | Attribute.FAVLIST_BIT | Attribute.PART_BIT, aid = 1, bvid = bvid, cid = cid)
+
+        store(task_manager, part, f"{bvid}-{cid}", completed = completed)
+
+
+def make_reparse_item(bvid: str, page_count: int = 0, attribute = Attribute.VIDEO_BIT | Attribute.FAVLIST_BIT):
+    item = TreeItem({"title": bvid, "bvid": bvid, "page_count": page_count})
+    item.set_attribute(attribute | Attribute.NEED_PARSE_BIT)
+
+    return item
+
+
+class TestMarkByBvid:
+    def test_matches_by_bvid_across_both_tables(self, task_manager, mark):
+        store_parts(task_manager, "BVdone", [1], completed = True)
+        store_parts(task_manager, "BVqueued", [2], completed = False)
+
+        done = make_reparse_item("BVdone")
+        queued = make_reparse_item("BVqueued")
+        fresh = make_reparse_item("BVfresh")
+
+        mark([make_tree([done, queued, fresh])])
+
+        assert done.in_download_history
+        assert queued.in_download_history
+        assert not fresh.in_download_history
+
+    def test_partially_downloaded_is_not_marked_when_page_count_known(self, task_manager, mark):
+        # 收藏夹给出了分P总数：3P 只下了 2P，不打勾
+        store_parts(task_manager, "BVpart", [1, 2])
+        store_parts(task_manager, "BVfull", [1, 2, 3])
+
+        part = make_reparse_item("BVpart", page_count = 3)
+        full = make_reparse_item("BVfull", page_count = 3)
+
+        mark([make_tree([part, full])])
+
+        assert not part.in_download_history
+        assert full.in_download_history
+
+    def test_same_part_downloaded_twice_counts_once(self, task_manager, mark):
+        # 同一分P重复下载过（例如重复下载设置为继续），不能凑数成"全部下载"
+        store_parts(task_manager, "BVdup", [1], completed = True)
+        store_parts(task_manager, "BVdup", [1], completed = False)
+
+        item = make_reparse_item("BVdup", page_count = 2)
+
+        mark([make_tree([item])])
+
+        assert not item.in_download_history
+
+    def test_unknown_page_count_marks_on_any_record(self, task_manager, mark):
+        # 个人空间、稍后再看等来源拿不到分P总数，有记录即视为下载过
+        store_parts(task_manager, "BVspace", [1])
+
+        item = make_reparse_item("BVspace", attribute = Attribute.VIDEO_BIT | Attribute.SPACE_BIT)
+
+        mark([make_tree([item])])
+
+        assert item.in_download_history
+
+    @pytest.mark.parametrize("attribute", [
+        Attribute.BANGUMI_BIT | Attribute.FAVLIST_BIT,
+        Attribute.CHEESE_BIT | Attribute.SPACE_BIT,
+    ], ids = ["bangumi", "cheese"])
+    def test_bangumi_and_cheese_are_skipped(self, task_manager, mark, attribute):
+        # 番剧按 ep_id 取单集、课程整季下载，条目上的 bvid 对应不到具体任务
+        store_parts(task_manager, "BVother", [1])
+
+        item = make_reparse_item("BVother", attribute = attribute)
+
+        mark([make_tree([item])])
+
+        assert not item.in_download_history
+
+    def test_bvid_query_failure_keeps_hash_marks(self, task_manager, mark, monkeypatch, caplog):
+        direct = make_item(Attribute.VIDEO_BIT, aid = 1, bvid = "BVdirect", cid = 1)
+        store(task_manager, direct, "direct", completed = True)
+
+        def boom(_):
+            raise RuntimeError("no such function: json_extract")
+
+        monkeypatch.setattr(task_manager.db_manager, "count_parts_by_bvid", boom)
+
+        reparse = make_reparse_item("BVdirect")
+
+        mark([make_tree([direct, reparse])])
+
+        assert direct.in_download_history
+        assert not reparse.in_download_history
+        assert "按 bvid 查询下载记录失败" in caplog.text
+
+    def test_query_uses_bvid_index(self, task_manager):
+        # 查询里的表达式必须与建索引时逐字一致，否则静默退化为全表扫描、逐行解析 JSON
+        plan = task_manager.db_manager.query("""
+            EXPLAIN QUERY PLAN
+            SELECT 1 FROM completed_task WHERE json_extract("data", '$.Episode.bvid') IN (?)
+        """, ("BV1",))
+
+        assert any("idx_completed_task_bvid" in row[-1] for row in plan)
+
+    def test_large_input_is_split_into_batches(self, task_manager):
+        store_parts(task_manager, "BVtarget", [1, 2])
+
+        bvids = [f"BVmissing{i}" for i in range(450)] + ["BVtarget"]
+
+        assert task_manager.db_manager.count_parts_by_bvid(bvids) == {"BVtarget": 2}
 
 
 class TestParseModelDecoration:

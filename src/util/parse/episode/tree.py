@@ -266,6 +266,10 @@ class TreeItem(TreeItemBase):
         self.item_id = item_data.get("item_id", 0)
         self.section_id = item_data.get("section_id", 0)
 
+        # 稿件的分P总数，仅收藏夹条目可知，0 表示未知。
+        # 用于判断按 bvid 匹配到的下载记录是否已覆盖全部分P，不随任务入库
+        self.page_count = item_data.get("page_count", 0)
+
         # 本次会话中已提交下载，列表上显示为灰色
         self.downloaded = False
         # 解析时已存在于下载记录中（含仍在下载队列里的），列表上显示绿色对勾。
