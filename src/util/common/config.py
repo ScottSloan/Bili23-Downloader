@@ -327,6 +327,7 @@ class APPConfig(QConfig):
     parse_list_column = ConfigItem("Behavior", "parse_list_column", DefaultValue.parse_list_column)
     parse_list_alternate_row_color = ConfigItem("Behavior", "parse_list_alternate_row_color", True, BoolValidator())
     parse_list_show_floating_command_bar = ConfigItem("Behavior", "parse_list_show_floating_command_bar", True, BoolValidator())
+    parse_list_mark_downloaded = ConfigItem("Behavior", "parse_list_mark_downloaded", True, BoolValidator())
 
     monitor_clipboard = ConfigItem("Behavior", "monitor_clipboard", False, BoolValidator())
     show_download_confirmation_dialog = ConfigItem("Behavior", "show_download_confirmation_dialog", False, BoolValidator())

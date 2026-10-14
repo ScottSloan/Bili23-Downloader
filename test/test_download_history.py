@@ -35,7 +35,24 @@ def task_manager():
 
 
 @pytest.fixture
-def mark(task_manager, monkeypatch):
+def mark_enabled():
+    """设置项开关，用例结束后恢复原值（config.set 会立即落盘）"""
+    from util.common.config import config
+
+    saved = config.get(config.parse_list_mark_downloaded)
+
+    def set_enabled(value: bool):
+        config.set(config.parse_list_mark_downloaded, value)
+
+    set_enabled(True)
+
+    yield set_enabled
+
+    config.set(config.parse_list_mark_downloaded, saved)
+
+
+@pytest.fixture
+def mark(task_manager, monkeypatch, mark_enabled):
     from util.parse.episode import download_history
 
     # 换成隔离库上的实例，避免读到进程级单例背后的那份库
@@ -177,6 +194,21 @@ class TestMarkDownloadHistory:
         assert queried == []
         assert not item.in_download_history
 
+    def test_disabled_skips_query(self, task_manager, mark, mark_enabled, monkeypatch):
+        item = make_item(Attribute.VIDEO_BIT, aid = 1, bvid = "BV1", cid = 1)
+
+        store(task_manager, item, "disabled", completed = True)
+
+        queried = []
+        monkeypatch.setattr(task_manager.db_manager, "filter_existing_hash_ids", lambda hash_ids: queried.append(list(hash_ids)) or set())
+
+        mark_enabled(False)
+        mark([make_tree([item])])
+
+        # 关闭时连数据库都不碰
+        assert queried == []
+        assert not item.in_download_history
+
     def test_database_error_does_not_break_parsing(self, task_manager, mark, monkeypatch, caplog):
         item = make_item(Attribute.VIDEO_BIT, aid = 1, bvid = "BV1", cid = 1)
 
@@ -203,9 +235,9 @@ def app():
 
 
 class TestParseModelDecoration:
-    def test_icon_only_on_title_column_of_history_items(self, app):
-        from PySide6.QtCore import QModelIndex, QSize, Qt
-        from PySide6.QtGui import QIcon
+    @staticmethod
+    def _make_model():
+        from PySide6.QtCore import QModelIndex
 
         from gui.component.parse_list.model import ParseModel
 
@@ -221,7 +253,32 @@ class TestParseModelDecoration:
         model.root_node = root
         model.endResetModel()
 
-        parent = model.index(0, 0, QModelIndex())
+        return model, model.index(0, 0, QModelIndex())
+
+    def test_disabled_hides_icon_and_placeholder(self, app, mark_enabled):
+        from PySide6.QtCore import Qt
+
+        from util.common.signal_bus import signal_bus
+
+        model, parent = self._make_model()
+        title_column = model._title_column
+        role = Qt.ItemDataRole.DecorationRole
+
+        assert model.index(0, title_column, parent).data(role) is not None
+
+        # 与设置对话框保存时的路径一致：改配置后发 update_column_settings
+        mark_enabled(False)
+        signal_bus.parse.update_column_settings.emit()
+
+        # 已解析出的对勾立即隐藏，占位也一并去掉，标题回到原来的位置
+        assert model.index(0, title_column, parent).data(role) is None
+        assert model.index(1, title_column, parent).data(role) is None
+
+    def test_icon_only_on_title_column_of_history_items(self, app, mark_enabled):
+        from PySide6.QtCore import QSize, Qt
+        from PySide6.QtGui import QIcon
+
+        model, parent = self._make_model()
         title_column = model._title_column
 
         assert title_column >= 0

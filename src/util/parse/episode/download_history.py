@@ -1,5 +1,6 @@
 from ...download.task.hash_id import calc_episode_hash_id, is_identifiable
 from ...download.task.manager import task_manager
+from ...common.config import config
 
 from .tree import TreeItem, Attribute
 
@@ -18,6 +19,10 @@ def mark_download_history(nodes: List[TreeItem]):
     判定口径与创建任务时的重复下载判定完全一致（同一个 hash_id、同样查两张表），
     保证列表上打了勾的条目，点下载时也必然被判为重复。
     """
+    # 关闭时连查询一并省掉，上千条的收藏夹、个人空间每一页都要查一次库
+    if not config.get(config.parse_list_mark_downloaded):
+        return
+
     candidates: dict[str, List[TreeItem]] = {}
 
     for node in nodes:

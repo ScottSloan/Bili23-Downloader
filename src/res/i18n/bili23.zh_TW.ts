@@ -3665,6 +3665,11 @@ This software contains no advertisements, trackers, or analytics SDKs of any kin
         <source>Show floating command bar</source>
         <translation>顯示懸浮命令列</translation>
     </message>
+    <message>
+        <location filename="../../gui/dialog/setting/parse_list.py" line="33"/>
+        <source>Mark items found in download history</source>
+        <translation>標記下載紀錄中已有的項目</translation>
+    </message>
 </context>
 <context>
     <name>ParseTreeView</name>

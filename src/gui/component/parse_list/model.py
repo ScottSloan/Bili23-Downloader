@@ -40,6 +40,8 @@ class ParseModel(QAbstractItemModel):
 
         # 标题列的下标，已下载对勾画在这一列。列可隐藏、可调整顺序，随列配置一起更新
         self._title_column = -1
+        # 是否显示已下载对勾。data() 是最热路径，不在里面逐次读配置
+        self._mark_downloaded = True
 
         self._setup_column_data()
 
@@ -106,6 +108,10 @@ class ParseModel(QAbstractItemModel):
 
         self._title_column = next((i for i, entry in enumerate(self._column_data) if entry.get("attr_key") == "title"), -1)
 
+        # 解析列表设置对话框保存时发出 update_column_settings，开关随之生效。
+        # 关闭时连占位一起去掉，已解析出的对勾也立即隐藏，不必等重新解析
+        self._mark_downloaded = config.get(config.parse_list_mark_downloaded)
+
         self.endResetModel()
 
     def columnCount(self, parent = QModelIndex()):
@@ -157,7 +163,7 @@ class ParseModel(QAbstractItemModel):
         if role == DECORATION_ROLE:
             # 下载记录里已有的条目在标题前加一个绿色对勾，与本次刚提交下载的灰色区分开。
             # 序号列的复选框由委托手绘，图标放在那一列会与之重叠，因此放在标题列
-            if index.column() != self._title_column or not index.isValid():
+            if not self._mark_downloaded or index.column() != self._title_column or not index.isValid():
                 return None
 
             if index.internalPointer().in_download_history:
