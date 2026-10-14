@@ -219,7 +219,7 @@ class ParseHistoryDialog(DialogBase):
         parent_size: QSize = self.parent().size()
 
         width = parent_size.width() * 0.6
-        height = parent_size.height() * 0.65
+        height = parent_size.height() * 0.75
 
         self.widget.setMinimumWidth(max(750, width))
-        self.widget.setMinimumHeight(max(475, height))
+        self.widget.setMinimumHeight(max(500, height))
