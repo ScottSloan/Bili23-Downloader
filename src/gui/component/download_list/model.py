@@ -170,8 +170,9 @@ class DownloadListModel(CoverQueryModelBase):
             case _:
                 task_manager.cancel_async(task_info)
 
-    def batchStart(self):
-        for task in self._task_list:
+    def batchStart(self, task_list: List[TaskInfo] = None):
+        # task_list 为 None 时作用于整个列表；列表筛选生效时由代理模型传入当前可见的任务
+        for task in self._targetTasks(task_list):
             if task.Download.status in [DownloadStatus.PAUSED, DownloadStatus.FFMPEG_FAILED, DownloadStatus.FAILED]:
                 # 从暂停状态变为等待状态，由 manage_concurrent_downloads 统一调度
                 task.Download.status = DownloadStatus.QUEUED
@@ -180,8 +181,8 @@ class DownloadListModel(CoverQueryModelBase):
 
         self.manageConcurrentDownloads()
 
-    def batchPause(self):
-        for task in self._task_list:
+    def batchPause(self, task_list: List[TaskInfo] = None):
+        for task in self._targetTasks(task_list):
             if task.Download.status in [DownloadStatus.DOWNLOADING, DownloadStatus.QUEUED]:
                 task.Download.status = DownloadStatus.PAUSED
                 downloader = downloader_manager.get(task, create_if_not_exists = False)
@@ -191,13 +192,13 @@ class DownloadListModel(CoverQueryModelBase):
 
                 self.onUpdateData(task)
 
-    def batch_cancel(self):
+    def batch_cancel(self, task_list: List[TaskInfo] = None):
         # 已完成的任务走批量路径：一次数据库删除 + 一次界面刷新。
         # 逐条处理时每条都要独立提交事务并重建行索引，任务较多时会长时间卡住界面。
         completed_tasks = []
         remaining_tasks = []
 
-        for task in list(self._task_list):
+        for task in list(self._targetTasks(task_list)):
             match task.Download.status:
                 case DownloadStatus.MERGING | DownloadStatus.CONVERTING:
                     # 只有非合并中的任务才允许取消
@@ -216,6 +217,9 @@ class DownloadListModel(CoverQueryModelBase):
 
         for task in remaining_tasks:
             self.cancelDownload(task)
+
+    def _targetTasks(self, task_list: List[TaskInfo] = None):
+        return self._task_list if task_list is None else task_list
 
     def manageConcurrentDownloads(self):
         # 启动任务时可能同步走完整个流程并反过来再次触发调度。

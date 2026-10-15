@@ -1249,7 +1249,7 @@ Please note that download history is the sole basis for recognizing downloaded v
         <translation>下載完成</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/download.py" line="140"/>
+        <location filename="../../gui/interface/download.py" line="143"/>
         <source>Failed to query download tasks</source>
         <translation>查詢下載任務失敗</translation>
     </message>
@@ -1257,17 +1257,17 @@ Please note that download history is the sole basis for recognizing downloaded v
 <context>
     <name>DownloadListView</name>
     <message>
-        <location filename="../../gui/component/download_list/list_view.py" line="58"/>
+        <location filename="../../gui/component/download_list/list_view.py" line="59"/>
         <source>Re-parse</source>
         <translation>重新解析</translation>
     </message>
     <message>
-        <location filename="../../gui/component/download_list/list_view.py" line="61"/>
+        <location filename="../../gui/component/download_list/list_view.py" line="62"/>
         <source>Resume</source>
         <translation>繼續</translation>
     </message>
     <message>
-        <location filename="../../gui/component/download_list/list_view.py" line="64"/>
+        <location filename="../../gui/component/download_list/list_view.py" line="65"/>
         <source>Pause</source>
         <translation>暫停</translation>
     </message>
@@ -1276,22 +1276,27 @@ Please note that download history is the sole basis for recognizing downloaded v
         <translation type="vanished">編輯下載選項</translation>
     </message>
     <message>
-        <location filename="../../gui/component/download_list/list_view.py" line="72"/>
+        <location filename="../../gui/component/download_list/list_view.py" line="73"/>
         <source>Delete</source>
         <translation>刪除</translation>
     </message>
     <message>
-        <location filename="../../gui/component/download_list/list_view.py" line="66"/>
+        <location filename="../../gui/component/download_list/list_view.py" line="67"/>
         <source>Re-download</source>
         <translation>重新下載</translation>
     </message>
     <message>
-        <location filename="../../gui/component/download_list/list_view.py" line="187"/>
+        <location filename="../../gui/component/download_list/list_view.py" line="29"/>
+        <source>No matching tasks</source>
+        <translation>沒有符合條件的任務</translation>
+    </message>
+    <message>
+        <location filename="../../gui/component/download_list/list_view.py" line="203"/>
         <source>Tasks being processed by FFmpeg cannot be redownloaded</source>
         <translation>處於 FFmpeg 處理中的任務無法重新下載</translation>
     </message>
     <message>
-        <location filename="../../gui/component/download_list/list_view.py" line="191"/>
+        <location filename="../../gui/component/download_list/list_view.py" line="207"/>
         <source>Selected task will be redownloaded</source>
         <translation>選定的任務開始重新下載</translation>
     </message>
@@ -2098,6 +2103,24 @@ File name: {filename}</source>
         <location filename="../../gui/component/widget/flyout.py" line="252"/>
         <source>History</source>
         <translation>歷史記錄</translation>
+    </message>
+</context>
+<context>
+    <name>FilterFlyoutWidget</name>
+    <message>
+        <location filename="../../gui/component/download_list/top_widget.py" line="139"/>
+        <source>Status</source>
+        <translation>狀態</translation>
+    </message>
+    <message>
+        <location filename="../../gui/component/download_list/top_widget.py" line="153"/>
+        <source>Type</source>
+        <translation>類型</translation>
+    </message>
+    <message>
+        <location filename="../../gui/component/download_list/top_widget.py" line="164"/>
+        <source>Reset</source>
+        <translation>重設</translation>
     </message>
 </context>
 <context>
@@ -4719,22 +4742,22 @@ ISP：{isp}</translation>
 <context>
     <name>SortFlyoutWidget</name>
     <message>
-        <location filename="../../gui/component/download_list/top_widget.py" line="33"/>
+        <location filename="../../gui/component/download_list/top_widget.py" line="36"/>
         <source>Sort By</source>
         <translation>排序方式</translation>
     </message>
     <message>
-        <location filename="../../gui/component/download_list/top_widget.py" line="43"/>
+        <location filename="../../gui/component/download_list/top_widget.py" line="46"/>
         <source>Sort Direction</source>
         <translation>排序方向</translation>
     </message>
     <message>
-        <location filename="../../gui/component/download_list/top_widget.py" line="45"/>
+        <location filename="../../gui/component/download_list/top_widget.py" line="48"/>
         <source>Ascending</source>
         <translation>升序</translation>
     </message>
     <message>
-        <location filename="../../gui/component/download_list/top_widget.py" line="47"/>
+        <location filename="../../gui/component/download_list/top_widget.py" line="50"/>
         <source>Descending</source>
         <translation>降序</translation>
     </message>
@@ -5071,63 +5094,99 @@ Under no circumstances shall the developer be liable for any direct, indirect, i
 <context>
     <name>TopStackedWidget</name>
     <message>
-        <location filename="../../gui/component/download_list/top_widget.py" line="126"/>
-        <location filename="../../gui/component/download_list/top_widget.py" line="151"/>
+        <location filename="../../gui/component/download_list/top_widget.py" line="235"/>
+        <location filename="../../gui/component/download_list/top_widget.py" line="267"/>
+        <source>Filter</source>
+        <translation>篩選</translation>
+    </message>
+    <message>
+        <location filename="../../gui/component/download_list/top_widget.py" line="238"/>
+        <location filename="../../gui/component/download_list/top_widget.py" line="270"/>
         <source>Sort</source>
         <translation>排序</translation>
     </message>
     <message>
-        <location filename="../../gui/component/download_list/top_widget.py" line="129"/>
-        <location filename="../../gui/component/download_list/top_widget.py" line="154"/>
+        <location filename="../../gui/component/download_list/top_widget.py" line="241"/>
+        <location filename="../../gui/component/download_list/top_widget.py" line="273"/>
         <source>Open Download Directory</source>
         <translation>開啟下載目錄</translation>
     </message>
     <message>
-        <location filename="../../gui/component/download_list/top_widget.py" line="133"/>
+        <location filename="../../gui/component/download_list/top_widget.py" line="245"/>
         <source>Start All</source>
         <translation>全部開始</translation>
     </message>
     <message>
-        <location filename="../../gui/component/download_list/top_widget.py" line="134"/>
+        <location filename="../../gui/component/download_list/top_widget.py" line="246"/>
         <source>Pause All</source>
         <translation>全部暫停</translation>
     </message>
     <message>
-        <location filename="../../gui/component/download_list/top_widget.py" line="135"/>
+        <location filename="../../gui/component/download_list/top_widget.py" line="247"/>
         <source>Delete All</source>
         <translation>全部刪除</translation>
     </message>
     <message>
-        <location filename="../../gui/component/download_list/top_widget.py" line="158"/>
+        <location filename="../../gui/component/download_list/top_widget.py" line="277"/>
         <source>Clear All</source>
         <translation>清除記錄</translation>
     </message>
     <message>
-        <location filename="../../gui/component/download_list/top_widget.py" line="183"/>
+        <location filename="../../gui/component/download_list/top_widget.py" line="297"/>
+        <source>Search</source>
+        <translation>搜尋</translation>
+    </message>
+    <message>
+        <location filename="../../gui/component/download_list/top_widget.py" line="318"/>
         <source>Creation Time</source>
         <translation>建立時間</translation>
     </message>
     <message>
-        <location filename="../../gui/component/download_list/top_widget.py" line="184"/>
-        <location filename="../../gui/component/download_list/top_widget.py" line="200"/>
+        <location filename="../../gui/component/download_list/top_widget.py" line="319"/>
+        <location filename="../../gui/component/download_list/top_widget.py" line="335"/>
         <source>Title</source>
         <translation>標題名稱</translation>
     </message>
     <message>
-        <location filename="../../gui/component/download_list/top_widget.py" line="185"/>
-        <location filename="../../gui/component/download_list/top_widget.py" line="201"/>
+        <location filename="../../gui/component/download_list/top_widget.py" line="320"/>
+        <location filename="../../gui/component/download_list/top_widget.py" line="336"/>
         <source>File Size</source>
         <translation>檔案大小</translation>
     </message>
     <message>
-        <location filename="../../gui/component/download_list/top_widget.py" line="186"/>
+        <location filename="../../gui/component/download_list/top_widget.py" line="321"/>
         <source>Download Progress</source>
         <translation>下載進度</translation>
     </message>
     <message>
-        <location filename="../../gui/component/download_list/top_widget.py" line="199"/>
+        <location filename="../../gui/component/download_list/top_widget.py" line="334"/>
         <source>Completion Time</source>
         <translation>完成時間</translation>
+    </message>
+    <message>
+        <location filename="../../gui/component/download_list/top_widget.py" line="372"/>
+        <source>Downloading</source>
+        <translation>下載中</translation>
+    </message>
+    <message>
+        <location filename="../../gui/component/download_list/top_widget.py" line="373"/>
+        <source>Waiting</source>
+        <translation>等待中</translation>
+    </message>
+    <message>
+        <location filename="../../gui/component/download_list/top_widget.py" line="374"/>
+        <source>Paused</source>
+        <translation>已暫停</translation>
+    </message>
+    <message>
+        <location filename="../../gui/component/download_list/top_widget.py" line="375"/>
+        <source>Processing</source>
+        <translation>處理中</translation>
+    </message>
+    <message>
+        <location filename="../../gui/component/download_list/top_widget.py" line="376"/>
+        <source>Failed</source>
+        <translation>失敗</translation>
     </message>
 </context>
 <context>
