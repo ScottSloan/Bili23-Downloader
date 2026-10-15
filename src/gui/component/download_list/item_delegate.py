@@ -331,9 +331,13 @@ class UIData(QObject):
 
     def getMediaTypeText(self, task_info: TaskInfo):
         attribute = task_info.Episode.attribute
+        download_type = task_info.Download.type
+
+        # 仅下载音频时，产物就是音频文件，无论来源是投稿、番剧还是课程，都直接标「音频」
+        audio_only = download_type & DownloadType.AUDIO and not download_type & DownloadType.VIDEO
 
         # 先判断更具体的类型：音频、课程、剧集条目也可能同时带着其他通用位
-        if attribute & Attribute.AUDIO_BIT:
+        if audio_only or attribute & Attribute.AUDIO_BIT:
             key = "AUDIO"
         elif attribute & (Attribute.CHEESE_BIT | Attribute.LESSON_BIT):
             key = "COURSE"
