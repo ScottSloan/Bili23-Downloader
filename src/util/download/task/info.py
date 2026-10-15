@@ -138,6 +138,10 @@ class DownloadInfo(InfoBase):
     info_label: str = ""
     status_label: str = ""
 
+    # 预计剩余秒数，0 表示无法估算。由下载器按平滑后的速度折算，
+    # 直接用瞬时速度算出来的值每秒都会大幅跳动，界面上反而没法读
+    eta: int = 0
+
 @dataclass
 class OptionsInfo(InfoBase):
     """

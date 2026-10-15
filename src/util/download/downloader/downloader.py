@@ -574,6 +574,7 @@ class Downloader(QObject):
 
         self.active_workers = 0
         self.last_sampled_size = 0
+        self.smoothed_speed = 0.0
         self.wait_flag = False
         self.wait_callback = None
         self.start_worker_lock = Lock()
@@ -1529,6 +1530,7 @@ class Downloader(QObject):
         
         self.task_info.Download.status = DownloadStatus.DOWNLOADING
         self.task_info.Download.speed = 0
+        self.task_info.Download.eta = 0
         self.task_info.Download.progress = 100
 
         danmaku = self.task_info.Download.type & DownloadType.DANMAKU != 0
@@ -1627,6 +1629,7 @@ class Downloader(QObject):
 
         self.last_sampled_size = self.task_info.Download.downloaded_size
         self.last_sampled_time = time.monotonic()
+        self.smoothed_speed = 0.0
         self.speed_timer.start()
 
     def _calculate_speed(self):
@@ -1646,11 +1649,31 @@ class Downloader(QObject):
         self.task_info.Download.progress = int(current_size / total * 100) if total > 0 else 100
         self.last_sampled_size = current_size
 
+        self._estimate_remaining_time(current_size, total)
+
         self.update_item(self.task_info)
 
         # timer 的定期检查：如果队列为空且处于 DOWNLOADING 状态可以尝试转移到合并步骤
         if not self.task_info.Download.queue and self.task_info.Download.status == DownloadStatus.DOWNLOADING:
             self.on_download_completed()
+
+    def _estimate_remaining_time(self, current_size: int, total: int):
+        # 剩余时间用指数移动平均后的速度折算：瞬时速度受分片调度、TCP 窗口影响，
+        # 相邻两秒差出一倍很常见，直接拿来算剩余时间会在「10 秒」和「3 分钟」之间来回跳。
+        # 系数取 0.3，大约 3 秒内就能跟上真实的速度变化（如限速调整），又足以压住抖动
+        speed = self.task_info.Download.speed
+
+        if self.smoothed_speed <= 0:
+            self.smoothed_speed = float(speed)
+        else:
+            self.smoothed_speed = 0.3 * speed + 0.7 * self.smoothed_speed
+
+        remaining = total - current_size
+
+        if self.smoothed_speed >= 1 and remaining > 0:
+            self.task_info.Download.eta = int(remaining / self.smoothed_speed)
+        else:
+            self.task_info.Download.eta = 0
 
     def shutdown(self):
         """

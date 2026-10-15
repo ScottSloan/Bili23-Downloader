@@ -577,6 +577,7 @@ class TaskManager:
         task_info.Download.total_size = 0
         task_info.Download.downloaded_size = 0
         task_info.Download.speed = 0
+        task_info.Download.eta = 0
 
         # 临时文件删除放到后台线程，避免在 GUI 线程上做磁盘操作
         self._remove_temporary_files_async([task_info])
