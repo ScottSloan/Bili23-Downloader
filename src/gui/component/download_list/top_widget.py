@@ -17,6 +17,21 @@ from util.common.io.directory import Directory
 from util.common.signal_bus import signal_bus
 from util.common.config import config
 
+def get_media_type_group_dict():
+    """
+    筛选浮窗的类型选项：label → 一组 get_media_type_key 的取值
+
+    选项文案直接用封面角标那一组，与列表里看到的角标逐字对得上。互动视频不单列：
+    它同时带着 VIDEO_BIT，重新解析、命名规则等处都按投稿视频对待，勾「视频」却筛不出
+    互动视频反而奇怪。封面角标仍标「互动」，那里是展示细分类型，不涉及归类
+    """
+    return {
+        Translator.MEDIA_TYPE_BADGE("VIDEO"): frozenset({"VIDEO", "INTERACTIVE"}),
+        Translator.MEDIA_TYPE_BADGE("BANGUMI"): frozenset({"BANGUMI"}),
+        Translator.MEDIA_TYPE_BADGE("COURSE"): frozenset({"COURSE"}),
+        Translator.MEDIA_TYPE_BADGE("AUDIO"): frozenset({"AUDIO"})
+    }
+
 class SortFlyoutWidget(FlyoutViewBase):
     closed = Signal()
 
@@ -118,13 +133,14 @@ class FilterFlyoutWidget(FlyoutViewBase):
     ):
         super().__init__(parent)
 
-        # 状态按组给出（label → 一组 DownloadStatus），已完成列表里只有一种状态，传 None 不显示这一栏
+        # 两栏都按组给出：label → 一组 DownloadStatus / 一组媒体类型 key，勾一项等于纳入这一整组。
+        # 已完成列表里只有一种状态，状态传 None 不显示这一栏
         self.status_group_dict = status_group_dict or {}
         self.media_type_dict = media_type_dict or {}
         self.trigger_signal_func = trigger_signal_func
 
         self.status_check_box_list: list[tuple[CheckBox, frozenset]] = []
-        self.media_type_check_box_list: list[tuple[CheckBox, str]] = []
+        self.media_type_check_box_list: list[tuple[CheckBox, frozenset]] = []
 
         self.init_UI(status_filter, media_type_filter)
 
@@ -139,12 +155,7 @@ class FilterFlyoutWidget(FlyoutViewBase):
         if self.status_group_dict:
             status_lab = BodyLabel(self.tr("Status"), self)
 
-            for label, statuses in self.status_group_dict.items():
-                check_box = CheckBox(self._escape_mnemonic(label), self)
-                # 筛选条件是按状态存的，一组状态全在条件里才算这一项被勾选
-                check_box.setChecked(bool(status_filter) and statuses <= status_filter)
-
-                self.status_check_box_list.append((check_box, statuses))
+            self.status_check_box_list = self._create_check_box_list(self.status_group_dict, status_filter)
 
             main_layout.addWidget(status_lab, row, 0)
             main_layout.addLayout(self._create_check_box_layout(self.status_check_box_list), row, 2)
@@ -153,11 +164,7 @@ class FilterFlyoutWidget(FlyoutViewBase):
 
         media_type_lab = BodyLabel(self.tr("Type"), self)
 
-        for label, key in self.media_type_dict.items():
-            check_box = CheckBox(self._escape_mnemonic(label), self)
-            check_box.setChecked(key in media_type_filter)
-
-            self.media_type_check_box_list.append((check_box, key))
+        self.media_type_check_box_list = self._create_check_box_list(self.media_type_dict, media_type_filter)
 
         main_layout.addWidget(media_type_lab, row, 0)
         main_layout.addLayout(self._create_check_box_layout(self.media_type_check_box_list), row, 2)
@@ -172,6 +179,18 @@ class FilterFlyoutWidget(FlyoutViewBase):
         main_layout.addLayout(reset_layout, row + 1, 0, 1, 3)
 
         self.connect_signals()
+
+    def _create_check_box_list(self, group_dict: dict, current_filter: frozenset):
+        check_box_list = []
+
+        for label, group in group_dict.items():
+            check_box = CheckBox(self._escape_mnemonic(label), self)
+            # 筛选条件是按组内成员存的，一组成员全在条件里才算这一项被勾选
+            check_box.setChecked(bool(current_filter) and group <= current_filter)
+
+            check_box_list.append((check_box, group))
+
+        return check_box_list
 
     def _escape_mnemonic(self, text: str):
         # 按钮文字里的 & 会被当成助记符吞掉，「Film & TV」会显示成「Film  TV」
@@ -204,18 +223,22 @@ class FilterFlyoutWidget(FlyoutViewBase):
         self.trigger_signal()
 
     def trigger_signal(self):
-        statuses = set()
-
-        for check_box, group in self.status_check_box_list:
-            if check_box.isChecked():
-                statuses |= group
-
-        media_types = {key for check_box, key in self.media_type_check_box_list if check_box.isChecked()}
+        statuses = self._collect_checked(self.status_check_box_list)
+        media_types = self._collect_checked(self.media_type_check_box_list)
 
         if self.trigger_signal_func:
             self.trigger_signal_func(statuses, media_types)
 
         self.changed.emit()
+
+    def _collect_checked(self, check_box_list: list):
+        checked = set()
+
+        for check_box, group in check_box_list:
+            if check_box.isChecked():
+                checked |= group
+
+        return checked
 
 class ExpandableSearchBox(QWidget):
     """
@@ -471,14 +494,6 @@ class TopStackedWidget(QStackedWidget):
 
         view.closed.connect(flyout.fadeOut)
 
-    def _get_media_type_dict(self):
-        # 选项文案直接用封面角标那一组：筛选项与列表里看到的角标逐字对得上，
-        # 判断逻辑也是同一份（get_media_type_key）
-        return {
-            Translator.MEDIA_TYPE_BADGE(key): key
-            for key in ["VIDEO", "BANGUMI", "COURSE", "AUDIO", "INTERACTIVE"]
-        }
-
     def on_show_downloading_list_filter_flyout(self):
         # 按用户能分辨的阶段归组，而不是逐个列出 DownloadStatus：解析中一闪而过，
         # 合并 / 转换 / 附加处理在用户看来都是「下载完在收尾」
@@ -518,7 +533,7 @@ class TopStackedWidget(QStackedWidget):
         update_button_state()
 
         view = FilterFlyoutWidget(
-            self, status_group_dict, self._get_media_type_dict(), trigger_signal_func,
+            self, status_group_dict, get_media_type_group_dict(), trigger_signal_func,
             list_view.status_filter, list_view.media_type_filter
         )
 

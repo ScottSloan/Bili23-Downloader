@@ -295,3 +295,38 @@ def test_escape_clears_and_collapses_search_box(app):
     assert search_box.isCollapsed()
     # 清空也要经 textChanged 通知列表撤销搜索
     assert received == ["keyword", ""]
+
+
+def test_video_filter_option_includes_interactive_videos(app):
+    """互动视频同时带 VIDEO_BIT，归在「视频」这一项里，不单列选项"""
+    from gui.component.download_list.top_widget import FilterFlyoutWidget, get_media_type_group_dict
+
+    from util.common.translator import Translator
+
+    group_dict = get_media_type_group_dict()
+    assert Translator.MEDIA_TYPE_BADGE("INTERACTIVE") not in group_dict
+
+    received = []
+    view = FilterFlyoutWidget(
+        None, None, group_dict, lambda statuses, media_types: received.append(media_types)
+    )
+
+    video_check_box = next(
+        check_box for check_box, group in view.media_type_check_box_list if "VIDEO" in group
+    )
+    video_check_box.setChecked(True)
+
+    media_types = received[-1]
+
+    proxy = make_proxy([
+        make_task(1),
+        make_task(2, attribute = Attribute.INTERACTIVE_BIT | Attribute.VIDEO_BIT),
+        make_task(3, attribute = Attribute.BANGUMI_BIT),
+    ])
+
+    apply(proxy, media_types = media_types)
+    assert visible_ids(proxy) == [1, 2]
+
+    # 再次打开浮窗时，按存下来的条件恢复勾选状态
+    reopened = FilterFlyoutWidget(None, None, group_dict, None, frozenset(), frozenset(media_types))
+    assert [check_box.isChecked() for check_box, _ in reopened.media_type_check_box_list] == [True, False, False, False]
