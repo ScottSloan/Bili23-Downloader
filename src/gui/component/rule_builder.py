@@ -3,12 +3,13 @@ from PySide6.QtCore import Qt, Signal, QTimer
 from PySide6.QtGui import QFontMetrics
 
 from qfluentwidgets import (
-    FlyoutViewBase, Flyout, FlyoutAnimationType, FluentIcon, ComboBox, LineEdit,
+    FlyoutViewBase, FlyoutAnimationType, FluentIcon, ComboBox, LineEdit,
     BodyLabel, StrongBodyLabel, CaptionLabel, PushButton, TransparentPushButton,
     RoundMenu, Action
 )
 
 from .widget.button import TransparentToolButton
+from .widget.flyout_popup import Flyout
 from .widget.scroll import ScrollArea
 
 from util.common.data.naming_convention import VariableListFactory

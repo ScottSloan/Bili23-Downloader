@@ -124,7 +124,7 @@ class MainWindow(MSFluentWindow):
         from gui.component.widget.flyout import FavoriteFlyoutWidget
         from gui.component.sys_tray import SystemTrayIcon
 
-        from qfluentwidgets import Flyout
+        from gui.component.widget.flyout_popup import Flyout
 
         from .download import DownloadInterface
 
@@ -354,7 +354,9 @@ class MainWindow(MSFluentWindow):
         else:
             # 已登录，点击头像显示用户信息
             from ..component.profile import ProfileCard
-            from qfluentwidgets import Flyout, FlyoutAnimationType
+            from qfluentwidgets import FlyoutAnimationType
+
+            from ..component.widget.flyout_popup import Flyout
 
             Flyout.make(
                 view = ProfileCard(self),

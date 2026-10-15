@@ -2,11 +2,12 @@ from PySide6.QtWidgets import QStackedWidget, QWidget, QHBoxLayout, QGridLayout,
 from PySide6.QtCore import Qt, QEvent, Signal
 
 from qfluentwidgets import (
-    PrimaryPushButton, PushButton, FluentIcon, FlyoutViewBase, BodyLabel, ComboBox, Flyout, FlyoutAnimationType,
+    PrimaryPushButton, PushButton, FluentIcon, FlyoutViewBase, BodyLabel, ComboBox, FlyoutAnimationType,
     CheckBox, SearchLineEdit
 )
 
 from gui.component.widget.button import ToolButton, ToggleToolButton
+from gui.component.widget.flyout_popup import Flyout
 from gui.component.widget.separator import Separator
 
 from util.common.enum import DownloadStatus
@@ -180,6 +181,7 @@ class FilterFlyoutWidget(FlyoutViewBase):
         layout = QGridLayout()
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setHorizontalSpacing(16)
+        layout.setVerticalSpacing(5)
 
         for index, (check_box, _) in enumerate(check_box_list):
             layout.addWidget(check_box, index // 3, index % 3)
@@ -330,7 +332,7 @@ class TopStackedWidget(QStackedWidget):
 
         self.search_downloading_list_box = self._create_search_box()
 
-        self.filter_downloading_list_btn = ToggleToolButton(FluentIcon.FILTER, self)
+        self.filter_downloading_list_btn = ToolButton(FluentIcon.FILTER, self)
         self.filter_downloading_list_btn.setToolTip(self.tr("Filter"))
 
         self.sort_downloading_list_btn = ToolButton(ExtendedFluentIcon.SORT, self)
