@@ -1229,27 +1229,27 @@ Please note that download history is the sole basis for recognizing downloaded v
 <context>
     <name>DownloadInterface</name>
     <message>
-        <location filename="../../gui/interface/download.py" line="34"/>
+        <location filename="../../gui/interface/download.py" line="35"/>
         <source>No downloads in progress</source>
         <translation>没有正在下载的任务</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/download.py" line="44"/>
+        <location filename="../../gui/interface/download.py" line="45"/>
         <source>No completed downloads</source>
         <translation>没有下载完成的任务</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/download.py" line="55"/>
+        <location filename="../../gui/interface/download.py" line="57"/>
         <source>Downloading</source>
         <translation>正在下载</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/download.py" line="56"/>
+        <location filename="../../gui/interface/download.py" line="58"/>
         <source>Completed</source>
         <translation>下载完成</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/download.py" line="143"/>
+        <location filename="../../gui/interface/download.py" line="145"/>
         <source>Failed to query download tasks</source>
         <translation>查询下载任务失败</translation>
     </message>
@@ -2108,17 +2108,17 @@ File name: {filename}</source>
 <context>
     <name>FilterFlyoutWidget</name>
     <message>
-        <location filename="../../gui/component/download_list/top_widget.py" line="139"/>
+        <location filename="../../gui/component/download_list/top_widget.py" line="156"/>
         <source>Status</source>
         <translation>状态</translation>
     </message>
     <message>
-        <location filename="../../gui/component/download_list/top_widget.py" line="153"/>
+        <location filename="../../gui/component/download_list/top_widget.py" line="165"/>
         <source>Type</source>
         <translation>类型</translation>
     </message>
     <message>
-        <location filename="../../gui/component/download_list/top_widget.py" line="164"/>
+        <location filename="../../gui/component/download_list/top_widget.py" line="172"/>
         <source>Reset</source>
         <translation>重置</translation>
     </message>
@@ -2192,27 +2192,27 @@ File name: {filename}</source>
 <context>
     <name>FragmentChip</name>
     <message>
-        <location filename="../../gui/component/rule_builder.py" line="357"/>
+        <location filename="../../gui/component/rule_builder.py" line="358"/>
         <source>(empty)</source>
         <translation>（空）</translation>
     </message>
     <message>
-        <location filename="../../gui/component/rule_builder.py" line="392"/>
+        <location filename="../../gui/component/rule_builder.py" line="393"/>
         <source>Edit</source>
         <translation>编辑</translation>
     </message>
     <message>
-        <location filename="../../gui/component/rule_builder.py" line="395"/>
+        <location filename="../../gui/component/rule_builder.py" line="396"/>
         <source>Move left</source>
         <translation>左移</translation>
     </message>
     <message>
-        <location filename="../../gui/component/rule_builder.py" line="399"/>
+        <location filename="../../gui/component/rule_builder.py" line="400"/>
         <source>Move right</source>
         <translation>右移</translation>
     </message>
     <message>
-        <location filename="../../gui/component/rule_builder.py" line="403"/>
+        <location filename="../../gui/component/rule_builder.py" line="404"/>
         <source>Remove</source>
         <translation>移除</translation>
     </message>
@@ -2220,77 +2220,77 @@ File name: {filename}</source>
 <context>
     <name>FragmentEditView</name>
     <message>
-        <location filename="../../gui/component/rule_builder.py" line="121"/>
+        <location filename="../../gui/component/rule_builder.py" line="122"/>
         <source>Custom format</source>
         <translation>自定义格式</translation>
     </message>
     <message>
-        <location filename="../../gui/component/rule_builder.py" line="126"/>
+        <location filename="../../gui/component/rule_builder.py" line="127"/>
         <source>The prefix and suffix disappear together with the variable</source>
         <translation>变量为空时，前缀与后缀一并消失</translation>
     </message>
     <message>
-        <location filename="../../gui/component/rule_builder.py" line="91"/>
+        <location filename="../../gui/component/rule_builder.py" line="92"/>
         <source>Remove</source>
         <translation>移除</translation>
     </message>
     <message>
-        <location filename="../../gui/component/rule_builder.py" line="74"/>
+        <location filename="../../gui/component/rule_builder.py" line="75"/>
         <source>Edit fragment</source>
         <translation>编辑片段</translation>
     </message>
     <message>
-        <location filename="../../gui/component/rule_builder.py" line="76"/>
+        <location filename="../../gui/component/rule_builder.py" line="77"/>
         <source>Move left</source>
         <translation>左移</translation>
     </message>
     <message>
-        <location filename="../../gui/component/rule_builder.py" line="77"/>
+        <location filename="../../gui/component/rule_builder.py" line="78"/>
         <source>Move right</source>
         <translation>右移</translation>
     </message>
     <message>
-        <location filename="../../gui/component/rule_builder.py" line="129"/>
+        <location filename="../../gui/component/rule_builder.py" line="130"/>
         <source>Variable</source>
         <translation>变量</translation>
     </message>
     <message>
-        <location filename="../../gui/component/rule_builder.py" line="130"/>
+        <location filename="../../gui/component/rule_builder.py" line="131"/>
         <source>Format</source>
         <translation>格式</translation>
     </message>
     <message>
-        <location filename="../../gui/component/rule_builder.py" line="132"/>
+        <location filename="../../gui/component/rule_builder.py" line="133"/>
         <source>Prefix</source>
         <translation>前缀</translation>
     </message>
     <message>
-        <location filename="../../gui/component/rule_builder.py" line="133"/>
+        <location filename="../../gui/component/rule_builder.py" line="134"/>
         <source>Suffix</source>
         <translation>后缀</translation>
     </message>
     <message>
-        <location filename="../../gui/component/rule_builder.py" line="111"/>
+        <location filename="../../gui/component/rule_builder.py" line="112"/>
         <source>Text</source>
         <translation>文字</translation>
     </message>
     <message>
-        <location filename="../../gui/component/rule_builder.py" line="195"/>
+        <location filename="../../gui/component/rule_builder.py" line="196"/>
         <source>Other available variables</source>
         <translation>其余可用变量</translation>
     </message>
     <message>
-        <location filename="../../gui/component/rule_builder.py" line="216"/>
+        <location filename="../../gui/component/rule_builder.py" line="217"/>
         <source>Not available for this variable</source>
         <translation>该变量没有可选格式</translation>
     </message>
     <message>
-        <location filename="../../gui/component/rule_builder.py" line="225"/>
+        <location filename="../../gui/component/rule_builder.py" line="226"/>
         <source>As is</source>
         <translation>原样</translation>
     </message>
     <message>
-        <location filename="../../gui/component/rule_builder.py" line="229"/>
+        <location filename="../../gui/component/rule_builder.py" line="230"/>
         <source>Custom…</source>
         <translation>自定义…</translation>
     </message>
@@ -2763,73 +2763,73 @@ B站的视频通常将视频流和音频流分开存储和传输，下载时需�
         <translation>设置</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="460"/>
+        <location filename="../../gui/interface/main_window.py" line="469"/>
         <source>Welcome to Bili23 Downloader</source>
         <translation>欢迎使用 Bili23 Downloader</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="461"/>
+        <location filename="../../gui/interface/main_window.py" line="470"/>
         <source>It is recommended to read the user guide and FAQs when using for the first time, to help you get started quickly and make full use of all features.</source>
         <translation>首次使用时建议先查看使用说明和常见问题，帮助你更快上手并充分利用各项功能。</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="464"/>
+        <location filename="../../gui/interface/main_window.py" line="473"/>
         <source>View</source>
         <translation>查看</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="465"/>
+        <location filename="../../gui/interface/main_window.py" line="474"/>
         <source>Skip</source>
         <translation>跳过</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="477"/>
+        <location filename="../../gui/interface/main_window.py" line="486"/>
         <source>Log in to your account</source>
         <translation>登录账号</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="478"/>
+        <location filename="../../gui/interface/main_window.py" line="487"/>
         <source>Click the avatar to log in to your Bilibili account. 
 Download functionality will be limited if you&apos;re not logged in.</source>
         <translation>点击头像登录哔哩哔哩账号，未登录状态下下载功能将受限</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="687"/>
+        <location filename="../../gui/interface/main_window.py" line="696"/>
         <source>Download Directory Invalid</source>
         <translation>下载目录无效</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="688"/>
+        <location filename="../../gui/interface/main_window.py" line="697"/>
         <source>The current download directory is inaccessible or lacks write permissions. Please reset it.</source>
         <translation>当前下载目录无法访问或没有写入权限，请重新设置。</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="697"/>
+        <location filename="../../gui/interface/main_window.py" line="706"/>
         <source>FFmpeg Not Found</source>
         <translation>未找到 FFmpeg</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="698"/>
+        <location filename="../../gui/interface/main_window.py" line="707"/>
         <source>No FFmpeg executable found. Please ensure FFmpeg is installed and configured correctly.</source>
         <translation>未找到 FFmpeg 可执行文件。请确保已正确安装并配置 FFmpeg。</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="716"/>
+        <location filename="../../gui/interface/main_window.py" line="725"/>
         <source>Naming Rules Were Reset</source>
         <translation>命名规则已重置</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="717"/>
+        <location filename="../../gui/interface/main_window.py" line="726"/>
         <source>The built-in naming rules changed in this version, so all of your naming rules have been reset to the defaults. Please set them up again.</source>
         <translation>此版本修改了内置命名规则，你的命名规则已全部重置为默认值，请重新设置。</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="726"/>
+        <location filename="../../gui/interface/main_window.py" line="735"/>
         <source>Login Required</source>
         <translation>需要登录</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="727"/>
+        <location filename="../../gui/interface/main_window.py" line="736"/>
         <source>Please log in to your account first.</source>
         <translation>请先登录账号</translation>
     </message>
@@ -3343,6 +3343,95 @@ The meaning of each &quot;Numbering Mode&quot; option is as follows:
     </message>
 </context>
 <context>
+    <name>NetworkErrorDialog</name>
+    <message>
+        <location filename="../../gui/dialog/misc/network_error.py" line="42"/>
+        <source>Error details: {message}</source>
+        <translation>错误详情：{message}</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialog/misc/network_error.py" line="49"/>
+        <source>Open Proxy Settings</source>
+        <translation>打开代理设置</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialog/misc/network_error.py" line="50"/>
+        <source>Close</source>
+        <translation>关闭</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialog/misc/network_error.py" line="56"/>
+        <source>Unable to connect through the proxy</source>
+        <translation>无法通过代理连接</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialog/misc/network_error.py" line="58"/>
+        <source>Network connection failed</source>
+        <translation>网络连接失败</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialog/misc/network_error.py" line="59"/>
+        <source>Unable to connect to the Bilibili server.</source>
+        <translation>无法连接到 B 站服务器。</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialog/misc/network_error.py" line="60"/>
+        <location filename="../../gui/dialog/misc/network_error.py" line="91"/>
+        <source>What you can do:</source>
+        <translation>你可以尝试：</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialog/misc/network_error.py" line="61"/>
+        <source>1. Check that your network connection is working</source>
+        <translation>1. 检查网络连接是否正常</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialog/misc/network_error.py" line="62"/>
+        <source>2. Check whether a firewall or security software is blocking this program</source>
+        <translation>2. 检查防火墙或安全软件是否拦截了本程序</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialog/misc/network_error.py" line="63"/>
+        <source>3. If your network can only access the Internet through a proxy, configure it in Settings → Advanced → Proxy Mode</source>
+        <translation>3. 如果你的网络需要通过代理才能上网，请在「设置 → 高级 → 代理模式」中进行配置</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialog/misc/network_error.py" line="69"/>
+        <source>The program is connecting through the manually configured proxy, but the connection failed. The proxy server may be offline, or its address or port may be incorrect.</source>
+        <translation>程序正在通过手动设置的代理连接，但连接失败。代理服务器可能未运行，或者地址、端口填写有误。</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialog/misc/network_error.py" line="73"/>
+        <source>1. Make sure the proxy server is running, then parse again</source>
+        <translation>1. 确认代理服务器正在运行，然后重新解析</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialog/misc/network_error.py" line="74"/>
+        <source>2. Check the proxy server address and port in Settings → Advanced → Proxy Mode, or choose &quot;Do not use proxy&quot; there. The change takes effect after restarting the program</source>
+        <translation>2. 在「设置 → 高级 → 代理模式」中检查代理服务器的地址和端口，或者改为「不使用代理」，重启程序后生效</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialog/misc/network_error.py" line="80"/>
+        <source>By default the program follows the system proxy, but the connection through it failed. This usually means the proxy software has been closed or its port has changed, while the system proxy setting is still in effect.</source>
+        <translation>程序默认跟随系统代理，但通过系统代理连接失败。这通常是因为代理软件已经退出或更换了端口，而系统代理设置仍然生效。</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialog/misc/network_error.py" line="84"/>
+        <source>1. Start the proxy software, then parse again</source>
+        <translation>1. 启动代理软件，然后重新解析</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialog/misc/network_error.py" line="85"/>
+        <source>2. If you don&apos;t need a proxy, go to Settings → Advanced → Proxy Mode and choose &quot;Do not use proxy&quot;. The change takes effect after restarting the program</source>
+        <translation>2. 如果不需要代理，请在「设置 → 高级 → 代理模式」中选择「不使用代理」，重启程序后生效</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialog/misc/network_error.py" line="89"/>
+        <source>Proxy server: {address}</source>
+        <translation>代理服务器：{address}</translation>
+    </message>
+</context>
+<context>
     <name>NumberSettingCard</name>
     <message>
         <location filename="../../gui/component/setting/card.py" line="428"/>
@@ -3641,78 +3730,78 @@ This software contains no advertisements, trackers, or analytics SDKs of any kin
 <context>
     <name>ParseInterface</name>
     <message>
-        <location filename="../../gui/interface/parse.py" line="90"/>
+        <location filename="../../gui/interface/parse.py" line="93"/>
         <source>Paste and Parse</source>
         <translation>粘贴并解析</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="94"/>
+        <location filename="../../gui/interface/parse.py" line="97"/>
         <source>Link / av / BV / ep / ss / md / Favorites / Profile</source>
         <translation>链接 / av / BV / ep / ss / md / 收藏夹 / 个人空间</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="99"/>
+        <location filename="../../gui/interface/parse.py" line="102"/>
         <source>Parse</source>
         <translation>解析</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="103"/>
+        <location filename="../../gui/interface/parse.py" line="106"/>
         <source>Batch Parse</source>
         <translation>批量解析</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="114"/>
+        <location filename="../../gui/interface/parse.py" line="117"/>
         <source>Parsing History</source>
         <translation>解析记录</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="118"/>
+        <location filename="../../gui/interface/parse.py" line="121"/>
         <source>Batch Select</source>
         <translation>批量选择</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="122"/>
+        <location filename="../../gui/interface/parse.py" line="125"/>
         <source>Download Options</source>
         <translation>下载选项</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="137"/>
+        <location filename="../../gui/interface/parse.py" line="140"/>
         <source>Download Selected Items</source>
         <translation>下载所选项目</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="358"/>
+        <location filename="../../gui/interface/parse.py" line="365"/>
         <source>Parse Failed</source>
         <translation>解析失败</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="110"/>
+        <location filename="../../gui/interface/parse.py" line="113"/>
         <source>Search</source>
         <translation>搜索</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="439"/>
+        <location filename="../../gui/interface/parse.py" line="460"/>
         <source>{category_name} ({selected_count} selected, {total_count} total)</source>
         <translation>{category_name}（已选择 {selected_count} 项，共 {total_count} 项）</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="445"/>
-        <location filename="../../gui/interface/parse.py" line="717"/>
+        <location filename="../../gui/interface/parse.py" line="466"/>
+        <location filename="../../gui/interface/parse.py" line="738"/>
         <source>{category_name} ({total_count} total)</source>
         <translation>{category_name}（共 {total_count} 项）</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="742"/>
+        <location filename="../../gui/interface/parse.py" line="763"/>
         <source>Auto-parse Pagination</source>
         <translation>自动解析分页</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="743"/>
+        <location filename="../../gui/interface/parse.py" line="764"/>
         <source>Click here to automatically parse all pages.</source>
         <translation>点击此处可进行自动解析分页操作</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="836"/>
+        <location filename="../../gui/interface/parse.py" line="857"/>
         <source>Skipped duplicate download: {task_title}</source>
         <translation>已跳过重复下载的任务：{task_title}</translation>
     </message>
@@ -4205,32 +4294,32 @@ ISP：{isp}</translation>
 <context>
     <name>RuleBuilderWidget</name>
     <message>
-        <location filename="../../gui/component/rule_builder.py" line="610"/>
+        <location filename="../../gui/component/rule_builder.py" line="611"/>
         <source>Directory structure</source>
         <translation>目录结构</translation>
     </message>
     <message>
-        <location filename="../../gui/component/rule_builder.py" line="616"/>
+        <location filename="../../gui/component/rule_builder.py" line="617"/>
         <source>Add level</source>
         <translation>添加层级</translation>
     </message>
     <message>
-        <location filename="../../gui/component/rule_builder.py" line="620"/>
+        <location filename="../../gui/component/rule_builder.py" line="621"/>
         <source>At most {count} directory levels</source>
         <translation>最多 {count} 层目录</translation>
     </message>
     <message>
-        <location filename="../../gui/component/rule_builder.py" line="649"/>
+        <location filename="../../gui/component/rule_builder.py" line="650"/>
         <source>File name</source>
         <translation>文件名</translation>
     </message>
     <message>
-        <location filename="../../gui/component/rule_builder.py" line="693"/>
+        <location filename="../../gui/component/rule_builder.py" line="694"/>
         <source>This rule cannot be shown in the visual editor ({reason}). Edit it in the advanced section below.</source>
         <translation>该规则无法在可视化编辑器中显示（{reason}），请在下方的高级区域中编辑。</translation>
     </message>
     <message>
-        <location filename="../../gui/component/rule_builder.py" line="742"/>
+        <location filename="../../gui/component/rule_builder.py" line="743"/>
         <source>Level {number}</source>
         <translation>第 {number} 层</translation>
     </message>
@@ -4238,27 +4327,27 @@ ISP：{isp}</translation>
 <context>
     <name>RuleLevelRow</name>
     <message>
-        <location filename="../../gui/component/rule_builder.py" line="444"/>
+        <location filename="../../gui/component/rule_builder.py" line="445"/>
         <source>Add fragment</source>
         <translation>添加片段</translation>
     </message>
     <message>
-        <location filename="../../gui/component/rule_builder.py" line="454"/>
+        <location filename="../../gui/component/rule_builder.py" line="455"/>
         <source>Move up</source>
         <translation>上移</translation>
     </message>
     <message>
-        <location filename="../../gui/component/rule_builder.py" line="455"/>
+        <location filename="../../gui/component/rule_builder.py" line="456"/>
         <source>Move down</source>
         <translation>下移</translation>
     </message>
     <message>
-        <location filename="../../gui/component/rule_builder.py" line="456"/>
+        <location filename="../../gui/component/rule_builder.py" line="457"/>
         <source>Delete level</source>
         <translation>删除层级</translation>
     </message>
     <message>
-        <location filename="../../gui/component/rule_builder.py" line="497"/>
+        <location filename="../../gui/component/rule_builder.py" line="498"/>
         <source>Empty, will be skipped</source>
         <translation>为空，将被省略</translation>
     </message>
@@ -4271,7 +4360,7 @@ ISP：{isp}</translation>
         <translation type="vanished">插入变量</translation>
     </message>
     <message>
-        <location filename="../../gui/component/rule_builder.py" line="528"/>
+        <location filename="../../gui/component/rule_builder.py" line="529"/>
         <source>Insert text</source>
         <translation>插入文字</translation>
     </message>
@@ -4729,12 +4818,12 @@ ISP：{isp}</translation>
         <translation>缺少程序附带的 FFmpeg 可执行文件。请切换到“系统环境变量”或指定自定义路径。</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="360"/>
+        <location filename="../../gui/interface/setting.py" line="364"/>
         <source>MCP server failed to start</source>
         <translation>MCP 服务器启动失败</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="374"/>
+        <location filename="../../gui/interface/setting.py" line="378"/>
         <source>Configuration takes effect after restart</source>
         <translation>配置重启后生效</translation>
     </message>
@@ -4742,22 +4831,22 @@ ISP：{isp}</translation>
 <context>
     <name>SortFlyoutWidget</name>
     <message>
-        <location filename="../../gui/component/download_list/top_widget.py" line="36"/>
+        <location filename="../../gui/component/download_list/top_widget.py" line="52"/>
         <source>Sort By</source>
         <translation>排序方式</translation>
     </message>
     <message>
-        <location filename="../../gui/component/download_list/top_widget.py" line="46"/>
+        <location filename="../../gui/component/download_list/top_widget.py" line="62"/>
         <source>Sort Direction</source>
         <translation>排序方向</translation>
     </message>
     <message>
-        <location filename="../../gui/component/download_list/top_widget.py" line="48"/>
+        <location filename="../../gui/component/download_list/top_widget.py" line="64"/>
         <source>Ascending</source>
         <translation>升序</translation>
     </message>
     <message>
-        <location filename="../../gui/component/download_list/top_widget.py" line="50"/>
+        <location filename="../../gui/component/download_list/top_widget.py" line="66"/>
         <source>Descending</source>
         <translation>降序</translation>
     </message>
@@ -5094,97 +5183,97 @@ Under no circumstances shall the developer be liable for any direct, indirect, i
 <context>
     <name>TopStackedWidget</name>
     <message>
-        <location filename="../../gui/component/download_list/top_widget.py" line="235"/>
-        <location filename="../../gui/component/download_list/top_widget.py" line="267"/>
+        <location filename="../../gui/component/download_list/top_widget.py" line="359"/>
+        <location filename="../../gui/component/download_list/top_widget.py" line="391"/>
         <source>Filter</source>
         <translation>筛选</translation>
     </message>
     <message>
-        <location filename="../../gui/component/download_list/top_widget.py" line="238"/>
-        <location filename="../../gui/component/download_list/top_widget.py" line="270"/>
+        <location filename="../../gui/component/download_list/top_widget.py" line="362"/>
+        <location filename="../../gui/component/download_list/top_widget.py" line="394"/>
         <source>Sort</source>
         <translation>排序</translation>
     </message>
     <message>
-        <location filename="../../gui/component/download_list/top_widget.py" line="241"/>
-        <location filename="../../gui/component/download_list/top_widget.py" line="273"/>
+        <location filename="../../gui/component/download_list/top_widget.py" line="365"/>
+        <location filename="../../gui/component/download_list/top_widget.py" line="397"/>
         <source>Open Download Directory</source>
         <translation>打开下载目录</translation>
     </message>
     <message>
-        <location filename="../../gui/component/download_list/top_widget.py" line="245"/>
+        <location filename="../../gui/component/download_list/top_widget.py" line="369"/>
         <source>Start All</source>
         <translation>全部开始</translation>
     </message>
     <message>
-        <location filename="../../gui/component/download_list/top_widget.py" line="246"/>
+        <location filename="../../gui/component/download_list/top_widget.py" line="370"/>
         <source>Pause All</source>
         <translation>全部暂停</translation>
     </message>
     <message>
-        <location filename="../../gui/component/download_list/top_widget.py" line="247"/>
+        <location filename="../../gui/component/download_list/top_widget.py" line="371"/>
         <source>Delete All</source>
         <translation>全部删除</translation>
     </message>
     <message>
-        <location filename="../../gui/component/download_list/top_widget.py" line="277"/>
+        <location filename="../../gui/component/download_list/top_widget.py" line="401"/>
         <source>Clear All</source>
         <translation>清除记录</translation>
     </message>
     <message>
-        <location filename="../../gui/component/download_list/top_widget.py" line="297"/>
+        <location filename="../../gui/component/download_list/top_widget.py" line="426"/>
         <source>Search</source>
         <translation>搜索</translation>
     </message>
     <message>
-        <location filename="../../gui/component/download_list/top_widget.py" line="318"/>
+        <location filename="../../gui/component/download_list/top_widget.py" line="455"/>
         <source>Creation Time</source>
         <translation>创建时间</translation>
     </message>
     <message>
-        <location filename="../../gui/component/download_list/top_widget.py" line="319"/>
-        <location filename="../../gui/component/download_list/top_widget.py" line="335"/>
+        <location filename="../../gui/component/download_list/top_widget.py" line="456"/>
+        <location filename="../../gui/component/download_list/top_widget.py" line="472"/>
         <source>Title</source>
         <translation>标题名称</translation>
     </message>
     <message>
-        <location filename="../../gui/component/download_list/top_widget.py" line="320"/>
-        <location filename="../../gui/component/download_list/top_widget.py" line="336"/>
+        <location filename="../../gui/component/download_list/top_widget.py" line="457"/>
+        <location filename="../../gui/component/download_list/top_widget.py" line="473"/>
         <source>File Size</source>
         <translation>文件大小</translation>
     </message>
     <message>
-        <location filename="../../gui/component/download_list/top_widget.py" line="321"/>
+        <location filename="../../gui/component/download_list/top_widget.py" line="458"/>
         <source>Download Progress</source>
         <translation>下载进度</translation>
     </message>
     <message>
-        <location filename="../../gui/component/download_list/top_widget.py" line="334"/>
+        <location filename="../../gui/component/download_list/top_widget.py" line="471"/>
         <source>Completion Time</source>
         <translation>完成时间</translation>
     </message>
     <message>
-        <location filename="../../gui/component/download_list/top_widget.py" line="372"/>
+        <location filename="../../gui/component/download_list/top_widget.py" line="501"/>
         <source>Downloading</source>
         <translation>下载中</translation>
     </message>
     <message>
-        <location filename="../../gui/component/download_list/top_widget.py" line="373"/>
+        <location filename="../../gui/component/download_list/top_widget.py" line="502"/>
         <source>Waiting</source>
         <translation>等待中</translation>
     </message>
     <message>
-        <location filename="../../gui/component/download_list/top_widget.py" line="374"/>
+        <location filename="../../gui/component/download_list/top_widget.py" line="503"/>
         <source>Paused</source>
         <translation>已暂停</translation>
     </message>
     <message>
-        <location filename="../../gui/component/download_list/top_widget.py" line="375"/>
+        <location filename="../../gui/component/download_list/top_widget.py" line="504"/>
         <source>Processing</source>
         <translation>处理中</translation>
     </message>
     <message>
-        <location filename="../../gui/component/download_list/top_widget.py" line="376"/>
+        <location filename="../../gui/component/download_list/top_widget.py" line="505"/>
         <source>Failed</source>
         <translation>失败</translation>
     </message>

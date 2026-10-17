@@ -162,6 +162,13 @@ class MainWindow(MSFluentWindow):
         # _addSubInterface 中建立的 clicked -> switchTo 连接对本次点击不生效，此处手动切换一次
         self.switchTo(self.setting_interface)
 
+    def show_proxy_setting(self):
+        self.ensure_setting_interface()
+
+        # ensure_setting_interface 只在首次构造时切换，设置页已存在时要自己切过去
+        self.switchTo(self.setting_interface)
+        self.setting_interface.scroll_to_proxy_card()
+
     def connect_signals(self):
         # 跟随系统主题切换。该连接原先建立在设置界面中，设置界面改为懒加载后需要提前到此处
         config.themeChanged.connect(setTheme)
