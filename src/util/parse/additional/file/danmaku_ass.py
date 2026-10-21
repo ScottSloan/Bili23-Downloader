@@ -139,10 +139,16 @@ class DanmakuASS:
         self.title = title
         
         # 各模式的显示时长 (毫秒)
+        # 设置里的单位是秒，这里必须从配置读取；此前写死为 10s / 5s，导致样式设置中的滚动/静止时长不生效
+        advanced = config.get(config.danmaku_style)["advanced"]
+
+        scroll_ms = int(advanced["scroll_duration"] * 1000)
+        static_ms = int(advanced["static_duration"] * 1000)
+
         self.duration_map = {
-            1: 10000, 2: 10000, 3: 10000, # 滚动弹幕
-            4: 5000,  # 底部弹幕
-            5: 5000   # 顶部弹幕
+            1: scroll_ms, 2: scroll_ms, 3: scroll_ms, # 滚动弹幕
+            4: static_ms,  # 底部弹幕
+            5: static_ms   # 顶部弹幕
         }
 
     def generate(self) -> str:
