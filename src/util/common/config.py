@@ -147,8 +147,8 @@ class DefaultValue:
         "color": {
             "primary": "&H00FFFFFF",
             "secondary": "&H000000FF",
-            "border": "H00000000",
-            "shadow": "H00000000"
+            "border": "&H00000000",
+            "shadow": "&H00000000"
         },
         "margin": {
             "left": 10,
