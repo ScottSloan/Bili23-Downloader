@@ -49,11 +49,18 @@ class NetworkErrorDialog(DialogBase):
         self.yesButton.setText(self.tr("Open Proxy Settings"))
         self.cancelButton.setText(self.tr("Close"))
 
+        # 直连时被风控，代理设置里没有可改的，留着这个按钮只会把用户引到无关的地方
+        if self.info.kind == NetworkErrorKind.RISK_CONTROL and not self.info.proxy_mode:
+            self.yesButton.hide()
+
         self.widget.setFixedWidth(480)
 
     def get_content(self):
         if self.info.kind == NetworkErrorKind.PROXY:
             return self.tr("Unable to connect through the proxy"), self.get_proxy_lines()
+
+        if self.info.kind == NetworkErrorKind.RISK_CONTROL:
+            return self.tr("Request blocked by Bilibili's risk control"), self.get_risk_control_lines()
 
         return self.tr("Network connection failed"), [
             self.tr("Unable to connect to the Bilibili server."),
@@ -89,3 +96,23 @@ class NetworkErrorDialog(DialogBase):
             lines.append(self.tr("Proxy server: {address}").format(address = self.info.proxy_address))
 
         return lines + [self.tr("What you can do:")] + steps
+
+    def get_risk_control_lines(self):
+        lines = [
+            self.tr("Bilibili has flagged requests from your current network environment and temporarily blocked access. This usually happens when too many requests are sent in a short time, or when your IP address has been flagged.")
+        ]
+
+        if self.info.proxy_address:
+            lines.append(self.tr("Proxy server: {address}").format(address = self.info.proxy_address))
+
+        lines += [
+            self.tr("What you can do:"),
+            self.tr("1. Switch to a different network environment, such as a mobile hotspot, or restart your router to get a new IP address"),
+            self.tr("2. Wait a while before parsing again, and avoid parsing too frequently")
+        ]
+
+        if self.info.proxy_mode:
+            # 风控按出口 IP 判定，走代理时被标记的往往是代理节点，而不是用户自己的网络
+            lines.append(self.tr("3. Requests are currently sent through a proxy, whose IP address may have been flagged. Switch to another proxy node, or choose \"Do not use proxy\" in Settings → Advanced → Proxy Mode. The change takes effect after restarting the program"))
+
+        return lines

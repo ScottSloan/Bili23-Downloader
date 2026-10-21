@@ -3360,75 +3360,102 @@ The meaning of each &quot;Numbering Mode&quot; option is as follows:
         <translation>关闭</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/network_error.py" line="56"/>
+        <location filename="../../gui/dialog/misc/network_error.py" line="60"/>
         <source>Unable to connect through the proxy</source>
         <translation>无法通过代理连接</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/network_error.py" line="58"/>
+        <location filename="../../gui/dialog/misc/network_error.py" line="63"/>
+        <source>Request blocked by Bilibili&apos;s risk control</source>
+        <translation>请求被 B 站风控拦截</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialog/misc/network_error.py" line="65"/>
         <source>Network connection failed</source>
         <translation>网络连接失败</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/network_error.py" line="59"/>
+        <location filename="../../gui/dialog/misc/network_error.py" line="66"/>
         <source>Unable to connect to the Bilibili server.</source>
         <translation>无法连接到 B 站服务器。</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/network_error.py" line="60"/>
-        <location filename="../../gui/dialog/misc/network_error.py" line="91"/>
+        <location filename="../../gui/dialog/misc/network_error.py" line="67"/>
+        <location filename="../../gui/dialog/misc/network_error.py" line="98"/>
+        <location filename="../../gui/dialog/misc/network_error.py" line="109"/>
         <source>What you can do:</source>
         <translation>你可以尝试：</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/network_error.py" line="61"/>
+        <location filename="../../gui/dialog/misc/network_error.py" line="68"/>
         <source>1. Check that your network connection is working</source>
         <translation>1. 检查网络连接是否正常</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/network_error.py" line="62"/>
+        <location filename="../../gui/dialog/misc/network_error.py" line="69"/>
         <source>2. Check whether a firewall or security software is blocking this program</source>
         <translation>2. 检查防火墙或安全软件是否拦截了本程序</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/network_error.py" line="63"/>
+        <location filename="../../gui/dialog/misc/network_error.py" line="70"/>
         <source>3. If your network can only access the Internet through a proxy, configure it in Settings → Advanced → Proxy Mode</source>
         <translation>3. 如果你的网络需要通过代理才能上网，请在「设置 → 高级 → 代理模式」中进行配置</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/network_error.py" line="69"/>
+        <location filename="../../gui/dialog/misc/network_error.py" line="76"/>
         <source>The program is connecting through the manually configured proxy, but the connection failed. The proxy server may be offline, or its address or port may be incorrect.</source>
         <translation>程序正在通过手动设置的代理连接，但连接失败。代理服务器可能未运行，或者地址、端口填写有误。</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/network_error.py" line="73"/>
+        <location filename="../../gui/dialog/misc/network_error.py" line="80"/>
         <source>1. Make sure the proxy server is running, then parse again</source>
         <translation>1. 确认代理服务器正在运行，然后重新解析</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/network_error.py" line="74"/>
+        <location filename="../../gui/dialog/misc/network_error.py" line="81"/>
         <source>2. Check the proxy server address and port in Settings → Advanced → Proxy Mode, or choose &quot;Do not use proxy&quot; there. The change takes effect after restarting the program</source>
         <translation>2. 在「设置 → 高级 → 代理模式」中检查代理服务器的地址和端口，或者改为「不使用代理」，重启程序后生效</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/network_error.py" line="80"/>
+        <location filename="../../gui/dialog/misc/network_error.py" line="87"/>
         <source>By default the program follows the system proxy, but the connection through it failed. This usually means the proxy software has been closed or its port has changed, while the system proxy setting is still in effect.</source>
         <translation>程序默认跟随系统代理，但通过系统代理连接失败。这通常是因为代理软件已经退出或更换了端口，而系统代理设置仍然生效。</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/network_error.py" line="84"/>
+        <location filename="../../gui/dialog/misc/network_error.py" line="91"/>
         <source>1. Start the proxy software, then parse again</source>
         <translation>1. 启动代理软件，然后重新解析</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/network_error.py" line="85"/>
+        <location filename="../../gui/dialog/misc/network_error.py" line="92"/>
         <source>2. If you don&apos;t need a proxy, go to Settings → Advanced → Proxy Mode and choose &quot;Do not use proxy&quot;. The change takes effect after restarting the program</source>
         <translation>2. 如果不需要代理，请在「设置 → 高级 → 代理模式」中选择「不使用代理」，重启程序后生效</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/network_error.py" line="89"/>
+        <location filename="../../gui/dialog/misc/network_error.py" line="96"/>
+        <location filename="../../gui/dialog/misc/network_error.py" line="106"/>
         <source>Proxy server: {address}</source>
         <translation>代理服务器：{address}</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialog/misc/network_error.py" line="102"/>
+        <source>Bilibili has flagged requests from your current network environment and temporarily blocked access. This usually happens when too many requests are sent in a short time, or when your IP address has been flagged.</source>
+        <translation>B 站判定当前网络环境的请求异常，暂时拒绝了访问。这通常是因为短时间内请求过于频繁，或者当前 IP 已被 B 站标记。</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialog/misc/network_error.py" line="110"/>
+        <source>1. Switch to a different network environment, such as a mobile hotspot, or restart your router to get a new IP address</source>
+        <translation>1. 更换网络环境，例如切换到手机热点，或者重启路由器以更换 IP</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialog/misc/network_error.py" line="111"/>
+        <source>2. Wait a while before parsing again, and avoid parsing too frequently</source>
+        <translation>2. 等待一段时间后再重新解析，并避免频繁解析</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialog/misc/network_error.py" line="116"/>
+        <source>3. Requests are currently sent through a proxy, whose IP address may have been flagged. Switch to another proxy node, or choose &quot;Do not use proxy&quot; in Settings → Advanced → Proxy Mode. The change takes effect after restarting the program</source>
+        <translation>3. 当前请求经过代理，代理的 IP 可能已被标记。请切换其他代理节点，或者在「设置 → 高级 → 代理模式」中改为「不使用代理」，重启程序后生效</translation>
     </message>
 </context>
 <context>
@@ -4818,12 +4845,12 @@ ISP：{isp}</translation>
         <translation>缺少程序附带的 FFmpeg 可执行文件。请切换到“系统环境变量”或指定自定义路径。</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="364"/>
+        <location filename="../../gui/interface/setting.py" line="370"/>
         <source>MCP server failed to start</source>
         <translation>MCP 服务器启动失败</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="378"/>
+        <location filename="../../gui/interface/setting.py" line="384"/>
         <source>Configuration takes effect after restart</source>
         <translation>配置重启后生效</translation>
     </message>

@@ -8,8 +8,9 @@
 分类错了不会有任何报错，只会退回成那条看不懂的「解析失败」通知，这里逐条钉住：
 
 1. 连接层面的失败才算网络问题，HTTP 状态码错误、连接池排队超时都不算；
-2. 解析器把底层异常包一层再抛时，仍然要沿异常链认出来；
-3. 是否「走了代理」以建 client 那一刻实际生效的挂载为准，展示的代理地址不能带出账号密码。
+2. 唯一的例外是风控拦截：HTTP 412 或接口 code -412，单独成类，提示换网络环境；
+3. 解析器把底层异常包一层再抛时，仍然要沿异常链认出来；
+4. 是否「走了代理」以建 client 那一刻实际生效的挂载为准，展示的代理地址不能带出账号密码。
 """
 
 from PySide6.QtWidgets import QApplication, QWidget, QLabel
@@ -19,7 +20,7 @@ import pytest
 
 from util.network import error as network_error
 from util.network import request
-from util.network.error import NetworkErrorInfo, NetworkErrorKind, classify_network_error
+from util.network.error import APIError, NetworkErrorInfo, NetworkErrorKind, classify_network_error
 from util.common.enum import ProxyMode
 
 
@@ -35,6 +36,14 @@ def system_proxy(monkeypatch):
 
 def connect_refused():
     return httpx.ConnectError("[WinError 10061] 由于目标计算机积极拒绝，无法连接。")
+
+
+def http_status_error(status_code: int):
+    return httpx.HTTPStatusError(
+        str(status_code),
+        request = httpx.Request("GET", "https://api.bilibili.com"),
+        response = httpx.Response(status_code)
+    )
 
 
 class TestClassify:
@@ -61,15 +70,43 @@ class TestClassify:
         RuntimeError("啥都木有"),
         # 连接池排队超时是本进程的问题，与网络、代理无关
         httpx.PoolTimeout("pool"),
-        # 拿到了状态码说明连接是通的，风控 412 之类不该被说成网络问题
-        httpx.HTTPStatusError(
-            "412",
-            request = httpx.Request("GET", "https://api.bilibili.com"),
-            response = httpx.Response(412)
-        ),
+        # 拿到了状态码说明连接是通的，412 以外的状态码不该被说成网络问题
+        http_status_error(403),
+        http_status_error(404),
+        # 接口返回的其他错误码同理，例如稿件不存在
+        APIError("啥都木有", -404),
     ])
     def test_non_network_errors_are_left_alone(self, system_proxy, exc):
         assert classify_network_error(exc) is None
+
+    @pytest.mark.parametrize("exc", [
+        http_status_error(412),
+        APIError("请求被拦截", -412),
+    ])
+    def test_risk_control_without_proxy(self, no_proxy, exc):
+        assert classify_network_error(exc) == NetworkErrorInfo(NetworkErrorKind.RISK_CONTROL)
+
+    def test_risk_control_through_proxy_keeps_the_proxy(self, system_proxy):
+        # 走代理时被风控，多半是代理节点的出口 IP 被标记，对话框要据此提示换节点
+        info = classify_network_error(http_status_error(412))
+
+        assert info == NetworkErrorInfo(NetworkErrorKind.RISK_CONTROL, ProxyMode.SYSTEM, "127.0.0.1:7890")
+
+    def test_api_error_is_still_a_runtime_error(self):
+        # 原先 check_response 抛的是 RuntimeError，按它捕获的地方不能因此漏接；报错文案也不能变
+        e = APIError("请求被拦截", -412)
+
+        assert isinstance(e, RuntimeError)
+        assert str(e) == "请求被拦截"
+        assert e.code == -412
+
+    def test_check_response_carries_the_code(self):
+        from util.parse.parser.base import ParserBase
+
+        with pytest.raises(APIError) as excinfo:
+            ParserBase().check_response({"code": -412, "message": "请求被拦截"})
+
+        assert excinfo.value.code == -412
 
     def test_explicitly_chained_error(self, system_proxy):
         try:
@@ -214,6 +251,8 @@ class TestDialog:
         NetworkErrorInfo(NetworkErrorKind.PROXY, ProxyMode.MANUAL, "10.0.0.2:8080"),
         NetworkErrorInfo(NetworkErrorKind.PROXY, ProxyMode.SYSTEM, ""),
         NetworkErrorInfo(NetworkErrorKind.CONNECTION),
+        NetworkErrorInfo(NetworkErrorKind.RISK_CONTROL),
+        NetworkErrorInfo(NetworkErrorKind.RISK_CONTROL, ProxyMode.SYSTEM, "127.0.0.1:7890"),
     ])
     def test_constructs(self, parent, info):
         from gui.dialog.misc.network_error import NetworkErrorDialog
@@ -226,3 +265,13 @@ class TestDialog:
 
         if info.proxy_address:
             assert info.proxy_address in text
+
+    def test_risk_control_without_proxy_hides_proxy_settings_button(self, parent):
+        # 直连时被风控，代理设置里没有可改的
+        from gui.dialog.misc.network_error import NetworkErrorDialog
+
+        direct = NetworkErrorDialog(NetworkErrorInfo(NetworkErrorKind.RISK_CONTROL), "412", parent)
+        proxied = NetworkErrorDialog(NetworkErrorInfo(NetworkErrorKind.RISK_CONTROL, ProxyMode.SYSTEM, "127.0.0.1:7890"), "412", parent)
+
+        assert direct.yesButton.isHidden()
+        assert not proxied.yesButton.isHidden()
