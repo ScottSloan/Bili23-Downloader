@@ -15,12 +15,14 @@ from ...parse.additional.chapter import ChapterParser
 from ...thread.pool import GlobalThreadPoolTask
 from ...network.request import get_cookies, get_proxy_mounts, get_ssl_context
 from ...thread.async_ import AsyncTask
+from ...network.cdn import CDN, HostHealth
 
 from ..task.manager import task_manager
 from ..task.info import TaskInfo
 
 from .parse_worker import ParseWorker
 from .merger import Merger
+from .integrity import ResponseMismatchError, parse_content_range, normalize_etag, is_md5, file_md5
 
 from threading import Event, Lock, Thread
 from pathlib import Path
@@ -28,6 +30,7 @@ import logging
 import errno
 import httpx
 import time
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -97,7 +100,7 @@ class ChunkWorker(QRunnable):
         errno.EPIPE,
     })
 
-    def __init__(self, session: httpx.Client, file_key: str, chunk_index: int, chunk_range: tuple[int, int], file_path: Path, url: str, referer: str, task_info: TaskInfo, stop_event: Event, lock: Lock, token_bucket: TokenBucket, generation: int, parent=None, on_chunk_start=None, on_chunk_end=None):
+    def __init__(self, session: httpx.Client, file_key: str, chunk_index: int, chunk_range: tuple[int, int], file_path: Path, url: str, referer: str, task_info: TaskInfo, stop_event: Event, lock: Lock, token_bucket: TokenBucket, generation: int, parent=None, on_chunk_start=None, on_chunk_end=None, file_size: int = 0):
         super().__init__()
         self.session = session
         self.file_key = file_key
@@ -105,6 +108,7 @@ class ChunkWorker(QRunnable):
         self.offset_key = str(chunk_index)      # 断点表随任务快照走 JSON，键统一用字符串
         self.chunk_range = chunk_range
         self.chunk_size = chunk_range[1] - chunk_range[0]
+        self.file_size = file_size              # 解析时探测到的文件总长，用来核对响应的 Content-Range
         self.file_path = file_path
         self.url = url
         self.referer = referer
@@ -116,6 +120,13 @@ class ChunkWorker(QRunnable):
         self.parent = parent
         self.on_chunk_start = on_chunk_start
         self.on_chunk_end = on_chunk_end
+
+        # 创建时就把断点表抓在手里，之后只读写这一份，而不是每次都去 task_info 里现查。
+        # 文件进度被重置（文件被删、远端文件变了、用户重新下载）时换上的是一张新表，
+        # 上一代仍在收尾的分片若照旧现查，会把旧文件上的断点写进新表 —— 新一代分片
+        # 读到这个断点就会跳过一段从没写过的区域，留下一段零填充，而断点表显示它是满的，
+        # 完整性校验也查不出来。抓住旧表之后，迟到的写入只会落进那张已被丢弃的表
+        self.offsets = self._lookup_offsets()
 
     def _invoke_download_error(self, message: str, retryable: bool):
         if self.parent:
@@ -130,7 +141,7 @@ class ChunkWorker(QRunnable):
             )
 
     def _is_retryable_exception(self, exc: Exception):
-        if isinstance(exc, StopIteration):
+        if isinstance(exc, (StopIteration, ResponseMismatchError)):
             return True
 
         if isinstance(exc, httpx.HTTPStatusError):
@@ -161,7 +172,7 @@ class ChunkWorker(QRunnable):
         if isinstance(exc, OSError):
             return f"文件读写失败: {exc}"
 
-        if isinstance(exc, StopIteration):
+        if isinstance(exc, (StopIteration, ResponseMismatchError)):
             return str(exc)
 
         return f"未知异常: {exc}"
@@ -212,7 +223,7 @@ class ChunkWorker(QRunnable):
             if self.on_chunk_end:
                 self.on_chunk_end()
 
-    def _get_offsets(self):
+    def _lookup_offsets(self):
         # 分片断点表由 calc_chunk_list 预先建好，此处只会改写已有键的值
         file_info = self.task_info.Download.files.get(self.file_key)
 
@@ -227,26 +238,93 @@ class ChunkWorker(QRunnable):
     def _commit_offset(self, written: int):
         # 记录本分片已 flush 落盘的字节数。只在 flush/close 成功之后调用，
         # 保证记录的断点绝不会超过磁盘上真实存在的数据。
-        offsets = self._get_offsets()
-
-        if offsets is None:
+        if self.offsets is None:
             return
 
         with self.lock:
-            offsets[self.offset_key] = written
+            self.offsets[self.offset_key] = written
 
     def _load_offset(self):
-        offsets = self._get_offsets()
-
-        if offsets is None:
+        if self.offsets is None:
             return 0
 
         with self.lock:
             try:
-                return max(min(int(offsets.get(self.offset_key, 0)), self.chunk_size), 0)
+                return max(min(int(self.offsets.get(self.offset_key, 0)), self.chunk_size), 0)
 
             except (TypeError, ValueError):
                 return 0
+
+    def _validate_response(self, response: httpx.Response, start: int):
+        """
+        确认节点给的确实是所请求文件的所请求区间，不符时抛 ResponseMismatchError，此时尚未写入任何字节
+
+        start 为本轮请求的起点。原先只看状态码是不是 206，节点回了 206
+        却给了别的区间（典型是忽略续传起点、从分片开头给起），这些字节就会被写到续传点上，
+        从那里一直错到分片末尾 —— Issue #449 用户的逐块对比结果正是这个形状
+        """
+        host = response.url.host
+        content_range = parse_content_range(response.headers.get("Content-Range"))
+
+        if content_range is None:
+            # 单段 206 必须带 Content-Range（RFC 9110），实测 upos、mcdn、PCDN 各类节点都带。
+            # 不带就无从确认这段字节落在文件的哪里，宁可重试也不能写
+            raise ResponseMismatchError(
+                f"分片 {self.chunk_index + 1} 的响应缺少有效的 Content-Range（{response.headers.get('Content-Range')!r}），节点：{host}"
+            )
+
+        range_start, range_end, range_total = content_range
+
+        if range_start != start:
+            raise ResponseMismatchError(
+                f"分片 {self.chunk_index + 1} 的响应区间与请求不符（请求起点 {start}，实际 {range_start}-{range_end}），节点：{host}"
+            )
+
+        if range_end < range_start:
+            raise ResponseMismatchError(
+                f"分片 {self.chunk_index + 1} 的响应区间无效（{range_start}-{range_end}），节点：{host}"
+            )
+
+        # 终点比请求的短不要紧，没写满会接着续传；比请求的长则会在写入时按分片边界截断
+
+        if range_total is not None and self.file_size > 0 and range_total != self.file_size:
+            # 文件总长对不上，说明这个节点上的是另一个版本的文件（重新转码过，或者节点缓存了别的东西），
+            # 哪怕区间对得上，内容也拼不进当前这个文件
+            raise ResponseMismatchError(
+                f"分片 {self.chunk_index + 1} 的响应文件总长与解析时不符（解析 {self.file_size}，实际 {range_total}），节点：{host}"
+            )
+
+        etag = normalize_etag(response.headers.get("ETag"))
+
+        if not is_md5(etag):
+            return
+
+        # upos 系节点的 ETag 就是整个文件的 MD5，各镜像一致。第一个带它的响应登记下来，
+        # 之后每个响应都与之比对，同时留给文件完成时做整体校验
+        with self.lock:
+            file_info = self.task_info.Download.files.get(self.file_key)
+
+            # 只改写已有键的值：该键由 Downloader 在 GUI 线程上预先建好，
+            # 这里增删键会与别的线程序列化任务快照撞上
+            if not isinstance(file_info, dict) or "md5" not in file_info:
+                return
+
+            expected = file_info.get("md5") or ""
+
+            if not expected:
+                file_info["md5"] = etag
+
+                return
+
+        if expected != etag:
+            raise ResponseMismatchError(
+                f"分片 {self.chunk_index + 1} 的响应来自另一个文件（ETag {etag}，应为 {expected}），节点：{host}"
+            )
+
+    def _report_bad_node(self):
+        # 给错数据的节点比连不上的节点更糟：连不上会报错，给错了却会悄悄写进文件。
+        # 记入节点健康状态，任务级重试重新解析时就会把它排到候选列表末尾
+        HostHealth.report_failure(CDN.get_netloc(self.url))
 
     def _download_chunk(self):
         chunk_start, chunk_end = self.chunk_range
@@ -308,6 +386,8 @@ class ChunkWorker(QRunnable):
                                 self._commit_offset(0)
 
                             raise StopIteration(f"服务端未按 Range 返回 206（实际 {response.status_code}），本轮作废")
+
+                        self._validate_response(response, chunk_start + written)
 
                         # 服务端承诺下发的体量。仅用于记录异常，不再作为分片完成的判据
                         expected_size = int(response.headers.get("Content-Length", remaining))
@@ -405,6 +485,11 @@ class ChunkWorker(QRunnable):
                 if self.stop_event.is_set():
                     break
 
+                if isinstance(exc, ResponseMismatchError):
+                    logger.warning("%s，本轮作废，文件：%s", exc, self.file_path)
+
+                    self._report_bad_node()
+
                 if not flushed and pending:
                     # 文件没能正常关闭，只有最后一次 flush 之后的那部分数据无法确认落盘，
                     # 回退这部分计数并从上一个确认过的断点重来；已 flush 的部分依旧有效
@@ -457,6 +542,10 @@ class ChunkWorker(QRunnable):
 _pending_delete: set = set()
 
 class Downloader(QObject):
+    # MD5 校验不通过时自动整个重下的次数。一次足以绕开偶发的坏节点（任务级重试会重新解析，
+    # 坏节点已被降权）；仍然不过多半是节点持续给错数据，再重下只是白白消耗流量，交给用户换节点
+    md5_max_redownloads = 1
+
     def __init__(self, task_info: TaskInfo):
         super().__init__()
         self.task_info = task_info
@@ -485,6 +574,7 @@ class Downloader(QObject):
 
         self.active_workers = 0
         self.last_sampled_size = 0
+        self.smoothed_speed = 0.0
         self.wait_flag = False
         self.wait_callback = None
         self.start_worker_lock = Lock()
@@ -494,6 +584,11 @@ class Downloader(QObject):
         
         self._completion_triggered = False
         self._download_error_triggered = False
+
+        # 本次运行内已通过 MD5 校验、以及正在后台校验的文件。只在 GUI 线程读写（重置进度时的
+        # discard 除外，那是单个原子操作）。不落盘：重启后重新校验一遍，代价只是读一次文件
+        self._md5_verified = set()
+        self._md5_checking = set()
 
         # ChunkWorker / ParseWorker / _start_worker_in_background 都持有本对象的裸引用，
         # 并在自己的线程上通过 QMetaObject.invokeMethod 回调过来。若在它们跑完之前就
@@ -543,8 +638,13 @@ class Downloader(QObject):
         self._completion_triggered = False
         self._download_error_triggered = False
 
-        # 如果队列空了则说明下载完成（进度 100）
-        if self.task_info.Download.progress >= 100 or (not self.task_info.Download.queue and self.task_info.Download.total_size > 0 and self.task_info.Download.status != DownloadStatus.FAILED):
+        # 如果队列空了则说明下载完成（进度 100）。
+        # 进度到 100 但队列没空不算完成：最后一个文件还在做 MD5 校验时进度就已经是 100，
+        # 校验不通过、整个重下的文件也可能残留着 100 的进度，此时直接判完成会把没校验过
+        # 甚至已知是坏的文件送去合并。队列里剩下的文件交给 start_worker，分片表已空的会直接补做出队
+        queue_empty = not self.task_info.Download.queue
+
+        if queue_empty and (self.task_info.Download.progress >= 100 or (self.task_info.Download.total_size > 0 and self.task_info.Download.status != DownloadStatus.FAILED)):
             self.on_download_completed()
         else:
             download_video = self.task_info.Download.type & DownloadType.VIDEO != 0
@@ -590,8 +690,40 @@ class Downloader(QObject):
             self.task_info.Download.queue = download_info["download_queue"]
 
         self.update_info(download_info)
+        self._sync_file_fields()
 
         self.start_download()
+
+    def _sync_file_fields(self):
+        """
+        每次解析完都会走到这里：补齐旧版本任务快照缺的字段，并确认远端仍是同一个文件
+
+        暂停、失败重试、重启程序之后都会重新解析一遍拿新链接，而分片进度是沿用的。
+        新链接若指向另一个版本的文件（稿件重新转码、编码回落成了别的），原先的进度
+        就拼不进去了，接着下只会得到一个前后两半来自不同文件的拼接品。总长变了是
+        最直接的信号，此时整个文件作废重下
+        """
+        for file_key, file_info in self.task_info.Download.files.items():
+            if not isinstance(file_info, dict):
+                continue
+
+            # 键只在这里（GUI 线程、分片尚未启动）增加，之后各线程只改写值，
+            # 不会与别的线程序列化任务快照撞上
+            file_info.setdefault("md5", "")
+            file_info.setdefault("md5_failures", 0)
+
+            new_size = (self.download_list.get(file_key) or {}).get("file_size", 0)
+            old_size = file_info.get("file_size", 0)
+
+            if new_size > 0 and old_size > 0 and new_size != old_size:
+                logger.warning(
+                    "任务 %s 的远端文件已变化（%s 字节 -> %s 字节），文件 %s 将重新下载",
+                    self.task_info.Basic.task_id, old_size, new_size, file_key
+                )
+
+                self._reset_file_progress(file_key)
+
+                file_info["file_size"] = new_size
 
     @Slot(str)
     def on_parse_error(self, error_message: str):
@@ -858,6 +990,11 @@ class Downloader(QObject):
             # 否则只会补下剩余分片，最终拼出一个中间全是空洞的文件。
             self._reset_file_progress(file_key)
 
+        elif file_size > 0 and current_size > file_size:
+            # 磁盘上的文件比目标还长，只可能是远端文件换了版本、变短了（见 on_parse_finished）。
+            # 分片只会覆盖 [0, file_size)，多出来的尾巴不截掉就会原样留在文件里
+            os.truncate(path, file_size)
+
         # 检查磁盘空间并预分配文件
         self._check_disk_space(path, required_space)
 
@@ -901,7 +1038,8 @@ class Downloader(QObject):
                 generation = generation,
                 parent = self,
                 on_chunk_start = self.on_chunk_start,
-                on_chunk_end = self.on_chunk_end
+                on_chunk_end = self.on_chunk_end,
+                file_size = file_size
             )
             self.thread_pool.start(worker)
 
@@ -918,6 +1056,13 @@ class Downloader(QObject):
             file_info["total_chunks"] = 0
             file_info["finished_chunks"] = 0
             file_info["chunk_offsets"] = {}
+
+            # 文件要整个重下，此前登记的 MD5 可能属于旧版本，重新从响应里取。
+            # 只改写已有键，理由同 _sync_file_fields
+            if "md5" in file_info:
+                file_info["md5"] = ""
+
+        self._md5_verified.discard(file_key)
 
     def start_merge(self):
         # 合并失败后可以重试，上一次的 Merger 不再需要。它挂在本对象的 parent 链上，
@@ -1158,9 +1303,143 @@ class Downloader(QObject):
 
         return False
 
+    def _start_md5_check(self, file_key: str):
+        """
+        返回 True 表示无需校验或已校验通过，可以直接出队；
+        返回 False 表示校验已在后台进行，结束后经 on_md5_checked 回到 on_file_completed
+
+        分片完整性校验只能说明每一片都写满了，说明不了写进去的字节是对的。
+        节点给了 MD5 就逐字节核对一遍；PCDN 节点不给，只能靠逐个响应的 Content-Range 把关
+        """
+        if file_key in self._md5_verified:
+            return True
+
+        file_info = self.task_info.Download.files.get(file_key) or {}
+        expected = file_info.get("md5") or ""
+        path = (self.download_list.get(file_key) or {}).get("file_path")
+
+        if not is_md5(expected) or not path:
+            return True
+
+        if file_key in self._md5_checking:
+            # 最后一片完成与 start_worker 发现分片表已空，两条路都会走到这里
+            return False
+
+        # 对象正在销毁时放弃，理由同 ParseWorker
+        if not self._acquire_ref():
+            return False
+
+        self._md5_checking.add(file_key)
+
+        try:
+            # 大文件读一遍要好几秒，不能放在 GUI 线程上
+            GlobalThreadPoolTask.run_func(
+                self._check_md5_in_background,
+                file_key,
+                Path(path),
+                expected,
+                self.download_generation
+            )
+
+        except Exception:
+            self._md5_checking.discard(file_key)
+            self._release_ref()
+
+            raise
+
+        return False
+
+    def _check_md5_in_background(self, file_key: str, path: Path, expected: str, generation: int):
+        try:
+            try:
+                # 暂停、删除时 stop_event 置位，提前放弃，恢复后会重新校验
+                actual = file_md5(path, self._stop_event) or ""
+
+            except OSError:
+                logger.exception("读取文件以校验 MD5 失败：%s", path)
+
+                actual = ""
+
+            QMetaObject.invokeMethod(
+                self,
+                "on_md5_checked",
+                Qt.ConnectionType.QueuedConnection,
+                Q_ARG(str, file_key),
+                Q_ARG(str, expected),
+                Q_ARG(str, actual),
+                Q_ARG(int, generation)
+            )
+
+        finally:
+            # 必须放在最后：释放引用后本对象随时可能被销毁
+            self._release_ref()
+
+    @Slot(str, str, str, int)
+    def on_md5_checked(self, file_key: str, expected: str, actual: str, generation: int):
+        self._md5_checking.discard(file_key)
+
+        # 校验期间被暂停、删除或者出错，结果作废。恢复下载时分片表已空，会重新走到校验
+        if (
+            self.task_info is None
+            or not self.is_generation_active(generation)
+            or self._stop_event.is_set()
+        ):
+            return
+
+        if actual == expected:
+            self._md5_verified.add(file_key)
+
+            self.on_file_completed(file_key)
+
+            return
+
+        if not actual:
+            self.on_download_error(f"无法读取已下载的文件进行校验：{file_key}", False)
+
+            return
+
+        file_info = self.task_info.Download.files.get(file_key) or {}
+        failures = int(file_info.get("md5_failures") or 0) + 1
+
+        if "md5_failures" in file_info:
+            file_info["md5_failures"] = failures
+
+        logger.error(
+            "文件内容校验不通过（MD5 应为 %s，实际 %s），第 %s 次，节点：%s，文件：%s",
+            expected, actual, failures,
+            CDN.get_netloc((self.download_list.get(file_key) or {}).get("url", "")),
+            (self.download_list.get(file_key) or {}).get("file_path", file_key)
+        )
+
+        # 不知道坏在哪一片，只能整个文件重下。断点表与已下载量一并清掉，
+        # 无论接下来是自动重试还是用户手动重试，都会从头下载这个文件
+        self._reset_file_progress(file_key)
+        self.calc_downloaded_size()
+
+        total_size = self.task_info.Download.total_size
+        self.task_info.Download.progress = int(self.task_info.Download.downloaded_size / total_size * 100) if total_size > 0 else 0
+
+        if failures > self.md5_max_redownloads:
+            self.on_download_error(
+                f"文件内容与服务器提供的校验值不符，已重新下载 {failures - 1} 次仍未通过，"
+                "请尝试在设置中更换 CDN 节点后重试",
+                False
+            )
+
+            return
+
+        # 走可重试的失败路径：任务级重试会重新解析拿新链接。给错数据的节点记入健康状态，
+        # 重新探测时它更可能被排到后面
+        HostHealth.report_failure(CDN.get_netloc((self.download_list.get(file_key) or {}).get("url", "")))
+
+        self.on_download_error("文件内容与服务器提供的校验值不符，需要重新下载", True)
+
     @Slot(str)
     def on_file_completed(self, file_key: str):
         if not self._verify_file_complete(file_key):
+            return
+
+        if not self._start_md5_check(file_key):
             return
 
         # 出队必须与分片状态在同一个快照里落盘。若先写库再出队，崩溃窗口内保存下来的记录
@@ -1185,7 +1464,11 @@ class Downloader(QObject):
                     "total_chunks": 0,
                     "finished_chunks": 0,
                     "chunk_offsets": {},
-                    "file_size": download_info["download_list"][file_key].get("file_size", 0)
+                    "file_size": download_info["download_list"][file_key].get("file_size", 0),
+                    # 节点在 ETag 里给出的整文件 MD5，由分片在收到第一个响应时登记
+                    "md5": "",
+                    # MD5 校验不通过而整个重下的次数，用于限制自动重下
+                    "md5_failures": 0
                 } for file_key in download_info["download_queue"]
             }
 
@@ -1218,7 +1501,11 @@ class Downloader(QObject):
 
         headers = {
             "Referer": self.task_info.Episode.url,
-            "User-Agent": config.get(config.user_agent)
+            "User-Agent": config.get(config.user_agent),
+            # httpx 默认声明接受 gzip/br 等压缩，iter_bytes 又会自动解压。节点一旦对分片做了
+            # 压缩，Content-Length 与 Content-Range 描述的就是压缩后的字节，与写进文件的
+            # 字节对不上号，校验和续传都会失准。媒体文件本身已经压缩过，要的就是原样字节
+            "Accept-Encoding": "identity"
         }
 
         self.session = httpx.Client(
@@ -1243,6 +1530,7 @@ class Downloader(QObject):
         
         self.task_info.Download.status = DownloadStatus.DOWNLOADING
         self.task_info.Download.speed = 0
+        self.task_info.Download.eta = 0
         self.task_info.Download.progress = 100
 
         danmaku = self.task_info.Download.type & DownloadType.DANMAKU != 0
@@ -1341,6 +1629,7 @@ class Downloader(QObject):
 
         self.last_sampled_size = self.task_info.Download.downloaded_size
         self.last_sampled_time = time.monotonic()
+        self.smoothed_speed = 0.0
         self.speed_timer.start()
 
     def _calculate_speed(self):
@@ -1360,11 +1649,31 @@ class Downloader(QObject):
         self.task_info.Download.progress = int(current_size / total * 100) if total > 0 else 100
         self.last_sampled_size = current_size
 
+        self._estimate_remaining_time(current_size, total)
+
         self.update_item(self.task_info)
 
         # timer 的定期检查：如果队列为空且处于 DOWNLOADING 状态可以尝试转移到合并步骤
         if not self.task_info.Download.queue and self.task_info.Download.status == DownloadStatus.DOWNLOADING:
             self.on_download_completed()
+
+    def _estimate_remaining_time(self, current_size: int, total: int):
+        # 剩余时间用指数移动平均后的速度折算：瞬时速度受分片调度、TCP 窗口影响，
+        # 相邻两秒差出一倍很常见，直接拿来算剩余时间会在「10 秒」和「3 分钟」之间来回跳。
+        # 系数取 0.3，大约 3 秒内就能跟上真实的速度变化（如限速调整），又足以压住抖动
+        speed = self.task_info.Download.speed
+
+        if self.smoothed_speed <= 0:
+            self.smoothed_speed = float(speed)
+        else:
+            self.smoothed_speed = 0.3 * speed + 0.7 * self.smoothed_speed
+
+        remaining = total - current_size
+
+        if self.smoothed_speed >= 1 and remaining > 0:
+            self.task_info.Download.eta = int(remaining / self.smoothed_speed)
+        else:
+            self.task_info.Download.eta = 0
 
     def shutdown(self):
         """

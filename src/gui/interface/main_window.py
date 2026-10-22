@@ -124,7 +124,7 @@ class MainWindow(MSFluentWindow):
         from gui.component.widget.flyout import FavoriteFlyoutWidget
         from gui.component.sys_tray import SystemTrayIcon
 
-        from qfluentwidgets import Flyout
+        from gui.component.widget.flyout_popup import Flyout
 
         from .download import DownloadInterface
 
@@ -161,6 +161,13 @@ class MainWindow(MSFluentWindow):
 
         # _addSubInterface 中建立的 clicked -> switchTo 连接对本次点击不生效，此处手动切换一次
         self.switchTo(self.setting_interface)
+
+    def show_proxy_setting(self):
+        self.ensure_setting_interface()
+
+        # ensure_setting_interface 只在首次构造时切换，设置页已存在时要自己切过去
+        self.switchTo(self.setting_interface)
+        self.setting_interface.scroll_to_proxy_card()
 
     def connect_signals(self):
         # 跟随系统主题切换。该连接原先建立在设置界面中，设置界面改为懒加载后需要提前到此处
@@ -263,8 +270,16 @@ class MainWindow(MSFluentWindow):
         # 自行结束事件循环（那会让主窗口不可见时关掉任意无父窗口也把整个进程带走），
         # 于是退出必须由这里显式声明。少了这一句，窗口消失后进程会一直留在后台，
         # shutdown_process() 永远等不到 app.exec() 返回，托盘菜单的"退出"也就失效了
+        #
+        # 用 exit() 而不是 quit()：Qt 6 的 quit() 会走平台自己的退出流程，macOS 上即
+        # [NSApp terminate:]，AppKit 随后在这个 closeEvent 内部直接调用 libc 的 exit()。
+        # app.exec() 永远不会返回，shutdown_process() 被整个跳过，C++ 静态析构在主题监听、
+        # 数据库写入线程仍然存活时执行 —— 先是 "QThreadStorage: entry N destroyed before
+        # end of thread"，运行久了 shiboken 析构绑定表时直接段错误（#477）。
+        # exit() 只结束事件循环，退出与否在这里已经决定好了，也不需要 quit() 再发一次
+        # QEvent::Quit 去把所有窗口重新关一遍
         if e.isAccepted():
-            QApplication.quit()
+            QApplication.exit(0)
 
     def resizeEvent(self, e):
         if hasattr(self, "parse_interface"):
@@ -346,7 +361,9 @@ class MainWindow(MSFluentWindow):
         else:
             # 已登录，点击头像显示用户信息
             from ..component.profile import ProfileCard
-            from qfluentwidgets import Flyout, FlyoutAnimationType
+            from qfluentwidgets import FlyoutAnimationType
+
+            from ..component.widget.flyout_popup import Flyout
 
             Flyout.make(
                 view = ProfileCard(self),

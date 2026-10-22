@@ -15,7 +15,7 @@ from ...thread.pool import GlobalThreadPoolTask
 from ..cover.manager import cover_manager
 from .reparse_worker import ReparseWorker
 from .options import pick_option, snapshot
-from .hash_id import calc_hash_id
+from .hash_id import calc_episode_hash_id
 from .db import TaskDatabase
 from .info import TaskInfo
 
@@ -577,6 +577,7 @@ class TaskManager:
         task_info.Download.total_size = 0
         task_info.Download.downloaded_size = 0
         task_info.Download.speed = 0
+        task_info.Download.eta = 0
 
         # 临时文件删除放到后台线程，避免在 GUI 线程上做磁盘操作
         self._remove_temporary_files_async([task_info])
@@ -670,17 +671,6 @@ class TaskManager:
 
     def _calc_hash_id(self, episode_info: dict):
         # 根据 episode_info 计算 hash_id
-        return calc_hash_id(
-            episode_info.get("attribute", 0),
-            aid = episode_info.get("aid"),
-            bvid = episode_info.get("bvid"),
-            cid = episode_info.get("cid"),
-            ep_id = episode_info.get("ep_id"),
-            sid = episode_info.get("sid"),
-            course_id = episode_info.get("course_id"),
-            lesson_id = episode_info.get("lesson_id"),
-            item_id = episode_info.get("item_id"),
-            section_id = episode_info.get("section_id")
-        )
+        return calc_episode_hash_id(episode_info)
     
 task_manager = TaskManager()

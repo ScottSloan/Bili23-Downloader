@@ -1,6 +1,6 @@
 from PySide6.QtWidgets import QStyledItemDelegate, QStyleOptionViewItem, QApplication, QStyle
 from PySide6.QtGui import QPainter, QColor, QFont, QFontMetrics, QPixmap, QPainterPath
-from PySide6.QtCore import QModelIndex, Qt, QRect, Signal, QPoint, QEvent
+from PySide6.QtCore import QModelIndex, Qt, QRect, QRectF, Signal, QPoint, QEvent
 
 from qfluentwidgets import isDarkTheme, drawIcon, getFont, qconfig, ThemeColor, Theme, FluentIconBase
 
@@ -13,8 +13,9 @@ from collections import OrderedDict
 _ICON_PIXMAP_CACHE: dict = {}
 _FONT_CACHE: dict = {}
 _ELIDED_TEXT_CACHE = OrderedDict()
+_TEXT_WIDTH_CACHE = OrderedDict()
 
-# 省略文本的条目数上限，超出后按最近最少使用淘汰
+# 省略文本（以及文本宽度）的条目数上限，超出后按最近最少使用淘汰
 _ELIDED_TEXT_CACHE_SIZE = 512
 
 def _getCachedFont(fontSize: int):
@@ -54,6 +55,27 @@ def _getCachedElidedText(text: str, width: int, metrics: QFontMetrics, font_key:
         _ELIDED_TEXT_CACHE.popitem(last = False)
 
     return elided_text
+
+def _getCachedTextWidth(text: str, metrics: QFontMetrics, font_key: tuple):
+    """缓存文本宽度
+
+    标签、角标要先量出文字宽度才能确定底板大小，与省略文本同理，滚动时文本几乎不变。
+    """
+    key = (font_key, text)
+
+    if key in _TEXT_WIDTH_CACHE:
+        _TEXT_WIDTH_CACHE.move_to_end(key)
+
+        return _TEXT_WIDTH_CACHE[key]
+
+    width = metrics.horizontalAdvance(text)
+
+    _TEXT_WIDTH_CACHE[key] = width
+
+    if len(_TEXT_WIDTH_CACHE) > _ELIDED_TEXT_CACHE_SIZE:
+        _TEXT_WIDTH_CACHE.popitem(last = False)
+
+    return width
 
 class FluentStyledItemDelegate:
     def __init__(self):
@@ -203,9 +225,9 @@ class FluentStyledItemDelegate:
 
     def _drawProgressBar(self, painter: QPainter, rect: QRect, value: int, error = False, paused = False):
         if isDarkTheme():
-            backgroundColor = QColor(255, 255, 255, 155)
+            backgroundColor = QColor(255, 255, 255, 40)
         else:
-            backgroundColor = QColor(0, 0, 0, 155)
+            backgroundColor = QColor(0, 0, 0, 30)
 
         if error:
             barColor = QColor(255, 153, 164) if isDarkTheme() else QColor(196, 43, 28)
@@ -214,18 +236,23 @@ class FluentStyledItemDelegate:
         else:
             barColor = ThemeColor.PRIMARY.color()
 
-        # 绘制背景
-        painter.setPen(backgroundColor)
-        painter.drawLine(rect.left(), rect.top(), rect.right(), rect.top())
+        # 轨道与进度都画成圆角条，在 rect 内垂直居中
+        h = 4
+        r = h / 2
+        top = rect.top() + (rect.height() - h) / 2
 
-        # 绘制进度
         painter.setPen(Qt.PenStyle.NoPen)
-        painter.setBrush(barColor)
 
-        w = int(value / 100 * rect.width())
-        r = rect.height() / 4
+        # 绘制背景轨道
+        painter.setBrush(backgroundColor)
+        painter.drawRoundedRect(QRectF(rect.left(), top, rect.width(), h), r, r)
 
-        painter.drawRoundedRect(rect.left(), rect.top() - 2, w, r, 1, 1)
+        # 绘制进度，不足一个圆角直径时会画成畸形的椭圆，直接跳过
+        w = max(0, min(value, 100)) / 100 * rect.width()
+
+        if w >= h:
+            painter.setBrush(barColor)
+            painter.drawRoundedRect(QRectF(rect.left(), top, w, h), r, r)
 
     def _drawPixmap(self, painter: QPainter, rect: QRect, option: QStyleOptionViewItem, pixmap: QPixmap, isPlaceholder = False):
         if isPlaceholder:
@@ -277,6 +304,11 @@ class FluentStyledItemDelegate:
 
         # 自动换行并左对齐、垂直居中
         self._drawTextBase(painter, rect, text, textColor, 14, textFlags)
+
+    def _getTextWidth(self, text: str, fontSize: int):
+        _, metrics, font_key = _getCachedFont(fontSize)
+
+        return _getCachedTextWidth(text, metrics, font_key)
 
     def _drawIndicator(self, painter: QPainter, rect: QRect, color: QColor):
         painter.setPen(Qt.PenStyle.NoPen)

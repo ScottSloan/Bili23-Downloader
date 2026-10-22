@@ -85,9 +85,26 @@ class WorkerBase:
             
         raise ValueError(Translator.ERROR_MESSAGES("INVALID_LINK"))
 
+    def classify_error(self, e: Exception):
+        """
+        随 error 信号一起发出的网络错误分类，不是网络问题时为 None。
+
+        分类只是为了给出更具体的指引，它自己出错不能连累原本的错误上报
+        """
+        try:
+            from ..network.error import classify_network_error
+
+            return classify_network_error(e)
+
+        except Exception:
+            logger.exception("网络错误分类失败")
+
+            return None
+
 class ParseWorker(WorkerBase, QObject):
     success = Signal(str, dict)
-    error = Signal(str)
+    # (错误信息, NetworkErrorInfo | None)。只接一个参数的槽照样能连，PySide 会丢掉多出来的参数
+    error = Signal(str, object)
     finished = Signal()
 
     def __init__(self, url: str, pn: int = 1):
@@ -115,7 +132,7 @@ class ParseWorker(WorkerBase, QObject):
             except Exception as e:
                 self.on_error()
 
-                self.error.emit(str(e))
+                self.error.emit(str(e), self.classify_error(e))
 
             finally:
                 # deleteLater 由 AsyncTask 统一挂在 finished 上，此处不再重复调用
@@ -142,7 +159,7 @@ class ParseWorker(WorkerBase, QObject):
 class ProgressParseWorker(WorkerBase, QObject):
     # 后台解析线程，负责自动解析流程中的进度回传
     success = Signal(str, dict)
-    error = Signal(str)
+    error = Signal(str, object)
     finished = Signal()
 
     update_progress = Signal(str)
@@ -168,7 +185,7 @@ class ProgressParseWorker(WorkerBase, QObject):
             except Exception as e:
                 logger.exception("解析失败")
 
-                self.error.emit(str(e))
+                self.error.emit(str(e), self.classify_error(e))
 
             finally:
                 self.finished.emit()

@@ -75,6 +75,9 @@ class ParseInterface(QFrame):
 
         self._triggered_by_clipboard = False
         self.download_options_dialog_opened = False
+        # 网络错误对话框是模态的，exec 期间剪贴板监听仍可能触发新一轮解析并再次失败，
+        # 已经开着一个时后续的同类错误退回到通知，不叠对话框
+        self._network_error_dialog_opened = False
 
         # 剪贴板去抖用：上一次自动解析的链接与时刻，见 CLIPBOARD_DEBOUNCE_S
         self._last_clipboard_url = None
@@ -346,7 +349,7 @@ class ParseInterface(QFrame):
 
         logger.info("解析成功，类别: %s", category_name)
 
-    def on_parse_error(self, error_message: str):
+    def on_parse_error(self, error_message: str, network_error = None):
         self.parse_btn.setIndeterminateState(False)
         self.progress_widget.hide_tip()
 
@@ -355,7 +358,25 @@ class ParseInterface(QFrame):
         self.reset_search()
         self.reset_parse_list()
 
+        if network_error is not None and not self._network_error_dialog_opened:
+            self.show_network_error_dialog(network_error, error_message)
+            return
+
         signal_bus.toast.show.emit(ToastNotificationCategory.ERROR, self.tr("Parse Failed"), error_message)
+
+    def show_network_error_dialog(self, network_error, error_message: str):
+        from gui.dialog.misc.network_error import NetworkErrorDialog
+
+        dialog = NetworkErrorDialog(network_error, error_message, self.main_window)
+
+        self._network_error_dialog_opened = True
+
+        try:
+            if dialog.exec():
+                self.main_window.show_proxy_setting()
+
+        finally:
+            self._network_error_dialog_opened = False
 
     def on_update_parse_list(self, title: str, category_name: str, root_node, current_episode_data: dict):
         self.parse_list.update_tree(root_node, current_episode_data)

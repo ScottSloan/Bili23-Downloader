@@ -91,7 +91,32 @@ class Translator:
             "HISTORY": translate("EPISODE_TYPE", "History"),
             "AUDIO": translate("EPISODE_TYPE", "Music")
         }
-    
+
+    @staticmethod
+    @get_map_method
+    def MEDIA_TYPE_BADGE(key = None):
+        # 下载列表封面左上角的角标。与 EPISODE_TYPE 分开：角标只有封面一角的位置，
+        # 必须是一两个字的短词；剧集也拿不到细分类型（番剧/电影/纪录片），只能统称
+        return {
+            "VIDEO": translate("MEDIA_TYPE_BADGE", "Video"),
+            "INTERACTIVE": translate("MEDIA_TYPE_BADGE", "Interactive"),
+            "BANGUMI": translate("MEDIA_TYPE_BADGE", "Film & TV"),
+            "COURSE": translate("MEDIA_TYPE_BADGE", "Course"),
+            "AUDIO": translate("MEDIA_TYPE_BADGE", "Audio")
+        }
+
+    @staticmethod
+    @get_map_method
+    def ADDITIONAL_CONTENT_TAG(key = None):
+        # 下载列表里附加内容的标签。不复用 ADDITIONAL_FILES_QUALIFIER：那组是写进文件名的限定词，
+        # 两边的措辞需求不同，改一边不应牵动另一边（改了限定词会让已下载的文件名对不上）
+        return {
+            "DANMAKU": translate("ADDITIONAL_CONTENT_TAG", "Danmaku"),
+            "SUBTITLES": translate("ADDITIONAL_CONTENT_TAG", "Subtitles"),
+            "COVER": translate("ADDITIONAL_CONTENT_TAG", "Cover"),
+            "METADATA": translate("ADDITIONAL_CONTENT_TAG", "Metadata")
+        }
+
     @staticmethod
     @get_map_method
     def DANMAKU_SPEED(key = None):
@@ -324,10 +349,8 @@ class Translator:
             "PAUSED": translate("TIP_MESSAGES", "Paused"),
             "FFMPEG_QUEUED": translate("TIP_MESSAGES", "Queued for FFmpeg..."),
             "MERGING": translate("TIP_MESSAGES", "Merging..."),
-            "MERGING_WITH_PROGRESS": translate("TIP_MESSAGES", "Merging... {progress}%"),
             "COMPLETED": translate("TIP_MESSAGES", "Completed"),
             "CONVERTING": translate("TIP_MESSAGES", "Converting..."),
-            "CONVERTING_WITH_PROGRESS": translate("TIP_MESSAGES", "Converting... {progress}%"),
             "ALREADY_LATEST_VERSION": translate("TIP_MESSAGES", "You are already using the latest version"),
             "DOWNLOAD_COMPLETED": translate("TIP_MESSAGES", "Download completed"),
             "DOWNLOAD_COMPLETED_DETAIL": translate("TIP_MESSAGES", "All download tasks have been completed."),
@@ -354,6 +377,8 @@ class Translator:
             "VIDEO_CODEC_FALLBACK": translate("TIP_MESSAGES", "This video has no {requested}"),
             "VIDEO_CODEC_FALLBACK_MESSAGE": translate("TIP_MESSAGES", "This video has no {requested}, using {actual}"),
             "SEARCH_KEYWORD": translate("TIP_MESSAGES", "Search: {keyword}"),
+            "REMAINING_TIME": translate("TIP_MESSAGES", "{time} left"),
+            "COMPLETED_AT": translate("TIP_MESSAGES", "Completed at {time}"),
         }
 
     @staticmethod

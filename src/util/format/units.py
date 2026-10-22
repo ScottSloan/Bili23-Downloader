@@ -35,14 +35,18 @@ class Units:
     
     @staticmethod
     def format_file_size(size: int):
+        # 小数位数随单位递增：B、KB 取整，MB 一位，GB 及以上两位。
+        # 小单位下的小数没有信息量，只会让下载列表里一串数字更难读
         units = ["B", "KB", "MB", "GB", "TB", "PB", "EB"]
+        decimals = [0, 0, 1, 2, 2, 2, 2]
         index = 0
 
-        while size >= 1024 and index < len(units) - 1:
+        # 按「舍入后」的值判断是否进位，否则 1023.6 KB 会显示成「1024 KB」
+        while round(size, decimals[index]) >= 1024 and index < len(units) - 1:
             size /= 1024
             index += 1
-        
-        return f"{size:.2f} {units[index]}"
+
+        return f"{size:.{decimals[index]}f} {units[index]}"
     
     @staticmethod
     def format_bitrate(bitrate: int):

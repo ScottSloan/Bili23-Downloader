@@ -26,6 +26,7 @@ class DownloadListView(ListView):
         applySmoothScroll(self)
 
         self._emptyTextTip = ""
+        self._noMatchTextTip = self.tr("No matching tasks")
         self._auto_manage_concurrent = False
         self._auto_update_visible_area = False
         self._auto_update_count_badge = False
@@ -91,6 +92,18 @@ class DownloadListView(ListView):
     def connectUpdateDataSignal(self):
         self._model.connectUpdateDataSignal()
 
+    def setFilterText(self, text: str):
+        self._model.setFilterText(text)
+
+    def setStatusFilter(self, statuses):
+        self._model.setStatusFilter(statuses)
+
+    def setMediaTypeFilter(self, media_types):
+        self._model.setMediaTypeFilter(media_types)
+
+    def isFiltering(self):
+        return self._model.isFiltering()
+
     def paintEvent(self, e):
         if self.isEmpty():
             if isDarkTheme():
@@ -104,14 +117,17 @@ class DownloadListView(ListView):
 
             setFont(painter, 14)
 
+            # 列表里其实有任务、只是全被筛掉时不能照旧显示「没有任务」，否则像是任务丢了
+            text = self._noMatchTextTip if self._source_model.rowCount() else self._emptyTextTip
+
             fm = QFontMetrics(self.font())
-            text_width = fm.horizontalAdvance(self._emptyTextTip)
+            text_width = fm.horizontalAdvance(text)
             text_height = fm.height()
 
             x = (self.viewport().width() - text_width) // 2
             y = (self.viewport().height() + text_height) // 2
 
-            painter.drawText(x, y, self._emptyTextTip)
+            painter.drawText(x, y, text)
 
         else:
             return super().paintEvent(e)
@@ -211,3 +227,11 @@ class DownloadListView(ListView):
     @property
     def sort_ascending(self):
         return self._model._ascending
+
+    @property
+    def status_filter(self):
+        return self._model.status_filter
+
+    @property
+    def media_type_filter(self):
+        return self._model.media_type_filter

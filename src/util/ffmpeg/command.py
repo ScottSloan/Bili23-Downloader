@@ -1,5 +1,23 @@
 from typing import List
+from pathlib import Path
 
+# 独立音频流扩展名 → 重封装时使用的输出封装器
+#
+# FFmpeg 按扩展名猜封装器时，.m4a 对应的是 ipod、.ec3 对应的是 eac3，而附带的精简版
+# FFmpeg 编译时只开了 --enable-muxer 白名单，其中写的 m4a 并不是任何封装器的名字，会被
+# configure 静默忽略。结果 ipod 与 eac3 都没编进去，猜不出格式直接报
+# "Unable to choose an output format"（#351、#476）。装了完整版 FFmpeg 的环境走不到附带版，
+# 所以这个问题在开发机上永远复现不出来
+#
+# m4a 用 mp4 而不是 ipod：两者的输出只差 ftyp 里的 major brand（M4A / isom），moov 前置与
+# iTunes 元数据完全一致，而 mp4 是任何 FFmpeg 构建都会带的封装器，已经发出去的附带版也能用。
+# ec3 没有这种替身，只能靠附带版补编 eac3 封装器解决；显式写出来至少能让缺失时的报错直接
+# 指明是哪个封装器
+REMUX_AUDIO_MUXERS = {
+    "m4a": "mp4",
+    "flac": "flac",
+    "ec3": "eac3",
+}
 
 class FFmpegCommand:
     def __init__(self):
@@ -172,12 +190,17 @@ class FFmpegCommand:
         #
         # -c copy 只重写容器、不重编码，27 分钟音轨实测约 0.19 秒
         # -movflags +faststart 把 moov 前置；非 mov 系容器（flac、ec3）下 FFmpeg 会静默
-        # 忽略它，因此三种扩展名可以共用同一条命令，无需按扩展名分支
-        return (
+        # 忽略它，因此除了 -f 之外三种扩展名共用同一条命令
+        command = (
             cls()
             .add_input(input_path)
             .add_param("-c", "copy")
             .add_param("-movflags", "+faststart")
             .allow_unofficial()
-            .add_output(output_path)
         )
+
+        # 输出封装器必须显式指定，不能交给 FFmpeg 按扩展名去猜，见 REMUX_AUDIO_MUXERS
+        if muxer := REMUX_AUDIO_MUXERS.get(Path(output_path).suffix.lstrip(".").lower()):
+            command.add_param("-f", muxer)
+
+        return command.add_output(output_path)

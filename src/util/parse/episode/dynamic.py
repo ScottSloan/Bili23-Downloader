@@ -6,6 +6,7 @@ from ...common.config import config
 from ...download.task.manager import task_manager
 from ...thread.pool import GlobalThreadPoolTask
 
+from .download_history import mark_download_history
 from .tree import TreeItem, Attribute
 from .base import EpisodeParserBase
 
@@ -103,6 +104,10 @@ class DynamicEpisodeParser(EpisodeParserBase):
 
         node = self.parser.parse(update_episode_list = False)
 
+        # 先查下载记录再自动添加：自动添加是异步写库的，顺序反过来时，
+        # 这一页刚加入队列的条目可能被查到，从而误标成"以前下载过"
+        mark_download_history(node.children)
+
         # 根据设置决定是否自动添加到下载列表
         if config.get(config.auto_add_to_download_list):
             GlobalThreadPoolTask.run_func(task_manager.create, node.get_all_children(to_dict = True), False)
@@ -132,5 +137,7 @@ class DynamicEpisodeParser(EpisodeParserBase):
 
         child_node = TreeItem(node_data)
         child_node.set_attribute(Attribute.INTERACTIVE_BIT | Attribute.VIDEO_BIT)
+
+        mark_download_history([child_node])
 
         self.append_nodes([child_node])

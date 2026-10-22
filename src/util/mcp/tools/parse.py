@@ -66,7 +66,8 @@ def _episode_to_dict(item_id: str, item, is_link_target: bool = False) -> dict:
     if item.attribute & Attribute.NEED_PARSE_BIT:
         data["needs_reparse"] = True
 
-    if item.downloaded:
+    # 本次会话刚提交的，与解析时就已在下载记录里的，对模型而言都是"已下载过"
+    if item.downloaded or item.in_download_history:
         data["already_downloaded"] = True
 
     return data

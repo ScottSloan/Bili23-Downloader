@@ -91,3 +91,32 @@ def calc_hash_id(attribute: int, aid = None, bvid = None, cid = None, ep_id = No
         }
 
     return hashlib.md5(dumps_stable(metadata).encode("utf-8")).hexdigest()
+
+def calc_episode_hash_id(episode_info: dict):
+    """
+    根据解析结果（TreeItem.to_dict() 的产物）计算 hash_id
+
+    创建任务时的重复判定与解析列表的"已下载"标记都走这里，二者必须对同一个条目
+    算出同一个值，否则列表上打了勾的条目点下载时却不被判为重复（或者反过来）
+    """
+    return calc_hash_id(
+        episode_info.get("attribute", 0),
+        aid = episode_info.get("aid"),
+        bvid = episode_info.get("bvid"),
+        cid = episode_info.get("cid"),
+        ep_id = episode_info.get("ep_id"),
+        sid = episode_info.get("sid"),
+        course_id = episode_info.get("course_id"),
+        lesson_id = episode_info.get("lesson_id"),
+        item_id = episode_info.get("item_id"),
+        section_id = episode_info.get("section_id")
+    )
+
+def is_identifiable(attribute: int):
+    """
+    条目的 hash_id 能否唯一指向一个媒体，即能否命中 calc_hash_id 中的具名分支
+
+    落到兜底分支的条目在解析端没有 task_id 可以区分，彼此会算出相同的 hash，
+    拿它去查下载记录只会误报，因此一律视为无法判定
+    """
+    return bool(_to_int(attribute) & (Attribute.VIDEO_BIT | Attribute.BANGUMI_BIT | Attribute.LESSON_BIT | Attribute.CHEESE_BIT | Attribute.AUDIO_BIT))

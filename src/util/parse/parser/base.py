@@ -7,6 +7,8 @@ from ...common._json import dumps
 from ...common.config import config
 from ...common.runtime import runtime
 
+from ...network.error import APIError
+
 from ..search_url import extract_keyword
 
 from functools import reduce
@@ -204,13 +206,14 @@ class ParserBase:
         if self.error_message:
             raise RuntimeError(self.error_message)
         
-        if response.get("code", -1) != 0:
+        if (code := response.get("code", -1)) != 0:
             logger.error("接口请求错误：\n{response}".format(
                 response = dumps(response, indent = 2)
                 )
             )
 
-            raise RuntimeError(response.get("message", "未知错误"))
+            # 带上 code：-412 这类风控拦截要据此给出专门的提示，见 util/network/error.py
+            raise APIError(response.get("message", "未知错误"), code)
     
     def get_extra_data(self) -> dict:
         return {}
