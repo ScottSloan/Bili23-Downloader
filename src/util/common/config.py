@@ -147,8 +147,8 @@ class DefaultValue:
         "color": {
             "primary": "&H00FFFFFF",
             "secondary": "&H000000FF",
-            "border": "H00000000",
-            "shadow": "H00000000"
+            "border": "&H00000000",
+            "shadow": "&H00000000"
         },
         "margin": {
             "left": 10,
@@ -310,8 +310,8 @@ class DefaultValue:
 class APPConfig(QConfig):
     # APP
     app_name = "Bili23 Downloader"
-    app_version = "2.20.0"
-    app_comparable_version = "2.20.0"
+    app_version = "2.21.0"
+    app_comparable_version = "2.21.0"
     # 配置格式版本。**改动必须在 patch_config 里加对应的门禁并把它 +1**，
     # 否则已有用户配置里那份副本永远不会被更新（DefaultValue 只在配置文件不存在时
     # 作为初值）。与 app_version 不要求逐字对应
@@ -327,6 +327,7 @@ class APPConfig(QConfig):
     parse_list_column = ConfigItem("Behavior", "parse_list_column", DefaultValue.parse_list_column)
     parse_list_alternate_row_color = ConfigItem("Behavior", "parse_list_alternate_row_color", True, BoolValidator())
     parse_list_show_floating_command_bar = ConfigItem("Behavior", "parse_list_show_floating_command_bar", True, BoolValidator())
+    parse_list_mark_downloaded = ConfigItem("Behavior", "parse_list_mark_downloaded", True, BoolValidator())
 
     monitor_clipboard = ConfigItem("Behavior", "monitor_clipboard", False, BoolValidator())
     show_download_confirmation_dialog = ConfigItem("Behavior", "show_download_confirmation_dialog", False, BoolValidator())

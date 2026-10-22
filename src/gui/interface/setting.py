@@ -1,5 +1,5 @@
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QFileDialog
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QTimer, QPoint
 
 from qfluentwidgets import (
     SettingCardGroup, PushSettingCard, ComboBoxSettingCard, MSFluentWindow, MessageBox, FluentIcon,
@@ -334,6 +334,16 @@ class SettingInterface(ScrollArea):
     def on_change_proxy_mode(self, index: int):
         # 仅手动设置模式才需要配置代理服务器
         self.proxy_card.custom_group.setEnabled(index == 2)
+
+    def scroll_to_proxy_card(self):
+        # 设置页刚构造出来时布局还没算完，卡片坐标都是 0，推迟到下一轮事件循环再定位。
+        # 不用 ensureWidgetVisible：它只保证卡片露出来，从上往下滚时卡片会贴在视口最底部，不够显眼
+        def scroll():
+            top = self.proxy_card.mapTo(self.scroll_widget, QPoint(0, 0)).y()
+
+            self.verticalScrollBar().setValue(top - 60)
+
+        QTimer.singleShot(0, scroll)
 
     def on_custom_proxy(self):
         from ..dialog.setting.proxy import ProxyDialog

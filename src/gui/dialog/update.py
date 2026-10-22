@@ -117,4 +117,5 @@ class UpdateDialog(FluentDialogBase):
             self._parent_window.request_exit()
 
         else:
-            QApplication.quit()
+            # 不用 quit()，理由见 MainWindow.closeEvent 末尾的注释
+            QApplication.exit(0)

@@ -5,7 +5,7 @@ from qfluentwidgets import (
     PrimaryPushButton, IndeterminateProgressRing, ToolTipFilter, TransparentTogglePushButton, PrimarySplitPushButton,
     SwitchButton, BodyLabel, HyperlinkLabel
 )
-from qfluentwidgets import ToolButton as _ToolButton, TransparentToolButton as _TransparentToolButton
+from qfluentwidgets import ToolButton as _ToolButton, TransparentToolButton as _TransparentToolButton, ToggleToolButton as _ToggleToolButton
 
 class IndeterminateProgressBase:
     def _init_spinner(self):
@@ -97,6 +97,17 @@ class ToolButton(_ToolButton):
 class TransparentToolButton(_TransparentToolButton):
     """
     增加了 Tooltip 显示的 TransparentToolButton。
+    """
+    def setToolTip(self, arg__1):
+        super().setToolTip(arg__1)
+
+        self.setToolTipDuration(3000)
+
+        self.installEventFilter(ToolTipFilter(self))
+
+class ToggleToolButton(_ToggleToolButton):
+    """
+    增加了 Tooltip 显示的 ToggleToolButton。
     """
     def setToolTip(self, arg__1):
         super().setToolTip(arg__1)

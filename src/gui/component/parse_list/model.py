@@ -1,7 +1,7 @@
 from PySide6.QtCore import Qt, QAbstractItemModel, QModelIndex, Signal
-from PySide6.QtGui import QBrush, QColor
+from PySide6.QtGui import QBrush, QColor, QIcon, QPixmap
 
-from qfluentwidgets import themeColor, isDarkTheme
+from qfluentwidgets import themeColor, isDarkTheme, InfoBarIcon
 
 from .header import StrFormatter, DurationFormatter, DateFormatter
 
@@ -15,6 +15,7 @@ from util.parse.episode.tree import TreeItem
 DISPLAY_ROLE = Qt.ItemDataRole.DisplayRole
 CHECK_STATE_ROLE = Qt.ItemDataRole.CheckStateRole
 FOREGROUND_ROLE = Qt.ItemDataRole.ForegroundRole
+DECORATION_ROLE = Qt.ItemDataRole.DecorationRole
 
 class ParseModel(QAbstractItemModel):
     check_state_changed = Signal(QModelIndex)
@@ -34,6 +35,13 @@ class ParseModel(QAbstractItemModel):
 
         self._highlight_brush = None
         self._disabled_brush = None
+        self._downloaded_icon = None
+        self._placeholder_icon = None
+
+        # 标题列的下标，已下载对勾画在这一列。列可隐藏、可调整顺序，随列配置一起更新
+        self._title_column = -1
+        # 是否显示已下载对勾。data() 是最热路径，不在里面逐次读配置
+        self._mark_downloaded = True
 
         self._setup_column_data()
 
@@ -55,6 +63,8 @@ class ParseModel(QAbstractItemModel):
     def _reset_brush_cache(self, *_):
         self._highlight_brush = None
         self._disabled_brush = None
+        # 图标的深浅色版本在创建时就已确定，换主题后同样要重建
+        self._downloaded_icon = None
 
     def _setup_column_data(self):
         self.beginResetModel()
@@ -95,6 +105,12 @@ class ParseModel(QAbstractItemModel):
 
             if column_show:
                 self._column_data.append(column_map.get(column_type, {}))
+
+        self._title_column = next((i for i, entry in enumerate(self._column_data) if entry.get("attr_key") == "title"), -1)
+
+        # 解析列表设置对话框保存时发出 update_column_settings，开关随之生效。
+        # 关闭时连占位一起去掉，已解析出的对勾也立即隐藏，不必等重新解析
+        self._mark_downloaded = config.get(config.parse_list_mark_downloaded)
 
         self.endResetModel()
 
@@ -144,6 +160,19 @@ class ParseModel(QAbstractItemModel):
             elif item.downloaded or item.expired:
                 return self._get_disabled_brush()
 
+        if role == DECORATION_ROLE:
+            # 下载记录里已有的条目在标题前加一个绿色对勾，与本次刚提交下载的灰色区分开。
+            # 序号列的复选框由委托手绘，图标放在那一列会与之重叠，因此放在标题列
+            if not self._mark_downloaded or index.column() != self._title_column or not index.isValid():
+                return None
+
+            if index.internalPointer().in_download_history:
+                return self._get_downloaded_icon()
+
+            # 其余行返回等大的透明图标占住对勾的位置，所有标题保持左对齐，
+            # 有没有对勾一眼就能看出来；返回 None 的话标题会顶到最左边，与带对勾的行错开
+            return self._get_placeholder_icon()
+
         return None
 
     def _get_highlight_brush(self):
@@ -151,6 +180,23 @@ class ParseModel(QAbstractItemModel):
             self._highlight_brush = QBrush(themeColor())
 
         return self._highlight_brush
+
+    def _get_downloaded_icon(self):
+        if self._downloaded_icon is None:
+            self._downloaded_icon = InfoBarIcon.SUCCESS.icon()
+
+        return self._downloaded_icon
+
+    def _get_placeholder_icon(self):
+        if self._placeholder_icon is None:
+            # 委托按 actualSize 取图标尺寸，位图图标只缩小不放大。
+            # 尺寸取得比任何装饰尺寸都大，才能缩到与对勾图标完全一致
+            pixmap = QPixmap(64, 64)
+            pixmap.fill(Qt.GlobalColor.transparent)
+
+            self._placeholder_icon = QIcon(pixmap)
+
+        return self._placeholder_icon
 
     def _get_disabled_brush(self):
         if self._disabled_brush is None:

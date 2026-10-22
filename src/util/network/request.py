@@ -172,12 +172,64 @@ def get_proxy_mounts():
         case _:
             return None
 
+def _resolve_client_proxy(mounts):
+    """
+    找出访问 B 站（https）时实际经过的代理，返回 (代理模式, 不含账号密码的代理地址)，直连时返回 None。
+
+    以 mounts 为准而不是只看 proxy_mode：选了「使用系统代理」但系统里根本没开代理，
+    或者那条挂载因协议不支持被跳过（见 get_env_mounts），请求其实都是直连的。
+    """
+    import httpx
+
+    if not mounts:
+        return None
+
+    match config.get(config.proxy_mode):
+        case ProxyMode.MANUAL:
+            from .proxy import Proxy
+
+            proxy_url = (Proxy().get_proxies() or {}).get("https")
+
+        case ProxyMode.SYSTEM:
+            proxies = _get_environment_proxies()
+
+            proxy_url = next((proxies[pattern] for pattern in ("https://", "all://") if mounts.get(pattern) is not None), None)
+
+        case _:
+            proxy_url = None
+
+    if not proxy_url:
+        return None
+
+    try:
+        url = httpx.URL(proxy_url)
+
+        address = f"{url.host}:{url.port}" if url.port else url.host
+
+    except Exception:
+        # 地址格式不合法时 transport 本身就建不起来，走不到这里；保险起见只是不展示地址
+        address = ""
+
+    return config.get(config.proxy_mode), address
+
+def get_client_proxy():
+    """全局 client 访问 B 站时经过的代理，见 _resolve_client_proxy。client 尚未创建时为 None"""
+    return _client_proxy
+
+# 代理模式需要重启才生效（config.proxy_mode 带 restart = True），设置里的当前值未必是 client 正在用的。
+# 网络出错时要告诉用户「是哪个代理连不上」，只能以建 client 那一刻记下的为准
+_client_proxy = None
+
 def _create_client():
+    global _client_proxy
+
     import httpx
 
     transport = httpx.HTTPTransport(retries = 3, limits = get_limits(), verify = get_ssl_context())
 
     mounts = get_proxy_mounts()
+
+    _client_proxy = _resolve_client_proxy(mounts)
 
     match config.get(config.proxy_mode):
         case ProxyMode.MANUAL:

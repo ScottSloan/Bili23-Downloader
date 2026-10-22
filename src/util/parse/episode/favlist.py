@@ -32,6 +32,7 @@ class FavlistEpisodeParser(ListEpisodeParserBase):
             "number": self.episode_count,
             "pubtime": episode_data["pubtime"],
             "favtime": episode_data["fav_time"],
+            "page_count": episode_data.get("page", 0),
             "title": self.get_episode_title(episode_data),
             "url": self.build_video_url(episode_data["bvid"])
         }

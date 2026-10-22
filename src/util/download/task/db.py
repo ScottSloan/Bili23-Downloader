@@ -22,6 +22,9 @@ class TaskDatabase(Database):
 
         self._check_should_upgrade()
 
+        # 放在升级之后：旧版库升级时会重建两张表，先建的索引会随旧表一起消失
+        self._create_bvid_index()
+
     def _check_should_upgrade(self):
         # 配置版本与任务数据库版本并不等价。始终检查实际表结构，
         # 避免配置升级成功但数据库迁移失败后永久跳过迁移。
@@ -135,6 +138,23 @@ class TaskDatabase(Database):
             CREATE INDEX IF NOT EXISTS "idx_download_task_created_time" ON "download_task" ("created_time");
             CREATE INDEX IF NOT EXISTS "idx_completed_task_completed_time" ON "completed_task" ("completed_time");
             """)
+
+    def _create_bvid_index(self):
+        # 收藏夹、个人空间等需要二次解析的条目解析时没有 cid，算不出 hash_id，
+        # 只能按 bvid 去下载记录里找（见 count_parts_by_bvid）。bvid 不单独成列，
+        # 而是对 data 中的 JSON 建表达式索引：不改表结构，也不必改动任何写入路径。
+        #
+        # 查询必须使用与这里逐字相同的表达式，SQLite 才会走这个索引
+        try:
+            self.execute_script("""
+                CREATE INDEX IF NOT EXISTS "idx_download_task_bvid" ON "download_task" (json_extract("data", '$.Episode.bvid'));
+                CREATE INDEX IF NOT EXISTS "idx_completed_task_bvid" ON "completed_task" (json_extract("data", '$.Episode.bvid'));
+                """)
+
+        except Exception:
+            # 索引只影响查询速度。SQLite 缺少 JSON 函数时这里会失败，
+            # 但绝不能因此让整个任务数据库初始化失败
+            logger.exception("创建 bvid 索引失败")
 
     def query_tasks(self, completed: bool = False, limit: int = None):
         """
@@ -267,6 +287,60 @@ class TaskDatabase(Database):
         """, (hash_id, hash_id))
 
         return bool(result and result[0][0])
+
+    def filter_existing_hash_ids(self, hash_ids) -> set:
+        """
+        从给定的 hash_id 中筛出已存在于下载记录中的那些，口径与 check_duplicate 一致
+
+        解析列表一次可能有上千条，逐条调用 check_duplicate 就是上千次数据库往返，
+        这里按 IN 批量查询。每批 400 个，两张表合计 800 个参数，
+        低于旧版 SQLite 999 个绑定参数的上限
+        """
+        hash_ids = list(hash_ids)
+        existing = set()
+
+        for start in range(0, len(hash_ids), 400):
+            chunk = hash_ids[start:start + 400]
+            placeholders = ", ".join("?" * len(chunk))
+
+            result = self.query(f"""
+                SELECT hash_id FROM completed_task WHERE hash_id IN ({placeholders})
+                UNION
+                SELECT hash_id FROM download_task WHERE hash_id IN ({placeholders})
+            """, (*chunk, *chunk))
+
+            existing.update(row[0] for row in result)
+
+        return existing
+
+    def count_parts_by_bvid(self, bvids) -> dict:
+        """
+        按 bvid 统计下载记录中各稿件已有多少个不同的分P（cid），口径同样覆盖两张表
+
+        用于判定需要二次解析的条目：它们二次解析时会一次性为稿件的全部分P建任务，
+        有记录即说明下载过；与分P总数比较，还能看出是否只下过其中一部分
+        """
+        bvids = list(bvids)
+        counts = {}
+
+        for start in range(0, len(bvids), 400):
+            chunk = bvids[start:start + 400]
+            placeholders = ", ".join("?" * len(chunk))
+
+            result = self.query(f"""
+                SELECT bvid, COUNT(DISTINCT cid) FROM (
+                    SELECT json_extract("data", '$.Episode.bvid') AS bvid, json_extract("data", '$.Episode.cid') AS cid
+                    FROM completed_task WHERE json_extract("data", '$.Episode.bvid') IN ({placeholders})
+                    UNION ALL
+                    SELECT json_extract("data", '$.Episode.bvid') AS bvid, json_extract("data", '$.Episode.cid') AS cid
+                    FROM download_task WHERE json_extract("data", '$.Episode.bvid') IN ({placeholders})
+                )
+                GROUP BY bvid
+            """, (*chunk, *chunk))
+
+            counts.update({bvid: count for bvid, count in result})
+
+        return counts
 
     def _upgrade(self):
         def _to_task_list(result):

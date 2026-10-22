@@ -50,15 +50,27 @@ class TestFileSize:
     @pytest.mark.parametrize(
         "size, expected",
         [
-            (0, "0.00 B"),
-            (1023, "1023.00 B"),
-            (1024, "1.00 KB"),      # 1024 进制
-            (1536, "1.50 KB"),
-            (1024 ** 2, "1.00 MB"),
+            (0, "0 B"),
+            (1023, "1023 B"),
+            (1024, "1 KB"),         # 1024 进制
+            (1536, "2 KB"),         # KB 取整
+            (1024 ** 2, "1.0 MB"),
+            (int(1.25 * 1024 ** 2), "1.2 MB"),   # MB 保留一位
+            (int(1.5 * 1024 ** 3), "1.50 GB"),   # GB 保留两位
             (1024 ** 4, "1.00 TB"),
         ],
     )
     def test_format(self, size, expected):
+        assert Units.format_file_size(size) == expected
+
+    @pytest.mark.parametrize(
+        "size, expected",
+        [
+            (1024 ** 2 - 1, "1.0 MB"),           # 1023.999 KB 取整后是 1024，应进位而不是显示「1024 KB」
+            (1024 ** 3 - 1, "1.00 GB"),          # 1023.99999 MB 同理
+        ],
+    )
+    def test_carry_after_rounding(self, size, expected):
         assert Units.format_file_size(size) == expected
 
     def test_beyond_largest_unit(self):
@@ -88,4 +100,4 @@ class TestMisc:
 
     def test_speed(self):
         assert Units.format_speed(0) == ""
-        assert Units.format_speed(1024 ** 2) == "1.00 MB/s"
+        assert Units.format_speed(1024 ** 2) == "1.0 MB/s"

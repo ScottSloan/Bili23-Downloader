@@ -19,9 +19,6 @@ class DownloadListModel(CoverQueryModelBase):
         self._cover_size = QSize(144, 80)
         self._task_list: List[TaskInfo] = task_list
 
-        self._sorting = False
-        self._sort_by_key = None
-        self._ascending = True
         self._row_by_task_id: dict[str, int] = {}
         self._managing_concurrent = False
         self._managing_merges = False
@@ -30,10 +27,6 @@ class DownloadListModel(CoverQueryModelBase):
 
     def _get_task_id(self, task_info: TaskInfo):
         return task_info.Basic.task_id
-
-    def _applyCurrentSort(self):
-        if self._sorting and self._sort_by_key:
-            self.sortBy(self._sort_by_key, self._ascending)
 
     def _rebuild_row_index(self):
         self._row_by_task_id = {
@@ -71,8 +64,6 @@ class DownloadListModel(CoverQueryModelBase):
 
         self._row_by_task_id[task_info.Basic.task_id] = row
 
-        self._applyCurrentSort()
-
     def appendRows(self, task_info_list: List[TaskInfo]):
         if not task_info_list:
             return
@@ -87,8 +78,6 @@ class DownloadListModel(CoverQueryModelBase):
 
         for row, task_info in enumerate(self._task_list):
             self._row_by_task_id[task_info.Basic.task_id] = row
-
-        self._applyCurrentSort()
 
     def updateRows(self, start_row: int, end_row: int):
         for row in range(start_row, end_row + 1):
@@ -181,8 +170,9 @@ class DownloadListModel(CoverQueryModelBase):
             case _:
                 task_manager.cancel_async(task_info)
 
-    def batchStart(self):
-        for task in self._task_list:
+    def batchStart(self, task_list: List[TaskInfo] = None):
+        # task_list 为 None 时作用于整个列表；列表筛选生效时由代理模型传入当前可见的任务
+        for task in self._targetTasks(task_list):
             if task.Download.status in [DownloadStatus.PAUSED, DownloadStatus.FFMPEG_FAILED, DownloadStatus.FAILED]:
                 # 从暂停状态变为等待状态，由 manage_concurrent_downloads 统一调度
                 task.Download.status = DownloadStatus.QUEUED
@@ -191,8 +181,8 @@ class DownloadListModel(CoverQueryModelBase):
 
         self.manageConcurrentDownloads()
 
-    def batchPause(self):
-        for task in self._task_list:
+    def batchPause(self, task_list: List[TaskInfo] = None):
+        for task in self._targetTasks(task_list):
             if task.Download.status in [DownloadStatus.DOWNLOADING, DownloadStatus.QUEUED]:
                 task.Download.status = DownloadStatus.PAUSED
                 downloader = downloader_manager.get(task, create_if_not_exists = False)
@@ -202,13 +192,13 @@ class DownloadListModel(CoverQueryModelBase):
 
                 self.onUpdateData(task)
 
-    def batch_cancel(self):
+    def batch_cancel(self, task_list: List[TaskInfo] = None):
         # 已完成的任务走批量路径：一次数据库删除 + 一次界面刷新。
         # 逐条处理时每条都要独立提交事务并重建行索引，任务较多时会长时间卡住界面。
         completed_tasks = []
         remaining_tasks = []
 
-        for task in list(self._task_list):
+        for task in list(self._targetTasks(task_list)):
             match task.Download.status:
                 case DownloadStatus.MERGING | DownloadStatus.CONVERTING:
                     # 只有非合并中的任务才允许取消
@@ -227,6 +217,9 @@ class DownloadListModel(CoverQueryModelBase):
 
         for task in remaining_tasks:
             self.cancelDownload(task)
+
+    def _targetTasks(self, task_list: List[TaskInfo] = None):
+        return self._task_list if task_list is None else task_list
 
     def manageConcurrentDownloads(self):
         # 启动任务时可能同步走完整个流程并反过来再次触发调度。
@@ -363,45 +356,3 @@ class DownloadListModel(CoverQueryModelBase):
         self.onUpdateData(task_info)
 
         self.manageConcurrentDownloads()
-
-    def sortBy(self, key: str, ascending: bool = True):
-        # 排序列表
-        if not self._sorting:
-            return
-        
-        self._sort_by_key = key
-        self._ascending = ascending
-
-        reverse = not ascending
-
-        self.layoutAboutToBeChanged.emit()
-
-        match key:
-            case "created_time":
-                self._task_list.sort(key = lambda x: x.Basic.created_time, reverse = reverse)
-
-            case "completed_time":
-                self._task_list.sort(key = lambda x: x.Basic.completed_time, reverse = reverse)
-
-            case "show_title":
-                self._task_list.sort(key = lambda x: x.Basic.show_title, reverse = reverse)
-
-            case "file_size":
-                self._task_list.sort(key = lambda x: x.Download.total_size, reverse = reverse)
-
-            case "progress":
-                self._task_list.sort(key = lambda x: x.Download.progress, reverse = reverse)
-
-        self.layoutChanged.emit()
-
-        self._rebuild_row_index()
-
-        self.updateRows(0, self.rowCount() - 1)
-
-    def enableSorting(self, default_key: str):
-        # 启用排序功能
-        self._sorting = True
-        self._sort_by_key = default_key
-
-        self._applyCurrentSort()
-        

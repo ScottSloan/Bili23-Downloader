@@ -56,6 +56,12 @@ class EpisodeParserBase:
             if child.has_attribute(Attribute.HISTORY_BIT) or child.has_attribute(Attribute.WATCH_LATER_BIT):
                 title = node.number
 
+        # 惰性导入：会连带加载 sqlite3 与整个下载任务管理器，不能出现在启动路径上
+        from .download_history import mark_download_history
+
+        # 发出信号之后树就归 GUI 线程所有了，标记必须赶在这之前
+        mark_download_history([node])
+
         # 定位信息一律传给解析列表：手动勾选模式下由列表自行决定不勾选，
         # 但媒体信息预览仍需据此找到链接指向的那个视频
         signal_bus.parse.update_parse_list.emit(title, self.category_name, root_node, current_episode_data)

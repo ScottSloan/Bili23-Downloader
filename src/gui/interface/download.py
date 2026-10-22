@@ -25,6 +25,7 @@ class DownloadInterface(QFrame):
 
     def init_UI(self):
         self.pivot = Pivot(self)
+
         self.list_stacked_widget = PopUpAniStackedWidget(self)
         self.list_stacked_widget.setContentsMargins(0, 10, 0, 10)
 
@@ -49,8 +50,9 @@ class DownloadInterface(QFrame):
 
         top_layout = QHBoxLayout()
         top_layout.addWidget(self.pivot)
-        top_layout.addStretch()
-        top_layout.addWidget(self.top_stacked_widget)
+        # 顶栏占满 Pivot 右侧的全部宽度（各页内部自带左侧弹簧，按钮仍靠右），
+        # 这样它才知道还剩多少空间，决定搜索框是常驻显示还是收成按钮
+        top_layout.addWidget(self.top_stacked_widget, 1)
 
         self.addSubInterface(self.downloading_list_view, "downloading", self.tr("Downloading"), 0)
         self.addSubInterface(self.completed_list_view, "completed", self.tr("Completed"), 1)
@@ -80,6 +82,9 @@ class DownloadInterface(QFrame):
         self.top_stacked_widget.delete_all_btn.clicked.connect(self.downloading_list_view.batch_cancel)
         
         self.top_stacked_widget.clear_all_btn.clicked.connect(self.completed_list_view._model.batch_cancel)
+
+        self.top_stacked_widget.search_downloading_list_box.textChanged.connect(self.downloading_list_view.setFilterText)
+        self.top_stacked_widget.search_completed_list_box.textChanged.connect(self.completed_list_view.setFilterText)
 
     def on_sort_downloading_list(self, key: str, ascending: bool):
         self._save_sort_preference(
@@ -113,7 +118,7 @@ class DownloadInterface(QFrame):
         self.list_stacked_widget.addWidget(widget)
 
         item = PivotItem(text = text, parent = self.pivot)
-        item.setMaximumWidth(150)
+        item.setMinimumWidth(110)
         item.setFontSize(15)
 
         item = self.pivot.insertWidget(-1, objectName, item, onClick)
