@@ -80,7 +80,7 @@ class TaskManager:
         task_info.Basic.cover_id = cover_manager.arrange_cover_id(episode_info.get("cover", ""))
         task_info.Basic.show_title = episode_info.get("title", "")
         task_info.Basic.created_time = get_timestamp_ms()
-        
+
         # DownloadInfo
         task_info.Download.status = DownloadStatus.QUEUED
         task_info.Download.type = self.__determine_download_type(options)
@@ -368,6 +368,101 @@ class TaskManager:
 
         return None
 
+    def query_completed_page(
+            self,
+            offset: int,
+            limit: int,
+            order_by: str = "completed_time",
+            ascending: bool = False,
+            keyword: str = "",
+            media_types=None,
+    ) -> List[TaskInfo]:
+        result = self.db_manager.query_completed_page(offset, limit, order_by, ascending, keyword, media_types)
+
+        return [self._build_task_info(entry) for entry in result]
+
+    def count_completed(self, keyword: str = "", media_types = None) -> int:
+        return self.db_manager.count_completed(keyword, media_types)
+
+    def clear_completed(self, timeout: float = 3.0) -> bool:
+        try:
+            return bool(self._update_executor.submit(self._clear_completed_storage).result(timeout=timeout))
+
+        except Exception:
+            logger.exception("清空已完成任务失败或超时")
+            return False
+
+    def _clear_completed_storage(self) -> bool:
+        self._flush_pending_snapshots()
+
+        try:
+            self.db_manager.clear_completed()
+            return True
+
+        except Exception:
+            logger.exception("清空已完成任务失败")
+            return False
+
+    def delete_completed_by_filter(self, keyword: str = "", media_types=None, timeout: float = 3.0) -> bool:
+        # 关键词与媒体类型同时存在时是 AND 关系，与旧版 proxy 的 _batchTargets 一致
+        try:
+            return bool(self._update_executor.submit(
+                self._delete_completed_by_filter_storage, keyword, media_types
+            ).result(timeout=timeout))
+
+        except Exception:
+            logger.exception("按筛选清空已完成任务失败或超时")
+            return False
+
+    def _delete_completed_by_filter_storage(self, keyword: str, media_types) -> bool:
+        self._flush_pending_snapshots()
+
+        try:
+            self.db_manager.delete_completed_by_filter(keyword, media_types)
+            return True
+
+        except Exception:
+            logger.exception("按筛选清空已完成任务失败")
+            return False
+
+    def delete_completed_by_keyword(self, keyword: str = "", timeout: float = 3.0) -> bool:
+        # 兼容旧调用方；新代码请用 delete_completed_by_filter
+        return self.delete_completed_by_filter(keyword, None, timeout)
+
+    def delete(self, task_info: TaskInfo, completed: bool = False, wait: bool = False) -> bool:
+        return self.delete_many([task_info], completed, wait)
+
+    def delete_many(self, task_info_list: List[TaskInfo], completed: bool = False, wait: bool = False) -> bool:
+        if not task_info_list:
+            return True
+
+        task_id_list = [task_info.Basic.task_id for task_info in task_info_list]
+
+        self._discard_pending_updates(task_id_list)
+
+        future = self._update_executor.submit(self._delete_storage, task_id_list, completed)
+
+        if not wait:
+            return True
+
+        try:
+            return bool(future.result(timeout = 3.0))
+
+        except Exception:
+            logger.exception("等待删除下载任务记录落盘超时")
+            return False
+
+    def _delete_storage(self, task_id_list: List[str], completed: bool) -> bool:
+        self._flush_pending_snapshots()
+
+        try:
+            self.db_manager.delete_tasks(task_id_list, completed)
+            return True
+
+        except Exception:
+            logger.exception("删除下载任务记录失败，本批共 %d 条", len(task_id_list))
+            return False
+
     def count(self, completed: bool = False) -> int:
         return self.db_manager.count_tasks(completed)
 
@@ -460,29 +555,6 @@ class TaskManager:
                 str(error)
             )
 
-    def delete(self, task_info: TaskInfo, completed: bool = False):
-        # 结构性操作与进度写入共用同一个写线程，天然保证先后顺序，
-        # 无需再阻塞调用方等待挂起的写入完成。
-        self.delete_many([task_info], completed)
-
-    def delete_many(self, task_info_list: List[TaskInfo], completed: bool = False):
-        if not task_info_list:
-            return
-
-        task_id_list = [task_info.Basic.task_id for task_info in task_info_list]
-
-        self._discard_pending_updates(task_id_list)
-        self._update_executor.submit(self._delete_storage, task_id_list, completed)
-
-    def _delete_storage(self, task_id_list: List[str], completed: bool):
-        self._flush_pending_snapshots()
-
-        try:
-            self.db_manager.delete_tasks(task_id_list, completed)
-
-        except Exception:
-            logger.exception("删除下载任务记录失败，本批共 %d 条", len(task_id_list))
-
     def cancel(self, task_info: TaskInfo):
         self.cancel_async(task_info)
 
@@ -526,46 +598,50 @@ class TaskManager:
             except Exception:
                 logger.exception("删除下载任务临时文件失败: %s", task_id)
 
-    def mark_as_completed(self, task_info: TaskInfo, wait: bool = False, timeout: float = 5.0):
+    def mark_as_completed(self, task_info: TaskInfo, wait: bool = False, timeout: float = 5.0) -> bool:
         """
         把任务移入已完成表
 
         记录在调用方线程上组装，保证写入的是此刻的任务快照；写入本身投递到写线程，
         避免同步的数据库写入阻塞界面。
 
-        wait 为 True 时阻塞到本条写入落盘为止。调用方紧接着要做的事（发出
-        remove_from_downloading_list，进而触发 Downloader 销毁）是整个下载流程中
-        最容易出现原生崩溃的一段，此时若写入还排在队列里，进程一旦没了这条记录就
-        彻底丢失 —— 磁盘上躺着合并好的成品文件，库里却还停在「下载中」，重启后
-        任务显示未完成，重复下载判定也会失效。这条写入只有一次，代价是可接受的。
+        wait 为 True 时阻塞到本条写入落盘为止，并返回写入是否成功。
+        调用方（merger.py）据此决定是否发 add_to_completed_list /
+        remove_from_downloading_list —— 归档失败时任务留在下载中列表，
+        用户重启并升级成功后可重新处理。
+
+        wait 为 False 时投递后立即返回 True（投递成功，不代表写入成功），
+        与原有异步契约一致。
         """
         self._discard_pending_updates([task_info.Basic.task_id])
 
-        record = self.db_manager.build_record(task_info, completed = True)
+        record = self.db_manager.build_record(task_info, completed=True)
 
         future = self._update_executor.submit(self._mark_as_completed_storage, record)
 
         if not wait:
-            return
+            return True
 
         try:
             # 写线程只做数据库操作，其中的 emit 是跨线程排队、不会回等 GUI 线程，
             # 因此这里不存在互相等待的可能。超时通常意味着前面排着一批大的写入，
             # 或 SQLite 正在等写锁（busy_timeout 30s），此时放弃等待继续走流程，
             # 写入仍会在写线程上完成，只是不再有落盘保证
-            future.result(timeout = timeout)
+            return bool(future.result(timeout=timeout))
 
         except Exception:
             logger.exception("等待标记下载任务为已完成的写入落盘超时: %s", record[0])
+            return False
 
-    def _mark_as_completed_storage(self, record: tuple):
+    def _mark_as_completed_storage(self, record: tuple) -> bool:
         self._flush_pending_snapshots()
 
         try:
-            self.db_manager.move_to_completed(record)
+            return self.db_manager.move_to_completed(record)
 
         except Exception:
             logger.exception("标记下载任务为已完成失败: %s", record[0])
+            return False
 
     def reset(self, task_info: TaskInfo):
         # 重置下载状态为初始状态，适用于完全重新下载的场景
@@ -652,9 +728,9 @@ class TaskManager:
                     logger.info("已跳过重复下载任务: %s", episode_info.get("title", ""))
 
                     signal_bus.download.show_skip_duplicate_download_toast.emit(episode_info.get("title", ""))
-                    
+
                     return True
-                
+
                 case DuplicateDownloadResolution.ALWAYS_ASK:
                     # 询问用户是否继续下载。后台线程等待主线程弹窗返回结果。
                     result_info = {"skip": True, "not_ask_again": False}
@@ -666,11 +742,11 @@ class TaskManager:
                     logger.info("用户选择%s重复下载任务: %s", "跳过" if result_info["skip"] else "继续", episode_info.get("title", ""))
 
                     return result_info["skip"]
-                    
+
         return result
 
     def _calc_hash_id(self, episode_info: dict):
         # 根据 episode_info 计算 hash_id
         return calc_episode_hash_id(episode_info)
-    
+
 task_manager = TaskManager()

@@ -30,8 +30,9 @@ DASH_AUDIO_STREAM_EXTS = ("m4a", "flac", "ec3")
 # 不保活的话，Python 侧最后一个引用消失就会析构，而 C++ 端的 QThread 还在跑
 _detached_mergers: set = set()
 
+
 class Merger(QObject):
-    def __init__(self, task_info: TaskInfo, parent = None):
+    def __init__(self, task_info: TaskInfo, parent=None):
         super().__init__(parent)
 
         self.task_info = task_info
@@ -133,7 +134,7 @@ class Merger(QObject):
             if self.should_remux_kept_audio():
                 # 保留原始文件时音频要当成品交付，而它同时是合并命令的输入，两者只能串行：
                 # 先重封装，完成后由回调接回合并流程
-                self.remux_audio(on_finished = self.on_remux_before_merge_completed)
+                self.remux_audio(on_finished=self.on_remux_before_merge_completed)
                 return
 
             # 现代 dash 视频合并
@@ -149,7 +150,7 @@ class Merger(QObject):
                 self.m4a_to_mp3()
                 return
 
-            self.remux_audio(on_finished = self.on_convert_completed)
+            self.remux_audio(on_finished=self.on_convert_completed)
 
         else:
             # 纯视频下载（未勾选独立音频流）走这里：audio_file_ext 为空串，
@@ -164,12 +165,12 @@ class Merger(QObject):
 
         if v_exists and a_exists:
             merge_cmd = FFmpegCommand.merge_video_audio(
-                video_path = self.temp_video_file_name,
-                audio_path = self.temp_audio_file_name,
-                output_path = self.temp_output_file_name,
-                cover_path = self.check_attach_cover(),
-                chapter_path = self.check_attach_chapter(),
-                subtitle_list = self.check_embed_subtitles()
+                video_path=self.temp_video_file_name,
+                audio_path=self.temp_audio_file_name,
+                output_path=self.temp_output_file_name,
+                cover_path=self.check_attach_cover(),
+                chapter_path=self.check_attach_chapter(),
+                subtitle_list=self.check_embed_subtitles()
             )
 
             self._run_merge_command(merge_cmd, cwd)
@@ -191,11 +192,11 @@ class Merger(QObject):
         self.add_file(lists_path)
 
         merge_cmd = FFmpegCommand.merge_video_parts(
-            lists_path = lists_path,
-            output_path = self.temp_output_file_name,
-            cover_path = self.check_attach_cover(),
-            chapter_path = self.check_attach_chapter(),
-            subtitle_list = self.check_embed_subtitles()
+            lists_path=lists_path,
+            output_path=self.temp_output_file_name,
+            cover_path=self.check_attach_cover(),
+            chapter_path=self.check_attach_chapter(),
+            subtitle_list=self.check_embed_subtitles()
         )
 
         self._run_merge_command(merge_cmd, cwd)
@@ -218,7 +219,7 @@ class Merger(QObject):
         # 下载阶段结束时进度停在 100，这里必须归零，否则进度条会从满格开始重走
         self.task_info.Download.progress = 0
 
-        self._ffmpeg_runner = FFmpegRunner.from_command(command, parent = self)
+        self._ffmpeg_runner = FFmpegRunner.from_command(command, parent=self)
         self._ffmpeg_runner.set_cwd(cwd)
         # FFmpeg 自己报的时长更准，这里给的只是它打印出 Duration 之前的兜底
         self._ffmpeg_runner.set_duration(self.task_info.Episode.duration)
@@ -286,15 +287,15 @@ class Merger(QObject):
                 kept_original_files = self.keep_original_files()
                 if self._has_error: return
 
-                self.add_file(*kept_original_files, clear = True)
+                self.add_file(*kept_original_files, clear=True)
 
             elif has_video and not has_audio:
                 final_video_file_name = safe_rename(cwd, self.temp_video_file_name, self.final_mp4_video_file_name).name
-                self.add_file(final_video_file_name, clear = True)
+                self.add_file(final_video_file_name, clear=True)
 
             elif has_audio and not has_video:
                 final_audio_file_name = safe_rename(cwd, self.output_audio_file_name, self.final_audio_file_name).name
-                self.add_file(final_audio_file_name, clear = True)
+                self.add_file(final_audio_file_name, clear=True)
 
             self.mark_as_completed()
 
@@ -312,7 +313,7 @@ class Merger(QObject):
 
         try:
             cwd = self.get_cwd()
-            
+
             final_output_file_name = safe_rename(cwd, self.temp_output_file_name, self.final_output_file_name).name
 
             kept_original_files = []
@@ -328,7 +329,7 @@ class Merger(QObject):
             self.delete_embedded_cover()
             self.delete_embedded_subtitles()
             self.delete_embedded_chapter()
-            self.add_file(final_output_file_name, *kept_original_files, clear = True)
+            self.add_file(final_output_file_name, *kept_original_files, clear=True)
             self.mark_as_completed()
 
         except Exception as e:
@@ -365,8 +366,40 @@ class Merger(QObject):
         # 必须等这条写入落盘再往下走。下面的 remove_from_downloading_list 会一路同步
         # 走到 Downloader.on_delete()，那是整个下载流程中最容易出现原生崩溃的一段
         # （线程池与定时器的销毁）。进程若在那里没了，异步排队的这条记录就永远丢了：
-        # 磁盘上是合并好的成品，库里却停在「下载中」
-        task_manager.mark_as_completed(self.task_info, wait = True)
+        # 磁盘上是合并好的成品，库里却停在「下载中」。
+        #
+        # 返回值表示归档是否成功。归档失败时（通常是数据库升级失败，completed_task
+        # 缺 file_size 列，move_to_completed 跳过），任务留在 download_task 里，
+        # 重启并升级成功后可重新处理。见下方失败分支的处理
+        if not task_manager.mark_as_completed(self.task_info, wait=True):
+            # 归档失败时必须做三件事，缺一不可：
+            #
+            # 1. 状态改回 PAUSED。此刻状态已被设为 COMPLETED、progress = 100，
+            #    不改的话任务会以「已完成」出现在下载中列表里，右键菜单是
+            #    「重新解析」而不是「继续」，用户会误以为已完成。
+            #    PAUSED 让右键菜单是「继续」，用户点继续时仍会再走一次归档
+            #    失败 —— toast 文案里明确提示「请重启应用」，让用户知道必须
+            #    重启才能解决，而不是反复点继续。
+            #
+            # 2. emit update_downloading_item 让下载中列表刷新状态。
+            #
+            # 3. emit auto_manage_concurrent_downloads 释放合并额度。FFmpeg
+            #    全局只允许跑一个，这个额度完全靠该信号释放，不发的话队列里
+            #    其余 FFMPEG_QUEUED 任务会永久卡住，直到用户重启或手动触发
+            #    某次调度
+            self.task_info.Download.status = DownloadStatus.PAUSED
+
+            signal_bus.download.update_downloading_item.emit(self.task_info)
+            signal_bus.download.auto_manage_concurrent_downloads.emit()
+
+            signal_bus.toast.show_long_message.emit(
+                ToastNotificationCategory.ERROR,
+                self.tr("Failed to archive completed task"),
+                self.tr(
+                    "The task is kept in the downloading list. Please restart the application to finish the database upgrade, then resume the task.")
+            )
+
+            return
 
         signal_bus.download.auto_manage_concurrent_downloads.emit()
         signal_bus.download.add_to_completed_list.emit([self.task_info])
@@ -404,7 +437,8 @@ class Merger(QObject):
             match self.get_keep_original_file_type():
                 case OriginalFileType.BOTH:
                     final_video_file_name = safe_rename(cwd, self.temp_video_file_name, self.final_video_file_name).name
-                    final_audio_file_name = safe_rename(cwd, self.output_audio_file_name, self.final_audio_file_name).name
+                    final_audio_file_name = safe_rename(cwd, self.output_audio_file_name,
+                                                        self.final_audio_file_name).name
 
                     kept_original_files.extend([final_video_file_name, final_audio_file_name])
 
@@ -413,7 +447,8 @@ class Merger(QObject):
                     kept_original_files.append(final_video_file_name)
 
                 case OriginalFileType.AUDIO:
-                    final_audio_file_name = safe_rename(cwd, self.output_audio_file_name, self.final_audio_file_name).name
+                    final_audio_file_name = safe_rename(cwd, self.output_audio_file_name,
+                                                        self.final_audio_file_name).name
                     kept_original_files.append(final_audio_file_name)
 
             return kept_original_files
@@ -440,7 +475,7 @@ class Merger(QObject):
         }
 
         error_message = None
-        
+
         for key, message in error_map.items():
             if key in str(stderr):
                 error_message = Translator.ERROR_MESSAGES(message)
@@ -474,7 +509,7 @@ class Merger(QObject):
     def get_cwd(self):
         return Path(self.task_info.File.download_path, self.task_info.File.folder)
 
-    def add_file(self, *args: str, clear = False):
+    def add_file(self, *args: str, clear=False):
         if clear:
             self.task_info.File.relative_files.clear()
 
@@ -494,14 +529,14 @@ class Merger(QObject):
             # 转换期间不能就地把 audio_file_ext 改成 mp3：一旦中途失败或程序退出，
             # 重试时 start() 里的 m4a 判断就不再成立，会跑去重命名一个根本不存在的 mp3。
             # 因此先输出到独立的临时名，等转换真正完成再改扩展名
-            temp_output_audio_file_name = "output_{task_id}.mp3".format(task_id = self.task_info.Basic.task_id)
+            temp_output_audio_file_name = "output_{task_id}.mp3".format(task_id=self.task_info.Basic.task_id)
 
             self._output_audio_file = temp_output_audio_file_name
             self._converted_audio_file_ext = "mp3"
 
             convert_cmd = FFmpegCommand.convert_m4a_to_mp3(
-                input_path = self.temp_audio_file_name,
-                output_path = temp_output_audio_file_name
+                input_path=self.temp_audio_file_name,
+                output_path=temp_output_audio_file_name
             )
 
             self._start_ffmpeg(convert_cmd, cwd, self.on_convert_completed)
@@ -537,8 +572,8 @@ class Merger(QObject):
         self._output_audio_file = self.temp_remux_audio_file_name
 
         remux_cmd = FFmpegCommand.remux_audio(
-            input_path = self.temp_audio_file_name,
-            output_path = self.temp_remux_audio_file_name
+            input_path=self.temp_audio_file_name,
+            output_path=self.temp_remux_audio_file_name
         )
 
         self._start_ffmpeg(remux_cmd, cwd, on_finished)
@@ -594,7 +629,7 @@ class Merger(QObject):
 
         # 字幕轨排在弹幕轨之前，并把首条字幕标记为默认轨：打开视频即显示字幕，弹幕需手动开启
         # sort 是稳定排序，同类轨道之间保持解析时的先后顺序
-        subtitle_list.sort(key = lambda entry: 0 if entry["kind"] == "subtitle" else 1)
+        subtitle_list.sort(key=lambda entry: 0 if entry["kind"] == "subtitle" else 1)
 
         if subtitle_list[0]["kind"] == "subtitle":
             subtitle_list[0]["default"] = True
@@ -636,12 +671,12 @@ class Merger(QObject):
         cwd = self.get_cwd()
         lists_path = Path(cwd, f"lists_{self.task_info.Basic.task_id}.txt")
 
-        with lists_path.open("w", encoding = "utf-8") as f:
+        with lists_path.open("w", encoding="utf-8") as f:
             for i in range(video_parts_count):
                 part_file_name = "video_{task_id}_{index}.{ext}".format(
-                    task_id = self.task_info.Basic.task_id,
-                    index = i,
-                    ext = self.task_info.File.video_file_ext
+                    task_id=self.task_info.Basic.task_id,
+                    index=i,
+                    ext=self.task_info.File.video_file_ext
                 )
 
                 f.write(f"file '{part_file_name}'\n")
@@ -651,15 +686,15 @@ class Merger(QObject):
     @property
     def temp_video_file_name(self):
         return "video_{task_id}.{file_ext}".format(
-            task_id = self.task_info.Basic.task_id,
-            file_ext = self.task_info.File.video_file_ext
+            task_id=self.task_info.Basic.task_id,
+            file_ext=self.task_info.File.video_file_ext
         )
-    
+
     @property
     def temp_audio_file_name(self):
         return "audio_{task_id}.{file_ext}".format(
-            task_id = self.task_info.Basic.task_id,
-            file_ext = self.task_info.File.audio_file_ext
+            task_id=self.task_info.Basic.task_id,
+            file_ext=self.task_info.File.audio_file_ext
         )
 
     @property
@@ -668,28 +703,28 @@ class Merger(QObject):
         # 与 m4a/flac/ec3 虽然天然不撞，但那依赖 VideoContainer 只有两个成员这个隐含前提，
         # 不如另起前缀让「不撞」变成一眼可见的事实
         return "remux_{task_id}.{file_ext}".format(
-            task_id = self.task_info.Basic.task_id,
-            file_ext = self.task_info.File.audio_file_ext
+            task_id=self.task_info.Basic.task_id,
+            file_ext=self.task_info.File.audio_file_ext
         )
 
     @property
     def temp_output_file_name(self):
         return "output_{task_id}.{file_ext}".format(
-            task_id = self.task_info.Basic.task_id,
-            file_ext = self.task_info.File.merge_file_ext
+            task_id=self.task_info.Basic.task_id,
+            file_ext=self.task_info.File.merge_file_ext
         )
-    
+
     @property
     def temp_cover_file_name(self):
         return "cover_{task_id}.{file_ext}".format(
-            task_id = self.task_info.Basic.task_id,
-            file_ext = resolve(self.task_info, "cover_type").value
+            task_id=self.task_info.Basic.task_id,
+            file_ext=resolve(self.task_info, "cover_type").value
         )
 
     @property
     def final_output_file_name(self):
         return f"{self.task_info.File.name}.{self.task_info.File.merge_file_ext}"
-    
+
     @property
     def final_video_file_name(self):
         return f"{self.task_info.File.name}.{self.task_info.File.video_file_ext}"

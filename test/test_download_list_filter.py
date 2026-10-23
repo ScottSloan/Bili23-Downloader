@@ -196,7 +196,13 @@ def test_source_batch_cancel_respects_task_list(app, monkeypatch):
 
     deleted = []
 
-    monkeypatch.setattr(model_module.task_manager, "delete_many", lambda task_list, completed: deleted.extend(task_list))
+    # batch_cancel 现在调 delete_many(..., wait=True) 并检查返回值；
+    # mock 必须接受 wait 关键字并返回 True，否则走 else 分支不调 removeTasks
+    def fake_delete_many(task_list, completed=False, wait=False):
+        deleted.extend(task_list)
+        return True
+
+    monkeypatch.setattr(model_module.task_manager, "delete_many", fake_delete_many)
 
     tasks = [make_task(value, status = DownloadStatus.COMPLETED) for value in range(1, 4)]
     source = DownloadListModel(list(tasks))

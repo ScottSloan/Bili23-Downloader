@@ -36,8 +36,8 @@ class SortFlyoutWidget(FlyoutViewBase):
     closed = Signal()
 
     def __init__(
-        self, parent = None, sort_by_key_dict: dict = None,
-        trigger_signal_func = None, sort_by_key = None, ascending = True
+            self, parent=None, sort_by_key_dict: dict = None,
+            trigger_signal_func=None, sort_by_key=None, ascending=True
     ):
         super().__init__(parent)
 
@@ -52,9 +52,9 @@ class SortFlyoutWidget(FlyoutViewBase):
         sort_by_lab = BodyLabel(self.tr("Sort By"), self)
 
         self.sort_by_choice = ComboBox(self)
-        
+
         for label, key in self.sort_by_key_dict.items():
-            self.sort_by_choice.addItem(label, userData = key)
+            self.sort_by_choice.addItem(label, userData=key)
 
             if key == self.sort_by_key:
                 self.sort_by_choice.setCurrentIndex(self.sort_by_choice.count() - 1)
@@ -128,8 +128,8 @@ class FilterFlyoutWidget(FlyoutViewBase):
     changed = Signal()
 
     def __init__(
-        self, parent = None, status_group_dict: dict = None, media_type_dict: dict = None,
-        trigger_signal_func = None, status_filter = frozenset(), media_type_filter = frozenset()
+            self, parent=None, status_group_dict: dict = None, media_type_dict: dict = None,
+            trigger_signal_func=None, status_filter=frozenset(), media_type_filter=frozenset()
     ):
         super().__init__(parent)
 
@@ -254,7 +254,7 @@ class ExpandableSearchBox(QWidget):
     # 常驻显示不光要放得下搜索框，左侧还得留出这么多空白，否则顶栏看着仍是满的
     SPARE_WIDTH = 60
 
-    def __init__(self, parent = None):
+    def __init__(self, parent=None):
         super().__init__(parent)
 
         self._pinned = True
@@ -340,7 +340,11 @@ class ExpandableSearchBox(QWidget):
         return super().eventFilter(obj, e)
 
 class TopStackedWidget(QStackedWidget):
-    def __init__(self, parent = None):
+    # 已完成列表的媒体筛选：分页模式下由 DownloadInterface 接管，下推到 SQLite。
+    # 下载中列表的筛选仍走 proxy，不经过这个信号
+    completed_list_filter_changed = Signal(set)
+
+    def __init__(self, parent=None):
         super().__init__(parent)
 
         self.download_interface = parent
@@ -364,7 +368,7 @@ class TopStackedWidget(QStackedWidget):
         self.open_folder_1_btn = ToolButton(FluentIcon.FOLDER, self)
         self.open_folder_1_btn.setToolTip(self.tr("Open Download Directory"))
 
-        separator_1 = Separator(self, alpha = 50)
+        separator_1 = Separator(self, alpha=50)
 
         self.start_all_btn = PrimaryPushButton(FluentIcon.PLAY, self.tr("Start All"), self)
         self.pause_all_btn = PushButton(FluentIcon.PAUSE, self.tr("Pause All"), self)
@@ -396,7 +400,7 @@ class TopStackedWidget(QStackedWidget):
         self.open_folder_2_btn = ToolButton(FluentIcon.FOLDER, self)
         self.open_folder_2_btn.setToolTip(self.tr("Open Download Directory"))
 
-        separator_2 = Separator(self, alpha = 50)
+        separator_2 = Separator(self, alpha=50)
 
         self.clear_all_btn = PushButton(ExtendedFluentIcon.CLEAR, self.tr("Clear All"))
         self.clear_all_btn.setMinimumWidth(110)
@@ -485,11 +489,11 @@ class TopStackedWidget(QStackedWidget):
         view = SortFlyoutWidget(self, sort_by_key_dict, trigger_signal_func, sort_by_key, ascending)
 
         flyout = Flyout.make(
-            view = view,
-            target = target,
-            parent = self,
-            aniType = FlyoutAnimationType.DROP_DOWN,
-            isDeleteOnClose = False
+            view=view,
+            target=target,
+            parent=self,
+            aniType=FlyoutAnimationType.DROP_DOWN,
+            isDeleteOnClose=False
         )
 
         view.closed.connect(flyout.fadeOut)
@@ -501,7 +505,8 @@ class TopStackedWidget(QStackedWidget):
             self.tr("Downloading"): frozenset({DownloadStatus.DOWNLOADING, DownloadStatus.PARSING}),
             self.tr("Waiting"): frozenset({DownloadStatus.QUEUED, DownloadStatus.FFMPEG_QUEUED}),
             self.tr("Paused"): frozenset({DownloadStatus.PAUSED}),
-            self.tr("Processing"): frozenset({DownloadStatus.MERGING, DownloadStatus.CONVERTING, DownloadStatus.ADDITIONAL_PROCESSING}),
+            self.tr("Processing"): frozenset(
+                {DownloadStatus.MERGING, DownloadStatus.CONVERTING, DownloadStatus.ADDITIONAL_PROCESSING}),
             self.tr("Failed"): frozenset({DownloadStatus.FAILED, DownloadStatus.FFMPEG_FAILED, DownloadStatus.INVALID})
         }
 
@@ -512,14 +517,46 @@ class TopStackedWidget(QStackedWidget):
         )
 
     def on_show_completed_list_filter_flyout(self):
-        # 已完成列表里只有一种状态，不提供状态筛选
-        self._show_filter_flyout(
-            self.download_interface.completed_list_view,
+        # 已完成列表里只有一种状态，不提供状态筛选。
+        # 媒体筛选改为发信号下推到 SQL：分页后 proxy 只能过滤当前页 100 条，
+        # 必须交给 DownloadInterface 让 SQLite 跨页筛选。
+        # 与下载中列表走不同的路径（下载中列表行数受并发上限约束，proxy 客户端筛选足够）
+        download_interface = self.download_interface
+        target = self.filter_completed_list_btn
+
+        def trigger_signal_func(statuses: set, media_types: set):
+            # 状态筛选不启用（completed_task 全部是 COMPLETED），只转发媒体类型
+            self.completed_list_filter_changed.emit(set(media_types))
+
+        def update_button_state():
+            # 按钮的选中态只表示「媒体筛选在生效」。
+            # 不能读 list_view.media_type_filter —— 分页模式下 proxy 的
+            # _media_type_filter 恒为空，读那里会永远显示未选中
+            target.setChecked(bool(download_interface.completed_media_types))
+
+        # ToggleToolButton 被点击时自己会先翻转一次，这里立即纠正回来
+        update_button_state()
+
+        view = FilterFlyoutWidget(
+            self,
             None,
-            self.filter_completed_list_btn
+            get_media_type_group_dict(),
+            trigger_signal_func,
+            frozenset(),
+            frozenset(download_interface.completed_media_types),
+        )
+
+        view.changed.connect(update_button_state)
+
+        Flyout.make(
+            view=view,
+            target=target,
+            parent=self,
+            aniType=FlyoutAnimationType.DROP_DOWN
         )
 
     def _show_filter_flyout(self, list_view, status_group_dict, target: ToggleToolButton):
+        # 仅下载中列表使用；已完成列表走 on_show_completed_list_filter_flyout 的 SQL 下推路径
         def trigger_signal_func(statuses: set, media_types: set):
             list_view.setStatusFilter(statuses)
             list_view.setMediaTypeFilter(media_types)
@@ -540,11 +577,11 @@ class TopStackedWidget(QStackedWidget):
         view.changed.connect(update_button_state)
 
         Flyout.make(
-            view = view,
-            target = target,
-            parent = self,
-            aniType = FlyoutAnimationType.DROP_DOWN
+            view=view,
+            target=target,
+            parent=self,
+            aniType=FlyoutAnimationType.DROP_DOWN
         )
 
-    def on_open_download_directory(self):    
+    def on_open_download_directory(self):
         Directory.open_directory_in_explorer(config.get(config.download_path))

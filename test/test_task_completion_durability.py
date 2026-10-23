@@ -8,6 +8,11 @@ Downloader.on_delete()，那是整个下载流程中最容易出现原生崩溃�
 
 因此 mark_as_completed(wait = True) 必须在返回前确保记录已经落库。这里断言的正是
 「调用返回时表已经改完」，用例中刻意不做任何等待或重试 —— 一旦退回异步，断言立刻失败。
+
+此外，mark_as_completed 的返回值是 merger.py 归档失败分支依赖的核心行为：
+upgrade_failed 时返回 False，merger 据此改任务状态为 PAUSED、释放合并额度、
+弹 toast；正常路径返回 True，merger 继续发 add_to_completed_list /
+remove_from_downloading_list。
 """
 
 from concurrent.futures import Future
@@ -158,3 +163,50 @@ class TestMarkAsCompletedDurability:
         task_manager._update_executor.submit(lambda: None).result(timeout = 10)
 
         assert "wait-false" in _task_ids(task_manager, completed = True)
+
+
+class TestMarkAsCompletedReturnValue:
+    """mark_as_completed 的返回值
+
+    merger.py 的归档失败分支依赖这个返回值：返回 False 时改任务状态为 PAUSED、
+    释放合并额度、弹 toast，不发 add_to_completed_list / remove_from_downloading_list。
+    返回 True 时继续走原有流程。
+    """
+
+    def test_returns_true_on_success(self, task_manager):
+        """正常路径返回 True，任务移到已完成表"""
+        task_info = _make_task("return-true")
+
+        task_manager.db_manager.add_tasks([task_info])
+
+        assert task_manager.mark_as_completed(task_info, wait = True) is True
+
+        # 任务已移到 completed_task
+        assert "return-true" in _task_ids(task_manager, completed = True)
+        assert "return-true" not in _task_ids(task_manager, completed = False)
+
+    def test_returns_false_when_upgrade_failed(self, task_manager):
+        """upgrade_failed 时返回 False，任务留在下载中表
+
+        升级事务已回滚，completed_task 仍缺 file_size 列，move_to_completed
+        会跳过并返回 False。这里验证整条链路：mark_as_completed 不抛异常、
+        返回 False、任务没被移动
+        """
+        task_info = _make_task("return-false")
+
+        task_manager.db_manager.add_tasks([task_info])
+
+        task_manager.db_manager.upgrade_failed = True
+
+        try:
+            result = task_manager.mark_as_completed(task_info, wait = True)
+
+        finally:
+            task_manager.db_manager.upgrade_failed = False
+
+        # 返回 False
+        assert result is False
+
+        # 任务仍在 download_task 里，completed_task 里没有
+        assert "return-false" in _task_ids(task_manager, completed = False)
+        assert "return-false" not in _task_ids(task_manager, completed = True)
