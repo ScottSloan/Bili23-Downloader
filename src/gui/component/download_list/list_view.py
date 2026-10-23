@@ -1,5 +1,5 @@
 from PySide6.QtGui import QPainter, QColor, QFontMetrics
-from PySide6.QtCore import QModelIndex, Qt, QTimer
+from PySide6.QtCore import QModelIndex, Qt, QTimer, Signal
 
 from qfluentwidgets import ListView, RoundMenu, Action, FluentIcon, isDarkTheme, setFont
 
@@ -19,8 +19,13 @@ from util.common.config import config
 
 from typing import List
 
+
 class DownloadListView(ListView):
-    def __init__(self, parent = None):
+    # 任务被移除时发射，参数为本次移除的数量。
+    # 下载中列表不关心这个信号；已完成列表在分页模式下用它更新总数并重载当前页
+    taskRemoved = Signal(int)
+
+    def __init__(self, parent=None):
         super().__init__(parent)
 
         applySmoothScroll(self)
@@ -34,6 +39,12 @@ class DownloadListView(ListView):
         self._in_batch_cancel = False
 
         self._in_adding_queried_tasks = False
+
+        # 分页模式下 proxy 不参与排序（_sorting 为 False，_sort_by_key 为 None），
+        # 排序状态由外部（DownloadInterface）注入，供顶栏排序浮窗读取当前值。
+        # 非分页模式保持 None，属性回落到 proxy 的真实状态
+        self._pagination_sort_key = None
+        self._pagination_sort_ascending = True
 
         self._source_model = DownloadListModel([], self)
         self._model = DownloadListProxyModel(self)
@@ -49,34 +60,45 @@ class DownloadListView(ListView):
 
         self.setUniformItemSizes(True)
 
+    def setPaginationSortState(self, key: str, ascending: bool):
+        # 分页模式下由 DownloadInterface 在排序变化 / 启动时注入，
+        # 使 sort_by_key / sort_ascending 能报告真实排序状态
+        self._pagination_sort_key = key
+        self._pagination_sort_ascending = bool(ascending)
+
     def showContextMenu(self, index, pos):
-        menu = RoundMenu(parent = self)
+        menu = RoundMenu(parent=self)
 
         task_info: TaskInfo = index.data(Qt.ItemDataRole.UserRole)
 
         match task_info.Download.status:
             case DownloadStatus.COMPLETED:
-                menu.addAction(self._create_action(FluentIcon.SEARCH, self.tr("Re-parse"), lambda: self.onReparseTask(task_info)))
+                menu.addAction(
+                    self._create_action(FluentIcon.SEARCH, self.tr("Re-parse"), lambda: self.onReparseTask(task_info)))
 
             case DownloadStatus.QUEUED | DownloadStatus.PAUSED:
-                menu.addAction(self._create_action(FluentIcon.PLAY, self.tr("Resume"), lambda: self.onTogglePauseResumeTask(index, task_info)))
+                menu.addAction(self._create_action(FluentIcon.PLAY, self.tr("Resume"),
+                                                   lambda: self.onTogglePauseResumeTask(index, task_info)))
 
             case DownloadStatus.DOWNLOADING:
-                menu.addAction(self._create_action(FluentIcon.PAUSE, self.tr("Pause"), lambda: self.onTogglePauseResumeTask(index, task_info)))
+                menu.addAction(self._create_action(FluentIcon.PAUSE, self.tr("Pause"),
+                                                   lambda: self.onTogglePauseResumeTask(index, task_info)))
 
-        menu.addAction(self._create_action(ExtendedFluentIcon.RETRY, self.tr("Re-download"), lambda: self.onRedownloadTask(index, task_info)))
+        menu.addAction(self._create_action(ExtendedFluentIcon.RETRY, self.tr("Re-download"),
+                                           lambda: self.onRedownloadTask(index, task_info)))
 
-        #menu.addAction(self._create_action(FluentIcon.EDIT, self.tr("Edit download options"), lambda: self.onEditDownloadOptions(index, task_info)))
+        # menu.addAction(self._create_action(FluentIcon.EDIT, self.tr("Edit download options"), lambda: self.onEditDownloadOptions(index, task_info)))
 
         menu.addSeparator()
 
-        menu.addAction(self._create_action(FluentIcon.DELETE, self.tr("Delete"), lambda: self.onCancelTask(index, task_info)))
+        menu.addAction(
+            self._create_action(FluentIcon.DELETE, self.tr("Delete"), lambda: self.onCancelTask(index, task_info)))
 
         menu.exec(pos)
 
     def isEmpty(self):
         return self._model.rowCount() == 0
-    
+
     def setEmptyTextTip(self, text: str):
         self._emptyTextTip = text
 
@@ -138,9 +160,9 @@ class DownloadListView(ListView):
         if self._auto_update_count_badge:
             # 更新下载数量徽章
             signal_bus.download.update_downloading_count.emit(self._source_model.rowCount())
-    
+
     def removeTask(self, task_info: TaskInfo):
-        self._model.removeTask(task_info)
+        removed = self._model.removeTask(task_info)
 
         downloader_manager.remove(task_info.Basic.task_id)
 
@@ -157,6 +179,10 @@ class DownloadListView(ListView):
                 # 如果没有正在下载的任务了，发射下载完成的通知信号
                 downloader_manager.show_notification()
 
+        # 只有真的移除了才通知，避免重复删除时把总数减错
+        if removed:
+            self.taskRemoved.emit(1)
+
     def _beginAddQueriedTasks(self):
         self._in_adding_queried_tasks = True
 
@@ -164,12 +190,19 @@ class DownloadListView(ListView):
         self._in_adding_queried_tasks = False
 
     def batch_cancel(self):
+        before = self._source_model.rowCount()
+
         self._in_batch_cancel = True
 
         try:
             self._model.batch_cancel()
         finally:
             self._in_batch_cancel = False
+
+        removed = before - self._source_model.rowCount()
+
+        if removed > 0:
+            self.taskRemoved.emit(removed)
 
         if self._auto_manage_concurrent:
             self._schedule_auto_manage_concurrent_downloads()
@@ -200,10 +233,11 @@ class DownloadListView(ListView):
         # 与 model 交互以重新下载任务
         if task_info.Download.status in [DownloadStatus.MERGING, DownloadStatus.CONVERTING]:
             # 合并和转换过程中的任务不允许直接重新下载
-            signal_bus.toast.show.emit(ToastNotificationCategory.WARNING, "", self.tr("Tasks being processed by FFmpeg cannot be redownloaded"))
+            signal_bus.toast.show.emit(ToastNotificationCategory.WARNING, "",
+                                       self.tr("Tasks being processed by FFmpeg cannot be redownloaded"))
 
             return
-        
+
         signal_bus.toast.show.emit(ToastNotificationCategory.INFO, "", self.tr("Selected task will be redownloaded"))
 
         index.model().redownload(task_info)
@@ -215,17 +249,25 @@ class DownloadListView(ListView):
         pass
 
     def _create_action(self, icon, text, slot):
-        action = Action(icon = icon, text = text, parent = self)
+        action = Action(icon=icon, text=text, parent=self)
         action.triggered.connect(slot)
-        
+
         return action
-    
+
     @property
     def sort_by_key(self):
+        # 分页模式下 proxy 的 _sort_by_key 恒为 None，
+        # 必须返回外部注入的值，顶栏排序浮窗才能选中真实项
+        if self._pagination_sort_key is not None:
+            return self._pagination_sort_key
+
         return self._model._sort_by_key
 
     @property
     def sort_ascending(self):
+        if self._pagination_sort_key is not None:
+            return self._pagination_sort_ascending
+
         return self._model._ascending
 
     @property

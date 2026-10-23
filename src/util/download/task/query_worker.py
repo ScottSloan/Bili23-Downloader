@@ -35,12 +35,12 @@ class QueryWorker(QObject):
 
     def query(self):
         downloading_tasks = task_manager.query()
-        completed_tasks = task_manager.query(completed = True)
 
+        # 已完成列表由 DownloadInterface 分页加载，这里只取下载中任务，
+        # 第二个返回值保留空列表以维持 success 信号的签名
         downloading_tasks = self.get_task_list(downloading_tasks, update_status = True)
-        completed_tasks = self.get_task_list(completed_tasks, update_status = False)
 
-        self.success.emit(downloading_tasks, completed_tasks)
+        self.success.emit(downloading_tasks, [])
 
     def get_task_list(self, task_info_list: List[TaskInfo], update_status = True):
         task_list = []

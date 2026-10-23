@@ -12,8 +12,9 @@ from ..view_model import CoverQueryModelBase
 
 from typing import List
 
-class DownloadListModel(CoverQueryModelBase):    
-    def __init__(self, task_list: list, parent = None):
+
+class DownloadListModel(CoverQueryModelBase):
+    def __init__(self, task_list: list, parent=None):
         super().__init__(parent)
 
         self._cover_size = QSize(144, 80)
@@ -34,22 +35,22 @@ class DownloadListModel(CoverQueryModelBase):
             for row, task_info in enumerate(self._task_list)
         }
 
-    def rowCount(self, parent = QModelIndex()):
+    def rowCount(self, parent=QModelIndex()):
         return len(self._task_list)
-    
-    def data(self, index: QModelIndex, role = Qt.ItemDataRole.DisplayRole):
+
+    def data(self, index: QModelIndex, role=Qt.ItemDataRole.DisplayRole):
         if not index.isValid():
             return
-        
+
         task_info = self._task_list[index.row()]
-        
+
         match role:
             case Qt.ItemDataRole.DisplayRole:
                 return task_info.Basic.task_id
-            
+
             case Qt.ItemDataRole.UserRole:
                 return task_info
-    
+
     def getRow(self, task_info: TaskInfo):
         return self._row_by_task_id.get(self._get_task_id(task_info), -1)
 
@@ -88,7 +89,7 @@ class DownloadListModel(CoverQueryModelBase):
 
             self.dataChanged.emit(index, index)
 
-    def removeRow(self, row, parent = QModelIndex()):
+    def removeRow(self, row, parent=QModelIndex()):
         if 0 <= row < self.rowCount():
             self.beginRemoveRows(parent, row, row)
 
@@ -101,6 +102,16 @@ class DownloadListModel(CoverQueryModelBase):
             return True
 
         return False
+
+    def setPageTasks(self, task_info_list: List[TaskInfo]):
+        # 分页模式下整页替换：行号全部变化，必须 reset
+        self.beginResetModel()
+
+        self._task_list[:] = task_info_list
+
+        self.endResetModel()
+
+        self._rebuild_row_index()
 
     def removeTasks(self, task_info_list: List[TaskInfo]):
         # 批量移除。逐行调用 removeRow 时每次都要重建行索引，整体为 O(n²)，
@@ -125,7 +136,7 @@ class DownloadListModel(CoverQueryModelBase):
         # 在暂停与继续之间切换
 
         # 在此处实现懒加载，get不存在时会自动创建 Downloader 实例并加入管理器
-        downloader = downloader_manager.get(task_info, create_if_not_exists = True) 
+        downloader = downloader_manager.get(task_info, create_if_not_exists=True)
 
         match task_info.Download.status:
             case DownloadStatus.QUEUED:
@@ -156,7 +167,7 @@ class DownloadListModel(CoverQueryModelBase):
         match task_info.Download.status:
             case DownloadStatus.COMPLETED:
                 # 数据库删除交由写线程处理，界面立即移除该行
-                task_manager.delete(task_info, completed = True)
+                task_manager.delete(task_info, completed=True)
 
                 self.removeRow(self.getRow(task_info))
 
@@ -185,7 +196,7 @@ class DownloadListModel(CoverQueryModelBase):
         for task in self._targetTasks(task_list):
             if task.Download.status in [DownloadStatus.DOWNLOADING, DownloadStatus.QUEUED]:
                 task.Download.status = DownloadStatus.PAUSED
-                downloader = downloader_manager.get(task, create_if_not_exists = False)
+                downloader = downloader_manager.get(task, create_if_not_exists=False)
 
                 if downloader:
                     downloader.pause()
@@ -211,7 +222,7 @@ class DownloadListModel(CoverQueryModelBase):
                     remaining_tasks.append(task)
 
         if completed_tasks:
-            task_manager.delete_many(completed_tasks, completed = True)
+            task_manager.delete_many(completed_tasks, completed=True)
 
             self.removeTasks(completed_tasks)
 
@@ -312,7 +323,6 @@ class DownloadListModel(CoverQueryModelBase):
             return
 
         if self.isRowInVisibleArea(row):
-
             model_index = self.index(row)
 
             self.dataChanged.emit(model_index, model_index)
@@ -332,9 +342,8 @@ class DownloadListModel(CoverQueryModelBase):
     def redownload(self, task_info: TaskInfo):
         # 重新下载任务
 
-        downloader = downloader_manager.get(task_info, create_if_not_exists = False)
+        downloader = downloader_manager.get(task_info, create_if_not_exists=False)
 
-  
         if task_info.Download.status == DownloadStatus.COMPLETED:
             # 已完成的任务需要从完成的列表中移动到正在下载的列表
             task_manager.reset(task_info)

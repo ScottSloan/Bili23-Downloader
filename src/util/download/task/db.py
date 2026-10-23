@@ -12,6 +12,14 @@ import logging
 logger = logging.getLogger(__name__)
 
 class TaskDatabase(Database):
+    # 已完成列表分页查询的排序键 -> SQL 表达式。
+    # completed_time 与 file_size 有对应索引，走索引时 SQLite 直接取前 N 条，不需要对全表排序
+    _COMPLETED_ORDER_COLUMNS = {
+        "completed_time": '"completed_time"',
+        "show_title": '"title" COLLATE NOCASE',
+        "file_size": '"file_size"',
+    }
+
     def __init__(self):
         super().__init__()
 
@@ -24,6 +32,7 @@ class TaskDatabase(Database):
 
         # 放在升级之后：旧版库升级时会重建两张表，先建的索引会随旧表一起消失
         self._create_bvid_index()
+        self._create_extra_indexes()
 
     def _check_should_upgrade(self):
         # 配置版本与任务数据库版本并不等价。始终检查实际表结构，
@@ -93,6 +102,10 @@ class TaskDatabase(Database):
             if not required_columns.issubset(column_names):
                 return True
 
+        # completed_task 需要 file_size 列，供分页按文件大小排序时走索引。
+        if "file_size" not in self._get_table_columns("completed_task"):
+            return True
+
         return False
 
     def _get_table_columns(self, table_name: str):
@@ -120,6 +133,7 @@ class TaskDatabase(Database):
                 "cover_id"	TEXT,
                 "title"	TEXT,
                 "completed_time"	INTEGER,
+                "file_size"	INTEGER DEFAULT 0,
                 "data"	TEXT,
                 PRIMARY KEY("id" AUTOINCREMENT)
             );
@@ -156,6 +170,16 @@ class TaskDatabase(Database):
             # 但绝不能因此让整个任务数据库初始化失败
             logger.exception("创建 bvid 索引失败")
 
+    def _create_extra_indexes(self):
+        # 升级会 DROP + CREATE 表，check_and_create_table 里建的时间索引随之丢失。
+        # 这里在升级之后补建，CREATE INDEX IF NOT EXISTS 幂等，未升级时也不会重复建。
+        # file_size 是本次新增的列，只有 completed_task 需要
+        self.execute_script("""
+            CREATE INDEX IF NOT EXISTS "idx_download_task_created_time" ON "download_task" ("created_time");
+            CREATE INDEX IF NOT EXISTS "idx_completed_task_completed_time" ON "completed_task" ("completed_time");
+            CREATE INDEX IF NOT EXISTS "idx_completed_task_file_size" ON "completed_task" ("file_size");
+            """)
+
     def query_tasks(self, completed: bool = False, limit: int = None):
         """
         读取任务记录
@@ -172,6 +196,42 @@ class TaskDatabase(Database):
         return self.query(
             f'SELECT data FROM "{table}" ORDER BY "{order_column}" DESC LIMIT ?', (limit,)
         )
+
+    def query_completed_page(self, offset: int, limit: int, order_by: str = "completed_time", ascending: bool = False, keyword: str = ""):
+        # 分页查询已完成任务。排序键走索引，SQLite 无需全表排序
+        order_expr = self._COMPLETED_ORDER_COLUMNS.get(order_by, '"completed_time"')
+        direction = "ASC" if ascending else "DESC"
+
+        params = []
+        where = ""
+
+        if keyword:
+            # 只搜标题与文件名。子串匹配用不上索引，界面层有 300 ms 防抖
+            where = ' WHERE ("title" LIKE ? OR json_extract("data", \'$.File.name\') LIKE ?)'
+            like = f"%{keyword}%"
+            params.extend([like, like])
+
+        sql = f'SELECT data FROM "completed_task"{where} ORDER BY {order_expr} {direction} LIMIT ? OFFSET ?'
+        params.extend([limit, offset])
+
+        return self.query(sql, tuple(params))
+
+    def count_completed(self, keyword: str = "") -> int:
+        if keyword:
+            like = f"%{keyword}%"
+            result = self.query(
+                'SELECT COUNT(*) FROM "completed_task" WHERE ("title" LIKE ? OR json_extract("data", \'$.File.name\') LIKE ?)',
+                (like, like)
+            )
+
+        else:
+            result = self.query('SELECT COUNT(*) FROM "completed_task"')
+
+        return result[0][0] if result else 0
+
+    def clear_completed(self):
+        # 分页模式下「全部清除」必须清空整张表，而不是只清当前页的条目
+        self.execute('DELETE FROM "completed_task"')
 
     def query_task_by_id(self, task_id: str, completed: bool = False):
         """按 task_id 直接取一条，task_id 上有 UNIQUE 约束，不必扫全表"""
@@ -193,12 +253,24 @@ class TaskDatabase(Database):
         if not timestamp:
             timestamp = get_timestamp()
 
+        if completed:
+            # completed_task 表带 file_size 列，供分页按文件大小排序走索引
+            return (
+                task_info.Basic.task_id,                                    # task_id
+                self._calc_hash_id(task_info),                              # hash_id
+                task_info.Basic.cover_id,                                   # cover_id
+                task_info.Basic.show_title,                                 # title
+                timestamp,                                                  # completed_time
+                task_info.Download.total_size or 0,                         # file_size
+                dumps(task_info.to_dict())                                  # data
+            )
+
         return (
             task_info.Basic.task_id,                                    # task_id
             self._calc_hash_id(task_info),                              # hash_id
             task_info.Basic.cover_id,                                   # cover_id
             task_info.Basic.show_title,                                 # title
-            timestamp,                                                  # created_time or completed_time
+            timestamp,                                                  # created_time
             dumps(task_info.to_dict())                                  # data
         )
 
@@ -213,8 +285,8 @@ class TaskDatabase(Database):
 
         if completed:
             self.executemany("""
-                INSERT INTO completed_task (task_id, hash_id, cover_id, title, completed_time, data)
-                VALUES (?, ?, ?, ?, ?, ?)
+                INSERT INTO completed_task (task_id, hash_id, cover_id, title, completed_time, file_size, data)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
             """, info_list)
         else:
             self.executemany("""
@@ -263,8 +335,8 @@ class TaskDatabase(Database):
         self.execute_batch([
             ("DELETE FROM download_task WHERE task_id = ?", (record[0],)),
             ("""
-                INSERT OR REPLACE INTO completed_task (task_id, hash_id, cover_id, title, completed_time, data)
-                VALUES (?, ?, ?, ?, ?, ?)
+                INSERT OR REPLACE INTO completed_task (task_id, hash_id, cover_id, title, completed_time, file_size, data)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
             """, record)
         ])
 
@@ -374,14 +446,26 @@ class TaskDatabase(Database):
                 if not timestamp:
                     timestamp = get_timestamp()
 
-                records.append((
-                    task_info.Basic.task_id,
-                    self._calc_hash_id(task_info),
-                    task_info.Basic.cover_id,
-                    task_info.Basic.show_title,
-                    timestamp,
-                    dumps(task_info.to_dict())
-                ))
+                if completed:
+                    records.append((
+                        task_info.Basic.task_id,
+                        self._calc_hash_id(task_info),
+                        task_info.Basic.cover_id,
+                        task_info.Basic.show_title,
+                        timestamp,
+                        task_info.Download.total_size or 0,
+                        dumps(task_info.to_dict())
+                    ))
+
+                else:
+                    records.append((
+                        task_info.Basic.task_id,
+                        self._calc_hash_id(task_info),
+                        task_info.Basic.cover_id,
+                        task_info.Basic.show_title,
+                        timestamp,
+                        dumps(task_info.to_dict())
+                    ))
 
             return records
 
@@ -418,6 +502,7 @@ class TaskDatabase(Database):
                     cover_id TEXT,
                     title TEXT,
                     completed_time INTEGER,
+                    file_size INTEGER DEFAULT 0,
                     data TEXT,
                     PRIMARY KEY(id AUTOINCREMENT)
                 )
@@ -430,8 +515,8 @@ class TaskDatabase(Database):
                 VALUES (?, ?, ?, ?, ?, ?)
             """, download_records)
             cursor.executemany("""
-                INSERT INTO completed_task (task_id, hash_id, cover_id, title, completed_time, data)
-                VALUES (?, ?, ?, ?, ?, ?)
+                INSERT INTO completed_task (task_id, hash_id, cover_id, title, completed_time, file_size, data)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
             """, completed_records)
 
             conn.commit()

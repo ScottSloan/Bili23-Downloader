@@ -1,4 +1,5 @@
-from ...common.enum import DownloadStatus, DownloadType, NumberingType, DuplicateDownloadResolution, ToastNotificationCategory
+from ...common.enum import DownloadStatus, DownloadType, NumberingType, DuplicateDownloadResolution, \
+    ToastNotificationCategory
 from ...common.data import reversed_video_quality_map, reversed_audio_quality_map, video_codec_str_map
 from ...common._json import dumps, loads
 from ...common.timestamp import get_timestamp_ms
@@ -29,6 +30,7 @@ import re
 
 logger = logging.getLogger(__name__)
 
+
 class TaskManager:
     def __init__(self):
         self.db_manager = TaskDatabase()
@@ -42,9 +44,9 @@ class TaskManager:
         self._update_flush_scheduled = False
         # 所有对 task.db 的写入都在这一个线程上串行执行：既保证了顺序，
         # 也避免了 GUI 线程与写线程争抢 SQLite 写锁。
-        self._update_executor = ThreadPoolExecutor(max_workers = 1, thread_name_prefix = "task-db")
+        self._update_executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="task-db")
         # 删除临时文件可能涉及大量磁盘操作，与数据库写入互不依赖，单独放一个线程执行。
-        self._cancel_executor = ThreadPoolExecutor(max_workers = 1, thread_name_prefix = "task-cancel")
+        self._cancel_executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="task-cancel")
 
         signal_bus.download.create_task.connect(self._create_async)
 
@@ -80,18 +82,22 @@ class TaskManager:
         task_info.Basic.cover_id = cover_manager.arrange_cover_id(episode_info.get("cover", ""))
         task_info.Basic.show_title = episode_info.get("title", "")
         task_info.Basic.created_time = get_timestamp_ms()
-        
+
         # DownloadInfo
         task_info.Download.status = DownloadStatus.QUEUED
         task_info.Download.type = self.__determine_download_type(options)
 
-        task_info.Download.video_quality_id = pick_option(options, "video_quality_id", runtime.download.video_quality_id)
-        task_info.Download.audio_quality_id = pick_option(options, "audio_quality_id", runtime.download.audio_quality_id)
+        task_info.Download.video_quality_id = pick_option(options, "video_quality_id",
+                                                          runtime.download.video_quality_id)
+        task_info.Download.audio_quality_id = pick_option(options, "audio_quality_id",
+                                                          runtime.download.audio_quality_id)
         task_info.Download.video_codec_id = pick_option(options, "video_codec_id", runtime.download.video_codec_id)
         # 这两项与下面 __determine_download_type 里的「下载哪几路流」一样，
         # 回落源是 config 上的配置项（设置界面与下载选项对话框改的是同一份值）
-        task_info.Download.merge_video_audio = pick_option(options, "merge_video_audio", config.get(config.merge_video_audio))
-        task_info.Download.keep_original_files = pick_option(options, "keep_original_files", config.get(config.keep_original_files))
+        task_info.Download.merge_video_audio = pick_option(options, "merge_video_audio",
+                                                           config.get(config.merge_video_audio))
+        task_info.Download.keep_original_files = pick_option(options, "keep_original_files",
+                                                             config.get(config.keep_original_files))
 
         # EpisodeInfo
         task_info.Episode.from_dict(self.__update_episode_info(episode_info, number))
@@ -117,7 +123,8 @@ class TaskManager:
     def __trim_download_type(self, task_info: TaskInfo):
         if task_info.Episode.attribute & Attribute.LESSON_BIT:
             # 会员购商城课程没有 aid / cid，也不返回封面
-            task_info.Download.type &= ~(DownloadType.DANMAKU | DownloadType.SUBTITLE | DownloadType.CHAPTER | DownloadType.COVER)
+            task_info.Download.type &= ~(
+                        DownloadType.DANMAKU | DownloadType.SUBTITLE | DownloadType.CHAPTER | DownloadType.COVER)
 
     def __determine_download_type(self, options: dict = None):
         # 确定下载类型
@@ -208,7 +215,7 @@ class TaskManager:
         if not path_str:
             # 以前这里是 Path(None)，抛 TypeError 被 create() 外层吞掉，
             # 条目静默消失，用户只看到数量对不上
-            raise ValueError("命名规则无法生成文件名：{rule!r}".format(rule = task_info.Naming.rule))
+            raise ValueError("命名规则无法生成文件名：{rule!r}".format(rule=task_info.Naming.rule))
 
         path = Path(path_str)
 
@@ -368,6 +375,39 @@ class TaskManager:
 
         return None
 
+    def query_completed_page(
+            self,
+            offset: int,
+            limit: int,
+            order_by: str = "completed_time",
+            ascending: bool = False,
+            keyword: str = ""
+    ) -> List[TaskInfo]:
+        result = self.db_manager.query_completed_page(offset, limit, order_by, ascending, keyword)
+
+        return [self._build_task_info(entry) for entry in result]
+
+    def count_completed(self, keyword: str = "") -> int:
+        return self.db_manager.count_completed(keyword)
+
+    def clear_completed(self, timeout: float = 10.0):
+        # 分页模式下「全部清除」要清空整张表。写入投递到唯一的写线程，
+        # 同步等待完成后再让界面刷新，避免界面读到尚未删除的数据
+        try:
+            self._update_executor.submit(self._clear_completed_storage).result(timeout=timeout)
+
+        except Exception:
+            logger.exception("清空已完成任务失败或超时")
+
+    def _clear_completed_storage(self):
+        self._flush_pending_snapshots()
+
+        try:
+            self.db_manager.clear_completed()
+
+        except Exception:
+            logger.exception("清空已完成任务失败")
+
     def count(self, completed: bool = False) -> int:
         return self.db_manager.count_tasks(completed)
 
@@ -401,7 +441,7 @@ class TaskManager:
         # 退出前把已投递的写入落盘。写入都在同一个线程上排队，
         # 因此只要等待队尾的任务完成即可，超时后不再继续阻塞退出流程。
         try:
-            self._update_executor.submit(self._flush_pending_snapshots).result(timeout = timeout)
+            self._update_executor.submit(self._flush_pending_snapshots).result(timeout=timeout)
 
         except Exception:
             logger.exception("等待下载任务写入完成超时")
@@ -541,7 +581,7 @@ class TaskManager:
         """
         self._discard_pending_updates([task_info.Basic.task_id])
 
-        record = self.db_manager.build_record(task_info, completed = True)
+        record = self.db_manager.build_record(task_info, completed=True)
 
         future = self._update_executor.submit(self._mark_as_completed_storage, record)
 
@@ -553,7 +593,7 @@ class TaskManager:
             # 因此这里不存在互相等待的可能。超时通常意味着前面排着一批大的写入，
             # 或 SQLite 正在等写锁（busy_timeout 30s），此时放弃等待继续走流程，
             # 写入仍会在写线程上完成，只是不再有落盘保证
-            future.result(timeout = timeout)
+            future.result(timeout=timeout)
 
         except Exception:
             logger.exception("等待标记下载任务为已完成的写入落盘超时: %s", record[0])
@@ -652,9 +692,9 @@ class TaskManager:
                     logger.info("已跳过重复下载任务: %s", episode_info.get("title", ""))
 
                     signal_bus.download.show_skip_duplicate_download_toast.emit(episode_info.get("title", ""))
-                    
+
                     return True
-                
+
                 case DuplicateDownloadResolution.ALWAYS_ASK:
                     # 询问用户是否继续下载。后台线程等待主线程弹窗返回结果。
                     result_info = {"skip": True, "not_ask_again": False}
@@ -663,14 +703,16 @@ class TaskManager:
                     signal_bus.download.show_duplicate_download_dialog.emit(episode_info, result_info, done_event)
                     done_event.wait()
 
-                    logger.info("用户选择%s重复下载任务: %s", "跳过" if result_info["skip"] else "继续", episode_info.get("title", ""))
+                    logger.info("用户选择%s重复下载任务: %s", "跳过" if result_info["skip"] else "继续",
+                                episode_info.get("title", ""))
 
                     return result_info["skip"]
-                    
+
         return result
 
     def _calc_hash_id(self, episode_info: dict):
         # 根据 episode_info 计算 hash_id
         return calc_episode_hash_id(episode_info)
-    
+
+
 task_manager = TaskManager()
