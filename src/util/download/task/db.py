@@ -11,12 +11,51 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 class TaskDatabase(Database):
+    # 已完成列表分页查询的排序键 -> SQL 表达式。
+    # 三个键都有对应索引，走索引时 SQLite 直接取前 N 条，不需要对全表排序。
+    # title 的索引必须带 COLLATE NOCASE，否则普通（BINARY）索引无法匹配这里的
+    # ORDER BY "title" COLLATE NOCASE，SQLite 会退化为全表排序。
+    #
+    # 新增排序键时必须同步更新三处：本映射、_create_extra_indexes 的索引、
+    # config.completed_list_sort_by 的 OptionsValidator，否则新键会静默回落到
+    # completed_time
+    _COMPLETED_ORDER_COLUMNS = {
+        "completed_time": '"completed_time"',
+        "show_title": '"title" COLLATE NOCASE',
+        "file_size": '"file_size"',
+    }
+
+    # 已完成列表的搜索字段：与旧版客户端 _getSearchableText 逐字对应。
+    # title 是 completed_task 的普通列，其余 8 个字段从 data JSON 中提取。
+    # 子串匹配用不上索引，每次查询是全表扫 + N×9 次 LIKE，界面层有 300 ms 防抖。
+    #
+    # 新增搜索字段时必须同步更新客户端 proxy_model._getSearchableText，
+    # 否则旧版全量模式下能搜到的字段在分页模式下会搜不到
+    _COMPLETED_SEARCH_FIELDS = (
+        '"title"',
+        'json_extract("data", \'$.File.name\')',
+        'json_extract("data", \'$.Episode.uploader\')',
+        'json_extract("data", \'$.Episode.bvid\')',
+        'json_extract("data", \'$.Episode.parent_title\')',
+        'json_extract("data", \'$.Episode.collection_title\')',
+        'json_extract("data", \'$.Episode.series_title\')',
+        'json_extract("data", \'$.Episode.season_title\')',
+        'json_extract("data", \'$.Episode.favorites_name\')',
+    )
+
     def __init__(self):
         super().__init__()
 
         self.path = Path(appdata_path) / "Bili23 Downloader" / "task.db"
         self.path.parent.mkdir(parents = True, exist_ok = True)
+
+        # 升级失败标记：旧库首次启动走 _upgrade() 时若失败（磁盘满、只读文件系统、
+        # 进程被 kill），不抛异常让应用无法启动，而是标记本字段。
+        # 已完成列表相关的读接口返回空/0，写接口直接 return，用户至少能正常打开
+        # 应用、使用下载中列表。再次启动会重试升级，成功则恢复正常
+        self.upgrade_failed = False
 
         self.check_and_create_table()
 
@@ -24,20 +63,31 @@ class TaskDatabase(Database):
 
         # 放在升级之后：旧版库升级时会重建两张表，先建的索引会随旧表一起消失
         self._create_bvid_index()
+        self._create_extra_indexes()
 
     def _check_should_upgrade(self):
         # 配置版本与任务数据库版本并不等价。始终检查实际表结构，
         # 避免配置升级成功但数据库迁移失败后永久跳过迁移。
-        if self._needs_upgrade():
-            logger.info("检测到旧版下载任务数据库，正在进行升级")
-            self._upgrade()
-
-            # 升级时已按当前算法重算过 hash_id，直接打上版本号
-            self.set_user_version(HASH_ID_VERSION)
-
+        if not self._needs_upgrade():
+            self._check_should_rehash()
             return
 
-        self._check_should_rehash()
+        logger.info("检测到旧版下载任务数据库，正在进行升级")
+
+        try:
+            self._upgrade()
+
+        except Exception:
+            # 升级失败不抛出：TaskDatabase.__init__ 是 TaskManager.__init__ 的
+            # 同步调用，异常传播出去会让应用直接启动失败。降级为「已完成列表
+            # 不可用」让应用能起来，由 DownloadInterface 提示用户
+            logger.exception("升级下载任务数据库失败，已完成列表将不可用")
+
+            self.upgrade_failed = True
+            return
+
+        # 升级时已按当前算法重算过 hash_id，直接打上版本号
+        self.set_user_version(HASH_ID_VERSION)
 
     def _check_should_rehash(self):
         # 表结构没变，但 hash_id 的算法可能已经变化。
@@ -93,6 +143,18 @@ class TaskDatabase(Database):
             if not required_columns.issubset(column_names):
                 return True
 
+        completed_columns = self._get_table_columns("completed_task")
+
+        # completed_task 需要 file_size 列（分页按文件大小排序走索引）
+        if "file_size" not in completed_columns:
+            return True
+
+        # completed_task 需要 media_type_group 列（媒体筛选走索引）。
+        # 之前版本用 json_extract 内联筛选，4 万行 count 要 200 ms；
+        # 这一列建好后筛选走索引，4 万行 0.5 ms 以内
+        if "media_type_group" not in completed_columns:
+            return True
+
         return False
 
     def _get_table_columns(self, table_name: str):
@@ -120,24 +182,24 @@ class TaskDatabase(Database):
                 "cover_id"	TEXT,
                 "title"	TEXT,
                 "completed_time"	INTEGER,
+                "file_size"	INTEGER DEFAULT 0,
+                "media_type_group" TEXT DEFAULT '',
                 "data"	TEXT,
                 PRIMARY KEY("id" AUTOINCREMENT)
             );
             """)
 
         # 旧版表可能还没有 hash_id，不能在迁移前直接创建索引。
+        # hash_id 索引依赖 hash_id 列存在，所以必须留在这里单独判断。
+        #
+        # 其他索引（created_time / completed_time / title / file_size / media_type_group）
+        # 全部放到 _create_extra_indexes（带 try/except），避免这里建索引失败让
+        # TaskDatabase.__init__ 抛异常 —— 与 _create_bvid_index 的保护一致
         if "hash_id" in self._get_table_columns("download_task") and "hash_id" in self._get_table_columns("completed_task"):
             self.execute_script("""
                 CREATE INDEX IF NOT EXISTS "idx_download_task_hash_id" ON "download_task" ("hash_id");
                 CREATE INDEX IF NOT EXISTS "idx_completed_task_hash_id" ON "completed_task" ("hash_id");
                 """)
-
-        # 按时间倒序取最近若干条是列表查询的固定形态，没有索引时 SQLite 要全表扫加排序。
-        # 索引不改变数据本身，CREATE INDEX IF NOT EXISTS 是幂等的，无需递增表结构版本
-        self.execute_script("""
-            CREATE INDEX IF NOT EXISTS "idx_download_task_created_time" ON "download_task" ("created_time");
-            CREATE INDEX IF NOT EXISTS "idx_completed_task_completed_time" ON "completed_task" ("completed_time");
-            """)
 
     def _create_bvid_index(self):
         # 收藏夹、个人空间等需要二次解析的条目解析时没有 cid，算不出 hash_id，
@@ -156,6 +218,34 @@ class TaskDatabase(Database):
             # 但绝不能因此让整个任务数据库初始化失败
             logger.exception("创建 bvid 索引失败")
 
+    def _create_extra_indexes(self):
+        # 所有非 hash_id / bvid 的索引都集中在这里，统一用 try/except 保护：
+        # 索引只影响查询速度，失败不应让 TaskDatabase.__init__ 抛异常。
+        #
+        # 升级会 DROP + CREATE 表，先建的索引会随旧表一起消失，
+        # 所以本方法必须在 _check_should_upgrade 之后调用。
+        #
+        # 下载中列表与已完成列表的索引分开 try/except：已完成列表的某个索引
+        # 因列缺失等原因失败时，不影响下载中列表索引创建
+        try:
+            self.execute_script("""
+                CREATE INDEX IF NOT EXISTS "idx_download_task_created_time" ON "download_task" ("created_time");
+                """)
+
+        except Exception:
+            logger.exception("创建下载中列表索引失败")
+
+        try:
+            self.execute_script("""
+                CREATE INDEX IF NOT EXISTS "idx_completed_task_completed_time" ON "completed_task" ("completed_time");
+                CREATE INDEX IF NOT EXISTS "idx_completed_task_file_size" ON "completed_task" ("file_size");
+                CREATE INDEX IF NOT EXISTS "idx_completed_task_title" ON "completed_task" ("title" COLLATE NOCASE);
+                CREATE INDEX IF NOT EXISTS "idx_completed_task_media_type_group" ON "completed_task" ("media_type_group");
+                """)
+
+        except Exception:
+            logger.exception("创建已完成列表索引失败")
+
     def query_tasks(self, completed: bool = False, limit: int = None):
         """
         读取任务记录
@@ -172,6 +262,200 @@ class TaskDatabase(Database):
         return self.query(
             f'SELECT data FROM "{table}" ORDER BY "{order_column}" DESC LIMIT ?', (limit,)
         )
+
+    @staticmethod
+    def _escape_like(value: str) -> str:
+        # SQLite LIKE 里 % 与 _ 是通配符，反斜杠是默认的转义字符。
+        # 不转义的话用户输入 "%" 会匹配所有记录，而 delete_completed_by_filter("%")
+        # 会清空整表 —— 原版 proxy 用 Python 的 `in` 是字面匹配，这里必须对齐
+        return value.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+
+    def _build_search_clause(self, keyword: str):
+        """
+        构造已完成任务的关键词 WHERE 子句
+
+        语义与旧版客户端 _getSearchableText 一致：空格分词，每个词都要命中，
+        每个词可以落在任意一个字段里。整串当作一个 keyword 会把「UP主名 合集名」
+        变成含中间空格的子串匹配，多关键词 AND 的能力就丢了。
+        """
+        keywords = keyword.strip().casefold().split()
+
+        if not keywords:
+            return "", []
+
+        keyword_clauses = []
+        params = []
+
+        for kw in keywords:
+            like = f"%{self._escape_like(kw)}%"
+            clauses = [f"{field} LIKE ? ESCAPE '\\'" for field in self._COMPLETED_SEARCH_FIELDS]
+
+            keyword_clauses.append(f"({' OR '.join(clauses)})")
+            params.extend([like] * len(self._COMPLETED_SEARCH_FIELDS))
+
+        return " AND ".join(keyword_clauses), params
+
+    @staticmethod
+    def _calc_media_type_group(task_info: TaskInfo) -> str:
+        """
+        根据 task_info 计算 media_type_group 单值
+
+        与客户端 get_media_type_key 逐条对应：
+        AUDIO > COURSE > BANGUMI > INTERACTIVE > VIDEO > ""（未知）
+
+        build_record 时算好存入 completed_task.media_type_group，之后筛选
+        只需 WHERE media_type_group IN (...)，走索引，4 万行 0.5 ms 以内。
+
+        之前版本用 json_extract 在 SQL 里展开互斥优先级链（AUDIO > COURSE >
+        BANGUMI > INTERACTIVE > VIDEO，每个低优先级类别都要 NOT 排除所有
+        高优先级类别）。展开后单行评估可能触发 15 次以上 json_extract，
+        4 万行 query + count 要 200-900 ms（benchmark 实测）。存成单值后
+        筛选可以走索引，彻底摆脱 json_extract 的全表解析开销。
+        """
+        from ...parse.episode.tree import Attribute
+        from ...common.enum import DownloadType
+
+        attribute = task_info.Episode.attribute
+        download_type = task_info.Download.type
+
+        # audio_only = (type & AUDIO) != 0 AND (type & VIDEO) == 0
+        audio_only = (download_type & int(DownloadType.AUDIO)) != 0 and (download_type & int(DownloadType.VIDEO)) == 0
+
+        if audio_only or (attribute & int(Attribute.AUDIO_BIT)) != 0:
+            return "AUDIO"
+        if (attribute & (int(Attribute.CHEESE_BIT) | int(Attribute.LESSON_BIT))) != 0:
+            return "COURSE"
+        if (attribute & int(Attribute.BANGUMI_BIT)) != 0:
+            return "BANGUMI"
+        if (attribute & int(Attribute.INTERACTIVE_BIT)) != 0:
+            return "INTERACTIVE"
+        if (attribute & int(Attribute.VIDEO_BIT)) != 0:
+            return "VIDEO"
+
+        return ""
+
+    def _build_filter_clause(self, keyword: str = "", media_types = None):
+        """
+        构造已完成任务的完整筛选 WHERE 子句：关键词 AND 媒体类型
+
+        与旧版 proxy 的 _batchTargets 语义一致：关键词和媒体筛选同时生效时
+        是 AND 关系。keywords 为空时只按媒体类型筛，media_types 为空时只按
+        关键词筛，都为空时返回 ("", []) 表示不筛。
+        """
+        clauses = []
+        params = []
+
+        if keyword:
+            keyword_sql, keyword_params = self._build_search_clause(keyword)
+
+            if keyword_sql:
+                clauses.append(f"({keyword_sql})")
+                params.extend(keyword_params)
+
+        if media_types:
+            # UI 的 get_media_type_group_dict 只提供四个组：VIDEO / BANGUMI /
+            # COURSE / AUDIO。其中 VIDEO 组同时包含 VIDEO 与 INTERACTIVE
+            # （互动视频归在「视频」里，不单列选项），这里展开成两个值
+            groups = set()
+
+            if "VIDEO" in media_types or "INTERACTIVE" in media_types:
+                groups.add("VIDEO")
+                groups.add("INTERACTIVE")
+            if "BANGUMI" in media_types:
+                groups.add("BANGUMI")
+            if "COURSE" in media_types:
+                groups.add("COURSE")
+            if "AUDIO" in media_types:
+                groups.add("AUDIO")
+
+            if groups:
+                placeholders = ", ".join("?" * len(groups))
+
+                clauses.append(f'"media_type_group" IN ({placeholders})')
+                params.extend(sorted(groups))
+
+        if not clauses:
+            return "", []
+
+        return " AND ".join(clauses), params
+
+    def query_completed_page(
+        self,
+        offset: int,
+        limit: int,
+        order_by: str = "completed_time",
+        ascending: bool = False,
+        keyword: str = "",
+        media_types = None,
+    ):
+        # 升级失败的库：completed_task 表结构不对，任何查询都会报错。
+        # 直接返回空列表，让 UI 显示「No completed downloads」而不是崩溃
+        if self.upgrade_failed:
+            return []
+
+        # 未定义的排序键静默回落到 completed_time，记一条 warning 便于排查
+        if order_by not in self._COMPLETED_ORDER_COLUMNS:
+            logger.warning("未知的已完成列表排序键 %r，回落到 completed_time", order_by)
+            order_by = "completed_time"
+
+        order_expr = self._COMPLETED_ORDER_COLUMNS[order_by]
+        direction = "ASC" if ascending else "DESC"
+
+        where_sql, where_params = self._build_filter_clause(keyword, media_types)
+
+        where = f" WHERE {where_sql}" if where_sql else ""
+
+        # 必须以 "id" 作为次级排序键：同值时 SQLite 不保证稳定顺序，
+        # 分页时同一行可能出现在两页，或某行永远不出现在任何页。
+        # id 是自增主键，唯一且单调，作为 tie-breaker 永远稳定
+        sql = f'SELECT data FROM "completed_task"{where} ORDER BY {order_expr} {direction}, "id" {direction} LIMIT ? OFFSET ?'
+
+        params = list(where_params) + [limit, offset]
+
+        return self.query(sql, tuple(params))
+
+    def count_completed(self, keyword: str = "", media_types = None) -> int:
+        if self.upgrade_failed:
+            return 0
+
+        where_sql, params = self._build_filter_clause(keyword, media_types)
+
+        where = f" WHERE {where_sql}" if where_sql else ""
+
+        result = self.query(f'SELECT COUNT(*) FROM "completed_task"{where}', tuple(params))
+
+        return result[0][0] if result else 0
+
+    def clear_completed(self):
+        if self.upgrade_failed:
+            return
+
+        # 分页模式下「全部清除」必须清空整张表，而不是只清当前页的条目
+        self.execute('DELETE FROM "completed_task"')
+
+    def delete_completed_by_filter(self, keyword: str = "", media_types = None):
+        """
+        按筛选条件删除已完成任务
+
+        关键词和媒体类型同时存在时是 AND 关系，与旧版 proxy 的 _batchTargets
+        语义一致。都为空时退回清空整表。
+        """
+        if self.upgrade_failed:
+            return
+
+        where_sql, params = self._build_filter_clause(keyword, media_types)
+
+        if not where_sql:
+            self.clear_completed()
+            return
+
+        self.execute(f'DELETE FROM "completed_task" WHERE {where_sql}', tuple(params))
+
+    def delete_completed_by_keyword(self, keyword: str = ""):
+        # 兼容旧调用方与测试；生产路径请用 delete_completed_by_filter。
+        # 保留这个薄包装是因为 test_completed_pagination_db.py 里有一个用例
+        # 专门验证它仍然工作，新代码不应再调
+        self.delete_completed_by_filter(keyword, None)
 
     def query_task_by_id(self, task_id: str, completed: bool = False):
         """按 task_id 直接取一条，task_id 上有 UNIQUE 约束，不必扫全表"""
@@ -193,12 +477,28 @@ class TaskDatabase(Database):
         if not timestamp:
             timestamp = get_timestamp()
 
+        if completed:
+            # completed_task 表带 file_size / media_type_group 列：
+            # - file_size 供分页按文件大小排序走索引；
+            # - media_type_group 供媒体筛选走索引（避免每次 WHERE 展开
+            #   15+ 次 json_extract）
+            return (
+                task_info.Basic.task_id,                                    # task_id
+                self._calc_hash_id(task_info),                              # hash_id
+                task_info.Basic.cover_id,                                   # cover_id
+                task_info.Basic.show_title,                                 # title
+                timestamp,                                                  # completed_time
+                task_info.Download.total_size or 0,                         # file_size
+                self._calc_media_type_group(task_info),                     # media_type_group
+                dumps(task_info.to_dict())                                  # data
+            )
+
         return (
             task_info.Basic.task_id,                                    # task_id
             self._calc_hash_id(task_info),                              # hash_id
             task_info.Basic.cover_id,                                   # cover_id
             task_info.Basic.show_title,                                 # title
-            timestamp,                                                  # created_time or completed_time
+            timestamp,                                                  # created_time
             dumps(task_info.to_dict())                                  # data
         )
 
@@ -213,8 +513,8 @@ class TaskDatabase(Database):
 
         if completed:
             self.executemany("""
-                INSERT INTO completed_task (task_id, hash_id, cover_id, title, completed_time, data)
-                VALUES (?, ?, ?, ?, ?, ?)
+                INSERT INTO completed_task (task_id, hash_id, cover_id, title, completed_time, file_size, media_type_group, data)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             """, info_list)
         else:
             self.executemany("""
@@ -258,15 +558,27 @@ class TaskDatabase(Database):
 
             self.execute(f"DELETE FROM {table} WHERE task_id IN ({placeholders})", tuple(batch))
 
-    def move_to_completed(self, record: tuple):
-        # 从下载中表移出并写入已完成表，两步在同一事务内完成，避免中途失败导致任务丢失
+    def move_to_completed(self, record: tuple) -> bool:
+        # 升级失败的库：completed_task 表仍缺 file_size / media_type_group 列
+        # （升级事务已回滚），写入 8 元组会 SQL 报错。这里直接返回 False，
+        # 让调用方知道归档被跳过，任务留在 download_task 里，重启并升级成功后
+        # 会重新出现为「下载中」，用户可以重新处理。不做 DELETE + INSERT 的
+        # 「半截操作」，避免 DELETE 已提交、INSERT 失败导致任务记录永久丢失
+        if self.upgrade_failed:
+            logger.warning("数据库升级失败，跳过归档: %s", record[0])
+            return False
+
+        # 从下载中表移出并写入已完成表，两步在同一事务内完成，避免中途失败导致任务丢失。
+        # record 是 build_record(task_info, completed=True) 的 8 元组
         self.execute_batch([
             ("DELETE FROM download_task WHERE task_id = ?", (record[0],)),
             ("""
-                INSERT OR REPLACE INTO completed_task (task_id, hash_id, cover_id, title, completed_time, data)
-                VALUES (?, ?, ?, ?, ?, ?)
+                INSERT OR REPLACE INTO completed_task (task_id, hash_id, cover_id, title, completed_time, file_size, media_type_group, data)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             """, record)
         ])
+
+        return True
 
     def recreate_task(self, record: tuple):
         # 从已完成表移回下载中表，同样在单个事务内完成
@@ -374,14 +686,27 @@ class TaskDatabase(Database):
                 if not timestamp:
                     timestamp = get_timestamp()
 
-                records.append((
-                    task_info.Basic.task_id,
-                    self._calc_hash_id(task_info),
-                    task_info.Basic.cover_id,
-                    task_info.Basic.show_title,
-                    timestamp,
-                    dumps(task_info.to_dict())
-                ))
+                if completed:
+                    records.append((
+                        task_info.Basic.task_id,
+                        self._calc_hash_id(task_info),
+                        task_info.Basic.cover_id,
+                        task_info.Basic.show_title,
+                        timestamp,
+                        task_info.Download.total_size or 0,
+                        self._calc_media_type_group(task_info),
+                        dumps(task_info.to_dict())
+                    ))
+
+                else:
+                    records.append((
+                        task_info.Basic.task_id,
+                        self._calc_hash_id(task_info),
+                        task_info.Basic.cover_id,
+                        task_info.Basic.show_title,
+                        timestamp,
+                        dumps(task_info.to_dict())
+                    ))
 
             return records
 
@@ -418,6 +743,8 @@ class TaskDatabase(Database):
                     cover_id TEXT,
                     title TEXT,
                     completed_time INTEGER,
+                    file_size INTEGER DEFAULT 0,
+                    media_type_group TEXT DEFAULT '',
                     data TEXT,
                     PRIMARY KEY(id AUTOINCREMENT)
                 )
@@ -430,8 +757,8 @@ class TaskDatabase(Database):
                 VALUES (?, ?, ?, ?, ?, ?)
             """, download_records)
             cursor.executemany("""
-                INSERT INTO completed_task (task_id, hash_id, cover_id, title, completed_time, data)
-                VALUES (?, ?, ?, ?, ?, ?)
+                INSERT INTO completed_task (task_id, hash_id, cover_id, title, completed_time, file_size, media_type_group, data)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             """, completed_records)
 
             conn.commit()

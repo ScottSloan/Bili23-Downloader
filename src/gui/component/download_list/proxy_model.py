@@ -242,11 +242,16 @@ class DownloadListProxyModel(QSortFilterProxyModel):
 
         return source.removeRow(source_row)
 
-    def removeTasks(self, task_info_list: list[TaskInfo]):
+    def removeTasks(self, task_info_list: list[TaskInfo]) -> int:
+        # 与 DownloadListModel.removeTasks 保持签名一致：返回实际移除的行数。
+        # 分页模式下 task_info_list 可能包含不在当前页的任务，
+        # 与 len(task_info_list) 不同，调用方据此判断是否真的移除了东西
         source = self._source()
 
         if source:
-            source.removeTasks(task_info_list)
+            return source.removeTasks(task_info_list)
+
+        return 0
 
     def togglePauseResume(self, task_info: TaskInfo):
         source = self._source()
