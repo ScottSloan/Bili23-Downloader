@@ -354,8 +354,13 @@ def test_upgrade_transaction_rolls_back_on_failure(tmp_path, monkeypatch):
     """_upgrade 事务中途失败时整体回滚，旧表结构与数据保留
 
     PR 描述「任一步失败均整体回滚，旧表数据保留」的验证：
-    在 INSERT completed_task 阶段抛异常，验证 DROP + CREATE 也被回滚，
-    旧表（无 file_size 列）和旧数据都还在
+    在 INSERT INTO completed_task 的 executemany 阶段抛异常，验证
+    DROP + CREATE 也被回滚，旧表（无 file_size 列）和旧数据都还在。
+
+    sqlite3.Cursor 是 C 扩展类型，无法直接 monkeypatch。改为包装
+    TaskDatabase.get_connection() 的返回值：cursor().executemany 在
+    遇到 INSERT INTO completed_task 时抛异常，其余全部转发到真实连接。
+    sqlite3.Connection.__exit__ 在异常时回滚整个事务，包括 DROP/CREATE。
     """
     from util.download.task import db as db_module
     from util.download.task.db import TaskDatabase
@@ -367,23 +372,73 @@ def test_upgrade_transaction_rolls_back_on_failure(tmp_path, monkeypatch):
     old_task = _make_completed("rollback-task", 1_700_000_000, "回滚任务", total_size = 777)
     _create_old_database(db_path, completed_records=[old_task])
 
-    # 在 INSERT completed_task 阶段抛异常
-    original_executemany = sqlite3.Cursor.executemany
+    original_get_connection = TaskDatabase.get_connection
 
-    def patched_executemany(self, sql, params):
-        if "INSERT INTO completed_task" in sql:
-            raise RuntimeError("模拟写入 completed_task 失败")
+    class _FailingCursor:
+        def __init__(self, real):
+            self._real = real
 
-        return original_executemany(self, sql, params)
+        def execute(self, sql, *args):
+            return self._real.execute(sql, *args)
 
-    monkeypatch.setattr(sqlite3.Cursor, "executemany", patched_executemany)
+        def executemany(self, sql, params):
+            if "INSERT INTO completed_task" in sql:
+                raise RuntimeError("模拟写入 completed_task 失败")
+
+            return self._real.executemany(sql, params)
+
+        def fetchall(self):
+            return self._real.fetchall()
+
+        def fetchone(self):
+            return self._real.fetchone()
+
+        def close(self):
+            return self._real.close()
+
+    class _FailingConnection:
+        def __init__(self, real):
+            self._real = real
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc_val, exc_tb):
+            # 转发给真实连接的 __exit__：异常时回滚、正常时提交
+            return self._real.__exit__(exc_type, exc_val, exc_tb)
+
+        def cursor(self):
+            return _FailingCursor(self._real.cursor())
+
+        def execute(self, sql, *args):
+            return self._real.execute(sql, *args)
+
+        def executemany(self, sql, params):
+            return self._real.executemany(sql, params)
+
+        def executescript(self, script):
+            return self._real.executescript(script)
+
+        def commit(self):
+            return self._real.commit()
+
+        def rollback(self):
+            return self._real.rollback()
+
+        def close(self):
+            return self._real.close()
+
+    def patched_get_connection(self):
+        return _FailingConnection(original_get_connection(self))
+
+    monkeypatch.setattr(TaskDatabase, "get_connection", patched_get_connection)
 
     database = TaskDatabase()
 
     try:
         assert database.upgrade_failed is True
 
-        # 旧表结构未变（缺 file_size 列）
+        # 旧表结构未变（缺 file_size 列）——DROP TABLE + CREATE TABLE 被回滚
         columns = {row[1] for row in database.query("PRAGMA table_info(completed_task)")}
         assert "file_size" not in columns
 
