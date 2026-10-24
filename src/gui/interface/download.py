@@ -183,21 +183,39 @@ class DownloadInterface(QFrame):
             signal_bus.toast.show_long_message.emit(
                 ToastNotificationCategory.ERROR,
                 self.tr("Failed to upgrade completed task database"),
-                self.tr("The completed list is unavailable in this session. Please check disk space and filesystem permissions, then restart the application.")
+                self.tr(
+                    "The completed list is unavailable in this session. Please check disk space and filesystem permissions, then restart the application.")
             )
 
-        worker = QueryWorker()
+        # 下载中列表与已完成列表第一页一起交给 QueryWorker 在后台线程查询。
+        # 原来这里先 AsyncTask.run(QueryWorker) 再同步调 _load_completed_page()，
+        # 现在合并成一次异步查询，get_tasks() 里不再有同步数据库操作。
+        worker = QueryWorker(
+            self._completed_page_size,
+            config.get(config.completed_list_sort_by),
+            config.get(config.completed_list_sort_ascending),
+        )
         worker.success.connect(self.on_query_success)
         worker.error.connect(self.on_query_error)
 
         AsyncTask.run(worker)
 
-        self._load_completed_page()
-
-    def on_query_success(self, downloading_tasks: list[TaskInfo], completed_tasks: list[TaskInfo]):
+    def on_query_success(self, downloading_tasks: list[TaskInfo], completed_tasks: list[TaskInfo], completed_total: int):
         self.downloading_list_view._beginAddQueriedTasks()
         self.downloading_list_view.addTask(downloading_tasks)
         self.downloading_list_view._endAddQueriedTasks()
+
+        # 已完成列表第一页由 QueryWorker 一并取回，与 _load_completed_page 的
+        # 后半段保持一致：更新总数、写页面、更新分页条。
+        # 启动时 _completed_page 已为 0、关键词与媒体筛选都为空，因此
+        # setFiltering 与越界回退都不需要（total >= 0 时 0 < total_pages 恒成立）
+        self._completed_total = completed_total
+
+        self.completed_list_view.setFiltering(
+            bool(self._completed_keyword or self._completed_media_types)
+        )
+        self.completed_list_view._source_model.setPageTasks(completed_tasks)
+        self.completed_pagination.setState(self._completed_page, completed_total, self._completed_page_size)
 
     def on_query_error(self, error_message: str):
         signal_bus.toast.show_long_message.emit(
