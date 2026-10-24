@@ -29,7 +29,9 @@ appdata_path monkeypatch 过去，task.db 落在 tmp_path/Bili23 Downloader/ 下
    写接口直接 return，不碰结构不对的表；move_to_completed 返回 False，
    任务留在 download_task 里，重启升级成功后可重新处理；
 10. 旧库升级时 download_task 里的记录必须原样保留 —— 这条路径若坏了，
-    用户升级后下载中的任务会全部消失，比已完成列表不可用更严重。
+    用户升级后下载中的任务会全部消失，比已完成列表不可用更严重；
+11. _upgrade() 抛异常时不传播、user_version 不写入、下次启动会重试、
+    事务失败时回滚、迁移成功后索引重建、迁移时 hash_id 按当前算法重算。
 """
 
 from util.common._json import loads, dumps
@@ -97,19 +99,15 @@ def _task_ids_from_rows(rows):
     return task_ids
 
 
-# ---------------------------------------------------------------------------
-# 迁移
-# ---------------------------------------------------------------------------
+def _create_old_database(db_path: Path, download_records=None, completed_records=None):
+    """
+    构造旧版数据库：completed_task 缺 file_size 列，无索引
 
-def test_old_db_without_file_size_is_upgraded(tmp_path, monkeypatch):
-    from util.download.task import db as db_module
-
-    monkeypatch.setattr(db_module, "appdata_path", str(tmp_path))
-
-    db_path = tmp_path / "Bili23 Downloader" / "task.db"
+    与 test_old_db_without_file_size_is_upgraded 里的建表逻辑一致，
+    抽出来供多个升级路径用例复用
+    """
     db_path.parent.mkdir(parents = True, exist_ok = True)
 
-    # 按旧版结构建库：completed_task 没有 file_size
     conn = sqlite3.connect(db_path)
 
     conn.executescript("""
@@ -135,15 +133,43 @@ def test_old_db_without_file_size_is_upgraded(tmp_path, monkeypatch):
         );
     """)
 
-    old_task = _make_completed("old-completed", 1_700_000_000, "旧记录", total_size = 12345)
+    for task_info in (download_records or []):
+        conn.execute(
+            'INSERT INTO download_task (task_id, hash_id, cover_id, title, created_time, data) '
+            'VALUES (?, ?, ?, ?, ?, ?)',
+            (
+                task_info.Basic.task_id, "OLD_HASH", "", task_info.Basic.show_title,
+                task_info.Basic.created_time, dumps(task_info.to_dict())
+            )
+        )
 
-    conn.execute(
-        'INSERT INTO completed_task (task_id, hash_id, cover_id, title, completed_time, data) '
-        'VALUES (?, ?, ?, ?, ?, ?)',
-        ("old-completed", "oldhash", "", "旧记录", 1_700_000_000, dumps(old_task.to_dict()))
-    )
+    for task_info in (completed_records or []):
+        conn.execute(
+            'INSERT INTO completed_task (task_id, hash_id, cover_id, title, completed_time, data) '
+            'VALUES (?, ?, ?, ?, ?, ?)',
+            (
+                task_info.Basic.task_id, "OLD_HASH", "", task_info.Basic.show_title,
+                task_info.Basic.completed_time, dumps(task_info.to_dict())
+            )
+        )
+
     conn.commit()
     conn.close()
+
+
+# ---------------------------------------------------------------------------
+# 迁移：结构升级、记录保留、失败不传播、版本号、重试、回滚、索引重建、hash 重算
+# ---------------------------------------------------------------------------
+
+def test_old_db_without_file_size_is_upgraded(tmp_path, monkeypatch):
+    from util.download.task import db as db_module
+
+    monkeypatch.setattr(db_module, "appdata_path", str(tmp_path))
+
+    db_path = tmp_path / "Bili23 Downloader" / "task.db"
+
+    old_task = _make_completed("old-completed", 1_700_000_000, "旧记录", total_size = 12345)
+    _create_old_database(db_path, completed_records=[old_task])
 
     from util.download.task.db import TaskDatabase
 
@@ -175,32 +201,6 @@ def test_old_db_upgrade_preserves_downloading_records(tmp_path, monkeypatch):
     monkeypatch.setattr(db_module, "appdata_path", str(tmp_path))
 
     db_path = tmp_path / "Bili23 Downloader" / "task.db"
-    db_path.parent.mkdir(parents = True, exist_ok = True)
-
-    conn = sqlite3.connect(db_path)
-
-    conn.executescript("""
-        CREATE TABLE download_task (
-            id INTEGER UNIQUE,
-            task_id TEXT UNIQUE,
-            hash_id TEXT,
-            cover_id TEXT,
-            title TEXT,
-            created_time INTEGER,
-            data TEXT,
-            PRIMARY KEY(id AUTOINCREMENT)
-        );
-        CREATE TABLE completed_task (
-            id INTEGER UNIQUE,
-            task_id TEXT UNIQUE,
-            hash_id TEXT,
-            cover_id TEXT,
-            title TEXT,
-            completed_time INTEGER,
-            data TEXT,
-            PRIMARY KEY(id AUTOINCREMENT)
-        );
-    """)
 
     # 两条下载中记录 + 一条已完成记录
     downloading_a = TaskInfo()
@@ -215,21 +215,11 @@ def test_old_db_upgrade_preserves_downloading_records(tmp_path, monkeypatch):
 
     completed_c = _make_completed("completed-c", 1_700_000_002, "已完成 C", total_size = 999)
 
-    for task_info in (downloading_a, downloading_b):
-        conn.execute(
-            'INSERT INTO download_task (task_id, hash_id, cover_id, title, created_time, data) '
-            'VALUES (?, ?, ?, ?, ?, ?)',
-            (task_info.Basic.task_id, "", "", task_info.Basic.show_title, task_info.Basic.created_time, dumps(task_info.to_dict()))
-        )
-
-    conn.execute(
-        'INSERT INTO completed_task (task_id, hash_id, cover_id, title, completed_time, data) '
-        'VALUES (?, ?, ?, ?, ?, ?)',
-        ("completed-c", "", "", "已完成 C", 1_700_000_002, dumps(completed_c.to_dict()))
+    _create_old_database(
+        db_path,
+        download_records=[downloading_a, downloading_b],
+        completed_records=[completed_c]
     )
-
-    conn.commit()
-    conn.close()
 
     from util.download.task.db import TaskDatabase
 
@@ -246,6 +236,233 @@ def test_old_db_upgrade_preserves_downloading_records(tmp_path, monkeypatch):
         # completed_task 的一条记录保留，且 file_size 迁移正确
         completed_rows = database.query("SELECT task_id, file_size FROM completed_task")
         assert completed_rows == [("completed-c", 999)]
+
+    finally:
+        database.close_connection()
+
+
+def test_upgrade_failure_does_not_propagate(tmp_path, monkeypatch):
+    """_upgrade() 抛异常时 TaskDatabase.__init__ 不传播，upgrade_failed = True
+
+    TaskDatabase.__init__ 是 TaskManager.__init__ 的同步调用，异常传播出去
+    会让应用直接启动失败。这里验证抛异常时 __init__ 正常返回
+    """
+    from util.download.task import db as db_module
+    from util.download.task.db import TaskDatabase
+
+    monkeypatch.setattr(db_module, "appdata_path", str(tmp_path))
+
+    db_path = tmp_path / "Bili23 Downloader" / "task.db"
+    _create_old_database(db_path)
+
+    original_upgrade = TaskDatabase._upgrade
+
+    def boom(self):
+        raise RuntimeError("模拟升级失败")
+
+    TaskDatabase._upgrade = boom
+
+    try:
+        database = TaskDatabase()
+
+    finally:
+        TaskDatabase._upgrade = original_upgrade
+
+    try:
+        # 不抛异常，upgrade_failed = True
+        assert database.upgrade_failed is True
+
+    finally:
+        database.close_connection()
+
+
+def test_upgrade_failure_does_not_write_user_version(tmp_path, monkeypatch):
+    """升级失败时 user_version 不写入 HASH_ID_VERSION，下次启动会重试"""
+    from util.download.task import db as db_module
+    from util.download.task.db import TaskDatabase
+    from util.download.task.hash_id import HASH_ID_VERSION
+
+    monkeypatch.setattr(db_module, "appdata_path", str(tmp_path))
+
+    db_path = tmp_path / "Bili23 Downloader" / "task.db"
+    _create_old_database(db_path)
+
+    original_upgrade = TaskDatabase._upgrade
+
+    def boom(self):
+        raise RuntimeError("模拟升级失败")
+
+    TaskDatabase._upgrade = boom
+
+    try:
+        database = TaskDatabase()
+
+    finally:
+        TaskDatabase._upgrade = original_upgrade
+
+    try:
+        # user_version 未被写入（旧库默认 0），下次启动 _needs_upgrade 仍返回 True
+        assert database.get_user_version() != HASH_ID_VERSION
+
+    finally:
+        database.close_connection()
+
+
+def test_upgrade_failure_is_retried_on_next_startup(tmp_path, monkeypatch):
+    """升级失败后下次启动重试，成功则 upgrade_failed = False"""
+    from util.download.task import db as db_module
+    from util.download.task.db import TaskDatabase
+
+    monkeypatch.setattr(db_module, "appdata_path", str(tmp_path))
+
+    db_path = tmp_path / "Bili23 Downloader" / "task.db"
+
+    old_task = _make_completed("retry-task", 1_700_000_000, "重试任务", total_size = 444)
+    _create_old_database(db_path, completed_records=[old_task])
+
+    # 第一次：升级失败
+    original_upgrade = TaskDatabase._upgrade
+
+    def boom(self):
+        raise RuntimeError("模拟升级失败")
+
+    TaskDatabase._upgrade = boom
+
+    try:
+        first = TaskDatabase()
+        assert first.upgrade_failed is True
+        first.close_connection()
+
+    finally:
+        TaskDatabase._upgrade = original_upgrade
+
+    # 第二次：不 monkeypatch，升级正常执行
+    second = TaskDatabase()
+
+    try:
+        assert second.upgrade_failed is False
+
+        # 数据完整，file_size 迁移正确
+        rows = second.query("SELECT task_id, file_size FROM completed_task")
+        assert rows == [("retry-task", 444)]
+
+    finally:
+        second.close_connection()
+
+
+def test_upgrade_transaction_rolls_back_on_failure(tmp_path, monkeypatch):
+    """_upgrade 事务中途失败时整体回滚，旧表结构与数据保留
+
+    PR 描述「任一步失败均整体回滚，旧表数据保留」的验证：
+    在 INSERT completed_task 阶段抛异常，验证 DROP + CREATE 也被回滚，
+    旧表（无 file_size 列）和旧数据都还在
+    """
+    from util.download.task import db as db_module
+    from util.download.task.db import TaskDatabase
+
+    monkeypatch.setattr(db_module, "appdata_path", str(tmp_path))
+
+    db_path = tmp_path / "Bili23 Downloader" / "task.db"
+
+    old_task = _make_completed("rollback-task", 1_700_000_000, "回滚任务", total_size = 777)
+    _create_old_database(db_path, completed_records=[old_task])
+
+    # 在 INSERT completed_task 阶段抛异常
+    original_executemany = sqlite3.Cursor.executemany
+
+    def patched_executemany(self, sql, params):
+        if "INSERT INTO completed_task" in sql:
+            raise RuntimeError("模拟写入 completed_task 失败")
+
+        return original_executemany(self, sql, params)
+
+    monkeypatch.setattr(sqlite3.Cursor, "executemany", patched_executemany)
+
+    database = TaskDatabase()
+
+    try:
+        assert database.upgrade_failed is True
+
+        # 旧表结构未变（缺 file_size 列）
+        columns = {row[1] for row in database.query("PRAGMA table_info(completed_task)")}
+        assert "file_size" not in columns
+
+        # 旧数据仍在
+        rows = database.query("SELECT task_id FROM completed_task")
+        assert rows == [("rollback-task",)]
+
+    finally:
+        database.close_connection()
+
+
+def test_upgrade_recreates_indexes(tmp_path, monkeypatch):
+    """迁移成功后索引被重建
+
+    _upgrade 里 DROP TABLE 会连带删除旧索引，__init__ 末尾调
+    _create_extra_indexes 补建。这里验证迁移后索引确实存在
+    """
+    from util.download.task import db as db_module
+    from util.download.task.db import TaskDatabase
+
+    monkeypatch.setattr(db_module, "appdata_path", str(tmp_path))
+
+    db_path = tmp_path / "Bili23 Downloader" / "task.db"
+
+    old_task = _make_completed("index-task", 1_700_000_000, "索引任务")
+    _create_old_database(db_path, completed_records=[old_task])
+
+    database = TaskDatabase()
+
+    try:
+        assert database.upgrade_failed is False
+
+        # 迁移后所有索引都在
+        index_names = {row[1] for row in database.query("PRAGMA index_list(completed_task)")}
+
+        assert "idx_completed_task_hash_id" in index_names
+        assert "idx_completed_task_completed_time" in index_names
+        assert "idx_completed_task_file_size" in index_names
+        assert "idx_completed_task_title" in index_names
+        assert "idx_completed_task_bvid" in index_names
+
+    finally:
+        database.close_connection()
+
+
+def test_upgrade_recalculates_hash_id(tmp_path, monkeypatch):
+    """迁移时 hash_id 按当前算法重算
+
+    旧库里的 hash_id 可能是早期算法的结果（依赖 orjson 默认输出格式等），
+    迁移时用 _calc_hash_id 按当前算法重算。这里插入 OLD_HASH 占位，
+    验证迁移后 hash_id 被改写成 _calc_hash_id(task_info) 的结果
+    """
+    from util.download.task import db as db_module
+    from util.download.task.db import TaskDatabase
+
+    monkeypatch.setattr(db_module, "appdata_path", str(tmp_path))
+
+    db_path = tmp_path / "Bili23 Downloader" / "task.db"
+
+    old_task = _make_completed("hash-task", 1_700_000_000, "hash 任务", attribute = 1)
+    _create_old_database(db_path, completed_records=[old_task])
+
+    database = TaskDatabase()
+
+    try:
+        assert database.upgrade_failed is False
+
+        rows = database.query("SELECT hash_id, data FROM completed_task WHERE task_id = ?", ("hash-task",))
+        assert len(rows) == 1
+
+        stored_hash, data = rows[0]
+
+        # 迁移前是占位 "OLD_HASH"，迁移后被改写成当前算法的结果
+        assert stored_hash != "OLD_HASH"
+
+        # 与新算法算出的值一致
+        task_info = TaskInfo()
+        task_info.from_dict(loads(data))
+        assert stored_hash == database._calc_hash_id(task_info)
 
     finally:
         database.close_connection()
