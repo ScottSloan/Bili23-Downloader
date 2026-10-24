@@ -152,8 +152,10 @@ class DownloadInterface(QFrame):
 
         self.completed_list_view.setPaginationSortState(key, ascending)
 
-        # 排序变化保持原页码，越界时由 _load_completed_page 内部回退
-        self._load_completed_page()
+        # 排序变化保持原页码，越界时由 _load_completed_page 内部回退。
+        # 总数不随排序变化，传 refresh_total=False 省掉一次全表 count ——
+        # 媒体筛选下的 count 与列表查询是同一份开销（各扫一遍全表）
+        self._load_completed_page(refresh_total = False)
 
     def _save_sort_preference(self, key_item, ascending_item, key: str, ascending: bool):
         config.set(key_item, key, save = False)
@@ -206,9 +208,12 @@ class DownloadInterface(QFrame):
 
     # ---------- 已完成列表分页 ----------
 
-    def _load_completed_page(self):
+    def _load_completed_page(self, refresh_total: bool = True):
         # 单次查询走索引只需几十毫秒，在 GUI 线程同步执行即可。
-        # 每页条数、排序、关键词、媒体筛选任一变化都会调用本方法
+        #
+        # refresh_total=False 时复用缓存的 _completed_total，跳过 count 查询。
+        # 翻页、排序切换、每页大小变化这几种操作的总数不会变，而媒体筛选下的
+        # count 与列表查询是同一份开销（各扫一遍全表），跳过能省一半时间
         try:
             task_list = task_manager.query_completed_page(
                 offset = self._completed_page * self._completed_page_size,
@@ -218,7 +223,13 @@ class DownloadInterface(QFrame):
                 keyword = self._completed_keyword,
                 media_types = self._completed_media_types,
             )
-            total = task_manager.count_completed(self._completed_keyword, self._completed_media_types)
+
+            if refresh_total:
+                total = task_manager.count_completed(self._completed_keyword, self._completed_media_types)
+
+                self._completed_total = total
+            else:
+                total = self._completed_total
 
         except Exception as e:
             logger.exception("分页查询已完成任务失败")
@@ -231,13 +242,11 @@ class DownloadInterface(QFrame):
 
             return
 
-        self._completed_total = total
-
         total_pages = max(1, (total + self._completed_page_size - 1) // self._completed_page_size)
 
         if self._completed_page >= total_pages:
             self._completed_page = total_pages - 1
-            self._load_completed_page()
+            self._load_completed_page(refresh_total = refresh_total)
 
             return
 
@@ -254,7 +263,9 @@ class DownloadInterface(QFrame):
             return
 
         self._completed_page = page
-        self._load_completed_page()
+
+        # 翻页不改变总数，跳过 count 查询
+        self._load_completed_page(refresh_total = False)
 
     def _on_completed_page_size_changed(self, size: int):
         if size == self._completed_page_size:
@@ -266,7 +277,9 @@ class DownloadInterface(QFrame):
 
         self._completed_page_size = size
         self._completed_page = new_page
-        self._load_completed_page()
+
+        # 每页大小变化不改变总数，跳过 count 查询
+        self._load_completed_page(refresh_total = False)
 
     def _on_completed_search_changed(self, text: str):
         self._search_timer.stop()
@@ -276,21 +289,24 @@ class DownloadInterface(QFrame):
     def _on_search_timeout(self):
         self._completed_keyword = self._pending_search_text.strip()
 
-        # 搜索变化保持原页码，越界由 _load_completed_page 内部回退
+        # 搜索变化保持原页码，越界由 _load_completed_page 内部回退。
+        # 关键词变化会改变总数，需要重新 count
         self._load_completed_page()
 
     def _on_completed_filter_changed(self, media_types: set):
         # TopStackedWidget 的筛选浮窗发出的媒体类型集合，直接下推 SQL
         self._completed_media_types = frozenset(media_types)
 
-        # 筛选变化保持原页码，越界由 _load_completed_page 内部回退
+        # 筛选变化保持原页码，越界由 _load_completed_page 内部回退。
+        # 媒体筛选变化会改变总数，需要重新 count
         self._load_completed_page()
 
     def _on_task_added_to_completed(self, task_info_list):
         # 无条件重载当前页，让页面内容随时反映最新状态。
         # 当前页码保持不变；保存/恢复滚动位置，避免新任务完成时列表跳回顶部。
         # QTimer.singleShot 的 context 传 self：控件先一步销毁时回调不再执行，
-        # 避免打到已经析构的 verticalScrollBar() 上
+        # 避免打到已经析构的 verticalScrollBar() 上。
+        # 新任务会改变总数，需要重新 count
         scroll_value = self.completed_list_view.verticalScrollBar().value()
 
         self._load_completed_page()
@@ -311,7 +327,8 @@ class DownloadInterface(QFrame):
     def _on_completed_task_permanently_deleted(self, count: int):
         # 数据库已落盘的真正删除，可以安全重载补位。
         # 保存/恢复滚动位置，避免删除后跳回顶部。
-        # QTimer.singleShot 的 context 传 self，理由同上
+        # QTimer.singleShot 的 context 传 self，理由同上。
+        # 删除会改变总数，需要重新 count
         scroll_value = self.completed_list_view.verticalScrollBar().value()
 
         self._load_completed_page()

@@ -11,6 +11,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 class TaskDatabase(Database):
     # 已完成列表分页查询的排序键 -> SQL 表达式。
     # 三个键都有对应索引，走索引时 SQLite 直接取前 N 条，不需要对全表排序。
@@ -142,8 +143,16 @@ class TaskDatabase(Database):
             if not required_columns.issubset(column_names):
                 return True
 
-        # completed_task 需要 file_size 列，供分页按文件大小排序时走索引。
-        if "file_size" not in self._get_table_columns("completed_task"):
+        completed_columns = self._get_table_columns("completed_task")
+
+        # completed_task 需要 file_size 列（分页按文件大小排序走索引）
+        if "file_size" not in completed_columns:
+            return True
+
+        # completed_task 需要 media_type_group 列（媒体筛选走索引）。
+        # 之前版本用 json_extract 内联筛选，4 万行 count 要 200 ms；
+        # 这一列建好后筛选走索引，4 万行 0.5 ms 以内
+        if "media_type_group" not in completed_columns:
             return True
 
         return False
@@ -174,6 +183,7 @@ class TaskDatabase(Database):
                 "title"	TEXT,
                 "completed_time"	INTEGER,
                 "file_size"	INTEGER DEFAULT 0,
+                "media_type_group" TEXT DEFAULT '',
                 "data"	TEXT,
                 PRIMARY KEY("id" AUTOINCREMENT)
             );
@@ -182,8 +192,8 @@ class TaskDatabase(Database):
         # 旧版表可能还没有 hash_id，不能在迁移前直接创建索引。
         # hash_id 索引依赖 hash_id 列存在，所以必须留在这里单独判断。
         #
-        # 其他索引（created_time / completed_time / title / file_size）全部放到
-        # _create_extra_indexes（带 try/except），避免这里建索引失败让
+        # 其他索引（created_time / completed_time / title / file_size / media_type_group）
+        # 全部放到 _create_extra_indexes（带 try/except），避免这里建索引失败让
         # TaskDatabase.__init__ 抛异常 —— 与 _create_bvid_index 的保护一致
         if "hash_id" in self._get_table_columns("download_task") and "hash_id" in self._get_table_columns("completed_task"):
             self.execute_script("""
@@ -230,6 +240,7 @@ class TaskDatabase(Database):
                 CREATE INDEX IF NOT EXISTS "idx_completed_task_completed_time" ON "completed_task" ("completed_time");
                 CREATE INDEX IF NOT EXISTS "idx_completed_task_file_size" ON "completed_task" ("file_size");
                 CREATE INDEX IF NOT EXISTS "idx_completed_task_title" ON "completed_task" ("title" COLLATE NOCASE);
+                CREATE INDEX IF NOT EXISTS "idx_completed_task_media_type_group" ON "completed_task" ("media_type_group");
                 """)
 
         except Exception:
@@ -285,86 +296,43 @@ class TaskDatabase(Database):
         return " AND ".join(keyword_clauses), params
 
     @staticmethod
-    def _build_media_type_sql(media_types) -> str:
+    def _calc_media_type_group(task_info: TaskInfo) -> str:
         """
-        把客户端 get_media_type_key 的优先级链翻译成 SQL
+        根据 task_info 计算 media_type_group 单值
 
-        客户端判定是一个互斥的分派：AUDIO > COURSE > BANGUMI > INTERACTIVE > VIDEO。
-        每个类别必须显式排除前面更高优先级的类别，否则一条同时带多个属性位的记录
-        会同时落入多个类别，筛选结果与封面角标对不上。
+        与客户端 get_media_type_key 逐条对应：
+        AUDIO > COURSE > BANGUMI > INTERACTIVE > VIDEO > ""（未知）
 
-        UI 的 get_media_type_group_dict 只提供四个组：
-        VIDEO / BANGUMI / COURSE / AUDIO。其中 VIDEO 组同时包含 VIDEO 与
-        INTERACTIVE 两个 key（互动视频归在「视频」里，不单列选项）。
-        先把传入的 key 集合规范化回这四个组，避免同一组被拆成多个 OR 条件
+        build_record 时算好存入 completed_task.media_type_group，之后筛选
+        只需 WHERE media_type_group IN (...)，走索引，4 万行 0.5 ms 以内。
+
+        之前版本用 json_extract 在 SQL 里展开互斥优先级链（AUDIO > COURSE >
+        BANGUMI > INTERACTIVE > VIDEO，每个低优先级类别都要 NOT 排除所有
+        高优先级类别）。展开后单行评估可能触发 15 次以上 json_extract，
+        4 万行 query + count 要 200-900 ms（benchmark 实测）。存成单值后
+        筛选可以走索引，彻底摆脱 json_extract 的全表解析开销。
         """
-        if not media_types:
-            return ""
-
-        # 惰性导入：util.download.task.db 被 main.py 的导入链间接加载，如果在模块顶层
-        # 导入 parse.episode.tree，会把整条解析链拖进启动路径（实测约 0.2 秒）。
-        # DownloadType 同理，util.common.enum 本身不重，但和 Attribute 成对出现更清楚。
-        # 不要"优化"成顶部导入
         from ...parse.episode.tree import Attribute
         from ...common.enum import DownloadType
 
-        # 规范化回 UI 的四个组：INTERACTIVE 是 VIDEO 组的成员
-        groups = set()
-
-        if "VIDEO" in media_types or "INTERACTIVE" in media_types:
-            groups.add("VIDEO")
-        if "BANGUMI" in media_types:
-            groups.add("BANGUMI")
-        if "COURSE" in media_types:
-            groups.add("COURSE")
-        if "AUDIO" in media_types:
-            groups.add("AUDIO")
-
-        if not groups:
-            return ""
-
-        attr = 'CAST(json_extract("data", \'$.Episode.attribute\') AS INTEGER)'
-        dtype = 'CAST(json_extract("data", \'$.Download.type\') AS INTEGER)'
-
-        video_bit = int(DownloadType.VIDEO)
-        audio_bit = int(DownloadType.AUDIO)
-
-        aud_attr_bit = int(Attribute.AUDIO_BIT)
-        cheese_lesson_bits = int(Attribute.CHEESE_BIT) | int(Attribute.LESSON_BIT)
-        bangumi_bit = int(Attribute.BANGUMI_BIT)
-        interactive_bit = int(Attribute.INTERACTIVE_BIT)
-        video_attr_bit = int(Attribute.VIDEO_BIT)
+        attribute = task_info.Episode.attribute
+        download_type = task_info.Download.type
 
         # audio_only = (type & AUDIO) != 0 AND (type & VIDEO) == 0
-        audio_only = f'(({dtype} & {audio_bit}) != 0 AND ({dtype} & {video_bit}) == 0)'
-        is_audio = f'({audio_only} OR ({attr} & {aud_attr_bit}) != 0)'
+        audio_only = (download_type & int(DownloadType.AUDIO)) != 0 and (download_type & int(DownloadType.VIDEO)) == 0
 
-        # 后续每一类都要排除前面所有更高优先级的类别，保证互斥
-        course_pre = f'(({attr} & {cheese_lesson_bits}) != 0)'
-        is_course = f'(NOT {is_audio} AND {course_pre})'
+        if audio_only or (attribute & int(Attribute.AUDIO_BIT)) != 0:
+            return "AUDIO"
+        if (attribute & (int(Attribute.CHEESE_BIT) | int(Attribute.LESSON_BIT))) != 0:
+            return "COURSE"
+        if (attribute & int(Attribute.BANGUMI_BIT)) != 0:
+            return "BANGUMI"
+        if (attribute & int(Attribute.INTERACTIVE_BIT)) != 0:
+            return "INTERACTIVE"
+        if (attribute & int(Attribute.VIDEO_BIT)) != 0:
+            return "VIDEO"
 
-        bangumi_pre = f'(({attr} & {bangumi_bit}) != 0)'
-        is_bangumi = f'(NOT {is_audio} AND NOT {course_pre} AND {bangumi_pre})'
-
-        interactive_pre = f'(({attr} & {interactive_bit}) != 0)'
-        is_interactive = f'(NOT {is_audio} AND NOT {course_pre} AND NOT {bangumi_pre} AND {interactive_pre})'
-
-        video_pre = f'(({attr} & {video_attr_bit}) != 0)'
-        is_video = f'(NOT {is_audio} AND NOT {course_pre} AND NOT {bangumi_pre} AND NOT {interactive_pre} AND {video_pre})'
-
-        # VIDEO 组同时命中视频与互动视频，与封面角标一致
-        group_clauses = []
-
-        if "AUDIO" in groups:
-            group_clauses.append(is_audio)
-        if "COURSE" in groups:
-            group_clauses.append(is_course)
-        if "BANGUMI" in groups:
-            group_clauses.append(is_bangumi)
-        if "VIDEO" in groups:
-            group_clauses.append(f'({is_video} OR {is_interactive})')
-
-        return "(" + " OR ".join(group_clauses) + ")"
+        return ""
 
     def _build_filter_clause(self, keyword: str = "", media_types = None):
         """
@@ -385,10 +353,26 @@ class TaskDatabase(Database):
                 params.extend(keyword_params)
 
         if media_types:
-            media_sql = self._build_media_type_sql(media_types)
+            # UI 的 get_media_type_group_dict 只提供四个组：VIDEO / BANGUMI /
+            # COURSE / AUDIO。其中 VIDEO 组同时包含 VIDEO 与 INTERACTIVE
+            # （互动视频归在「视频」里，不单列选项），这里展开成两个值
+            groups = set()
 
-            if media_sql:
-                clauses.append(media_sql)
+            if "VIDEO" in media_types or "INTERACTIVE" in media_types:
+                groups.add("VIDEO")
+                groups.add("INTERACTIVE")
+            if "BANGUMI" in media_types:
+                groups.add("BANGUMI")
+            if "COURSE" in media_types:
+                groups.add("COURSE")
+            if "AUDIO" in media_types:
+                groups.add("AUDIO")
+
+            if groups:
+                placeholders = ", ".join("?" * len(groups))
+
+                clauses.append(f'"media_type_group" IN ({placeholders})')
+                params.extend(sorted(groups))
 
         if not clauses:
             return "", []
@@ -494,7 +478,10 @@ class TaskDatabase(Database):
             timestamp = get_timestamp()
 
         if completed:
-            # completed_task 表带 file_size 列，供分页按文件大小排序走索引
+            # completed_task 表带 file_size / media_type_group 列：
+            # - file_size 供分页按文件大小排序走索引；
+            # - media_type_group 供媒体筛选走索引（避免每次 WHERE 展开
+            #   15+ 次 json_extract）
             return (
                 task_info.Basic.task_id,                                    # task_id
                 self._calc_hash_id(task_info),                              # hash_id
@@ -502,6 +489,7 @@ class TaskDatabase(Database):
                 task_info.Basic.show_title,                                 # title
                 timestamp,                                                  # completed_time
                 task_info.Download.total_size or 0,                         # file_size
+                self._calc_media_type_group(task_info),                     # media_type_group
                 dumps(task_info.to_dict())                                  # data
             )
 
@@ -525,8 +513,8 @@ class TaskDatabase(Database):
 
         if completed:
             self.executemany("""
-                INSERT INTO completed_task (task_id, hash_id, cover_id, title, completed_time, file_size, data)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO completed_task (task_id, hash_id, cover_id, title, completed_time, file_size, media_type_group, data)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             """, info_list)
         else:
             self.executemany("""
@@ -571,22 +559,22 @@ class TaskDatabase(Database):
             self.execute(f"DELETE FROM {table} WHERE task_id IN ({placeholders})", tuple(batch))
 
     def move_to_completed(self, record: tuple) -> bool:
-        # 升级失败的库：completed_task 表仍缺 file_size 列（升级事务已回滚），
-        # 写入 7 元组会 SQL 报错。这里直接返回 False，让调用方知道归档被跳过，
-        # 任务留在 download_task 里，重启并升级成功后会重新出现为「下载中」，
-        # 用户可以重新处理。不做 DELETE + INSERT 的「半截操作」，
-        # 避免 DELETE 已提交、INSERT 失败导致任务记录永久丢失
+        # 升级失败的库：completed_task 表仍缺 file_size / media_type_group 列
+        # （升级事务已回滚），写入 8 元组会 SQL 报错。这里直接返回 False，
+        # 让调用方知道归档被跳过，任务留在 download_task 里，重启并升级成功后
+        # 会重新出现为「下载中」，用户可以重新处理。不做 DELETE + INSERT 的
+        # 「半截操作」，避免 DELETE 已提交、INSERT 失败导致任务记录永久丢失
         if self.upgrade_failed:
             logger.warning("数据库升级失败，跳过归档: %s", record[0])
             return False
 
         # 从下载中表移出并写入已完成表，两步在同一事务内完成，避免中途失败导致任务丢失。
-        # record 是 build_record(task_info, completed=True) 的 7 元组
+        # record 是 build_record(task_info, completed=True) 的 8 元组
         self.execute_batch([
             ("DELETE FROM download_task WHERE task_id = ?", (record[0],)),
             ("""
-                INSERT OR REPLACE INTO completed_task (task_id, hash_id, cover_id, title, completed_time, file_size, data)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
+                INSERT OR REPLACE INTO completed_task (task_id, hash_id, cover_id, title, completed_time, file_size, media_type_group, data)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             """, record)
         ])
 
@@ -706,6 +694,7 @@ class TaskDatabase(Database):
                         task_info.Basic.show_title,
                         timestamp,
                         task_info.Download.total_size or 0,
+                        self._calc_media_type_group(task_info),
                         dumps(task_info.to_dict())
                     ))
 
@@ -755,6 +744,7 @@ class TaskDatabase(Database):
                     title TEXT,
                     completed_time INTEGER,
                     file_size INTEGER DEFAULT 0,
+                    media_type_group TEXT DEFAULT '',
                     data TEXT,
                     PRIMARY KEY(id AUTOINCREMENT)
                 )
@@ -767,8 +757,8 @@ class TaskDatabase(Database):
                 VALUES (?, ?, ?, ?, ?, ?)
             """, download_records)
             cursor.executemany("""
-                INSERT INTO completed_task (task_id, hash_id, cover_id, title, completed_time, file_size, data)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO completed_task (task_id, hash_id, cover_id, title, completed_time, file_size, media_type_group, data)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             """, completed_records)
 
             conn.commit()

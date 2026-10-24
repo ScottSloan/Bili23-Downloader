@@ -11,8 +11,10 @@ appdata_path monkeypatch 过去，task.db 落在 tmp_path/Bili23 Downloader/ 下
 
 ！！！！！！！！！！！！！！！！！！！注意事项！！！！！！！！！！！！！！！！！！！！：
 
-1. 旧库升级必须补上 file_size 列，并从 data JSON 里迁移出旧值；
-2. build_record(completed=True) 必须写入 file_size，否则按大小排的索引永远是 0；
+1. 旧库升级必须补上 file_size 列与 media_type_group 列，并从 data JSON
+   里迁移出 file_size，按当前 _calc_media_type_group 计算 media_type_group；
+2. build_record(completed=True) 必须写入 file_size / media_type_group，
+   否则按大小排的索引永远是 0、媒体筛选列永远是空串；
 3. query_completed_page 的三种排序 × 升降序结果正确，分页边界正确；
 4. 三种排序键都有对应索引，EXPLAIN QUERY PLAN 里确实用上了 ——
    尤其 title 的索引必须带 COLLATE NOCASE，普通索引无法匹配
@@ -21,8 +23,9 @@ appdata_path monkeypatch 过去，task.db 落在 tmp_path/Bili23 Downloader/ 下
    分页时同一行可能出现在两页，或某行永远不出现；
 6. 搜索语义与旧版客户端 _getSearchableText 一致：空格分词，每个词都要命中，
    每个词可以落在任意一个字段里（共 9 个字段）。LIKE 里的 %/_ 必须转义；
-7. 媒体筛选 SQL 必须与客户端 get_media_type_key 逐条一致（AUDIO > COURSE >
-   BANGUMI > INTERACTIVE > VIDEO 的互斥优先级，VIDEO 组同时包含 INTERACTIVE）；
+7. _calc_media_type_group 的判定必须与客户端 get_media_type_key 逐条一致
+   （AUDIO > COURSE > BANGUMI > INTERACTIVE > VIDEO 的互斥优先级，未知时
+   返回空串）；UI 的 VIDEO 组同时包含 VIDEO 与 INTERACTIVE，其余组单值；
 8. clear_completed 清空整表；delete_completed_by_filter 按关键词 + 媒体类型
    AND 关系删除匹配记录，都为空时退回清整表；
 9. upgrade_failed = True（_upgrade() 失败时的降级状态）时读接口返回空/0、
@@ -47,9 +50,6 @@ import pytest
 
 @pytest.fixture
 def db(tmp_path, monkeypatch):
-    # TaskDatabase.__init__ 里 Path(appdata_path) / "Bili23 Downloader" / "task.db"，
-    # 把 appdata_path 指到 tmp_path，库就落在 tmp_path/Bili23 Downloader/task.db，
-    # 连同 -wal / -shm 一起被 pytest 在用例结束后自动清理，与其他测试完全隔离
     from util.download.task import db as db_module
 
     monkeypatch.setattr(db_module, "appdata_path", str(tmp_path))
@@ -64,13 +64,6 @@ def db(tmp_path, monkeypatch):
 
 
 def _make_completed(task_id, completed_time, title, total_size = 0, file_name = "", **episode_fields):
-    """
-    构造一条 completed 记录
-
-    episode_fields 用来覆盖 Episode 上的任意字段（uploader、bvid、parent_title、
-    attribute 等）。媒体筛选测试需要 attribute 与 Download.type 的组合，
-    所以这两项也通过关键字覆盖。
-    """
     task_info = TaskInfo()
     task_info.Basic.task_id = task_id
     task_info.Basic.completed_time = completed_time
@@ -101,7 +94,7 @@ def _task_ids_from_rows(rows):
 
 def _create_old_database(db_path: Path, download_records=None, completed_records=None):
     """
-    构造旧版数据库：completed_task 缺 file_size 列，无索引
+    构造旧版数据库：completed_task 缺 file_size / media_type_group 列，无索引
 
     与 test_old_db_without_file_size_is_upgraded 里的建表逻辑一致，
     抽出来供多个升级路径用例复用
@@ -158,7 +151,7 @@ def _create_old_database(db_path: Path, download_records=None, completed_records
 
 
 # ---------------------------------------------------------------------------
-# 迁移：结构升级、记录保留、失败不传播、版本号、重试、回滚、索引重建、hash 重算
+# 迁移：结构升级、记录保留、列迁移、失败不传播、版本号、重试、回滚、索引重建、hash 重算
 # ---------------------------------------------------------------------------
 
 def test_old_db_without_file_size_is_upgraded(tmp_path, monkeypatch):
@@ -178,10 +171,13 @@ def test_old_db_without_file_size_is_upgraded(tmp_path, monkeypatch):
     try:
         columns = {row[1] for row in database.query("PRAGMA table_info(completed_task)")}
         assert "file_size" in columns
+        assert "media_type_group" in columns
 
-        # 老记录的 file_size 从 data JSON 的 Download.total_size 里迁移出来
-        rows = database.query("SELECT task_id, file_size FROM completed_task")
-        assert rows == [("old-completed", 12345)]
+        # 老记录的 file_size / media_type_group 被迁移：
+        # _make_completed 默认 attribute = 0、Download.type = 0，
+        # 按 get_media_type_key 的逻辑，两者都为 0 时返回 ""
+        rows = database.query("SELECT task_id, file_size, media_type_group FROM completed_task")
+        assert rows == [("old-completed", 12345, "")]
 
         # 升级成功的库 upgrade_failed 应为 False
         assert database.upgrade_failed is False
@@ -236,6 +232,56 @@ def test_old_db_upgrade_preserves_downloading_records(tmp_path, monkeypatch):
         # completed_task 的一条记录保留，且 file_size 迁移正确
         completed_rows = database.query("SELECT task_id, file_size FROM completed_task")
         assert completed_rows == [("completed-c", 999)]
+
+    finally:
+        database.close_connection()
+
+
+def test_media_type_group_column_migrated_for_old_records(tmp_path, monkeypatch):
+    """迁移时 media_type_group 对旧记录按当前算法计算
+
+    旧库没有 media_type_group 列，迁移时从 data JSON 中的 attribute /
+    Download.type 按当前 _calc_media_type_group 算好存入。这里覆盖三种
+    典型媒体类型，验证迁移后的值正确。
+    """
+    from util.download.task import db as db_module
+
+    monkeypatch.setattr(db_module, "appdata_path", str(tmp_path))
+
+    db_path = tmp_path / "Bili23 Downloader" / "task.db"
+
+    video_task = _make_completed(
+        "old-video", 1000, "视频",
+        attribute = Attribute.VIDEO_BIT,
+        download_type = DownloadType.VIDEO | DownloadType.AUDIO
+    )
+    bangumi_task = _make_completed(
+        "old-bangumi", 2000, "番剧",
+        attribute = Attribute.BANGUMI_BIT,
+        download_type = DownloadType.VIDEO | DownloadType.AUDIO
+    )
+    audio_task = _make_completed(
+        "old-audio", 3000, "音频",
+        attribute = Attribute.VIDEO_BIT,
+        download_type = DownloadType.AUDIO
+    )
+
+    _create_old_database(db_path, completed_records=[video_task, bangumi_task, audio_task])
+
+    from util.download.task.db import TaskDatabase
+
+    database = TaskDatabase()
+
+    try:
+        assert database.upgrade_failed is False
+
+        rows = database.query("SELECT task_id, media_type_group FROM completed_task ORDER BY task_id")
+
+        assert rows == [
+            ("old-audio", "AUDIO"),
+            ("old-bangumi", "BANGUMI"),
+            ("old-video", "VIDEO"),
+        ]
 
     finally:
         database.close_connection()
@@ -354,8 +400,15 @@ def test_upgrade_transaction_rolls_back_on_failure(tmp_path, monkeypatch):
     """_upgrade 事务中途失败时整体回滚，旧表结构与数据保留
 
     PR 描述「任一步失败均整体回滚，旧表数据保留」的验证：
-    在 INSERT completed_task 阶段抛异常，验证 DROP + CREATE 也被回滚，
-    旧表（无 file_size 列）和旧数据都还在
+    在 INSERT INTO completed_task 的 executemany 阶段抛异常，验证
+    DROP + CREATE 也被回滚，旧表（无 file_size / media_type_group 列）
+    和旧数据都还在。
+
+    sqlite3.Cursor / sqlite3.Connection 都是 C 扩展类型，无法直接
+    monkeypatch。改为包装 TaskDatabase.get_connection() 的返回值：
+    cursor().executemany 遇到 INSERT INTO completed_task 时抛异常，
+    其余全部转发到真实连接。sqlite3.Connection.__exit__ 在异常时回滚
+    整个事务，包括 DROP/CREATE/INSERT。
     """
     from util.download.task import db as db_module
     from util.download.task.db import TaskDatabase
@@ -367,25 +420,82 @@ def test_upgrade_transaction_rolls_back_on_failure(tmp_path, monkeypatch):
     old_task = _make_completed("rollback-task", 1_700_000_000, "回滚任务", total_size = 777)
     _create_old_database(db_path, completed_records=[old_task])
 
-    # 在 INSERT completed_task 阶段抛异常
-    original_executemany = sqlite3.Cursor.executemany
+    original_get_connection = TaskDatabase.get_connection
 
-    def patched_executemany(self, sql, params):
-        if "INSERT INTO completed_task" in sql:
-            raise RuntimeError("模拟写入 completed_task 失败")
+    class _FailingCursor:
+        def __init__(self, real):
+            self._real = real
 
-        return original_executemany(self, sql, params)
+        def execute(self, sql, *args):
+            return self._real.execute(sql, *args)
 
-    monkeypatch.setattr(sqlite3.Cursor, "executemany", patched_executemany)
+        def executemany(self, sql, params):
+            if "INSERT INTO completed_task" in sql:
+                raise RuntimeError("模拟写入 completed_task 失败")
+
+            return self._real.executemany(sql, params)
+
+        def fetchall(self):
+            return self._real.fetchall()
+
+        def fetchone(self):
+            return self._real.fetchone()
+
+        def fetchmany(self, size = None):
+            if size is None:
+                return self._real.fetchmany()
+
+            return self._real.fetchmany(size)
+
+        def close(self):
+            return self._real.close()
+
+    class _FailingConnection:
+        def __init__(self, real):
+            self._real = real
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc_val, exc_tb):
+            # 转发给真实连接的 __exit__：异常时回滚、正常时提交
+            return self._real.__exit__(exc_type, exc_val, exc_tb)
+
+        def cursor(self):
+            return _FailingCursor(self._real.cursor())
+
+        def execute(self, sql, *args):
+            return self._real.execute(sql, *args)
+
+        def executemany(self, sql, params):
+            return self._real.executemany(sql, params)
+
+        def executescript(self, script):
+            return self._real.executescript(script)
+
+        def commit(self):
+            return self._real.commit()
+
+        def rollback(self):
+            return self._real.rollback()
+
+        def close(self):
+            return self._real.close()
+
+    def patched_get_connection(self):
+        return _FailingConnection(original_get_connection(self))
+
+    monkeypatch.setattr(TaskDatabase, "get_connection", patched_get_connection)
 
     database = TaskDatabase()
 
     try:
         assert database.upgrade_failed is True
 
-        # 旧表结构未变（缺 file_size 列）
+        # 旧表结构未变（缺 file_size / media_type_group）——DROP TABLE + CREATE TABLE 被回滚
         columns = {row[1] for row in database.query("PRAGMA table_info(completed_task)")}
         assert "file_size" not in columns
+        assert "media_type_group" not in columns
 
         # 旧数据仍在
         rows = database.query("SELECT task_id FROM completed_task")
@@ -423,6 +533,7 @@ def test_upgrade_recreates_indexes(tmp_path, monkeypatch):
         assert "idx_completed_task_completed_time" in index_names
         assert "idx_completed_task_file_size" in index_names
         assert "idx_completed_task_title" in index_names
+        assert "idx_completed_task_media_type_group" in index_names
         assert "idx_completed_task_bvid" in index_names
 
     finally:
@@ -472,16 +583,17 @@ def test_upgrade_recalculates_hash_id(tmp_path, monkeypatch):
 # build_record / move_to_completed
 # ---------------------------------------------------------------------------
 
-def test_build_record_completed_returns_seven_tuple(db):
+def test_build_record_completed_returns_eight_tuple(db):
     task_info = _make_completed("build-test", 1_700_000_001, "标题", total_size = 999)
 
     record = db.build_record(task_info, completed = True)
 
-    assert len(record) == 7
+    assert len(record) == 8
     assert record[0] == "build-test"
     assert record[3] == "标题"
     assert record[4] == 1_700_000_001
     assert record[5] == 999
+    # record[6] 是 media_type_group，record[7] 是 data
 
 
 def test_build_record_downloading_still_six_tuple(db):
@@ -494,15 +606,23 @@ def test_build_record_downloading_still_six_tuple(db):
     assert len(record) == 6
 
 
-def test_move_to_completed_writes_file_size(db):
-    task_info = _make_completed("move-test", 1_700_000_100, "移动测试", total_size = 555)
+def test_move_to_completed_writes_file_size_and_media_type_group(db):
+    task_info = _make_completed(
+        "move-test", 1_700_000_100, "移动测试",
+        total_size = 555,
+        attribute = Attribute.BANGUMI_BIT,
+        download_type = DownloadType.VIDEO | DownloadType.AUDIO
+    )
 
     db.add_tasks([task_info])
 
     db.move_to_completed(db.build_record(task_info, completed = True))
 
-    completed_rows = db.query('SELECT file_size FROM completed_task WHERE task_id = ?', ("move-test",))
-    assert completed_rows == [(555,)]
+    completed_rows = db.query(
+        'SELECT file_size, media_type_group FROM completed_task WHERE task_id = ?',
+        ("move-test",)
+    )
+    assert completed_rows == [(555, "BANGUMI")]
 
     downloading_rows = db.query('SELECT COUNT(*) FROM download_task WHERE task_id = ?', ("move-test",))
     assert downloading_rows == [(0,)]
@@ -575,7 +695,7 @@ def test_tie_breaker_keeps_pagination_stable(db):
 
     按 file_size 排序时大量条目的 total_size 为 0 或相同。没有 tie-breaker 的话
     SQLite 不保证稳定顺序，同一行可能出现在两页，或某行永远不出现。这个用例在
-    没有 "id" tie-breaker 时会失败 —— 是钉住 reviewer ① 的核心保护
+    没有 "id" tie-breaker 时会失败
     """
     # 10 条 total_size 全为 0 的记录，只有 id 不同
     tasks = [_make_completed(f"t{i}", 1000 + i, f"标题{i}", total_size = 0) for i in range(1, 11)]
@@ -791,20 +911,18 @@ def test_count_completed_respects_multiple_keywords(db):
 
 
 # ---------------------------------------------------------------------------
-# 媒体筛选：SQL 分类必须与客户端 get_media_type_key 逐条一致
+# 媒体筛选：_calc_media_type_group 必须与客户端 get_media_type_key 逐条一致
 #
 # 客户端判定是一个互斥的分派：AUDIO > COURSE > BANGUMI > INTERACTIVE > VIDEO。
-# SQL 版本必须同样互斥，否则一条带多个属性位的记录会同时落入多个类别，
-# 筛选结果与封面角标对不上。
-#
-# UI 的 get_media_type_group_dict 只提供四个组：VIDEO / BANGUMI / COURSE / AUDIO，
-# 其中 VIDEO 组同时包含 VIDEO 与 INTERACTIVE（互动视频归在「视频」里）。
+# media_type_group 列存单值（VIDEO / INTERACTIVE / BANGUMI / COURSE / AUDIO /
+# 空串），build_record 时算好存入，筛选走索引。这条列与客户端的分类必须一致，
+# 否则封面角标写着 X、按 X 筛选却筛不出来（或反之）。
 # ---------------------------------------------------------------------------
 
-@pytest.mark.parametrize("attribute, download_type, expected_client_key", [
+@pytest.mark.parametrize("attribute, download_type, expected_group", [
     # 普通投稿视频
     (Attribute.VIDEO_BIT, DownloadType.VIDEO | DownloadType.AUDIO, "VIDEO"),
-    # 互动视频：VIDEO_BIT + INTERACTIVE_BIT，客户端归到「互动」，UI 组归到「视频」
+    # 互动视频：VIDEO_BIT + INTERACTIVE_BIT，客户端归到「互动」
     (Attribute.VIDEO_BIT | Attribute.INTERACTIVE_BIT, DownloadType.VIDEO | DownloadType.AUDIO, "INTERACTIVE"),
     # 番剧
     (Attribute.BANGUMI_BIT, DownloadType.VIDEO | DownloadType.AUDIO, "BANGUMI"),
@@ -816,14 +934,20 @@ def test_count_completed_respects_multiple_keywords(db):
     (Attribute.VIDEO_BIT, DownloadType.AUDIO, "AUDIO"),
     # 带 AUDIO_BIT 的音频条目
     (Attribute.AUDIO_BIT, DownloadType.AUDIO, "AUDIO"),
+    # 多属性位：BANGUMI 优先级高于 VIDEO
+    (Attribute.VIDEO_BIT | Attribute.BANGUMI_BIT, DownloadType.VIDEO | DownloadType.AUDIO, "BANGUMI"),
+    # 无任何属性位、type 也是空：归到空串
+    (0, 0, ""),
 ])
-def test_media_type_sql_matches_client_classification(db, attribute, download_type, expected_client_key):
-    """_build_media_type_sql 的分类必须与客户端 get_media_type_key 逐条一致
-
-    用例同时验证客户端分类和 SQL 分类，任何一侧语义分叉都会失败
-    """
+def test_media_type_group_matches_client_classification(db, attribute, download_type, expected_group):
+    """_calc_media_type_group 的判定必须与客户端 get_media_type_key 逐条一致"""
     from types import SimpleNamespace
     from gui.component.download_list.item_delegate import get_media_type_key
+
+    task_info = _make_completed(
+        "media-test", 1000, "媒体类型测试",
+        attribute = attribute, download_type = download_type
+    )
 
     # 1. 客户端分类
     client_task = SimpleNamespace(
@@ -832,102 +956,60 @@ def test_media_type_sql_matches_client_classification(db, attribute, download_ty
     )
     client_key = get_media_type_key(client_task)
 
-    assert client_key == expected_client_key, f"客户端分类与预期不符：{client_key} != {expected_client_key}"
+    # 2. 服务端分类（_calc_media_type_group）
+    server_group = db._calc_media_type_group(task_info)
 
-    # 2. SQL 分类
-    task_info = _make_completed("media-test", 1000, "媒体类型测试", attribute = attribute, download_type = download_type)
-    db.add_tasks([task_info], completed = True)
-
-    # 四个 UI 组逐一测试：只有客户端分类命中的组才应该查到这条记录
-    ui_groups = {
-        "VIDEO": {"VIDEO", "INTERACTIVE"},
-        "BANGUMI": {"BANGUMI"},
-        "COURSE": {"COURSE"},
-        "AUDIO": {"AUDIO"},
-    }
-
-    for group, members in ui_groups.items():
-        rows = db.query_completed_page(0, 10, "completed_time", False, media_types = frozenset({group}))
-        found = _task_ids_from_rows(rows) == ["media-test"]
-
-        expected = expected_client_key in members
-
-        assert found == expected, (
-            f"属性位 {attribute:#x} type {download_type} 在组 {group} 的分类不一致"
-            f"（客户端：{expected_client_key}，SQL 命中：{found}，应命中：{expected}）"
-        )
-
-
-def test_media_type_sql_priority_excludes_lower_categories(db):
-    """同时带多个属性位时，SQL 的互斥排除必须生效
-
-    客户端的判定是 AUDIO > COURSE > BANGUMI > INTERACTIVE > VIDEO 的互斥分派。
-    一条记录同时带 BANGUMI_BIT 与 VIDEO_BIT 时，客户端归到 BANGUMI；
-    SQL 的 is_bangumi 分支必须通过 NOT is_audio AND NOT course_pre 排除
-    AUDIO 与 COURSE，才能在 BANGUMI 组命中而 VIDEO 组不命中。
-
-    这个用例在 SQL 缺少互斥排除时会失败：VIDEO 组会额外命中这条记录
-    """
-    from types import SimpleNamespace
-    from gui.component.download_list.item_delegate import get_media_type_key
-
-    attribute = Attribute.VIDEO_BIT | Attribute.BANGUMI_BIT
-    download_type = DownloadType.VIDEO | DownloadType.AUDIO
-
-    client_task = SimpleNamespace(
-        Episode = SimpleNamespace(attribute = attribute),
-        Download = SimpleNamespace(type = download_type),
+    assert client_key == expected_group, f"客户端分类与预期不符：{client_key} != {expected_group}"
+    assert server_group == expected_group, f"_calc_media_type_group 与预期不符：{server_group} != {expected_group}"
+    assert client_key == server_group, (
+        f"客户端与 _calc_media_type_group 分类不一致：{client_key} != {server_group}"
     )
 
-    # 客户端归到 BANGUMI（优先级高于 VIDEO）
-    assert get_media_type_key(client_task) == "BANGUMI"
 
-    task_info = _make_completed("multi-bit", 1000, "多属性位", attribute = attribute, download_type = download_type)
-    db.add_tasks([task_info], completed = True)
+def test_media_type_group_column_initialized_on_insert(db):
+    """add_tasks(completed=True) 时 media_type_group 列被正确填充"""
+    tasks = [
+        _make_completed("video", 1000, "视频",
+                        attribute = Attribute.VIDEO_BIT,
+                        download_type = DownloadType.VIDEO | DownloadType.AUDIO),
+        _make_completed("interactive", 2000, "互动",
+                        attribute = Attribute.VIDEO_BIT | Attribute.INTERACTIVE_BIT,
+                        download_type = DownloadType.VIDEO | DownloadType.AUDIO),
+        _make_completed("bangumi", 3000, "番剧",
+                        attribute = Attribute.BANGUMI_BIT,
+                        download_type = DownloadType.VIDEO | DownloadType.AUDIO),
+        _make_completed("course", 4000, "课程",
+                        attribute = Attribute.CHEESE_BIT,
+                        download_type = DownloadType.VIDEO | DownloadType.AUDIO),
+        _make_completed("audio", 5000, "音频",
+                        attribute = Attribute.VIDEO_BIT,
+                        download_type = DownloadType.AUDIO),
+    ]
+    db.add_tasks(tasks, completed = True)
 
-    # BANGUMI 组命中
-    rows = db.query_completed_page(0, 10, "completed_time", False, media_types = frozenset({"BANGUMI"}))
-    assert _task_ids_from_rows(rows) == ["multi-bit"]
+    rows = db.query("SELECT task_id, media_type_group FROM completed_task ORDER BY task_id")
 
-    # VIDEO 组不命中（被互斥排除）
-    rows = db.query_completed_page(0, 10, "completed_time", False, media_types = frozenset({"VIDEO"}))
-    assert _task_ids_from_rows(rows) == []
-
-
-def test_media_type_sql_priority_audio_beats_everything(db):
-    """audio_only 优先于所有属性位：type 只有 AUDIO 时不论 attribute 有什么位都归 AUDIO"""
-    from types import SimpleNamespace
-    from gui.component.download_list.item_delegate import get_media_type_key
-
-    # 一条记录同时带 BANGUMI_BIT，但 type 只有 AUDIO（无 VIDEO 位）
-    attribute = Attribute.BANGUMI_BIT
-    download_type = DownloadType.AUDIO
-
-    client_task = SimpleNamespace(
-        Episode = SimpleNamespace(attribute = attribute),
-        Download = SimpleNamespace(type = download_type),
-    )
-
-    # audio_only 优先级最高，覆盖属性位
-    assert get_media_type_key(client_task) == "AUDIO"
-
-    task_info = _make_completed("audio-priority", 1000, "音频优先", attribute = attribute, download_type = download_type)
-    db.add_tasks([task_info], completed = True)
-
-    # 只在 AUDIO 组命中
-    rows = db.query_completed_page(0, 10, "completed_time", False, media_types = frozenset({"AUDIO"}))
-    assert _task_ids_from_rows(rows) == ["audio-priority"]
-
-    rows = db.query_completed_page(0, 10, "completed_time", False, media_types = frozenset({"BANGUMI"}))
-    assert _task_ids_from_rows(rows) == []
+    assert rows == [
+        ("audio",       "AUDIO"),
+        ("bangumi",     "BANGUMI"),
+        ("course",      "COURSE"),
+        ("interactive", "INTERACTIVE"),
+        ("video",       "VIDEO"),
+    ]
 
 
 def test_media_type_filter_accepts_multiple_groups(db):
     """多组选择时是 OR 关系：勾「视频」+「音频」应同时命中两类"""
     tasks = [
-        _make_completed("video", 1000, "视频", attribute = Attribute.VIDEO_BIT, download_type = DownloadType.VIDEO | DownloadType.AUDIO),
-        _make_completed("audio", 2000, "音频", attribute = Attribute.VIDEO_BIT, download_type = DownloadType.AUDIO),
-        _make_completed("bangumi", 3000, "番剧", attribute = Attribute.BANGUMI_BIT, download_type = DownloadType.VIDEO | DownloadType.AUDIO),
+        _make_completed("video", 1000, "视频",
+                        attribute = Attribute.VIDEO_BIT,
+                        download_type = DownloadType.VIDEO | DownloadType.AUDIO),
+        _make_completed("audio", 2000, "音频",
+                        attribute = Attribute.VIDEO_BIT,
+                        download_type = DownloadType.AUDIO),
+        _make_completed("bangumi", 3000, "番剧",
+                        attribute = Attribute.BANGUMI_BIT,
+                        download_type = DownloadType.VIDEO | DownloadType.AUDIO),
     ]
     db.add_tasks(tasks, completed = True)
 
@@ -938,18 +1020,89 @@ def test_media_type_filter_accepts_multiple_groups(db):
     assert set(_task_ids_from_rows(rows)) == {"video", "bangumi"}
 
 
+def test_media_type_filter_video_group_includes_interactive(db):
+    """UI 的「视频」组同时命中 VIDEO 与 INTERACTIVE
+
+    互动视频的媒体类型由 get_media_type_key 归到 INTERACTIVE（封面角标显示
+    「互动」），但用户勾「视频」时也要能筛出来 —— UI 的 VIDEO 组在
+    get_media_type_group_dict 里被定义为 {VIDEO, INTERACTIVE}，
+    _build_filter_clause 据此展开成 IN ('VIDEO', 'INTERACTIVE')
+    """
+    tasks = [
+        _make_completed("video", 1000, "普通视频",
+                        attribute = Attribute.VIDEO_BIT,
+                        download_type = DownloadType.VIDEO | DownloadType.AUDIO),
+        _make_completed("interactive", 2000, "互动视频",
+                        attribute = Attribute.VIDEO_BIT | Attribute.INTERACTIVE_BIT,
+                        download_type = DownloadType.VIDEO | DownloadType.AUDIO),
+        _make_completed("bangumi", 3000, "番剧",
+                        attribute = Attribute.BANGUMI_BIT,
+                        download_type = DownloadType.VIDEO | DownloadType.AUDIO),
+    ]
+    db.add_tasks(tasks, completed = True)
+
+    rows = db.query_completed_page(0, 10, "completed_time", False, media_types = frozenset({"VIDEO"}))
+    assert set(_task_ids_from_rows(rows)) == {"video", "interactive"}
+
+
 def test_media_type_filter_combines_with_keyword_as_and(db):
     """关键词与媒体筛选是 AND 关系，与旧版 proxy 的 _batchTargets 语义一致"""
     tasks = [
-        _make_completed("vm", 1000, "Minecraft 视频", attribute = Attribute.VIDEO_BIT, download_type = DownloadType.VIDEO | DownloadType.AUDIO),
-        _make_completed("am", 2000, "Minecraft 音频", attribute = Attribute.VIDEO_BIT, download_type = DownloadType.AUDIO),
-        _make_completed("vo", 3000, "原神 视频", attribute = Attribute.VIDEO_BIT, download_type = DownloadType.VIDEO | DownloadType.AUDIO),
+        _make_completed("vm", 1000, "Minecraft 视频",
+                        attribute = Attribute.VIDEO_BIT,
+                        download_type = DownloadType.VIDEO | DownloadType.AUDIO),
+        _make_completed("am", 2000, "Minecraft 音频",
+                        attribute = Attribute.VIDEO_BIT,
+                        download_type = DownloadType.AUDIO),
+        _make_completed("vo", 3000, "原神 视频",
+                        attribute = Attribute.VIDEO_BIT,
+                        download_type = DownloadType.VIDEO | DownloadType.AUDIO),
     ]
     db.add_tasks(tasks, completed = True)
 
     # 关键词 Minecraft + 视频组：只应命中 vm
     rows = db.query_completed_page(0, 10, "completed_time", False, keyword = "minecraft", media_types = frozenset({"VIDEO"}))
     assert _task_ids_from_rows(rows) == ["vm"]
+
+
+def test_media_type_filter_priority_excludes_lower_categories(db):
+    """同时带多个属性位时，分类按互斥优先级落入单值，筛选只在那一个组命中
+
+    客户端的判定是 AUDIO > COURSE > BANGUMI > INTERACTIVE > VIDEO 的互斥分派。
+    一条记录同时带 BANGUMI_BIT 与 VIDEO_BIT 时，客户端归到 BANGUMI；
+    _calc_media_type_group 同样归到 BANGUMI，所以筛选只应在 BANGUMI 组命中
+    """
+    tasks = [
+        _make_completed("multi-bit", 1000, "多属性位",
+                        attribute = Attribute.VIDEO_BIT | Attribute.BANGUMI_BIT,
+                        download_type = DownloadType.VIDEO | DownloadType.AUDIO),
+    ]
+    db.add_tasks(tasks, completed = True)
+
+    # BANGUMI 组命中
+    rows = db.query_completed_page(0, 10, "completed_time", False, media_types = frozenset({"BANGUMI"}))
+    assert _task_ids_from_rows(rows) == ["multi-bit"]
+
+    # VIDEO 组不命中
+    rows = db.query_completed_page(0, 10, "completed_time", False, media_types = frozenset({"VIDEO"}))
+    assert _task_ids_from_rows(rows) == []
+
+
+def test_media_type_filter_audio_beats_everything(db):
+    """audio_only 优先于所有属性位：type 只有 AUDIO 时不论 attribute 有什么位都归 AUDIO"""
+    tasks = [
+        _make_completed("audio-priority", 1000, "音频优先",
+                        attribute = Attribute.BANGUMI_BIT,
+                        download_type = DownloadType.AUDIO),
+    ]
+    db.add_tasks(tasks, completed = True)
+
+    # 只在 AUDIO 组命中
+    rows = db.query_completed_page(0, 10, "completed_time", False, media_types = frozenset({"AUDIO"}))
+    assert _task_ids_from_rows(rows) == ["audio-priority"]
+
+    rows = db.query_completed_page(0, 10, "completed_time", False, media_types = frozenset({"BANGUMI"}))
+    assert _task_ids_from_rows(rows) == []
 
 
 # ---------------------------------------------------------------------------
@@ -1004,9 +1157,15 @@ def test_delete_completed_by_filter_combines_keyword_and_media_types(db):
     这是 reviewer 强调的「关键词 + 媒体筛选组合下清空可能误删」的保护
     """
     tasks = [
-        _make_completed("vm", 1000, "Minecraft 视频", attribute = Attribute.VIDEO_BIT, download_type = DownloadType.VIDEO | DownloadType.AUDIO),
-        _make_completed("am", 2000, "Minecraft 音频", attribute = Attribute.VIDEO_BIT, download_type = DownloadType.AUDIO),
-        _make_completed("vo", 3000, "原神 视频", attribute = Attribute.VIDEO_BIT, download_type = DownloadType.VIDEO | DownloadType.AUDIO),
+        _make_completed("vm", 1000, "Minecraft 视频",
+                        attribute = Attribute.VIDEO_BIT,
+                        download_type = DownloadType.VIDEO | DownloadType.AUDIO),
+        _make_completed("am", 2000, "Minecraft 音频",
+                        attribute = Attribute.VIDEO_BIT,
+                        download_type = DownloadType.AUDIO),
+        _make_completed("vo", 3000, "原神 视频",
+                        attribute = Attribute.VIDEO_BIT,
+                        download_type = DownloadType.VIDEO | DownloadType.AUDIO),
     ]
     db.add_tasks(tasks, completed = True)
 
@@ -1020,9 +1179,15 @@ def test_delete_completed_by_filter_combines_keyword_and_media_types(db):
 def test_delete_completed_by_filter_only_media_types(db):
     """只有媒体筛选时按媒体筛选删，不触碰其他类型"""
     tasks = [
-        _make_completed("video", 1000, "视频", attribute = Attribute.VIDEO_BIT, download_type = DownloadType.VIDEO | DownloadType.AUDIO),
-        _make_completed("audio", 2000, "音频", attribute = Attribute.VIDEO_BIT, download_type = DownloadType.AUDIO),
-        _make_completed("bangumi", 3000, "番剧", attribute = Attribute.BANGUMI_BIT, download_type = DownloadType.VIDEO | DownloadType.AUDIO),
+        _make_completed("video", 1000, "视频",
+                        attribute = Attribute.VIDEO_BIT,
+                        download_type = DownloadType.VIDEO | DownloadType.AUDIO),
+        _make_completed("audio", 2000, "音频",
+                        attribute = Attribute.VIDEO_BIT,
+                        download_type = DownloadType.AUDIO),
+        _make_completed("bangumi", 3000, "番剧",
+                        attribute = Attribute.BANGUMI_BIT,
+                        download_type = DownloadType.VIDEO | DownloadType.AUDIO),
     ]
     db.add_tasks(tasks, completed = True)
 
@@ -1142,10 +1307,10 @@ def test_upgrade_failed_makes_writes_noop(db):
 def test_upgrade_failed_skips_move_to_completed(db):
     """upgrade_failed 时 move_to_completed 返回 False，不做 DELETE + INSERT
 
-    升级事务已回滚，completed_task 仍缺 file_size 列，INSERT 7 元组会 SQL 报错。
-    这里直接跳过，任务留在 download_task 里，重启并升级成功后可重新处理。
-    不做 DELETE + INSERT 的「半截操作」，避免 DELETE 已提交、INSERT 失败
-    导致任务记录永久丢失
+    升级事务已回滚，completed_task 仍缺 file_size / media_type_group 列，
+    INSERT 8 元组会 SQL 报错。这里直接跳过，任务留在 download_task 里，
+    重启并升级成功后可重新处理。不做 DELETE + INSERT 的「半截操作」，
+    避免 DELETE 已提交、INSERT 失败导致任务记录永久丢失
     """
     task_info = _make_completed("skip-archive", 1_700_000_000, "跳过归档")
     db.add_tasks([task_info], completed = False)
