@@ -310,8 +310,8 @@ class DefaultValue:
 class APPConfig(QConfig):
     # APP
     app_name = "Bili23 Downloader"
-    app_version = "2.21.0"
-    app_comparable_version = "2.21.0"
+    app_version = "2.22.0"
+    app_comparable_version = "2.22.0"
     # 配置格式版本。**改动必须在 patch_config 里加对应的门禁并把它 +1**，
     # 否则已有用户配置里那份副本永远不会被更新（DefaultValue 只在配置文件不存在时
     # 作为初值）。与 app_version 不要求逐字对应

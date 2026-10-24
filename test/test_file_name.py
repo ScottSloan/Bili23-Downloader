@@ -12,6 +12,7 @@ format() 内部吞掉了所有异常并返回 None，所以这些用例同时兼
 
 from util.format.file_name import FileNameFormatter
 
+from datetime import datetime
 from pathlib import Path
 import pytest
 
@@ -40,6 +41,16 @@ class TestSanitize:
     def test_non_string_values_pass_through(self):
         # 序号、aid 等是整数，不应被净化逻辑破坏
         assert render("{n}", {"n": 42}) == "42"
+
+    def test_datetime_without_format_is_sanitized(self):
+        # 不带格式的时间变量渲染出来是「2026-03-07 12:34:56」。以前只净化 str 值，
+        # 冒号是格式化时才生成的，原样落进文件名，到建文件那一步才失败
+        assert render("{t}", {"t": datetime(2026, 3, 7, 12, 34, 56)}) == "2026-03-07 12_34_56"
+
+    def test_illegal_chars_from_format_spec_are_sanitized(self):
+        assert render("{t:%H:%M}", {"t": datetime(2026, 3, 7, 12, 34, 56)}) == "12_34"
+        # 填充符同样是格式化时才出现的
+        assert render("{n:?>4}", {"n": 7}) == "___7"
 
 
 class TestPathTraversal:
@@ -189,8 +200,8 @@ class TestOptionalSegmentSafety:
     """
     可选段不得绕开净化链
 
-    求值顺序是 __sanitize_component（逐值）→ 模板渲染 → __normalize_path（整串）。
-    可选段只是在**已净化的值**之间做拼接，拼接结果整体再过一次路径规范化，
+    求值顺序是模板渲染 → __sanitize_component（逐字段，格式化之后）→ __normalize_path（整串）。
+    可选段只是在**已净化的字段**之间做拼接，拼接结果整体再过一次路径规范化，
     所以上面 TestSanitize / TestPathTraversal 的全部不变式在这里依然成立。
     """
 

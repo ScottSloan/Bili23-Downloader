@@ -9,13 +9,17 @@
 
 **求值顺序不可协商**，它是安全边界的一部分：
 
-    FileNameFormatter.__sanitize_component（逐值净化）
-        → 本模块解析模板、代入变量值
+    本模块解析模板、代入变量值
+        → FileNameFormatter.__sanitize_component（逐字段，作用于格式化之后的文本）
             → FileNameFormatter.__normalize_path（整串，最后一步）
 
 模板**先解析后代入**，因此变量值里的 `<` `>` 无法注入语法；而可选段只是在
-已净化的值之间做拼接，拼接结果整体再过一次路径规范化。任何人不得在
+已净化的字段之间做拼接，拼接结果整体再过一次路径规范化。任何人不得在
 __normalize_path 之后再拼接字符串 —— 那会绕过这条链上的全部防护。
+
+净化必须作用于**格式化之后**的字段文本，而不是代入前的原始值：datetime 的
+默认写法是「2026-03-07 00:00:00」，`{pub_time:%H:%M}` 里的冒号也是格式化时
+才生成的，代入前只看得到一个 datetime 对象，按值净化根本拦不住它们。
 
 `<` `>` 不提供转义写法。这两个字符在 Windows 文件名里非法，净化逻辑会把
 变量值里的它们换成下划线，编辑器的校验器也一直在拒绝字面量里的它们 ——
@@ -92,11 +96,18 @@ class _BlankTrackingFormatter(string.Formatter):
     blank_hit / field_count 反映的就是这一段自身（不含嵌套子段）的情况。
     """
 
-    def __init__(self):
+    def __init__(self, sanitize = None):
         super().__init__()
+
+        self.sanitize = sanitize
 
         self.blank_hit = False
         self.field_count = 0
+
+    def format_field(self, value, format_spec):
+        text = super().format_field(value, format_spec)
+
+        return self.sanitize(text) if self.sanitize else text
 
     def get_field(self, field_name, args, kwargs):
         if "." in field_name or "[" in field_name:
@@ -263,12 +274,18 @@ class RuleTemplate:
         self.rule = rule
         self.nodes = nodes
 
-    def render(self, data: Mapping) -> str:
-        text, _, _, _, _ = self._render_nodes(self.nodes, data)
+    def render(self, data: Mapping, sanitize = None) -> str:
+        """
+        渲染规则
+
+        sanitize 作用于每个字段格式化之后的文本（理由见模块 docstring），
+        判空仍然看原始值，两者互不干扰
+        """
+        text, _, _, _, _ = self._render_nodes(self.nodes, data, sanitize)
 
         return text
 
-    def _render_nodes(self, nodes, data: Mapping):
+    def _render_nodes(self, nodes, data: Mapping, sanitize = None):
         """
         渲染一层节点
 
@@ -278,7 +295,7 @@ class RuleTemplate:
         会被丢弃，也必须抛出 KeyError，否则编辑器里校验通过的规则到了运行期
         才悄悄少一截。
         """
-        formatter = _BlankTrackingFormatter()
+        formatter = _BlankTrackingFormatter(sanitize)
 
         pieces = []
         nested_total = 0
@@ -291,7 +308,7 @@ class RuleTemplate:
             else:
                 nested_total += 1
 
-                rendered = self._render_optional(node, data)
+                rendered = self._render_optional(node, data, sanitize)
 
                 if rendered:
                     nested_kept += 1
@@ -300,8 +317,8 @@ class RuleTemplate:
 
         return "".join(pieces), formatter.blank_hit, formatter.field_count, nested_total, nested_kept
 
-    def _render_optional(self, node: OptionalNode, data: Mapping) -> str:
-        text, blank_hit, field_count, nested_total, nested_kept = self._render_nodes(node.children, data)
+    def _render_optional(self, node: OptionalNode, data: Mapping, sanitize = None) -> str:
+        text, blank_hit, field_count, nested_total, nested_kept = self._render_nodes(node.children, data, sanitize)
 
         if blank_hit:
             # 段内任一变量为空 → 整段（含字面量前后缀）丢弃。
@@ -323,6 +340,22 @@ class RuleTemplate:
             names.update(_iter_field_names(node.text))
 
         return frozenset(names)
+
+    def field_specs(self):
+        """
+        规则里每个字段的 (变量名, 格式串)
+
+        供编辑器校验格式串：字面量里的非法字符靠 literal_texts 拦，
+        `{pub_time:%H:%M}` 这种藏在格式串里的冒号只能在这里拦
+        """
+        specs = []
+
+        for node in _iter_text_nodes(self.nodes):
+            for _, field_name, format_spec, _ in string.Formatter().parse(node.text):
+                if field_name:
+                    specs.append((field_name.split(".")[0].split("[")[0], format_spec or ""))
+
+        return specs
 
     def literal_texts(self):
         """

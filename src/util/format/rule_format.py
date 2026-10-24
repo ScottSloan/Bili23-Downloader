@@ -41,6 +41,18 @@ def presets_for(variable_type) -> tuple:
         case _:
             return ()
 
+def default_spec(variable_type) -> str:
+    """
+    新插入或刚换上的变量该带什么格式
+
+    落到第一个预设而不是空串：时间变量不带格式渲染出来是「2026-03-07 00:00:00」，
+    冒号在 Windows 文件名里非法。空串也不在日期预设里，编辑面板会因此落到「自定义」
+    并留下一个空输入框，用户根本看不出这个变量其实没有格式
+    """
+    presets = presets_for(variable_type)
+
+    return presets[0] if presets else ""
+
 def preview_spec(variable_type, spec: str) -> str:
     """
     把一个格式串渲染成示例效果，供下拉项旁边标注

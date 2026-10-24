@@ -17,7 +17,7 @@ from util.common.translator import Translator
 from util.common.enum import VariableType
 
 from util.format.rule_model import Fragment, Level, RuleModel, parse_rule, UnsupportedRule
-from util.format.rule_format import presets_for, preview_spec
+from util.format.rule_format import presets_for, preview_spec, default_spec
 
 def _discard(widget: QWidget):
     """
@@ -288,12 +288,9 @@ class FragmentEditView(FlyoutViewBase):
     def on_variable_changed(self):
         self.fragment.variable = self.variable_choice.currentData()
 
-        # 换了变量，原来的格式多半不再适用（日期格式套到数字上会直接报错）。
-        # 落到新变量的第一个预设而不是空串：时间变量不带格式渲染出来是
-        # 「2026-03-07 00:00:00」，冒号会被净化成下划线，没人想要那个文件名
-        presets = presets_for(self._variable_type())
-
-        self.fragment.spec = presets[0] if presets else ""
+        # 换了变量，原来的格式多半不再适用（日期格式套到数字上会直接报错），
+        # 落到新变量的默认格式（理由见 default_spec）
+        self.fragment.spec = default_spec(self._variable_type())
 
         self._set_format_text("")
         self._init_format_choice()
@@ -536,7 +533,11 @@ class RuleLevelRow(QWidget):
     def _variable_action(self, entry: dict, parent):
         action = Action(icon = FluentIcon.TAG, text = variable_label(entry), parent = parent)
         action.setToolTip(entry["variable"])
-        action.triggered.connect(lambda *_, name = entry["name"]: self.add_fragment(Fragment(variable = name)))
+        # 插入时就带上默认格式，与编辑面板里换变量走同一条路径 —— 以前这里留空，
+        # 时间变量插进来就是一个没有格式的 {pub_time}，落盘时文件名里带冒号
+        action.triggered.connect(lambda *_, name = entry["name"], spec = default_spec(entry.get("type")): self.add_fragment(
+            Fragment(variable = name, spec = spec)
+        ))
 
         return action
 

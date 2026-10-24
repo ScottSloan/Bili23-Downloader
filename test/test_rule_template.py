@@ -143,6 +143,24 @@ class TestIntrospection:
     def test_empty_optional_segment_detected_when_nested(self):
         assert compile_rule("<{a}<abc>>").has_empty_optional_segment()
 
+    def test_field_specs(self):
+        assert compile_rule("{a}/<P{b:02d}-{c:%H:%M}>").field_specs() == [("a", ""), ("b", "02d"), ("c", "%H:%M")]
+
+class TestSanitize:
+    """净化作用于格式化之后的字段文本，判空仍看原始值"""
+
+    def test_sanitize_applies_to_formatted_text(self):
+        result = compile_rule("{t:%H:%M}").render({"t": datetime(2026, 3, 7, 12, 34)}, lambda text: text.replace(":", "_"))
+
+        assert result == "12_34"
+
+    def test_sanitize_does_not_touch_literals(self):
+        assert compile_rule("a:{t}").render({"t": "b:c"}, lambda text: text.replace(":", "_")) == "a:b_c"
+
+    def test_blank_check_still_uses_raw_value(self):
+        # 净化把 0 渲染成的 "00" 原样放过，可选段依旧按原始值 0 丢弃
+        assert compile_rule("<P{p:02d}->x").render({"p": 0}, str.upper) == "x"
+
 
 class TestIssue461:
     """一条规则同时适配单P与多P —— 这是整个特性存在的理由"""

@@ -59,12 +59,9 @@ class FileNameFormatter:
 
                 self.rule = FALLBACK_RULE
 
-            safe_variable_data = {
-                name: self.__sanitize_component(value)
-                for name, value in self.variable_data.items()
-            }
-
-            return self.__normalize_path(compile_rule(self.rule).render(safe_variable_data))
+            # 净化交给模板逐字段做，而不是在这里按值预处理：只净化 str 值的话，
+            # datetime 格式化出来的冒号会原样落进文件名（理由见 rule_template 的 docstring）
+            return self.__normalize_path(compile_rule(self.rule).render(self.variable_data, self.__sanitize_component))
         
         except Exception:
             # logger.exception 已带上完整堆栈，无需再引用异常对象

@@ -13,7 +13,7 @@ from gui.component.rule_builder import RuleBuilderWidget
 
 from util.common.data import convention_type_map, reversed_convention_type_map, VariableListFactory
 from util.common.data.naming_convention import SampleShape, SUPPORTED_SHAPES, MIXED_ENTRY_TYPES
-from util.common.enum import ConventionType, ToastNotificationCategory
+from util.common.enum import ConventionType, ToastNotificationCategory, VariableType
 from util.common.translator import Translator
 from util.format.file_name import FileNameFormatter
 from util.format.rule_template import compile_rule, RuleSyntaxError
@@ -498,6 +498,21 @@ class EditRuleDialog(Base, QWidget):
 
         if template.has_empty_optional_segment():
             return False, self.tr("An optional segment must contain at least one variable")
+
+        # 格式串不算字面量，上面那道检查看不见它。运行期虽然会把冒号净化成下划线，
+        # 但那已经不是用户写下的样子了，得当场告诉用户
+        variable_types = {
+            entry["name"]: entry.get("type") for entry in self.preview_panel.factory.build(self.type_choice.currentData())
+        }
+
+        for name, spec in template.field_specs():
+            if re.search(r'[<>:\\"|/?*\x00-\x1f]', spec):
+                return False, self.tr("""Format of {name} contains illegal characters: <>:\\"|/?* or control characters""").format(name = name)
+
+            if not spec and variable_types.get(name) == VariableType.DATETIME:
+                # 不带格式的时间变量渲染出来是「2026-03-07 00:00:00」，自带冒号。
+                # 可视化编辑器里选了「自定义」却没填，序列化出来就是这样
+                return False, self.tr("{name} needs a date format, its default output contains ':'").format(name = name)
 
         if self.preview_panel.render(rule, SampleShape.SINGLE) is None:
             return False, self.tr("Invalid naming rule")
