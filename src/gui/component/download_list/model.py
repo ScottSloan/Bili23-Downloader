@@ -16,7 +16,6 @@ from typing import List
 
 logger = logging.getLogger(__name__)
 
-
 class DownloadListModel(CoverQueryModelBase):
     # 行被删除后发射，参数为本次删除的数量。
     # 所有删除路径（cancelDownload、redownload、batch_cancel）最终都落到本模型的
