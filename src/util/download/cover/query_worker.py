@@ -184,22 +184,74 @@ class CoverQueryWorker(QRunnable):
         return image, bytes(buffer.data())
 
     def query_url(self):
-        from ..cover.manager import cover_manager
-
         api_url = self.query_param.get("api_url")
+        # params 由 EntryListModel 保证非空；缺失时 urlencode 抛 TypeError，
+        # 由 _run 统一记为「查询封面 URL 失败」
         params = self.query_param.get("params")
-        
+
         url = f"{api_url}?{urlencode(params)}"
 
         request = SyncNetWorkRequest(url)
         response = request.run()
 
-        cover_url = response.get("data", {}).get("cover", "")
+        data = response.get("data")
+        cover_url = data.get("cover", "") if data else ""
+
+        # 只有在接口明确返回了 data、但其中没有封面时，才回退到第一个视频的封面。
+        # data 缺失或为 null 通常是业务出错（风控拦截、参数错误等），此时不应把错误
+        # 误判成"用户未设置封面" —— 否则一次接口故障会被静默换成一张错误的封面，
+        # 用户看到的是与自己预期不符的图，而日志里没有任何痕迹。
+        # 让后续的 ValueError 抛出，由 _run 的日志和 notify_failed 处理
+        if data and not cover_url:
+            cover_url = self.query_favlist_first_cover(api_url, params)
 
         if not cover_url:
             raise ValueError("获取封面 URL 失败")
 
-        # 换成真实封面 URL 对应的 cover_id，但尺寸后缀必须保留 —— 模型侧是按
-        # 「cover_id@宽x高」请求的，写回裸 md5 就永远对不上，缓存永不命中
-        self.cover_key = cover_manager.arrange_cover_key(cover_manager.arrange_cover_id(cover_url), self.cover_size)
+        # 只写 cover_url，不改 cover_key。模型侧是按「发起查询时的 cover_key」
+        # 登记等待集并查询缓存的；若在这里改写成 md5(cover_url)@{w}x{h}，
+        # 回报时 _release_waiting_rows 找不到对应的等待集，dataChanged 不会触发 ——
+        # 表现为封面已经拿到并写入了缓存，界面却一直停在占位图，且因为等待集
+        # 没有被释放，重绘也不会再次发起请求，形成确定性挂起
         self.cover_url = cover_url
+
+    def query_favlist_first_cover(self, api_url: str, params: dict | None):
+        # 只有收藏夹场景才走这个 fallback。__query__ 是通用机制，未来其他列表可能
+        # 复用，params 里也可能有 media_id，仅凭 media_id 存在与否判断会发错接口
+        if not api_url or "/x/v3/fav/folder/info" not in api_url:
+            return ""
+
+        media_id = params.get("media_id") if params else None
+
+        if not media_id:
+            return ""
+
+        # 与 util.parse.parser.favlist.FavlistParser.get_favlist() 的参数保持一致：
+        # pn=1、ps=1 只取第一页的第一条，即「收藏夹内第一个视频」（默认按收藏时间倒序，
+        # 语义与收藏夹页面相同）。
+        #
+        # 只取第一条：第一条无 cover 即视为失败，不遍历后续 —— 宁可退化到占位图，
+        # 也不误显示非首个视频的封面。这个取舍由 test_query_url_raises_when_first_media_has_no_cover 钉死
+        fallback_params = {
+            "media_id": media_id,
+            "pn": 1,
+            "ps": 1,
+            "keyword": "",
+            "order": "mtime",
+            "type": 0,
+            "tid": 0,
+            "platform": "web",
+            "web_location": "333.1387",
+        }
+
+        url = f"https://api.bilibili.com/x/v3/fav/resource/list?{urlencode(fallback_params)}"
+
+        request = SyncNetWorkRequest(url)
+        response = request.run()
+
+        medias = (response.get("data") or {}).get("medias") or []
+
+        # 与上面两层防御保持一致：medias 为空、或第一个元素为 None 都退化到空串
+        first = medias[0] if medias else None
+
+        return (first or {}).get("cover", "")

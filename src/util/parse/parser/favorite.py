@@ -93,7 +93,14 @@ class FavoriteParser(ParserBase):
                 "url": "https://space.bilibili.com/{mid}/favlist?fid={fid}".format(mid = mid, fid = fid),
                 "count": count,
                 "cover": fid,
-                "cover_id": f"__query__{fid}" if count > 0 else None
+                # 此前只有在 count > 0 时才走 __query__，导致没有视频的收藏夹
+                # 即使设置了封面也不会去请求 folder/info，界面上永远只有占位图。
+                # 封面是收藏夹的属性，与其中是否有视频无关，统一走懒加载。
+                #
+                # fid 为 0 是 B 站接口不会返回的值，若真出现，cover = 0 在 _run
+                # 的 `if not self.cover_url` 判断里会走"无需请求"路径，界面显示
+                # 占位图。该边界由 test_favorite_list_fid_zero_skips_request 钉死
+                "cover_id": f"__query__{fid}"
             })
 
         post_to_main_thread(self.success_callback, entry_list)
