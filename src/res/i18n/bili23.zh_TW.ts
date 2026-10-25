@@ -21,7 +21,7 @@
     <message>
         <location filename="../../util/common/translator.py" line="117"/>
         <source>Metadata</source>
-        <translation>中繼資料</translation>
+        <translation>元數據</translation>
     </message>
 </context>
 <context>
@@ -52,7 +52,7 @@
     <message>
         <location filename="../../util/common/translator.py" line="55"/>
         <source>Hi-Res Audio</source>
-        <translation>Hi-Res 無損音質</translation>
+        <translation>Hi-Res 無損</translation>
     </message>
     <message>
         <location filename="../../util/common/translator.py" line="56"/>
@@ -158,7 +158,7 @@
     <message>
         <location filename="../../gui/component/setting/group.py" line="254"/>
         <source>Minimum Horizontal Spacing (px)</source>
-        <translation>最小水準間距 (像素)</translation>
+        <translation>最小水平間距 (像素)</translation>
     </message>
 </context>
 <context>
@@ -602,7 +602,7 @@ You can also press shift + click to select a range of items.</source>
     <message>
         <location filename="../../util/common/translator.py" line="184"/>
         <source>Interactive Video</source>
-        <translation>互動影片</translation>
+        <translation>互動視頻</translation>
     </message>
     <message>
         <location filename="../../util/common/translator.py" line="185"/>
@@ -632,7 +632,7 @@ You can also press shift + click to select a range of items.</source>
     <message>
         <location filename="../../util/common/translator.py" line="190"/>
         <source>Watch Later</source>
-        <translation>稍後觀看</translation>
+        <translation>稍後再看</translation>
     </message>
     <message>
         <location filename="../../util/common/translator.py" line="191"/>
@@ -763,7 +763,7 @@ You can also press shift + click to select a range of items.</source>
     <message>
         <location filename="../../gui/dialog/login.py" line="334"/>
         <source>Support JSON format and semicolon-separated format</source>
-        <translation>支持 JSON 格式和分號分隔形式</translation>
+        <translation>支援 JSON 格式和分號分隔形式</translation>
     </message>
 </context>
 <context>
@@ -875,7 +875,7 @@ You can also press shift + click to select a range of items.</source>
     <message>
         <location filename="../../util/common/translator.py" line="162"/>
         <source>Preset: Interactive Video</source>
-        <translation>预设规则：互動影片</translation>
+        <translation>預設規則：互動視頻</translation>
     </message>
     <message>
         <location filename="../../util/common/translator.py" line="163"/>
@@ -910,7 +910,7 @@ You can also press shift + click to select a range of items.</source>
     <message>
         <location filename="../../util/common/translator.py" line="170"/>
         <source>Preset: Watch Later</source>
-        <translation>預設規則：稍後觀看</translation>
+        <translation>預設規則：稍後再看</translation>
     </message>
     <message>
         <location filename="../../util/common/translator.py" line="174"/>
@@ -934,7 +934,7 @@ You can also press shift + click to select a range of items.</source>
         <source>This feature detects duplicates based on unique video identifiers (e.g., BV/av IDs), not filenames.
 Please note that download history is the sole basis for recognizing downloaded videos. Clearing it will prevent the system from identifying existing downloads, which may result in duplicate downloads.</source>
         <translation>本功能透過影片唯一識別碼（如 BV號、av號）判斷是否重複，與檔案名稱無關。
-請注意，下載紀錄是識別已下載影片的唯一依據。若清除下載紀錄，系統將無法辨識已下載內容，可能導致重複下載。</translation>
+請注意，下載記錄是識別已下載影片的唯一依據。若清除下載記錄，系統將無法辨識已下載內容，可能導致重複下載。</translation>
     </message>
 </context>
 <context>
@@ -1489,12 +1489,12 @@ If you continue, please disable the &quot;Preallocate file space&quot; option. (
     <message>
         <location filename="../../util/common/translator.py" line="77"/>
         <source>Interactive Video</source>
-        <translation>互動影片</translation>
+        <translation>互動視頻</translation>
     </message>
     <message>
         <location filename="../../util/common/translator.py" line="78"/>
         <source>Anime</source>
-        <translation>動畫</translation>
+        <translation>番劇</translation>
     </message>
     <message>
         <location filename="../../util/common/translator.py" line="79"/>
@@ -1549,7 +1549,7 @@ If you continue, please disable the &quot;Preallocate file space&quot; option. (
     <message>
         <location filename="../../util/common/translator.py" line="90"/>
         <source>Watch Later</source>
-        <translation>稍後觀看</translation>
+        <translation>稍後再看</translation>
     </message>
     <message>
         <location filename="../../util/common/translator.py" line="91"/>
@@ -1710,7 +1710,7 @@ If you continue, please disable the &quot;Preallocate file space&quot; option. (
     <message>
         <location filename="../../util/common/translator.py" line="325"/>
         <source>Logout failed</source>
-        <translation>登出失敗</translation>
+        <translation>退出登入失敗</translation>
     </message>
     <message>
         <location filename="../../util/common/translator.py" line="326"/>
@@ -1933,7 +1933,7 @@ File name: {filename}</source>
     <message>
         <location filename="../../gui/dialog/setting/edit_rule.py" line="478"/>
         <source>Rule must not start or end with &apos;/&apos; or &apos;.&apos;</source>
-        <translation>命名规则不能以 &apos;/&apos; 或 &apos;.&apos; 开头或结尾</translation>
+        <translation>命名規則不能以 &apos;/&apos; 或 &apos;.&apos; 開頭或結尾</translation>
     </message>
     <message>
         <location filename="../../gui/dialog/setting/edit_rule.py" line="489"/>
@@ -2107,7 +2107,7 @@ File name: {filename}</source>
     <message>
         <location filename="../../gui/component/widget/flyout.py" line="245"/>
         <source>Watch later</source>
-        <translation>稍後觀看</translation>
+        <translation>稍後再看</translation>
     </message>
     <message>
         <location filename="../../gui/component/widget/flyout.py" line="252"/>
@@ -2318,12 +2318,12 @@ File name: {filename}</source>
     <message>
         <location filename="../../gui/dialog/misc/interactive_video.py" line="23"/>
         <source>Interactive Video</source>
-        <translation>互動影片</translation>
+        <translation>互動視頻</translation>
     </message>
     <message>
         <location filename="../../gui/dialog/misc/interactive_video.py" line="25"/>
         <source>Detection of interactive video, please select an operation</source>
-        <translation>偵測到互動式影片，請選擇一項操作</translation>
+        <translation>偵測到互動視頻，請選擇一項操作</translation>
     </message>
     <message>
         <location filename="../../gui/dialog/misc/interactive_video.py" line="27"/>
@@ -2354,7 +2354,7 @@ File name: {filename}</source>
     <message>
         <location filename="../../gui/component/log_list/list_view.py" line="51"/>
         <source>View Details</source>
-        <translation>檢視詳細資料</translation>
+        <translation>檢視詳情</translation>
     </message>
     <message>
         <location filename="../../gui/component/log_list/list_view.py" line="52"/>
@@ -2379,7 +2379,7 @@ Message:
     <message>
         <location filename="../../gui/component/log_list/list_view.py" line="71"/>
         <source>Log Details</source>
-        <translation>日誌詳細資料</translation>
+        <translation>日誌詳情</translation>
     </message>
 </context>
 <context>
@@ -2437,7 +2437,7 @@ Message:
     <message>
         <location filename="../../gui/dialog/log.py" line="62"/>
         <source>Tips: Click on a log entry to view details, right-click to copy</source>
-        <translation>提示：點擊日誌條目查看詳細資料，右鍵點擊複製</translation>
+        <translation>提示：點擊日誌條目檢視詳情，右鍵點擊複製</translation>
     </message>
 </context>
 <context>
@@ -2673,7 +2673,7 @@ To view detailed media info for a specific video, right-click its entry in the p
 Note: Videos protected by DRM can only be downloaded up to 1080P; higher qualities are unavailable.</source>
         <translation type="vanished">此處顯示的媒體資訊預設來自解析結果中的第一個影片。若存在多個影片，所展示的資訊可能與最終下載的影片不完全一致，僅供參考。
 
-如需查看特定影片的詳細媒體資訊，請在解析列表中對應項目上按右鍵，選擇「更新媒體資訊」。
+如需檢視特定影片的詳細媒體資訊，請在解析列表中對應項目上按右鍵，選擇「更新媒體資訊」。
 
 注意：受 DRM 加密保護的影片，最高僅支援下載 1080P 畫質，更高畫質無法使用。</translation>
     </message>
@@ -2686,11 +2686,11 @@ If multiple videos are available, this information may not exactly match the one
 To view detailed media info for a specific video, right-click its entry in the parse list and select &quot;Update Media Info&quot;.
 
 Note: Videos protected by DRM can only be downloaded up to 1080P; higher qualities are unavailable.</source>
-        <translation>此處顯示的媒體資訊只取自解析結果中的一個影片：連結指向哪個就取哪個，未指向特定影片時則取第一個。若該影片的媒體資訊無法取得（例如充電專屬、付費內容），會自動改用其他影片。實際取自哪個影片，可在上方的「媒體資訊來源」中查看。
+        <translation>此處顯示的媒體資訊只取自解析結果中的一個影片：連結指向哪個就取哪個，未指向特定影片時則取第一個。若該影片的媒體資訊無法取得（例如充電專屬、付費內容），會自動改用其他影片。實際取自哪個影片，可在上方的「媒體資訊來源」中檢視。
 
 若存在多個影片，所展示的資訊可能與最終下載的影片不完全一致，僅供參考。
 
-如需查看特定影片的詳細媒體資訊，請在解析列表中對應項目上按右鍵，選擇「更新媒體資訊」。
+如需檢視特定影片的詳細媒體資訊，請在解析列表中對應項目上按右鍵，選擇「更新媒體資訊」。
 
 注意：受 DRM 加密保護的影片，最高僅支援下載 1080P 畫質，更高畫質無法使用。</translation>
     </message>
@@ -2780,12 +2780,12 @@ Bilibili 的影片通常將影片串流與音訊串流分開儲存與傳輸，�
     <message>
         <location filename="../../gui/interface/main_window.py" line="470"/>
         <source>It is recommended to read the user guide and FAQs when using for the first time, to help you get started quickly and make full use of all features.</source>
-        <translation>首次使用時建議先查看使用說明與常見問題，幫助您更快上手並充分利用各項功能。</translation>
+        <translation>首次使用時建議先檢視使用說明與常見問題，幫助您更快上手並充分利用各項功能。</translation>
     </message>
     <message>
         <location filename="../../gui/interface/main_window.py" line="473"/>
         <source>View</source>
-        <translation>查看</translation>
+        <translation>檢視</translation>
     </message>
     <message>
         <location filename="../../gui/interface/main_window.py" line="474"/>
@@ -2801,7 +2801,7 @@ Bilibili 的影片通常將影片串流與音訊串流分開儲存與傳輸，�
         <location filename="../../gui/interface/main_window.py" line="487"/>
         <source>Click the avatar to log in to your Bilibili account. 
 Download functionality will be limited if you&apos;re not logged in.</source>
-        <translation>點擊頭像登入嘅 Bilibili 帳號，未登入狀態下下載功能將受到限制。</translation>
+        <translation>點擊頭像登入 Bilibili 帳號，未登入狀態下下載功能將受到限制。</translation>
     </message>
     <message>
         <location filename="../../gui/interface/main_window.py" line="696"/>
@@ -2964,7 +2964,7 @@ Download functionality will be limited if you&apos;re not logged in.</source>
     <message>
         <location filename="../../gui/dialog/download_options/card.py" line="228"/>
         <source>Smaller file size, limited compatibility</source>
-        <translation>文件体积小，但兼容性较差</translation>
+        <translation>檔案體積小，但相容性較差</translation>
     </message>
     <message>
         <location filename="../../gui/dialog/download_options/card.py" line="148"/>
@@ -3296,7 +3296,7 @@ For advanced usage, see the help documentation.</source>
 4. 內容為空的目錄層會被自動略過，因此不必將層級標記為可選。
 5. 副檔名（.mp4、.m4a 等）由程式自動補上，請勿寫進規則裡。
 
-預覽會將同一條規則分別套用到單個影片、多P影片與合集上並排顯示，據此可以看出哪些片段在哪種情況下會收合。
+預覽會將同一條規則分別套用到單個影片、分P影片與合集上並排顯示，據此可以看出哪些片段在哪種情況下會收合。
 
 進階區域以文字形式顯示規則。在那裡，帶前綴或後綴的片段寫作可選段，例如 &lt;P{p:02d}-&gt;；段內任一變數取空值時，整段都會被捨棄。“&lt;” 與 “&gt;” 是為此保留的字元，它們本來也不能出現在檔案名稱中。
 
@@ -3513,7 +3513,7 @@ The meaning of each &quot;Numbering Mode&quot; option is as follows:
     <message>
         <location filename="../../gui/component/setting/card.py" line="457"/>
         <source>About Numbering Settings</source>
-        <translation>關於編號設置的說明</translation>
+        <translation>關於編號設定的說明</translation>
     </message>
     <message>
         <location filename="../../gui/component/setting/card.py" line="464"/>
@@ -3868,7 +3868,7 @@ This software contains no advertisements, trackers, or analytics SDKs of any kin
     <message>
         <location filename="../../gui/dialog/setting/parse_list.py" line="33"/>
         <source>Mark items found in download history</source>
-        <translation>標記下載紀錄中已有的項目</translation>
+        <translation>標記下載記錄中已有的項目</translation>
     </message>
 </context>
 <context>
@@ -3928,12 +3928,12 @@ This software contains no advertisements, trackers, or analytics SDKs of any kin
     <message>
         <location filename="../../gui/component/parse_list/tree_view.py" line="212"/>
         <source>View Multi-part Video List</source>
-        <translation>查看分P影片列表</translation>
+        <translation>檢視分P影片列表</translation>
     </message>
     <message>
         <location filename="../../gui/component/parse_list/tree_view.py" line="648"/>
         <source>View Cover</source>
-        <translation>查看封面</translation>
+        <translation>檢視封面</translation>
     </message>
     <message>
         <location filename="../../gui/component/parse_list/tree_view.py" line="680"/>
@@ -3993,7 +3993,7 @@ This software contains no advertisements, trackers, or analytics SDKs of any kin
     <message>
         <location filename="../../gui/component/setting/card.py" line="711"/>
         <source>Save the history of parsed links</source>
-        <translation>保存已解析連結的歷史紀錄</translation>
+        <translation>儲存已解析連結的歷史記錄</translation>
     </message>
     <message>
         <location filename="../../gui/component/setting/card.py" line="708"/>
@@ -4145,7 +4145,7 @@ This software contains no advertisements, trackers, or analytics SDKs of any kin
     <message>
         <location filename="../../gui/component/profile.py" line="46"/>
         <source>Logout</source>
-        <translation>登出</translation>
+        <translation>退出登入</translation>
     </message>
     <message>
         <location filename="../../gui/component/profile.py" line="49"/>
@@ -4155,17 +4155,17 @@ This software contains no advertisements, trackers, or analytics SDKs of any kin
     <message>
         <location filename="../../gui/component/profile.py" line="68"/>
         <source>Log Out</source>
-        <translation>登出</translation>
+        <translation>退出登入</translation>
     </message>
     <message>
         <location filename="../../gui/component/profile.py" line="68"/>
         <source>Are you sure you want to log out? This will also clear locally stored cookies.</source>
-        <translation>確定要登出嗎？這將會同時清除本機儲存的 Cookies。</translation>
+        <translation>確定要退出登入嗎？這將會同時清除本機儲存的 Cookies。</translation>
     </message>
     <message>
         <location filename="../../gui/component/profile.py" line="74"/>
         <source>Successfully logged out</source>
-        <translation>登出成功</translation>
+        <translation>退出登入成功</translation>
     </message>
 </context>
 <context>
@@ -4561,7 +4561,7 @@ ISP：{isp}</translation>
     <message>
         <location filename="../../gui/dialog/setting/edit_rule.py" line="146"/>
         <source>Multi-part video</source>
-        <translation>多P影片</translation>
+        <translation>分P影片</translation>
     </message>
     <message>
         <location filename="../../gui/dialog/setting/edit_rule.py" line="149"/>
@@ -5548,7 +5548,7 @@ Under no circumstances shall the developer be liable for any direct, indirect, i
     <message>
         <location filename="../../util/common/translator.py" line="238"/>
         <source>Interactive video title</source>
-        <translation>互動影片標題</translation>
+        <translation>互動視頻標題</translation>
     </message>
     <message>
         <location filename="../../util/common/translator.py" line="226"/>
@@ -5626,12 +5626,12 @@ Under no circumstances shall the developer be liable for any direct, indirect, i
     <message>
         <location filename="../../util/common/translator.py" line="271"/>
         <source>User name</source>
-        <translation>用戶名稱</translation>
+        <translation>使用者名稱</translation>
     </message>
     <message>
         <location filename="../../util/common/translator.py" line="272"/>
         <source>User id</source>
-        <translation>用戶ID</translation>
+        <translation>使用者ID</translation>
     </message>
     <message>
         <location filename="../../util/common/translator.py" line="209"/>
@@ -5714,7 +5714,7 @@ Under no circumstances shall the developer be liable for any direct, indirect, i
     <message>
         <location filename="../../util/common/translator.py" line="36"/>
         <source>8K UHD</source>
-        <translation>8K 超高畫質</translation>
+        <translation>8K 超高清</translation>
     </message>
     <message>
         <location filename="../../util/common/translator.py" line="37"/>
@@ -5734,12 +5734,12 @@ Under no circumstances shall the developer be liable for any direct, indirect, i
     <message>
         <location filename="../../util/common/translator.py" line="40"/>
         <source>4K UHD</source>
-        <translation>4K 超高畫質</translation>
+        <translation>4K 超清</translation>
     </message>
     <message>
         <location filename="../../util/common/translator.py" line="41"/>
         <source>1080P 60fps</source>
-        <translation>1080P 60 幀</translation>
+        <translation>1080P 60幀</translation>
     </message>
     <message>
         <location filename="../../util/common/translator.py" line="42"/>
@@ -5754,7 +5754,7 @@ Under no circumstances shall the developer be liable for any direct, indirect, i
     <message>
         <location filename="../../util/common/translator.py" line="44"/>
         <source>1080P</source>
-        <translation>1080P 高畫質</translation>
+        <translation>1080P 高清</translation>
     </message>
     <message>
         <location filename="../../util/common/translator.py" line="45"/>
@@ -5764,7 +5764,7 @@ Under no circumstances shall the developer be liable for any direct, indirect, i
     <message>
         <location filename="../../util/common/translator.py" line="46"/>
         <source>480P</source>
-        <translation>480P 標準畫質</translation>
+        <translation>480P 標清</translation>
     </message>
     <message>
         <location filename="../../util/common/translator.py" line="47"/>

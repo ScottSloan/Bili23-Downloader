@@ -1710,7 +1710,7 @@ If you continue, please disable the &quot;Preallocate file space&quot; option. (
     <message>
         <location filename="../../util/common/translator.py" line="325"/>
         <source>Logout failed</source>
-        <translation>注销登录失败</translation>
+        <translation>退出登录失败</translation>
     </message>
     <message>
         <location filename="../../util/common/translator.py" line="326"/>
@@ -4145,7 +4145,7 @@ This software contains no advertisements, trackers, or analytics SDKs of any kin
     <message>
         <location filename="../../gui/component/profile.py" line="46"/>
         <source>Logout</source>
-        <translation>注销</translation>
+        <translation>退出登录</translation>
     </message>
     <message>
         <location filename="../../gui/component/profile.py" line="49"/>
@@ -4155,17 +4155,17 @@ This software contains no advertisements, trackers, or analytics SDKs of any kin
     <message>
         <location filename="../../gui/component/profile.py" line="68"/>
         <source>Log Out</source>
-        <translation>注销</translation>
+        <translation>退出登录</translation>
     </message>
     <message>
         <location filename="../../gui/component/profile.py" line="68"/>
         <source>Are you sure you want to log out? This will also clear locally stored cookies.</source>
-        <translation>确定要注销登录吗？这将会同时清除本地存储的 Cookies。</translation>
+        <translation>确定要退出登录吗？这将会同时清除本地存储的 Cookies。</translation>
     </message>
     <message>
         <location filename="../../gui/component/profile.py" line="74"/>
         <source>Successfully logged out</source>
-        <translation>注销登录成功</translation>
+        <translation>退出登录成功</translation>
     </message>
 </context>
 <context>
@@ -5734,7 +5734,7 @@ Under no circumstances shall the developer be liable for any direct, indirect, i
     <message>
         <location filename="../../util/common/translator.py" line="40"/>
         <source>4K UHD</source>
-        <translation>4K 超高清</translation>
+        <translation>4K 超清</translation>
     </message>
     <message>
         <location filename="../../util/common/translator.py" line="41"/>
