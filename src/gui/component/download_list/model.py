@@ -12,7 +12,20 @@ from ..view_model import CoverQueryModelBase
 
 from typing import List
 
-class DownloadListModel(CoverQueryModelBase):    
+# 排序键 → 取值函数，与顶栏排序浮窗里的选项一一对应
+SORT_KEY_FUNCS = {
+    "created_time": lambda task_info: task_info.Basic.created_time or 0,
+    "completed_time": lambda task_info: task_info.Basic.completed_time or 0,
+    "show_title": lambda task_info: (task_info.Basic.show_title or "").casefold(),
+    "file_size": lambda task_info: task_info.Download.total_size or 0,
+    "progress": lambda task_info: task_info.Download.progress or 0,
+}
+
+class DownloadListModel(CoverQueryModelBase):
+    # 一次追加不超过这么多条时逐条二分插入，否则接在末尾后整体重排一次。
+    # 逐条插入每条都要挪动列表并发一次 rowsInserted，条数多了不如一次 layoutChanged
+    _INSERT_THRESHOLD = 64
+
     def __init__(self, task_list: list, parent = None):
         super().__init__(parent)
 
@@ -22,6 +35,14 @@ class DownloadListModel(CoverQueryModelBase):
         self._row_by_task_id: dict[str, int] = {}
         self._managing_concurrent = False
         self._managing_merges = False
+
+        # 排序放在源模型里做，而不是交给 QSortFilterProxyModel.sort()。
+        # 代理排序每比较一次就要回调两次 Python 的 lessThan / data()，已完成列表攒到 4 万条时
+        # 点一次表头要卡 2～5 秒，每完成一个任务还要整表重排一次、卡近 2 秒。
+        # list.sort(key = ...) 每条只取一次键、比较全在 C 层，同样 4 万条只需 6～30 毫秒；
+        # 新任务按二分查找插到该在的位置，不必重排
+        self._sort_key_func = None
+        self._sort_reverse = False
 
         self._rebuild_row_index()
 
@@ -54,30 +75,105 @@ class DownloadListModel(CoverQueryModelBase):
         return self._row_by_task_id.get(self._get_task_id(task_info), -1)
 
     def appendRow(self, task_info: TaskInfo):
-        row = self.rowCount()
-
-        self.beginInsertRows(QModelIndex(), row, row)
-
-        self._task_list.append(task_info)
-
-        self.endInsertRows()
-
-        self._row_by_task_id[task_info.Basic.task_id] = row
+        self.appendRows([task_info])
 
     def appendRows(self, task_info_list: List[TaskInfo]):
         if not task_info_list:
             return
 
-        row = self.rowCount()
+        if self._sort_key_func is None:
+            self._extendRows(task_info_list)
 
-        self.beginInsertRows(QModelIndex(), row, row + len(task_info_list) - 1)
+            return
+
+        if not self._task_list:
+            # 启动时整批载入：先把这一批排好，一次插入即可，用不着事后重排
+            self._extendRows(sorted(task_info_list, key = self._sort_key_func, reverse = self._sort_reverse))
+
+        elif len(task_info_list) <= self._INSERT_THRESHOLD:
+            for task_info in task_info_list:
+                row = self._insertPosition(task_info)
+
+                self.beginInsertRows(QModelIndex(), row, row)
+
+                self._task_list.insert(row, task_info)
+
+                self.endInsertRows()
+
+            # 插在中间会让后面的行号整体后移，插完统一重建一次
+            self._rebuild_row_index()
+
+        else:
+            self._extendRows(task_info_list)
+
+            self.resort()
+
+    def _extendRows(self, task_info_list: List[TaskInfo]):
+        start = self.rowCount()
+
+        self.beginInsertRows(QModelIndex(), start, start + len(task_info_list) - 1)
 
         self._task_list.extend(task_info_list)
 
         self.endInsertRows()
 
-        for row, task_info in enumerate(self._task_list):
+        # 接在末尾不影响已有行号，只需补上新增的这一段
+        for row, task_info in enumerate(task_info_list, start):
             self._row_by_task_id[task_info.Basic.task_id] = row
+
+    def _insertPosition(self, task_info: TaskInfo):
+        # 二分查找插入位置，落在键值相等的行之后，与稳定排序的结果一致
+        key_func = self._sort_key_func
+        key = key_func(task_info)
+
+        low, high = 0, len(self._task_list)
+
+        while low < high:
+            mid = (low + high) // 2
+            mid_key = key_func(self._task_list[mid])
+
+            if (mid_key >= key) if self._sort_reverse else (mid_key <= key):
+                low = mid + 1
+            else:
+                high = mid
+
+        return low
+
+    def setSortOrder(self, key: str, ascending: bool = True):
+        self._sort_key_func = SORT_KEY_FUNCS.get(key)
+        self._sort_reverse = not ascending
+
+        self.resort()
+
+    def resort(self):
+        """
+        按当前排序方式重排整个列表
+
+        进度、文件大小这类排序键在下载过程中会变，由代理模型去抖后调这里。
+        顺序没变时什么也不发：layoutChanged 会让代理模型重建映射、筛选生效时还要把每一行重新过滤一遍
+        """
+        if self._sort_key_func is None or len(self._task_list) < 2:
+            return
+
+        sorted_list = sorted(self._task_list, key = self._sort_key_func, reverse = self._sort_reverse)
+
+        if all(new is old for new, old in zip(sorted_list, self._task_list)):
+            return
+
+        # PySide6 只暴露了这两个信号的无参重载，排序提示（VerticalSortHint）传不进去，只影响优化不影响正确性
+        self.layoutAboutToBeChanged.emit()
+
+        # 选中项、当前项都挂在持久索引上，重排后要按任务把它们挪到新行，否则选中会落到别的任务上
+        old_indexes = self.persistentIndexList()
+        old_tasks = [self._task_list[index.row()] for index in old_indexes]
+
+        self._task_list[:] = sorted_list
+
+        self._rebuild_row_index()
+
+        self.changePersistentIndexList(old_indexes, [self.index(self.getRow(task_info)) for task_info in old_tasks])
+
+        self.layoutChanged.emit()
 
     def updateRows(self, start_row: int, end_row: int):
         for row in range(start_row, end_row + 1):
