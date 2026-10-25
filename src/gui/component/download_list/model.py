@@ -11,12 +11,25 @@ from util.common.config import config
 from ..view_model import CoverQueryModelBase
 
 from typing import List
+import string
+
+_ASCII_LOWER = str.maketrans(string.ascii_uppercase, string.ascii_lowercase)
+
+def nocase_key(text: str):
+    """
+    与 SQLite 的 NOCASE 排序规则等价的排序键：只折叠 ASCII 字母，其余字符按码位比较
+
+    已完成列表的排序交给数据库执行（见 CompletedListModel），新完成的任务却是在内存里插入的。
+    两边的比较规则必须一致，否则新任务会插错位置，分批读取时还可能漏掉或重复。
+    不用 casefold() 的代价是 ß、İ 这类非 ASCII 字母不再折叠大小写，中文标题不受影响
+    """
+    return (text or "").translate(_ASCII_LOWER)
 
 # 排序键 → 取值函数，与顶栏排序浮窗里的选项一一对应
 SORT_KEY_FUNCS = {
     "created_time": lambda task_info: task_info.Basic.created_time or 0,
     "completed_time": lambda task_info: task_info.Basic.completed_time or 0,
-    "show_title": lambda task_info: (task_info.Basic.show_title or "").casefold(),
+    "show_title": lambda task_info: nocase_key(task_info.Basic.show_title),
     "file_size": lambda task_info: task_info.Download.total_size or 0,
     "progress": lambda task_info: task_info.Download.progress or 0,
 }

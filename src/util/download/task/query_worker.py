@@ -11,7 +11,8 @@ import logging
 logger = logging.getLogger(__name__)
 
 class QueryWorker(QObject):
-    success = Signal(list, list)
+    # 只读下载中的任务。已完成的任务由 CompletedListModel 按需分批读取，不在启动时全量载入
+    success = Signal(list)
     error = Signal(str)
     finished = Signal()
 
@@ -35,12 +36,10 @@ class QueryWorker(QObject):
 
     def query(self):
         downloading_tasks = task_manager.query()
-        completed_tasks = task_manager.query(completed = True)
 
         downloading_tasks = self.get_task_list(downloading_tasks, update_status = True)
-        completed_tasks = self.get_task_list(completed_tasks, update_status = False)
 
-        self.success.emit(downloading_tasks, completed_tasks)
+        self.success.emit(downloading_tasks)
 
     def get_task_list(self, task_info_list: List[TaskInfo], update_status = True):
         task_list = []

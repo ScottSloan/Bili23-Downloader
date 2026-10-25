@@ -12,42 +12,15 @@ from util.common.icon import ExtendedFluentIcon
 from util.common.io.directory import Directory
 from util.common.signal_bus import signal_bus
 from util.common.translator import Translator
+from util.download.task.filter import get_media_type_key
 from util.download.task.info import TaskInfo
 from util.format.units import Units
 from util.format.time import Time
-from util.parse.episode.tree import Attribute
 
 from pathlib import Path
 import logging
 
 logger = logging.getLogger(__name__)
-
-def get_media_type_key(task_info: TaskInfo):
-    """
-    任务的媒体类型，取值为 MEDIA_TYPE_BADGE 的 key，判断不出时返回空串
-
-    封面角标与列表的类型筛选共用这一份判断：两边各写一套的话，迟早会出现
-    角标写着「音频」、按音频筛选却筛不出来的情况
-    """
-    attribute = task_info.Episode.attribute
-    download_type = task_info.Download.type
-
-    # 仅下载音频时，产物就是音频文件，无论来源是投稿、番剧还是课程，都直接标「音频」
-    audio_only = download_type & DownloadType.AUDIO and not download_type & DownloadType.VIDEO
-
-    # 先判断更具体的类型：音频、课程、剧集条目也可能同时带着其他通用位
-    if audio_only or attribute & Attribute.AUDIO_BIT:
-        return "AUDIO"
-    elif attribute & (Attribute.CHEESE_BIT | Attribute.LESSON_BIT):
-        return "COURSE"
-    elif attribute & Attribute.BANGUMI_BIT:
-        return "BANGUMI"
-    elif attribute & Attribute.INTERACTIVE_BIT:
-        return "INTERACTIVE"
-    elif attribute & Attribute.VIDEO_BIT:
-        return "VIDEO"
-
-    return ""
 
 class DownloadItemDelegate(CoverQueryDelegateBase):
     def __init__(self, parent = None):

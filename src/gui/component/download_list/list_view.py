@@ -4,6 +4,7 @@ from PySide6.QtCore import QModelIndex, Qt, QTimer
 from qfluentwidgets import ListView, RoundMenu, Action, FluentIcon, isDarkTheme, setFont
 
 from .item_delegate import DownloadItemDelegate
+from .completed_model import CompletedListModel
 from .model import DownloadListModel
 from .proxy_model import DownloadListProxyModel
 
@@ -20,7 +21,7 @@ from util.common.config import config
 from typing import List
 
 class DownloadListView(ListView):
-    def __init__(self, parent = None):
+    def __init__(self, parent = None, lazy_load = False):
         super().__init__(parent)
 
         applySmoothScroll(self)
@@ -35,9 +36,16 @@ class DownloadListView(ListView):
 
         self._in_adding_queried_tasks = False
 
-        self._source_model = DownloadListModel([], self)
+        # lazy_load 用于已完成列表：任务按需从数据库分批读取，排序与筛选都在数据库里执行，
+        # 代理模型只是原样转发。下载中列表任务数受并发约束，仍全部放在内存里由代理模型筛选
+        self._lazy_load = lazy_load
+
+        self._source_model = CompletedListModel([], self) if lazy_load else DownloadListModel([], self)
         self._model = DownloadListProxyModel(self)
         self._model.setSourceModel(self._source_model)
+
+        # 筛选条件交给谁执行
+        self._filter_model = self._source_model if lazy_load else self._model
 
         self._delegate = DownloadItemDelegate(self)
         self._delegate.contextMenuRequested.connect(self.showContextMenu)
@@ -93,16 +101,16 @@ class DownloadListView(ListView):
         self._model.connectUpdateDataSignal()
 
     def setFilterText(self, text: str):
-        self._model.setFilterText(text)
+        self._filter_model.setFilterText(text)
 
     def setStatusFilter(self, statuses):
-        self._model.setStatusFilter(statuses)
+        self._filter_model.setStatusFilter(statuses)
 
     def setMediaTypeFilter(self, media_types):
-        self._model.setMediaTypeFilter(media_types)
+        self._filter_model.setMediaTypeFilter(media_types)
 
     def isFiltering(self):
-        return self._model.isFiltering()
+        return self._filter_model.isFiltering()
 
     def paintEvent(self, e):
         if self.isEmpty():
@@ -117,8 +125,14 @@ class DownloadListView(ListView):
 
             setFont(painter, 14)
 
-            # 列表里其实有任务、只是全被筛掉时不能照旧显示「没有任务」，否则像是任务丢了
-            text = self._noMatchTextTip if self._source_model.rowCount() else self._emptyTextTip
+            # 列表里其实有任务、只是全被筛掉时不能照旧显示「没有任务」，否则像是任务丢了。
+            # 按需读取时筛掉的任务根本不会读进来，源模型同样是空的，只能看筛选是否生效
+            if self._lazy_load:
+                filtered_out = self.isFiltering()
+            else:
+                filtered_out = self._source_model.rowCount() > 0
+
+            text = self._noMatchTextTip if filtered_out else self._emptyTextTip
 
             fm = QFontMetrics(self.font())
             text_width = fm.horizontalAdvance(text)
@@ -230,8 +244,8 @@ class DownloadListView(ListView):
 
     @property
     def status_filter(self):
-        return self._model.status_filter
+        return self._filter_model.status_filter
 
     @property
     def media_type_filter(self):
-        return self._model.media_type_filter
+        return self._filter_model.media_type_filter

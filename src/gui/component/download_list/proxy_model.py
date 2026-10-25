@@ -1,10 +1,10 @@
 from PySide6.QtCore import QModelIndex, Qt, QSortFilterProxyModel, QTimer
 from PySide6.QtWidgets import QAbstractItemView
 
+from util.download.task.filter import get_media_type_key, get_searchable_text, matches_keywords, split_keywords
 from util.download.task.info import TaskInfo
 from util.common.signal_bus import signal_bus
 
-from .item_delegate import get_media_type_key
 from .model import DownloadListModel
 
 
@@ -42,31 +42,10 @@ class DownloadListProxyModel(QSortFilterProxyModel):
         if self._media_type_filter and get_media_type_key(task_info) not in self._media_type_filter:
             return False
 
-        if self._filter_keywords:
-            searchable_text = self._getSearchableText(task_info)
-
-            # 多个关键词按空格分开、同时命中才算匹配：「UP主名 合集名」这种组合用起来最顺手
-            if not all(keyword in searchable_text for keyword in self._filter_keywords):
-                return False
+        if self._filter_keywords and not matches_keywords(get_searchable_text(task_info), self._filter_keywords):
+            return False
 
         return True
-
-    def _getSearchableText(self, task_info: TaskInfo):
-        # 只收建任务时就定下来、用户认得出的字段。task_id 是内部哈希，info_label / status_label
-        # 是随界面语言与下载进度变化的展示文案（「3 秒后重试」），搜得到反而让结果忽隐忽现
-        episode = task_info.Episode
-
-        return " ".join([
-            task_info.Basic.show_title or "",
-            task_info.File.name or "",
-            episode.uploader or "",
-            episode.bvid or "",
-            episode.parent_title or "",
-            episode.collection_title or "",
-            episode.series_title or "",
-            episode.season_title or "",
-            episode.favorites_name or "",
-        ]).casefold()
 
     def filterAcceptsRow(self, source_row: int, source_parent: QModelIndex):
         # 源模型每次重排（layoutChanged）后，代理模型都会对每一行重新调一次这里。
@@ -342,7 +321,7 @@ class DownloadListProxyModel(QSortFilterProxyModel):
 
     def setFilterText(self, text: str):
         self._filter_text = text.strip()
-        self._filter_keywords = self._filter_text.casefold().split()
+        self._filter_keywords = split_keywords(self._filter_text)
         self._scheduleRefresh(refresh_filter = True)
 
     def setStatusFilter(self, statuses):

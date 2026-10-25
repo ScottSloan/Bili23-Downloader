@@ -46,6 +46,13 @@ class TaskManager:
         # 删除临时文件可能涉及大量磁盘操作，与数据库写入互不依赖，单独放一个线程执行。
         self._cancel_executor = ThreadPoolExecutor(max_workers = 1, thread_name_prefix = "task-cancel")
 
+        # 已完成列表按需分批读取，放在单独的一个读线程上：读取可能要扫全表（搜索无命中时约半秒），
+        # 不能占着写线程拖慢进度落盘；只用一个线程，连接也就只有一条，请求按先后顺序执行
+        self._read_executor = ThreadPoolExecutor(max_workers = 1, thread_name_prefix = "task-db-read")
+
+        # 建索引也是写入，同样排到写线程上；首次建立要几百毫秒，放在这里不占用主窗口的构造时间
+        self._update_executor.submit(self.db_manager.create_completed_sort_indexes)
+
         signal_bus.download.create_task.connect(self._create_async)
 
     def _create_async(self, episode_info_list: List[dict], show_toast: bool = False, options: dict = None):
@@ -358,6 +365,30 @@ class TaskManager:
 
         return [self._build_task_info(entry) for entry in result]
 
+    def query_completed_batch(self, order_by: str, ascending: bool, limit: int, after: tuple = None, keywords = (), media_types = None):
+        """分批读取已完成任务，返回 [(排序值, id, TaskInfo), ...]，参数含义见 db.query_completed_batch"""
+        result = self.db_manager.query_completed_batch(order_by, ascending, limit, after, keywords, media_types)
+
+        return [(sort_value, row_id, self._build_task_info((data,))) for sort_value, row_id, data in result]
+
+    def submit_read(self, func, *args):
+        # 投递到读线程执行，见 __init__ 中 _read_executor 的说明
+        return self._read_executor.submit(func, *args)
+
+    def wait_for_pending_writes(self, timeout: float = 5.0):
+        """
+        阻塞到写线程上此前已排队的写入全部执行完，供后台读取前调用
+
+        写入是异步投递的：刚点了「全部清除」、紧接着改筛选条件，读线程若抢在删除之前查询，
+        已删的记录会重新出现在列表里。写线程是单线程，往队尾投一个空任务并等它执行，
+        就能保证前面的写入都已落盘。不要在 GUI 线程上调用
+        """
+        try:
+            self._update_executor.submit(lambda: None).result(timeout = timeout)
+
+        except Exception:
+            logger.warning("等待下载任务写入完成超时，继续读取")
+
     def query_by_id(self, task_id: str) -> TaskInfo:
         """按 task_id 取单条，未完成与已完成两张表都找。找不到返回 None"""
         for completed in (False, True):
@@ -473,6 +504,19 @@ class TaskManager:
 
         self._discard_pending_updates(task_id_list)
         self._update_executor.submit(self._delete_storage, task_id_list, completed)
+
+    def delete_completed_matching(self, keywords = (), media_types = None):
+        # 已完成列表的「全部清除」，按筛选条件在数据库里删除，不必先把记录全部读出来
+        self._update_executor.submit(self._delete_completed_matching_storage, tuple(keywords), media_types)
+
+    def _delete_completed_matching_storage(self, keywords: tuple, media_types):
+        self._flush_pending_snapshots()
+
+        try:
+            self.db_manager.delete_completed_matching(keywords, media_types)
+
+        except Exception:
+            logger.exception("清除已完成的下载任务记录失败")
 
     def _delete_storage(self, task_id_list: List[str], completed: bool):
         self._flush_pending_snapshots()

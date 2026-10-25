@@ -41,7 +41,9 @@ class DownloadInterface(QFrame):
             config.get(config.downloading_list_sort_ascending)
         )
 
-        self.completed_list_view = DownloadListView(self)
+        # 已完成任务长期累积，按需从数据库分批读取，滚动到底再取下一批（见 CompletedListModel）。
+        # 下面 enableSorting 设定排序方式时即开始读取第一批
+        self.completed_list_view = DownloadListView(self, lazy_load = True)
         self.completed_list_view.setEmptyTextTip(self.tr("No completed downloads"))
         self.completed_list_view.enableSorting(
             config.get(config.completed_list_sort_by),
@@ -73,6 +75,8 @@ class DownloadInterface(QFrame):
 
         signal_bus.download.remove_from_downloading_list.connect(self.downloading_list_view.removeTask)
         signal_bus.download.remove_from_completed_list.connect(self.completed_list_view.removeTask)
+
+        self.completed_list_view._source_model.loadFailed.connect(self.on_query_error)
 
         signal_bus.download.sort_downloading_list.connect(self.on_sort_downloading_list)
         signal_bus.download.sort_completed_list.connect(self.on_sort_completed_list)
@@ -131,11 +135,10 @@ class DownloadInterface(QFrame):
 
         AsyncTask.run(worker)
     
-    def on_query_success(self, downloading_tasks: list[TaskInfo], completed_tasks: list[TaskInfo]):
+    def on_query_success(self, downloading_tasks: list[TaskInfo]):
         self.downloading_list_view._beginAddQueriedTasks()
 
         self.downloading_list_view.addTask(downloading_tasks)
-        self.completed_list_view.addTask(completed_tasks)
 
         self.downloading_list_view._endAddQueriedTasks()
 
