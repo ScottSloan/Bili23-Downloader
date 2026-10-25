@@ -1,6 +1,6 @@
 from PySide6.QtWidgets import QApplication, QWidget
 from PySide6.QtGui import QIcon, QPixmap
-from PySide6.QtCore import Qt, QTimer, QRect, Signal
+from PySide6.QtCore import Qt, QTimer, QRect, QEvent, Signal
 
 from qfluentwidgets import (
     MSFluentWindow, SystemThemeListener, NavigationItemPosition, FluentIcon, InfoBadge, qrouter, setTheme
@@ -15,6 +15,7 @@ from util.misc.macos import activate_app
 from util.thread.pool import GlobalThreadPoolTask
 
 import logging
+import sys
 
 logger = logging.getLogger(__name__)
 
@@ -293,6 +294,42 @@ class MainWindow(MSFluentWindow):
         self.track_normal_geometry()
 
         return super().moveEvent(e)
+
+    def changeEvent(self, e):
+        super().changeEvent(e)
+
+        if sys.platform == "darwin" and e.type() == QEvent.Type.WindowStateChange and self.isFullScreen():
+            self.restore_system_title_bar_button_layout()
+
+    def _updateSystemButtonRect(self):
+        """
+        qframelesswindow 在 macOS 上把红绿灯挪到窗口右上角（见 FluentWindowBase.systemTitleBarRect），
+        而且在每次 paintEvent 里都重新摆一遍。
+
+        全屏时 AppKit 会把红绿灯连同系统标题栏一起抽出来，放进随菜单栏下滑的那条悬浮标题栏里，
+        并按系统惯例排在左上角。此时两边轮流改写同一组按钮的坐标：系统每次布局把它们放回左边，
+        窗口一重绘又被搬到右边，用户看到的就是红绿灯在悬浮标题栏两端来回跳。
+
+        那条悬浮标题栏完全归系统管，全屏期间不再插手。退出全屏时 WindowStateChange 会再走一遍
+        父类逻辑，把按钮放回右上角
+        """
+        if self.isFullScreen():
+            return
+
+        super()._updateSystemButtonRect()
+
+    def restore_system_title_bar_button_layout(self):
+        # 进入全屏的瞬间按钮可能还停在父类上一次摆放的右侧坐标上，让 AppKit 重新布局一次标题栏，
+        # 把它们放回系统默认位置，不必等到用户把鼠标移到屏幕顶端时才被纠正
+        import objc
+        import Cocoa
+
+        view = objc.objc_object(c_void_p = self.winId().__int__())
+        title_bar = view.window().standardWindowButton_(Cocoa.NSWindowCloseButton).superview()
+
+        if title_bar is not None:
+            title_bar.setNeedsLayout_(True)
+            title_bar.layoutSubtreeIfNeeded()
 
     def request_exit(self):
         """
