@@ -41,6 +41,9 @@ class FileInfo(InfoBase):
     # 文件名中带有随界面语言变化的限定词和语言后缀，Merger 无法自行反推，因此必须在此登记
     subtitle_track_list: list[dict] = field(default_factory = list)
 
+    # Optional inspection result; old records remain unverified.
+    verification: dict = field(default_factory = dict)
+
 @dataclass
 class EpisodeInfo(InfoBase):
     attribute: int = 0

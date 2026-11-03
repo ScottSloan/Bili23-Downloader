@@ -222,6 +222,13 @@ class TaskDatabase(Database):
                 VALUES (?, ?, ?, ?, ?, ?)
             """, info_list)
 
+    def save_verification(self, task_id: str, result: dict):
+        # Update only existing completed records; never resurrect deleted tasks.
+        self.execute("""
+            UPDATE completed_task SET data = json_set(data, '$.File.verification', json(?))
+            WHERE task_id = ?
+        """, (dumps(result), task_id))
+
     def update_task(self, task_info: TaskInfo):
         self.execute("""
             UPDATE download_task SET data = ? WHERE task_id = ?
