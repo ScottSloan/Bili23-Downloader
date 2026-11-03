@@ -50,9 +50,22 @@ def test_dialog_background_inspection_and_save(tmp_path, monkeypatch):
     task.Basic.task_id = "background-check"
     task.File.download_path = str(tmp_path)
     task.File.relative_files = ["sample.mp4", "cover.jpg"]
+    from util.common.enum import DownloadType
+    task.Download.type = DownloadType.VIDEO | DownloadType.AUDIO
+    task.Download.merge_video_audio = True
     calls = []
-    monkeypatch.setattr(module, "probe_media", lambda *a, **kw: ProbeResult(status="verified", duration=10))
-    monkeypatch.setattr(module.task_manager, "save_verification", lambda *args: calls.append(args))
+    expectations = []
+    def probe(*args, **kwargs):
+        expectations.append(kwargs)
+        return ProbeResult(status="verified", duration=10)
+    monkeypatch.setattr(module, "probe_media", probe)
+    from concurrent.futures import Future
+    def save(*args):
+        calls.append(args)
+        future = Future()
+        future.set_result(None)
+        return future
+    monkeypatch.setattr(module.task_manager, "save_verification", save)
     dialog = module.MediaInspectionDialog(task)
     dialog.startInspection()
     loop = QEventLoop()
@@ -64,7 +77,51 @@ def test_dialog_background_inspection_and_save(tmp_path, monkeypatch):
     timer.stop()
     assert app is not None
     assert dialog.inspect.isEnabled()
+    assert expectations[0]["expect_video"] is True
+    assert expectations[0]["expect_audio"] is True
     assert calls[0][0] == task.Basic.task_id
     assert len(calls[0][1]["files"]) == 1
     assert "10" in dialog.output.toPlainText()
     dialog.reject()
+
+
+def test_worker_reports_probe_exception(tmp_path, monkeypatch):
+    from gui.dialog.misc import media_inspection as module
+    from threading import Event
+    def fail(*args, **kwargs):
+        raise OSError("temporary storage failure")
+    monkeypatch.setattr(module, "probe_media", fail)
+    worker = module.InspectionWorker([(tmp_path / 'x.mp4', {})], None, Event(), 'x')
+    results, finished = [], []
+    worker.result.connect(results.append)
+    worker.finished.connect(lambda: finished.append(True))
+    worker.run()
+    assert results[0]['reason'] == 'inspection_error'
+    assert finished == [True]
+
+
+def test_worker_reports_save_failure_and_keeps_results(tmp_path, monkeypatch):
+    from gui.dialog.misc import media_inspection as module
+    from util.media_probe import ProbeResult
+    from threading import Event
+    from concurrent.futures import Future
+    monkeypatch.setattr(module, 'probe_media', lambda *a, **kw: ProbeResult(status='verified'))
+    future = Future()
+    future.set_exception(OSError('database unavailable'))
+    monkeypatch.setattr(module.task_manager, 'save_verification', lambda *a: future)
+    worker = module.InspectionWorker([(tmp_path / 'x.mp4', {})], None, Event(), 'x')
+    results = []
+    worker.result.connect(results.append)
+    worker.run()
+    assert results[0]['saved'] is False
+    assert results[0]['files'][0]['status'] == 'verified'
+
+
+def test_inspection_translations():
+    from pathlib import Path
+    from PySide6.QtCore import QTranslator
+    for language in ("zh_CN", "zh_TW"):
+        translator = QTranslator()
+        assert translator.load(str(Path(__file__).parents[1] / "src/res/i18n" / f"bili23.{language}.qm"))
+        assert translator.translate("MediaInspectionDialog", "Results saved")
+        assert translator.translate("DownloadListView", "Inspect media")

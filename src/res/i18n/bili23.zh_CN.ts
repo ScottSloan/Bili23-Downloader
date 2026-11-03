@@ -1300,6 +1300,10 @@ Please note that download history is the sole basis for recognizing downloaded v
         <source>Selected task will be redownloaded</source>
         <translation>选定的任务开始重新下载</translation>
     </message>
+<message>
+            <source>Inspect media</source>
+            <translation>检查媒体</translation>
+        </message>
 </context>
 <context>
     <name>DownloadOptionsDialog</name>
@@ -5848,5 +5852,108 @@ Under no circumstances shall the developer be liable for any direct, indirect, i
         <source>Choose the action when closing the main window</source>
         <translation>选择关闭主窗口时的操作</translation>
     </message>
+</context>
+<context>
+    <name>MediaInspectionDialog</name>
+<message>
+            <source>Media inspection</source>
+            <translation>媒体检查</translation>
+        </message>
+<message>
+            <source>Quick structure inspection. This does not decode the entire file.</source>
+            <translation>快速检查文件结构，不进行整片解码。</translation>
+        </message>
+<message>
+            <source>Inspect</source>
+            <translation>检查</translation>
+        </message>
+<message>
+            <source>Structure verified</source>
+            <translation>结构检查通过</translation>
+        </message>
+<message>
+            <source>Needs review</source>
+            <translation>需要确认</translation>
+        </message>
+<message>
+            <source>Inspection failed</source>
+            <translation>检查失败</translation>
+        </message>
+<message>
+            <source>Not verified</source>
+            <translation>未验证</translation>
+        </message>
+<message>
+            <source>Install ffprobe alongside FFmpeg or add it to PATH, then retry</source>
+            <translation>请将 ffprobe 安装到 FFmpeg 同目录或加入 PATH 后重试</translation>
+        </message>
+<message>
+            <source>ffprobe could not be started</source>
+            <translation>无法启动 ffprobe</translation>
+        </message>
+<message>
+            <source>File not found</source>
+            <translation>文件不存在</translation>
+        </message>
+<message>
+            <source>Inspection timed out</source>
+            <translation>检查超时</translation>
+        </message>
+<message>
+            <source>File could not be read</source>
+            <translation>无法读取文件</translation>
+        </message>
+<message>
+            <source>Required media track is missing</source>
+            <translation>缺少所需的媒体轨道</translation>
+        </message>
+<message>
+            <source>No media outputs recorded</source>
+            <translation>没有记录可检查的媒体文件</translation>
+        </message>
+<message>
+            <source>Inspecting…</source>
+            <translation>正在检查…</translation>
+        </message>
+<message>
+            <source>Not inspected</source>
+            <translation>尚未检查</translation>
+        </message>
+<message>
+            <source>Inspection encountered an error. Please retry.</source>
+            <translation>检查发生异常，请重试。</translation>
+        </message>
+<message>
+            <source>Could not save results. They remain visible in this window; retry to save.</source>
+            <translation>结果保存失败，仍可在本窗口查看，请重试保存。</translation>
+        </message>
+<message>
+            <source>Results saved</source>
+            <translation>结果已保存</translation>
+        </message>
+<message>
+            <source>Inspection could not be completed</source>
+            <translation>无法完成检查</translation>
+        </message>
+<message>
+            <source>Duration differs from the expected value. Check the source and file.</source>
+            <translation>时长与预期不符，请核对来源和文件。</translation>
+        </message>
+<message>
+            <source>Media specifications need review</source>
+            <translation>媒体规格需要确认</translation>
+        </message>
+<message>
+            <source>Duration: %s seconds</source>
+            <translation>时长：%s 秒</translation>
+        </message>
+<message>
+            <source>Unknown codec</source>
+            <translation>未知编码</translation>
+        </message>
+<message>
+            <source>%s channels</source>
+            <translation>%s 声道</translation>
+        </message>
 </context>
 </TS>

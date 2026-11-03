@@ -7,34 +7,50 @@ from PySide6.QtCore import Signal, Slot, Qt
 from PySide6.QtWidgets import QDialog, QVBoxLayout, QLabel, QPlainTextEdit, QPushButton
 
 from util.common.config import config
-from util.common.enum import FFmpegSource
+from util.common.enum import FFmpegSource, DownloadType
 from util.common.io.directory import Directory
 from util.download.task.manager import task_manager
 from util.media_probe import find_ffprobe, probe_media
 from util.thread.async_ import AsyncTask
 from util.thread.worker_base import WorkerBase
+import shutil
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class InspectionWorker(WorkerBase):
     result = Signal(dict)
 
-    def __init__(self, paths, executable, cancel):
+    def __init__(self, paths, executable, cancel, task_id):
         super().__init__()
         self.paths = paths
         self.executable = executable
         self.cancel = cancel
+        self.task_id = task_id
 
     @Slot()
     def run(self):
         try:
             results = []
-            for path in self.paths:
+            for path, expectations in self.paths:
                 if self.cancel.is_set():
                     break
-                result = probe_media(path, executable=self.executable, cancel=self.cancel)
+                result = probe_media(path, executable=self.executable, cancel=self.cancel, **expectations)
                 results.append({"file": path.name, **result.to_dict()})
             if not self.cancel.is_set():
-                self.result.emit({"files": results})
+                result = {"files": results}
+                try:
+                    task_manager.save_verification(self.task_id, deepcopy(result)).result()
+                    result["saved"] = True
+                except Exception:
+                    logger.exception("Could not save media inspection")
+                    result["saved"] = False
+                self.result.emit(result)
+        except Exception:
+            logger.exception("Media inspection failed")
+            if not self.cancel.is_set():
+                self.result.emit({"files": [], "reason": "inspection_error"})
         finally:
             self.finished.emit()
 
@@ -64,7 +80,7 @@ class MediaInspectionDialog(QDialog):
     def formatResult(self, result):
         statuses = {"verified": self.tr("Structure verified"), "warning": self.tr("Needs review"),
                     "failed": self.tr("Inspection failed"), "unverified": self.tr("Not verified")}
-        reasons = {"ffprobe_missing": self.tr("ffprobe is not installed"),
+        reasons = {"ffprobe_missing": self.tr("Install ffprobe alongside FFmpeg or add it to PATH, then retry"),
                    "ffprobe_unavailable": self.tr("ffprobe could not be started"),
                    "file_missing": self.tr("File not found"), "timeout": self.tr("Inspection timed out"),
                    "probe_failed": self.tr("File could not be read"),
@@ -74,6 +90,9 @@ class MediaInspectionDialog(QDialog):
             lines.extend([item["file"], statuses.get(item["status"], self.tr("Not verified"))])
             if item.get("reason"):
                 lines.append(reasons.get(item["reason"], self.tr("Inspection could not be completed")))
+            for warning in item.get("warnings", []):
+                lines.append(self.tr("Duration differs from the expected value. Check the source and file.")
+                             if warning == "duration_mismatch" else self.tr("Media specifications need review"))
             if item.get("duration"):
                 lines.append(self.tr("Duration: %s seconds") % round(item["duration"], 2))
             for stream in item.get("streams", []):
@@ -88,6 +107,12 @@ class MediaInspectionDialog(QDialog):
                     details.append(f"{round(stream['bit_rate'] / 1000)} kb/s")
                 lines.append(" · ".join(details))
             lines.append("")
+        if result.get("reason") == "inspection_error":
+            lines.append(self.tr("Inspection encountered an error. Please retry."))
+        if result.get("saved") is False:
+            lines.append(self.tr("Could not save results. They remain visible in this window; retry to save."))
+        elif result.get("saved"):
+            lines.append(self.tr("Results saved"))
         return "\n".join(lines) or self.tr("No media outputs recorded")
 
     @Slot()
@@ -100,14 +125,25 @@ class MediaInspectionDialog(QDialog):
         # Inspect recorded final media files, including separate audio/video outputs.
         extensions = {".mp4", ".mkv", ".m4a", ".mp3", ".flac", ".ec3", ".aac", ".flv", ".wav"}
         root = Path(self.task.File.download_path, self.task.File.folder)
-        paths = [root / name for name in self.task.File.relative_files if Path(name).suffix.lower() in extensions]
+        paths = []
+        audio_extensions = {".m4a", ".mp3", ".flac", ".ec3", ".aac", ".wav"}
+        media = [name for name in self.task.File.relative_files if Path(name).suffix.lower() in extensions]
+        for index, name in enumerate(media):
+            is_audio = Path(name).suffix.lower() in audio_extensions
+            merged = self.task.Download.merge_video_audio and index == 0 and not is_audio
+            paths.append((root / name, {
+                "expect_video": bool(self.task.Download.type & DownloadType.VIDEO) and not is_audio,
+                "expect_audio": bool(self.task.Download.type & DownloadType.AUDIO) and (is_audio or merged),
+            }))
         if not paths:
             self.onResult({"files": [], "reason": "no_media_outputs"})
             return
         ffmpeg = str(Directory.get_cwd() / "bundle" / "ffmpeg")
-        if config.get(config.ffmpeg_source) == FFmpegSource.CUSTOM:
+        if config.get(config.ffmpeg_source) == FFmpegSource.SYSTEM:
+            ffmpeg = shutil.which("ffmpeg")
+        elif config.get(config.ffmpeg_source) == FFmpegSource.CUSTOM:
             ffmpeg = config.get(config.custom_ffmpeg_path)
-        self.worker = InspectionWorker(paths, find_ffprobe(ffmpeg), self.cancel)
+        self.worker = InspectionWorker(paths, find_ffprobe(ffmpeg), self.cancel, self.task.Basic.task_id)
         self.worker.result.connect(self.onResult, Qt.ConnectionType.QueuedConnection)
         AsyncTask.run(self.worker)
 
@@ -117,9 +153,6 @@ class MediaInspectionDialog(QDialog):
             return
         self.worker = None
         self.task.File.verification = deepcopy(result)
-        task_id = self.task.Basic.task_id
-        snapshot = deepcopy(result)
-        task_manager.save_verification(task_id, snapshot)
         self.output.setPlainText(self.formatResult(result))
         self.inspect.setEnabled(True)
 

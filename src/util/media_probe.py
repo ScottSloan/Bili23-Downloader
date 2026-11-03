@@ -28,7 +28,8 @@ def find_ffprobe(ffmpeg_path: str | None = None) -> str | None:
     """Prefer the configured FFmpeg's sibling, then PATH; never download tools."""
     name = "ffprobe.exe" if os.name == "nt" else "ffprobe"
     if ffmpeg_path:
-        sibling = Path(ffmpeg_path).absolute().with_name(name)
+        resolved = shutil.which(ffmpeg_path) or ffmpeg_path
+        sibling = Path(resolved).absolute().with_name(name)
         if sibling.is_file() and os.access(sibling, os.X_OK):
             return str(sibling)
     return shutil.which(name)
