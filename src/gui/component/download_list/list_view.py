@@ -56,6 +56,7 @@ class DownloadListView(ListView):
 
         match task_info.Download.status:
             case DownloadStatus.COMPLETED:
+                menu.addAction(self._create_action(FluentIcon.INFO, self.tr("Inspect media"), lambda: self.onInspectMedia(task_info)))
                 menu.addAction(self._create_action(FluentIcon.SEARCH, self.tr("Re-parse"), lambda: self.onReparseTask(task_info)))
 
             case DownloadStatus.QUEUED | DownloadStatus.PAUSED:
@@ -73,6 +74,12 @@ class DownloadListView(ListView):
         menu.addAction(self._create_action(FluentIcon.DELETE, self.tr("Delete"), lambda: self.onCancelTask(index, task_info)))
 
         menu.exec(pos)
+
+    def onInspectMedia(self, task_info):
+        from gui.dialog.misc.media_inspection import MediaInspectionDialog
+        dialog = MediaInspectionDialog(task_info, self.window())
+        dialog.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
+        dialog.open()
 
     def isEmpty(self):
         return self._model.rowCount() == 0

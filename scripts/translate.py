@@ -102,6 +102,7 @@ sources = [
     "src/gui/dialog/setting/subtitles_language.py",
     "src/gui/dialog/setting/subtitles_style.py",
     "src/gui/dialog/setting/user_agent.py",
+    "src/gui/dialog/misc/media_inspection.py",
     "src/gui/dialog/log.py",
     "src/gui/dialog/login.py",
     "src/gui/dialog/update.py",

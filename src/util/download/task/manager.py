@@ -48,6 +48,15 @@ class TaskManager:
 
         signal_bus.download.create_task.connect(self._create_async)
 
+    def save_verification(self, task_id: str, result: dict):
+        def save():
+            try:
+                self.db_manager.save_verification(task_id, result)
+            except Exception:
+                logger.exception("保存媒体检查结果失败：%s", task_id)
+                raise
+        return self._update_executor.submit(save)
+
     def _create_async(self, episode_info_list: List[dict], show_toast: bool = False, options: dict = None):
         GlobalThreadPoolTask.run_func(self.create, episode_info_list, show_toast, options)
 
