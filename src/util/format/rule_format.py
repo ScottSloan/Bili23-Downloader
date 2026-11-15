@@ -6,6 +6,7 @@
 一个渲染不出来的预设会让整条规则失败，而用户完全看不出问题在哪。
 """
 
+import re
 from ..common.enum import VariableType
 
 from .time import Time
@@ -58,7 +59,8 @@ def preview_spec(variable_type, spec: str) -> str:
             case _:
                 return ""
 
-        return format(value, spec) if spec else str(value)
+        result = format(value, spec) if spec else str(value)
+        return re.sub(r'[<>:"/\\|?*\x00-\x1f]', "_", result)
 
     except (ValueError, TypeError):
         return ""

@@ -85,13 +85,12 @@ class FileNameFormatter:
             # 任务建得出来却没有文件名，且全程不报错
             return "_"
         
-        path_str = path_str.lstrip("/\\")
-
-        path = Path(path_str)
+        parts = re.split(r'[\\/]+', path_str)
         normalized_parts = []
 
-        for part in path.parts:
-            cleaned_part = part.lstrip("/\\").strip(" .")
+        for part in parts:
+            part = re.sub(r'[<>:"/\\|?*\x00-\x1f]', "_", part)
+            cleaned_part = part.strip(" .")
 
             if cleaned_part:
                 normalized_parts.append(cleaned_part)

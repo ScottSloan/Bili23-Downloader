@@ -22,11 +22,13 @@ __normalize_path 之后再拼接字符串 —— 那会绕过这条链上的全�
 本项目的输出里从来不可能出现 `<` 或 `>`，转义机制没有正当用途。
 """
 
+from datetime import datetime, date, time
 from functools import lru_cache
 from dataclasses import dataclass
 from typing import Mapping
 import string
 import logging
+import re
 
 logger = logging.getLogger(__name__)
 
@@ -121,6 +123,14 @@ class _BlankTrackingFormatter(string.Formatter):
             self.blank_hit = True
 
         return value
+
+    def format_field(self, value, format_spec):
+        text = super().format_field(value, format_spec)
+
+        if isinstance(value, (datetime, date, time)):
+            return re.sub(r'[<>:"/\\|?*\x00-\x1f]', "_", text)
+
+        return text
 
 def _scan_field(rule: str, start: int, strict: bool) -> int:
     """

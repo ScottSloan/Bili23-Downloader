@@ -31,6 +31,13 @@ class TestDelimiterScanning:
     def test_strftime_spec_untouched(self):
         assert render("{d:%Y-%m-%d}", {"d": datetime(2026, 3, 7)}) == "2026-03-07"
 
+    def test_strftime_spec_sanitizes_colons(self):
+        assert render("{d:%Y-%m-%d %H:%M:%S}", {"d": datetime(2026, 3, 7, 12, 0, 0)}) == "2026-03-07 12_00_00"
+        assert render("{d:%H:%M:%S}", {"d": datetime(2026, 3, 7, 12, 0, 0)}) == "12_00_00"
+
+    def test_datetime_without_spec_sanitizes_colons(self):
+        assert render("{d}", {"d": datetime(2026, 3, 7, 12, 0, 0)}) == "2026-03-07 12_00_00"
+
     def test_nested_format_spec(self):
         assert render("{t:{w}}", {"t": "ab", "w": ">6"}) == "    ab"
 

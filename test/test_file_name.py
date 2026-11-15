@@ -10,6 +10,7 @@ format() 内部吞掉了所有异常并返回 None，所以这些用例同时兼
 "不崩" 与 "不逃逸" 两重含义。
 """
 
+from datetime import datetime
 from util.format.file_name import FileNameFormatter
 
 from pathlib import Path
@@ -234,3 +235,34 @@ class TestIssue461EndToEnd:
         })
 
         assert result == str(Path("UP主", "分P稿件", "P01-第一段"))
+
+
+class TestDateTimeSanitize:
+    def test_datetime_without_spec_replaces_colons(self):
+        dt = datetime(2026, 3, 7, 12, 0, 0)
+        assert render("{pub_time}", {"pub_time": dt}) == "2026-03-07 12_00_00"
+
+    def test_datetime_inside_optional_segment(self):
+        dt = datetime(2026, 3, 7, 12, 0, 0)
+        assert render("< {pub_time}>", {"pub_time": dt}) == "2026-03-07 12_00_00"
+        assert render("{title}< {pub_time}>", {"title": "视频", "pub_time": dt}) == "视频 2026-03-07 12_00_00"
+
+    def test_datetime_custom_format_with_colons(self):
+        dt = datetime(2026, 3, 7, 12, 34, 56)
+        assert render("{pub_time:%H:%M:%S}", {"pub_time": dt}) == "12_34_56"
+        assert render("{pub_time:%Y-%m-%d %H:%M:%S}", {"pub_time": dt}) == "2026-03-07 12_34_56"
+
+    def test_multiple_datetime_fields(self):
+        dt = datetime(2026, 3, 7, 12, 0, 0)
+        data = {
+            "pub_time": dt,
+            "create_time": dt,
+            "fav_time": dt,
+            "last_watched_time": dt,
+        }
+        assert render("{create_time}", data) == "2026-03-07 12_00_00"
+        assert render("{fav_time}", data) == "2026-03-07 12_00_00"
+        assert render("{last_watched_time}", data) == "2026-03-07 12_00_00"
+
+    def test_path_normalization_guarantees_no_colon(self):
+        assert ":" not in render("{title}", {"title": "A:B"})
