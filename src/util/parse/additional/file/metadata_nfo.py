@@ -6,6 +6,7 @@ from ...episode.tree import Attribute
 
 from pathlib import Path
 from typing import List
+from xml.sax.saxutils import escape
 import textwrap
 import math
 
@@ -99,17 +100,17 @@ class MetadataNFO:
         pubtime = Time.from_timestamp(self.task_info.Episode.pubtime)
 
         return video_base.format(
-            title = self.task_info.Basic.show_title,
-            plot = self.task_info.Episode.description,
+            title = escape(self.task_info.Basic.show_title or ""),
+            plot = escape(self.task_info.Episode.description or ""),
             runtime = math.ceil(self.task_info.Episode.duration / 60),
             premiered = pubtime,
             year = pubtime.year,
-            uploader = self.task_info.Episode.uploader,
+            uploader = escape(self.task_info.Episode.uploader or ""),
             uploader_uid = self.task_info.Episode.uploader_uid,
-            uploader_face = self.task_info.Episode.uploader_face,
-            tag = "\n    ".join([f"<tag>{tag}</tag>" for tag in self.task_info.Episode.tags]),
-            thumb = self.task_info.Episode.cover,
-            bvid = self.task_info.Episode.bvid
+            uploader_face = escape(self.task_info.Episode.uploader_face or ""),
+            tag = "\n    ".join(f"<tag>{escape(tag)}</tag>" for tag in self.task_info.Episode.tags if isinstance(tag, str)),
+            thumb = escape(self.task_info.Episode.cover or ""),
+            bvid = escape(self.task_info.Episode.bvid or "")
         )
     
     def _generate_tvshow(self, genres: List[str]):

@@ -1,5 +1,6 @@
 from PySide6.QtGui import QPainter, QColor, QFontMetrics
 from PySide6.QtCore import QModelIndex, Qt, QTimer
+from PySide6.QtWidgets import QProgressDialog
 
 from qfluentwidgets import ListView, RoundMenu, Action, FluentIcon, isDarkTheme, setFont
 
@@ -11,6 +12,7 @@ from gui.component.widget.smooth_scroll import applySmoothScroll
 
 from util.download.downloader.manager import downloader_manager
 from util.download.task.info import TaskInfo
+from util.parse.episode.tree import Attribute
 
 from util.common.enum import DownloadStatus, ToastNotificationCategory
 from util.common.icon import ExtendedFluentIcon
@@ -34,6 +36,7 @@ class DownloadListView(ListView):
         self._in_batch_cancel = False
 
         self._in_adding_queried_tasks = False
+        self._metadata_progress = None
 
         self._source_model = DownloadListModel([], self)
         self._model = DownloadListProxyModel(self)
@@ -57,6 +60,8 @@ class DownloadListView(ListView):
         match task_info.Download.status:
             case DownloadStatus.COMPLETED:
                 menu.addAction(self._create_action(FluentIcon.SEARCH, self.tr("Re-parse"), lambda: self.onReparseTask(task_info)))
+                if task_info.Episode.attribute & Attribute.VIDEO_BIT and task_info.Episode.bvid:
+                    menu.addAction(self._create_action(FluentIcon.UPDATE, self.tr("Refresh Metadata"), lambda: self.onRefreshMetadata([task_info])))
 
             case DownloadStatus.QUEUED | DownloadStatus.PAUSED:
                 menu.addAction(self._create_action(FluentIcon.PLAY, self.tr("Resume"), lambda: self.onTogglePauseResumeTask(index, task_info)))
@@ -210,6 +215,56 @@ class DownloadListView(ListView):
 
     def onReparseTask(self, task_info: TaskInfo):
         signal_bus.parse.parse_url.emit(task_info.Episode.url)
+
+    def refreshVisibleMetadata(self):
+        self.onRefreshMetadata(self._model.visibleTasks())
+
+    def onRefreshMetadata(self, tasks: list[TaskInfo]):
+        from gui.dialog.misc.refresh_metadata import RefreshMetadataDialog
+        from util.parse.additional.metadata_refresh import MetadataRefreshWorker, can_refresh_metadata
+        from util.thread.async_ import AsyncTask
+
+        if self._metadata_progress is not None:
+            self._metadata_progress.show()
+            return
+
+        tasks = [task for task in tasks if can_refresh_metadata(task)]
+        if not tasks:
+            signal_bus.toast.show.emit(ToastNotificationCategory.INFO, "", self.tr("No completed videos to refresh"))
+            return
+
+        dialog = RefreshMetadataDialog(len(tasks), self.window())
+        if not dialog.exec():
+            return
+
+        worker = MetadataRefreshWorker(tasks, *dialog.options)
+        progress = QProgressDialog(self.tr("Refreshing video metadata…"), self.tr("Stop after current video"), 0, len(tasks), self)
+        progress.setWindowModality(Qt.WindowModality.WindowModal)
+        progress.setAutoClose(False)
+        progress.setAutoReset(False)
+        progress.setValue(0)
+        progress.canceled.connect(lambda: worker.cancel())
+        worker.progress.connect(progress.setValue)
+        worker.result.connect(self.onMetadataRefreshResult)
+
+        self._metadata_progress = progress
+        progress.show()
+        AsyncTask.run(worker)
+
+    def onMetadataRefreshResult(self, succeeded: int, failed: int, error: str):
+        progress = self._metadata_progress
+        pending = progress.maximum() - succeeded - failed
+        progress.hide()
+        progress.deleteLater()
+        self._metadata_progress = None
+
+        message = self.tr("Updated: {succeeded} · Failed: {failed} · Unprocessed: {pending}").format(
+            succeeded = succeeded, failed = failed, pending = pending
+        )
+        if error:
+            message = f"{message}\n{error}"
+        category = ToastNotificationCategory.WARNING if failed or pending else ToastNotificationCategory.SUCCESS
+        signal_bus.toast.show_long_message.emit(category, self.tr("Metadata Refresh"), message)
 
     def onEditDownloadOptions(self, index: QModelIndex, task_info: TaskInfo):
         pass
