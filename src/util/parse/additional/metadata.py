@@ -19,6 +19,13 @@ class MetadataParser(AdditionalParserBase):
         super().__init__(task_info)
 
     def parse(self):
+        attr = self.task_info.Episode.attribute
+
+        if attr & Attribute.VIDEO_BIT and attr & Attribute.COLLECTION_BIT:
+            # 合集条目共用入口稿件的 episode_data，而 arc.desc 可能为空。
+            # 只在导出元数据时按当前 BV 号补取，避免把入口简介写给整个合集。
+            self._get_video_description()
+
         match resolve(self.task_info, "metadata_type"):
             case MetadataType.NFO:
                 if self.task_info.Episode.attribute & Attribute.VIDEO_BIT != 0:
@@ -72,3 +79,13 @@ class MetadataParser(AdditionalParserBase):
         tag_list = response.get("data", [])
             
         self.task_info.Episode.tags = [tag.get("tag_name") for tag in tag_list]
+
+    def _get_video_description(self):
+        params = {"bvid": self.task_info.Episode.bvid}
+        url = f"https://api.bilibili.com/x/web-interface/wbi/view?{self.enc_wbi(params)}"
+
+        request = SyncNetWorkRequest(url)
+        response = request.run()
+        self.check_response(response)
+
+        self.task_info.Episode.description = response["data"].get("desc", "")
