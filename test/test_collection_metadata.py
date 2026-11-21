@@ -60,7 +60,7 @@ def metadata_api(monkeypatch):
             query = parse_qs(urlparse(self.url).query)
             bvid = query["bvid"][0]
             if urlparse(self.url).path.endswith("/tag"):
-                return {"code": 0, "data": []}
+                return {"code": 0, "data": [{"tag_name": "A & B"}, {"tag_name": None}]}
             return {"code": 0, "data": {"bvid": bvid, "desc": descriptions[bvid]}}
 
     monkeypatch.setattr(metadata, "SyncNetWorkRequest", Request)
@@ -80,9 +80,13 @@ def test_collection_exports_each_videos_description(collection_tasks, metadata_a
         metadata.MetadataParser(task).parse()
         path, = tmp_path.glob(f"{task.File.name}.*.{kind.value}")
         if kind == MetadataType.JSON:
-            exported = json.loads(path.read_text(encoding = "utf-8"))["description"]
+            data = json.loads(path.read_text(encoding = "utf-8"))
+            exported = data["description"]
+            assert data["tags"] == ["A & B"]
         else:
-            exported = ElementTree.parse(path).findtext("plot")
+            data = ElementTree.parse(path)
+            exported = data.findtext("plot")
+            assert data.findtext("tag") == "A & B"
         assert exported == descriptions[task.Episode.bvid]
 
     assert [task.Episode.cid for task in collection_tasks] == original_cids
@@ -133,4 +137,44 @@ def test_other_video_types_do_not_request_description(collection_tasks, metadata
     task.Episode.attribute = attribute
     task.Options.metadata_type = MetadataType.JSON.value
     metadata.MetadataParser(task).parse()
-    assert requested == []
+    assert not any(urlparse(url).path.endswith("/wbi/view") for url in requested)
+
+
+def test_export_recovers_a_description_missing_from_the_parse_cache(tmp_path, metadata_api):
+    descriptions, _ = metadata_api
+    response = {"data": {
+        "bvid": "BVentry", "aid": 1, "cid": 10, "desc": descriptions["BVentry"],
+        "title": "Standalone video", "pic": "", "pubdate": 1700000000, "is_upower_exclusive": False,
+        "owner": {"name": "UP", "mid": 1, "face": ""},
+    }}
+    tree = VideoEpisodeParser(response, "USER_UPLOADS").parse(update_episode_list = False)
+    item, = tree.get_all_children(to_dict = True)
+    # 新一轮解析可能在异步建任务前清除旧缓存。
+    EpisodeData.clear_cache()
+    task = task_manager._TaskManager__episode_info_to_task_info(item, 1)
+    assert not task.Episode.description
+    task.File.download_path = str(tmp_path)
+    task.File.folder = ""
+    task.Options.metadata_type = MetadataType.JSON.value
+    metadata.MetadataParser(task).parse()
+    path, = tmp_path.glob("*.json")
+    assert json.loads(path.read_text(encoding = "utf-8"))["description"] == descriptions["BVentry"]
+
+
+def test_tag_request_failure_does_not_discard_available_json(collection_tasks, metadata_api, monkeypatch, tmp_path):
+    request = metadata.SyncNetWorkRequest
+
+    class UnavailableTags(request):
+        def run(self):
+            if urlparse(self.url).path.endswith("/tag"):
+                return {"code": -404, "message": "Tags unavailable"}
+            return super().run()
+
+    monkeypatch.setattr(metadata, "SyncNetWorkRequest", UnavailableTags)
+    task = collection_tasks[1]
+    task.Options.metadata_type = MetadataType.JSON.value
+    metadata.MetadataParser(task).parse()
+    path, = tmp_path.glob("*.json")
+    data = json.loads(path.read_text(encoding = "utf-8"))
+    assert data["description"] == "另一个视频的简介"
+    assert "tags" not in data

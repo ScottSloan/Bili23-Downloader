@@ -396,6 +396,9 @@ class TopStackedWidget(QStackedWidget):
         self.open_folder_2_btn = ToolButton(FluentIcon.FOLDER, self)
         self.open_folder_2_btn.setToolTip(self.tr("Open Download Directory"))
 
+        self.refresh_metadata_btn = ToolButton(FluentIcon.UPDATE, self)
+        self.refresh_metadata_btn.setToolTip(self.tr("Refresh Metadata for Visible Videos"))
+
         separator_2 = Separator(self, alpha = 50)
 
         self.clear_all_btn = PushButton(ExtendedFluentIcon.CLEAR, self.tr("Clear All"))
@@ -408,6 +411,7 @@ class TopStackedWidget(QStackedWidget):
         completed_layout.addWidget(self.filter_completed_list_btn)
         completed_layout.addWidget(self.sort_completed_list_btn)
         completed_layout.addWidget(self.open_folder_2_btn)
+        completed_layout.addWidget(self.refresh_metadata_btn)
         completed_layout.addWidget(separator_2)
         completed_layout.addWidget(self.clear_all_btn)
 

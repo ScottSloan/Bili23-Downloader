@@ -82,6 +82,7 @@ class DownloadInterface(QFrame):
         self.top_stacked_widget.delete_all_btn.clicked.connect(self.downloading_list_view.batch_cancel)
         
         self.top_stacked_widget.clear_all_btn.clicked.connect(self.completed_list_view._model.batch_cancel)
+        self.top_stacked_widget.refresh_metadata_btn.clicked.connect(self.completed_list_view.refreshVisibleMetadata)
 
         self.top_stacked_widget.search_downloading_list_box.textChanged.connect(self.downloading_list_view.setFilterText)
         self.top_stacked_widget.search_completed_list_box.textChanged.connect(self.completed_list_view.setFilterText)
