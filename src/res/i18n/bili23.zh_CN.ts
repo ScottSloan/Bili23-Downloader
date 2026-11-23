@@ -319,7 +319,7 @@
 <context>
     <name>BATCH_SELECT_GUIDE</name>
     <message>
-        <location filename="../../util/common/translator.py" line="494"/>
+        <location filename="../../util/common/translator.py" line="502"/>
         <source>Press Ctrl + A to select all items, Ctrl + D to deselect all items
 You can also press shift + click to select a range of items.</source>
         <translation>按 Ctrl + A 全选，Ctrl + D 取消全选
@@ -675,27 +675,27 @@ You can also press shift + click to select a range of items.</source>
 <context>
     <name>CheckUpdateSettingCard</name>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="771"/>
+        <location filename="../../gui/component/setting/card.py" line="777"/>
         <source>Check for Updates</source>
         <translation>检查更新</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="771"/>
+        <location filename="../../gui/component/setting/card.py" line="777"/>
         <source>Check if a new version is available</source>
         <translation>检查是否有新版本可用</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="773"/>
+        <location filename="../../gui/component/setting/card.py" line="779"/>
         <source>Check Now</source>
         <translation>立即检查</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="778"/>
+        <location filename="../../gui/component/setting/card.py" line="784"/>
         <source>Include Prerelease Versions</source>
         <translation>包含预发布版本</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="778"/>
+        <location filename="../../gui/component/setting/card.py" line="784"/>
         <source>Include prerelease versions in update checks (may be unstable)</source>
         <translation>在更新检查中包含预发布版本（可能不稳定）</translation>
     </message>
@@ -930,7 +930,7 @@ You can also press shift + click to select a range of items.</source>
 <context>
     <name>DUPLICATE_DOWNLOAD_GUIDE</name>
     <message>
-        <location filename="../../util/common/translator.py" line="489"/>
+        <location filename="../../util/common/translator.py" line="497"/>
         <source>This feature detects duplicates based on unique video identifiers (e.g., BV/av IDs), not filenames.
 Please note that download history is the sole basis for recognizing downloaded videos. Clearing it will prevent the system from identifying existing downloads, which may result in duplicate downloads.</source>
         <translation>本功能通过视频唯一标识（如 BV号、av号）判断是否重复，与文件名无关。
@@ -1030,37 +1030,57 @@ Please note that download history is the sole basis for recognizing downloaded v
         <translation>调整每任务线程数、并发下载数和速度限制</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="763"/>
+        <location filename="../../gui/component/setting/card.py" line="764"/>
         <source>Configure…</source>
         <translation>设置…</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="765"/>
+        <location filename="../../gui/component/setting/card.py" line="766"/>
         <source>Number of Threads</source>
         <translation>多线程数</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="766"/>
+        <location filename="../../gui/component/setting/card.py" line="767"/>
         <source>Number of Parallel Downloads</source>
         <translation>并行下载数</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="767"/>
+        <location filename="../../gui/component/setting/card.py" line="769"/>
+        <source>Number of Parallel Merges</source>
+        <translation>并行合并数</translation>
+    </message>
+    <message>
+        <location filename="../../gui/component/setting/card.py" line="769"/>
+        <source>Number of FFmpeg merges run at the same time. Recommended: 1 — higher values may make the system unresponsive</source>
+        <translation>同时运行的 FFmpeg 合并任务数，推荐设为 1，调高可能导致系统卡顿甚至无响应</translation>
+    </message>
+    <message>
+        <location filename="../../gui/component/setting/card.py" line="770"/>
         <source>Speed Limit Settings</source>
         <translation>速度限制设置</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="765"/>
+        <location filename="../../gui/component/setting/card.py" line="772"/>
+        <source>About Parallel Merges</source>
+        <translation>有关并行合并的说明</translation>
+    </message>
+    <message>
+        <location filename="../../gui/component/setting/card.py" line="773"/>
+        <source>Instructions</source>
+        <translation>说明</translation>
+    </message>
+    <message>
+        <location filename="../../gui/component/setting/card.py" line="766"/>
         <source>Adjust the number of threads used per task (default: 4)</source>
         <translation>调整单个任务使用的线程数，默认为 4</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="766"/>
+        <location filename="../../gui/component/setting/card.py" line="767"/>
         <source>Adjust the number of tasks downloaded simultaneously (default: 1)</source>
         <translation>调整同时下载的任务数，默认为 1</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="767"/>
+        <location filename="../../gui/component/setting/card.py" line="770"/>
         <source>Configure speed limit settings for downloads</source>
         <translation>配置下载的速度限制设置</translation>
     </message>
@@ -1570,12 +1590,12 @@ If you continue, please disable the &quot;Preallocate file space&quot; option. (
 <context>
     <name>ERROR_CODE_EXPLANATION</name>
     <message>
-        <location filename="../../util/common/translator.py" line="501"/>
+        <location filename="../../util/common/translator.py" line="509"/>
         <source>Request blocked, client IP has been banned</source>
         <translation>请求被阻止，客户端IP已被封禁</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="502"/>
+        <location filename="../../util/common/translator.py" line="510"/>
         <source>Paid content requires purchasing</source>
         <translation>付费内容需要购买</translation>
     </message>
@@ -2529,58 +2549,58 @@ Message:
 <context>
     <name>MCPSettingCard</name>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="875"/>
+        <location filename="../../gui/component/setting/card.py" line="881"/>
         <source>MCP Server</source>
         <translation>MCP 服务器</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="875"/>
+        <location filename="../../gui/component/setting/card.py" line="881"/>
         <source>Let AI clients parse links and manage downloads through the Model Context Protocol</source>
         <translation>让 AI 客户端通过 Model Context Protocol 解析链接并管理下载任务</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="888"/>
         <location filename="../../gui/component/setting/card.py" line="894"/>
+        <location filename="../../gui/component/setting/card.py" line="900"/>
         <source>Copy</source>
         <translation>复制</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="889"/>
+        <location filename="../../gui/component/setting/card.py" line="895"/>
         <source>Regenerate</source>
         <translation>重新生成</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="898"/>
+        <location filename="../../gui/component/setting/card.py" line="904"/>
         <source>HTTP (Claude Code, etc.)</source>
         <translation>HTTP 直连（Claude Code 等）</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="901"/>
+        <location filename="../../gui/component/setting/card.py" line="907"/>
         <source>stdio (Claude Desktop, etc.)</source>
         <translation>stdio 桥接（Claude Desktop 等）</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="914"/>
+        <location filename="../../gui/component/setting/card.py" line="920"/>
         <source>Enable MCP Server</source>
         <translation>启用 MCP 服务器</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="914"/>
+        <location filename="../../gui/component/setting/card.py" line="920"/>
         <source>Listen on the local loopback address only. Disabled by default.</source>
         <translation>仅监听本地回环地址，默认关闭</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="915"/>
+        <location filename="../../gui/component/setting/card.py" line="921"/>
         <source>Status</source>
         <translation>状态</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="916"/>
+        <location filename="../../gui/component/setting/card.py" line="922"/>
         <source>Port</source>
         <translation>端口</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="916"/>
+        <location filename="../../gui/component/setting/card.py" line="922"/>
         <source>Takes effect after the server restarts</source>
         <translation>重启服务器后生效</translation>
     </message>
@@ -2593,72 +2613,72 @@ Message:
         <translation type="vanished">允许 AI 客户端创建、暂停和取消下载任务，关闭后仅提供只读功能</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="917"/>
+        <location filename="../../gui/component/setting/card.py" line="923"/>
         <source>Access Token</source>
         <translation>访问令牌</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="917"/>
+        <location filename="../../gui/component/setting/card.py" line="923"/>
         <source>Required by every request. Treat it like a password.</source>
         <translation>每次请求都需要提供，请像密码一样妥善保管</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="918"/>
+        <location filename="../../gui/component/setting/card.py" line="924"/>
         <source>Client Configuration</source>
         <translation>客户端配置</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="918"/>
+        <location filename="../../gui/component/setting/card.py" line="924"/>
         <source>Copy a ready-to-use MCP client configuration</source>
         <translation>复制可直接使用的 MCP 客户端配置</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="922"/>
+        <location filename="../../gui/component/setting/card.py" line="928"/>
         <source>View Documentation</source>
         <translation>查看帮助文档</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="941"/>
+        <location filename="../../gui/component/setting/card.py" line="947"/>
         <source>Disabled</source>
         <translation>已关闭</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="944"/>
+        <location filename="../../gui/component/setting/card.py" line="950"/>
         <source>Listening on 127.0.0.1:{port}</source>
         <translation>正在监听 127.0.0.1:{port}</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="947"/>
+        <location filename="../../gui/component/setting/card.py" line="953"/>
         <source>Failed to start: {error}</source>
         <translation>启动失败：{error}</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="950"/>
+        <location filename="../../gui/component/setting/card.py" line="956"/>
         <source>Not running</source>
         <translation>未运行</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="977"/>
+        <location filename="../../gui/component/setting/card.py" line="983"/>
         <source>Access token copied</source>
         <translation>已复制访问令牌</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="981"/>
+        <location filename="../../gui/component/setting/card.py" line="987"/>
         <source>Regenerate Access Token</source>
         <translation>重新生成访问令牌</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="982"/>
+        <location filename="../../gui/component/setting/card.py" line="988"/>
         <source>Existing AI clients will stop working until they are reconfigured with the new token. Continue?</source>
         <translation>现有 AI 客户端将无法继续使用，需要使用新令牌重新配置。是否继续？</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="995"/>
+        <location filename="../../gui/component/setting/card.py" line="1001"/>
         <source>Access token regenerated</source>
         <translation>已重新生成访问令牌</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="1004"/>
+        <location filename="../../gui/component/setting/card.py" line="1010"/>
         <source>Client configuration copied</source>
         <translation>已复制客户端配置</translation>
     </message>
@@ -2743,6 +2763,22 @@ B站的视频通常将视频流和音频流分开存储和传输，下载时需�
         <location filename="../../util/common/translator.py" line="105"/>
         <source>Audio</source>
         <translation>音频</translation>
+    </message>
+</context>
+<context>
+    <name>MERGE_PARALLEL_GUIDE</name>
+    <message>
+        <location filename="../../util/common/translator.py" line="489"/>
+        <source>After a download finishes, FFmpeg merges the video and audio streams into the final file. This step mainly reads and writes the disk, and converting to MP3 also uses a lot of CPU.
+
+It is strongly recommended to keep this at 1 (one task at a time). Running several FFmpeg processes at once makes them compete for the same disk, so merging usually does not get faster overall, and the system may become sluggish or even unresponsive.
+
+Only consider a higher value if the download folder is on a fast SSD and your computer stays responsive while merging.</source>
+        <translation>下载完成后，FFmpeg 会将视频流与音频流合并为最终文件。这一步主要是磁盘读写，转换为 MP3 时还会占用大量 CPU。
+
+强烈建议保持为 1（逐个处理）。同时运行多个 FFmpeg 进程会争抢同一块磁盘，整体合并速度通常并不会更快，还可能导致系统卡顿甚至无响应。
+
+只有当下载目录位于高速 SSD 上、且合并期间电脑依然流畅时，才考虑调高此数值。</translation>
     </message>
 </context>
 <context>
@@ -3539,84 +3575,84 @@ The meaning of each &quot;Numbering Mode&quot; option is as follows:
 <context>
     <name>OtherAdvancedSettingCard</name>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="782"/>
+        <location filename="../../gui/component/setting/card.py" line="788"/>
         <source>Other Advanced Settings</source>
         <translation>其他高级设置</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="782"/>
+        <location filename="../../gui/component/setting/card.py" line="788"/>
         <source>Configure other advanced settings</source>
         <translation>配置其他高级设置</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="786"/>
+        <location filename="../../gui/component/setting/card.py" line="792"/>
         <source>Customize…</source>
         <translation>自定义…</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="787"/>
+        <location filename="../../gui/component/setting/card.py" line="793"/>
         <source>Configure</source>
         <translation>配置</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="790"/>
+        <location filename="../../gui/component/setting/card.py" line="796"/>
         <source>Import Config</source>
         <translation>导入配置</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="791"/>
+        <location filename="../../gui/component/setting/card.py" line="797"/>
         <source>Export Config</source>
         <translation>导出配置</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="792"/>
-        <location filename="../../gui/component/setting/card.py" line="854"/>
+        <location filename="../../gui/component/setting/card.py" line="798"/>
+        <location filename="../../gui/component/setting/card.py" line="860"/>
         <source>Reset Config</source>
         <translation>重置配置</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="793"/>
+        <location filename="../../gui/component/setting/card.py" line="799"/>
         <source>Open Config Directory</source>
         <translation>打开配置目录</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="797"/>
+        <location filename="../../gui/component/setting/card.py" line="803"/>
         <source>Custom User-Agent</source>
         <translation>自定义 User-Agent</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="797"/>
+        <location filename="../../gui/component/setting/card.py" line="803"/>
         <source>Set a custom User-Agent string for network requests</source>
         <translation>为网络请求设置自定义 User-Agent 字符串</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="798"/>
+        <location filename="../../gui/component/setting/card.py" line="804"/>
         <source>Config File Settings</source>
         <translation>配置文件设置</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="798"/>
+        <location filename="../../gui/component/setting/card.py" line="804"/>
         <source>Import/export configuration files or reset to defaults</source>
         <translation>导入/导出配置文件或重置为默认值</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="814"/>
+        <location filename="../../gui/component/setting/card.py" line="820"/>
         <source>Import Config File</source>
         <translation>导入配置文件</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="816"/>
-        <location filename="../../gui/component/setting/card.py" line="838"/>
+        <location filename="../../gui/component/setting/card.py" line="822"/>
+        <location filename="../../gui/component/setting/card.py" line="844"/>
         <source>Config Files (*.json)</source>
         <translation>配置文件 (*.json)</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="836"/>
+        <location filename="../../gui/component/setting/card.py" line="842"/>
         <source>Export Config File</source>
         <translation>导出配置文件</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="855"/>
+        <location filename="../../gui/component/setting/card.py" line="861"/>
         <source>Are you sure you want to reset all settings to their default values? This action cannot be undone.</source>
         <translation>确定要将所有设置恢复为默认值吗？此操作无法撤销。</translation>
     </message>

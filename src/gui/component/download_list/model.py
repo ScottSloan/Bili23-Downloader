@@ -388,7 +388,10 @@ class DownloadListModel(CoverQueryModelBase):
 
     def _manageConcurrentMerges(self):
         # 自动调度同时合并的任务数量
-        # 为避免多个合并任务同时进行导致高频资源占用，每次只允许一个合并任务进行，其他等待合并的任务都处于等待合并状态，由 manage_concurrent_merges 统一调度
+        # 多个合并任务同时进行会大量占用磁盘与 CPU，曾导致机器卡死，因此默认只允许一个合并任务进行，
+        # 其他等待合并的任务都处于等待合并状态，由 manage_concurrent_merges 统一调度。
+        # 上限由用户在设置中调整（merge_parallel），推荐保持 1
+        limit = config.get(config.merge_parallel)
 
         merging_count = 0
         merge_queued_tasks = []
@@ -402,7 +405,7 @@ class DownloadListModel(CoverQueryModelBase):
                     merge_queued_tasks.append(item)
 
         for task in merge_queued_tasks:
-            if merging_count >= 1:
+            if merging_count >= limit:
                 break
 
             self.togglePauseResume(task)

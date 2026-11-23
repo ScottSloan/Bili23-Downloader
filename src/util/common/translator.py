@@ -485,6 +485,14 @@ The meaning of each "Numbering Mode" option is as follows:
 Note: If the download path is on an external storage device such as a USB drive, and the file system does not support sparse files (e.g., FAT32 or exFAT), please disable this feature—otherwise, the program may become unresponsive.""")
     
     @staticmethod
+    def MERGE_PARALLEL_GUIDE():
+        return translate("MERGE_PARALLEL_GUIDE", """After a download finishes, FFmpeg merges the video and audio streams into the final file. This step mainly reads and writes the disk, and converting to MP3 also uses a lot of CPU.
+
+It is strongly recommended to keep this at 1 (one task at a time). Running several FFmpeg processes at once makes them compete for the same disk, so merging usually does not get faster overall, and the system may become sluggish or even unresponsive.
+
+Only consider a higher value if the download folder is on a fast SSD and your computer stays responsive while merging.""")
+
+    @staticmethod
     def DUPLICATE_DOWNLOAD_GUIDE():
         return translate("DUPLICATE_DOWNLOAD_GUIDE", """This feature detects duplicates based on unique video identifiers (e.g., BV/av IDs), not filenames.
 Please note that download history is the sole basis for recognizing downloaded videos. Clearing it will prevent the system from identifying existing downloads, which may result in duplicate downloads.""")

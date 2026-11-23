@@ -357,6 +357,10 @@ class APPConfig(QConfig):
     download_path = ConfigItem("Download", "download_path", QStandardPaths.writableLocation(QStandardPaths.StandardLocation.DownloadLocation))
     download_thread = RangeConfigItem("Download", "download_thread", 4, RangeValidator(1, 10))
     download_parallel = RangeConfigItem("Download", "download_parallel", 1, RangeValidator(1, 10))
+    # 同时运行的 FFmpeg 合并/转换任务数（Issue #490）。默认且推荐保持 1：并行合并曾把机器
+    # 拖到卡死 —— 流拷贝几乎全是磁盘读写，多个 FFmpeg 同时读写同一块盘时会互相抢占，
+    # 转 MP3 这类重编码还会吃满 CPU。上限刻意定得很低，只给磁盘性能足够的用户留出余地
+    merge_parallel = RangeConfigItem("Download", "merge_parallel", 1, RangeValidator(1, 4))
     speed_limit_enabled = ConfigItem("Download", "speed_limit_enabled", False, BoolValidator())
     speed_limit_rate = ConfigItem("Download", "speed_limit_rate", 10.0)
 

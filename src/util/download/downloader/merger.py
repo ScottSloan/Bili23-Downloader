@@ -118,7 +118,7 @@ class Merger(QObject):
         调用方在此之前已经把状态置为 MERGING。这条路径上有大量文件系统操作
         （探测文件是否存在、写 concat 清单、拉起 FFmpeg 线程），任意一处抛出，
         任务就会永远停在 MERGING：状态已经置位，却没有任何 FFmpeg 在跑，
-        也就再没有人把它推向终态。而合并额度全局只有一个，这一个僵住会让
+        也就再没有人把它推向终态。而合并额度很少（默认只有一个），僵住一个就会让
         整条队列都排不下去，所以这里必须保证异常一定收敛到失败态
         """
         try:
@@ -463,7 +463,7 @@ class Merger(QObject):
 
         signal_bus.download.update_downloading_item.emit(self.task_info)
 
-        # 失败同样要唤醒调度器。FFmpeg 全局只允许跑一个，而这个额度完全靠该信号释放，
+        # 失败同样要唤醒调度器。同时运行的 FFmpeg 数量有上限（merge_parallel），额度完全靠该信号释放，
         # 这里不发的话，队列里其余等待合并的任务就再没有下一次被调度的机会，会一直干等
         signal_bus.download.auto_manage_concurrent_downloads.emit()
 

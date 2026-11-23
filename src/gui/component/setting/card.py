@@ -759,12 +759,18 @@ class DownloadConcurrencySettingCard(ExpandGroupSettingCard):
 
         self.download_thread_slider = SettingSlider(config.download_thread, self)
         self.download_parallel_slider = SettingSlider(config.download_parallel, self)
+        self.merge_parallel_slider = SettingSlider(config.merge_parallel, self)
 
         self.download_speed_limit_btn = PushButton(self.tr("Configure…"), self)
 
         self.addGroup("", self.tr("Number of Threads"), self.tr("Adjust the number of threads used per task (default: 4)"), self.download_thread_slider)
         self.addGroup("", self.tr("Number of Parallel Downloads"), self.tr("Adjust the number of tasks downloaded simultaneously (default: 1)"), self.download_parallel_slider)
+        # 并行合并曾把机器拖到卡死（Issue #490），说明里必须直接写出推荐值与风险，不能只写默认值
+        merge_parallel_group = self.addGroup("", self.tr("Number of Parallel Merges"), self.tr("Number of FFmpeg merges run at the same time. Recommended: 1 — higher values may make the system unresponsive"), self.merge_parallel_slider)
         self.addGroup("", self.tr("Speed Limit Settings"), self.tr("Configure speed limit settings for downloads"), self.download_speed_limit_btn)
+
+        merge_parallel_group.showHyperLinkLabel(self.tr("About Parallel Merges"))
+        merge_parallel_group.hyper_label.clicked.connect(lambda: merge_parallel_group.showGuideMessageBox(self.tr("Instructions"), Translator.MERGE_PARALLEL_GUIDE()))
 
 class CheckUpdateSettingCard(ExpandGroupSettingCard):
     def __init__(self, parent = None):
