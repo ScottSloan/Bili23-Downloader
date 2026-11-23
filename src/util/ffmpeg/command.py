@@ -19,6 +19,20 @@ REMUX_AUDIO_MUXERS = {
     "ec3": "eac3",
 }
 
+# MKV 封面附件的 MIME 类型，键为封面扩展名（与 CoverType 的取值一致）
+#
+# Matroska 的附件必须带 mimetype，缺失时 FFmpeg 会尝试按编码推断，推断不出就直接报错退出。
+# 附件内容是原样拷贝的文件字节，不经过任何编解码器，所以格式只影响这里的标注
+COVER_ATTACHMENT_MIMETYPES = {
+    "jpg": "image/jpeg",
+    "png": "image/png",
+    "webp": "image/webp",
+    "avif": "image/avif",
+}
+
+def is_matroska(output_path: str):
+    return Path(output_path).suffix.lower() == ".mkv"
+
 class FFmpegCommand:
     def __init__(self):
         self.inputs = []
@@ -51,18 +65,52 @@ class FFmpegCommand:
         # 因此所有封装流程统一带上，避免按容器分支
         return self.add_param("-strict", "unofficial")
 
-    def add_cover(self, cover_path: str, *maps: str):
-        # 将封面作为附加视频流嵌入，maps 为各路流的映射关系
-        self.add_input(cover_path)
-
+    def map_streams(self, *maps: str):
         for map_param in maps:
             self.add_param("-map", map_param)
 
+        return self
+
+    def add_cover(self, cover_path: str, *maps: str, matroska: bool = False):
+        # 嵌入封面，maps 为主视频流与音频流的映射关系
+        #
+        # 封面一律要求主流显式 -map：MP4 下封面是一路额外的视频输入，不显式映射主流的话
+        # FFmpeg 的默认选择只会挑出一条视频流；MKV 下虽然 -attach 本身不算 -map，但统一显式
+        # 映射可以让两种容器的流布局完全由这里决定，不依赖默认选择的规则
+        self.map_streams(*maps)
+
+        if matroska:
+            return self._attach_cover(cover_path)
+
+        # MP4：封面作为一路 attached_pic 视频流写入（moov 里的 covr），播放器与资源管理器都认这个
+        #
+        # 封面输入的索引在这里现取，而不是由调用方写死，字幕等其他输入的添加顺序就不会影响它
+        index = len(self.inputs)
+
+        self.add_input(cover_path)
+
         return (
             self
+            .add_param("-map", f"{index}:v:0")
             .add_param("-c:v:1", "png")
             .add_param("-disposition:v:1", "attached_pic")
             .add_param("-pix_fmt:v:1", "rgba")
+        )
+
+    def _attach_cover(self, cover_path: str):
+        # MKV：封面必须走 Matroska 的附件（Attachment）机制，不能沿用 MP4 的做法（#493）
+        #
+        # matroska 封装器会丢掉 attached_pic 这个 disposition，MP4 那套写法到了 MKV 里就是一条
+        # 普通的 PNG 视频轨：PotPlayer 的视频轨菜单里多出一条，资源管理器也不把它当封面。
+        # 附件按约定命名为 cover.<ext>，播放器、MKVToolNix 与资源管理器的缩略图都按这个名字识别。
+        # -attach 是输出选项，文件不作为输入读取，因此不占输入索引，也不需要任何图像编码器
+        ext = Path(cover_path).suffix.lstrip(".").lower()
+
+        return (
+            self
+            .add_param("-attach", cover_path)
+            .add_param("-metadata:s:t:0", f"mimetype={COVER_ATTACHMENT_MIMETYPES.get(ext, 'image/jpeg')}")
+            .add_param("-metadata:s:t:0", f"filename=cover.{ext}")
         )
 
     def add_subtitles(self, subtitle_list: List[dict]):
@@ -114,6 +162,8 @@ class FFmpegCommand:
     
     @classmethod
     def merge_video_audio(cls, video_path: str, audio_path: str, output_path: str, cover_path: str = None, chapter_path: str = None, subtitle_list: List[dict] = None):
+        matroska = is_matroska(output_path)
+
         command = (
             cls()
             .add_input(video_path)
@@ -124,15 +174,13 @@ class FFmpegCommand:
         )
 
         if cover_path:
-            # 封面为第三路输入，索引为 2
-            command.add_cover(cover_path, "0:v:0", "1:a:0", "2:v:0")
+            command.add_cover(cover_path, "0:v:0", "1:a:0", matroska = matroska)
 
         elif subtitle_list:
             # 没有封面时主流本来靠 FFmpeg 的默认选择，而字幕轨的 -map 会让默认选择失效，
             # 因此这里必须把主流一并显式映射
-            command.add_param("-map", "0:v:0").add_param("-map", "1:a:0")
+            command.map_streams("0:v:0", "1:a:0")
 
-        # 字幕输入必须排在封面之后：add_cover 的流映射里写死了封面的输入索引
         if subtitle_list:
             command.add_subtitles(subtitle_list)
 
@@ -152,13 +200,12 @@ class FFmpegCommand:
         )
 
         if cover_path:
-            # 分片视频为第一路输入，封面为第二路输入
             # 音频用可选映射（0:a?），避免显式 -map 之后音轨被丢弃，同时兼容没有音轨的分片
-            command.add_cover(cover_path, "0:v:0", "0:a?", "1:v:0")
+            command.add_cover(cover_path, "0:v:0", "0:a?", matroska = is_matroska(output_path))
 
         elif subtitle_list:
             # 同 merge_video_audio，字幕轨的 -map 会让默认流选择失效，主流必须显式映射
-            command.add_param("-map", "0:v:0").add_param("-map", "0:a?")
+            command.map_streams("0:v:0", "0:a?")
 
         if subtitle_list:
             command.add_subtitles(subtitle_list)
