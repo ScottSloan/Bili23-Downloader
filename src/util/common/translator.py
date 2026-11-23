@@ -376,6 +376,8 @@ class Translator:
             # 没有上下文，必须把「改用了哪个编码」说出来
             "VIDEO_CODEC_FALLBACK": translate("TIP_MESSAGES", "This video has no {requested}"),
             "VIDEO_CODEC_FALLBACK_MESSAGE": translate("TIP_MESSAGES", "This video has no {requested}, using {actual}"),
+            # 批量下载时会有一批任务同时触发，提示经过节流，不对应某一个具体任务，因此不带标题
+            "PLAYER_INFO_SKIPPED_MESSAGE": translate("TIP_MESSAGES", "Failed to fetch subtitles and chapters for some downloads (the request may have been blocked by Bilibili's risk control). They were skipped, and the videos are not affected"),
             "SEARCH_KEYWORD": translate("TIP_MESSAGES", "Search: {keyword}"),
             "REMAINING_TIME": translate("TIP_MESSAGES", "{time} left"),
             "COMPLETED_AT": translate("TIP_MESSAGES", "Completed at {time}"),

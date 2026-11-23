@@ -27,17 +27,17 @@
 <context>
     <name>ADDITIONAL_FILES_QUALIFIER</name>
     <message>
-        <location filename="../../util/common/translator.py" line="388"/>
+        <location filename="../../util/common/translator.py" line="390"/>
         <source>Danmaku</source>
         <translation>彈幕</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="389"/>
+        <location filename="../../util/common/translator.py" line="391"/>
         <source>Subtitles</source>
         <translation>字幕</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="390"/>
+        <location filename="../../util/common/translator.py" line="392"/>
         <source>Metadata</source>
         <translation>元數據</translation>
     </message>
@@ -319,7 +319,7 @@
 <context>
     <name>BATCH_SELECT_GUIDE</name>
     <message>
-        <location filename="../../util/common/translator.py" line="492"/>
+        <location filename="../../util/common/translator.py" line="494"/>
         <source>Press Ctrl + A to select all items, Ctrl + D to deselect all items
 You can also press shift + click to select a range of items.</source>
         <translation>按 Ctrl + A 全選，Ctrl + D 取消全選
@@ -930,7 +930,7 @@ You can also press shift + click to select a range of items.</source>
 <context>
     <name>DUPLICATE_DOWNLOAD_GUIDE</name>
     <message>
-        <location filename="../../util/common/translator.py" line="487"/>
+        <location filename="../../util/common/translator.py" line="489"/>
         <source>This feature detects duplicates based on unique video identifiers (e.g., BV/av IDs), not filenames.
 Please note that download history is the sole basis for recognizing downloaded videos. Clearing it will prevent the system from identifying existing downloads, which may result in duplicate downloads.</source>
         <translation>本功能透過影片唯一識別碼（如 BV號、av號）判斷是否重複，與檔案名稱無關。
@@ -1234,22 +1234,22 @@ Please note that download history is the sole basis for recognizing downloaded v
         <translation>無進行中的下載任務</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/download.py" line="45"/>
+        <location filename="../../gui/interface/download.py" line="47"/>
         <source>No completed downloads</source>
         <translation>無已完成的下載任務</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/download.py" line="57"/>
+        <location filename="../../gui/interface/download.py" line="59"/>
         <source>Downloading</source>
         <translation>下載中</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/download.py" line="58"/>
+        <location filename="../../gui/interface/download.py" line="60"/>
         <source>Completed</source>
         <translation>下載完成</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/download.py" line="145"/>
+        <location filename="../../gui/interface/download.py" line="148"/>
         <source>Failed to query download tasks</source>
         <translation>查詢下載任務失敗</translation>
     </message>
@@ -1257,17 +1257,17 @@ Please note that download history is the sole basis for recognizing downloaded v
 <context>
     <name>DownloadListView</name>
     <message>
-        <location filename="../../gui/component/download_list/list_view.py" line="59"/>
+        <location filename="../../gui/component/download_list/list_view.py" line="67"/>
         <source>Re-parse</source>
         <translation>重新解析</translation>
     </message>
     <message>
-        <location filename="../../gui/component/download_list/list_view.py" line="62"/>
+        <location filename="../../gui/component/download_list/list_view.py" line="70"/>
         <source>Resume</source>
         <translation>繼續</translation>
     </message>
     <message>
-        <location filename="../../gui/component/download_list/list_view.py" line="65"/>
+        <location filename="../../gui/component/download_list/list_view.py" line="73"/>
         <source>Pause</source>
         <translation>暫停</translation>
     </message>
@@ -1276,27 +1276,27 @@ Please note that download history is the sole basis for recognizing downloaded v
         <translation type="vanished">編輯下載選項</translation>
     </message>
     <message>
-        <location filename="../../gui/component/download_list/list_view.py" line="73"/>
+        <location filename="../../gui/component/download_list/list_view.py" line="81"/>
         <source>Delete</source>
         <translation>刪除</translation>
     </message>
     <message>
-        <location filename="../../gui/component/download_list/list_view.py" line="67"/>
+        <location filename="../../gui/component/download_list/list_view.py" line="75"/>
         <source>Re-download</source>
         <translation>重新下載</translation>
     </message>
     <message>
-        <location filename="../../gui/component/download_list/list_view.py" line="29"/>
+        <location filename="../../gui/component/download_list/list_view.py" line="30"/>
         <source>No matching tasks</source>
         <translation>沒有符合條件的任務</translation>
     </message>
     <message>
-        <location filename="../../gui/component/download_list/list_view.py" line="203"/>
+        <location filename="../../gui/component/download_list/list_view.py" line="217"/>
         <source>Tasks being processed by FFmpeg cannot be redownloaded</source>
         <translation>處於 FFmpeg 處理中的任務無法重新下載</translation>
     </message>
     <message>
-        <location filename="../../gui/component/download_list/list_view.py" line="207"/>
+        <location filename="../../gui/component/download_list/list_view.py" line="221"/>
         <source>Selected task will be redownloaded</source>
         <translation>選定的任務開始重新下載</translation>
     </message>
@@ -1570,12 +1570,12 @@ If you continue, please disable the &quot;Preallocate file space&quot; option. (
 <context>
     <name>ERROR_CODE_EXPLANATION</name>
     <message>
-        <location filename="../../util/common/translator.py" line="499"/>
+        <location filename="../../util/common/translator.py" line="501"/>
         <source>Request blocked, client IP has been banned</source>
         <translation>請求遭封鎖，用戶端IP已被禁止</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="500"/>
+        <location filename="../../util/common/translator.py" line="502"/>
         <source>Paid content requires purchasing</source>
         <translation>付費內容需要購買</translation>
     </message>
@@ -2678,7 +2678,7 @@ Note: Videos protected by DRM can only be downloaded up to 1080P; higher qualiti
 注意：受 DRM 加密保護的影片，最高僅支援下載 1080P 畫質，更高畫質無法使用。</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="404"/>
+        <location filename="../../util/common/translator.py" line="406"/>
         <source>The media info shown here comes from a single video in the parsed results: the one the link points to, or the first one when the link doesn&apos;t point to a specific video. If that video&apos;s media info cannot be retrieved—charge-exclusive or paid content, for example—another video is used instead. &quot;Source Video&quot; above shows which one it came from.
 
 If multiple videos are available, this information may not exactly match the one you download—use it for reference only.
@@ -2698,7 +2698,7 @@ Note: Videos protected by DRM can only be downloaded up to 1080P; higher qualiti
 <context>
     <name>MEDIA_OPTIONS_GUIDE</name>
     <message>
-        <location filename="../../util/common/translator.py" line="414"/>
+        <location filename="../../util/common/translator.py" line="416"/>
         <source>Media options control how video and audio streams are downloaded and whether they are automatically merged after download.
 Videos on Bilibili typically store and transmit video and audio streams separately. During download, both parts must be fetched individually and can then be merged into a complete video file using FFmpeg. These settings determine which streams to download and whether to keep the original unmerged files.
 
@@ -2773,73 +2773,73 @@ Bilibili 的影片通常將影片串流與音訊串流分開儲存與傳輸，�
         <translation>設定</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="469"/>
+        <location filename="../../gui/interface/main_window.py" line="489"/>
         <source>Welcome to Bili23 Downloader</source>
         <translation>歡迎使用 Bili23 Downloader</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="470"/>
+        <location filename="../../gui/interface/main_window.py" line="490"/>
         <source>It is recommended to read the user guide and FAQs when using for the first time, to help you get started quickly and make full use of all features.</source>
         <translation>首次使用時建議先檢視使用說明與常見問題，幫助您更快上手並充分利用各項功能。</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="473"/>
+        <location filename="../../gui/interface/main_window.py" line="493"/>
         <source>View</source>
         <translation>檢視</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="474"/>
+        <location filename="../../gui/interface/main_window.py" line="494"/>
         <source>Skip</source>
         <translation>跳過</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="486"/>
+        <location filename="../../gui/interface/main_window.py" line="506"/>
         <source>Log in to your account</source>
         <translation>登入帳號</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="487"/>
+        <location filename="../../gui/interface/main_window.py" line="507"/>
         <source>Click the avatar to log in to your Bilibili account. 
 Download functionality will be limited if you&apos;re not logged in.</source>
         <translation>點擊頭像登入 Bilibili 帳號，未登入狀態下下載功能將受到限制。</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="696"/>
+        <location filename="../../gui/interface/main_window.py" line="716"/>
         <source>Download Directory Invalid</source>
         <translation>下載目錄無效</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="697"/>
+        <location filename="../../gui/interface/main_window.py" line="717"/>
         <source>The current download directory is inaccessible or lacks write permissions. Please reset it.</source>
         <translation>目前下載目錄無法存取或沒有寫入權限，請重新設定。</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="706"/>
+        <location filename="../../gui/interface/main_window.py" line="726"/>
         <source>FFmpeg Not Found</source>
         <translation>找不到 FFmpeg</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="707"/>
+        <location filename="../../gui/interface/main_window.py" line="727"/>
         <source>No FFmpeg executable found. Please ensure FFmpeg is installed and configured correctly.</source>
         <translation>找不到 FFmpeg 執行檔。請確保已正確安裝並設定 FFmpeg。</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="725"/>
+        <location filename="../../gui/interface/main_window.py" line="745"/>
         <source>Naming Rules Were Reset</source>
         <translation>命名規則已重設</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="726"/>
+        <location filename="../../gui/interface/main_window.py" line="746"/>
         <source>The built-in naming rules changed in this version, so all of your naming rules have been reset to the defaults. Please set them up again.</source>
         <translation>此版本修改了內建命名規則，你的命名規則已全部重設為預設值，請重新設定。</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="735"/>
+        <location filename="../../gui/interface/main_window.py" line="755"/>
         <source>Login Required</source>
         <translation>需要登入</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="736"/>
+        <location filename="../../gui/interface/main_window.py" line="756"/>
         <source>Please log in to your account first.</source>
         <translation>請先登入帳號</translation>
     </message>
@@ -3272,7 +3272,7 @@ For advanced usage, see the help documentation.</source>
 更多進階用法，請參閱說明文件。</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="425"/>
+        <location filename="../../util/common/translator.py" line="427"/>
         <source>Build the folder structure and file name visually: each row is one folder level, and the last row is the file name.
 
 Basics:
@@ -3306,7 +3306,7 @@ For advanced usage, see the help documentation.</source>
 <context>
     <name>NUMBERING_GUIDE</name>
     <message>
-        <location filename="../../util/common/translator.py" line="470"/>
+        <location filename="../../util/common/translator.py" line="472"/>
         <source>This setting affects the value of the {number} variable in the naming rule. By default, the program’s preset naming rule does not include {number}. If you want to use numbering, please add {number} to your naming rule first.
 
 The meaning of each &quot;Numbering Mode&quot; option is as follows:
@@ -3624,7 +3624,7 @@ The meaning of each &quot;Numbering Mode&quot; option is as follows:
 <context>
     <name>PREALLOCATE_GUIDE</name>
     <message>
-        <location filename="../../util/common/translator.py" line="481"/>
+        <location filename="../../util/common/translator.py" line="483"/>
         <source>Preallocating file space can improve download performance, especially for large files. When enabled, the program will allocate the required disk space before the download starts, reducing performance overhead caused by repeatedly expanding the file during download and minimizing disk fragmentation.
 
 Note: If the download path is on an external storage device such as a USB drive, and the file system does not support sparse files (e.g., FAT32 or exFAT), please disable this feature—otherwise, the program may become unresponsive.</source>
@@ -3636,7 +3636,7 @@ Note: If the download path is on an external storage device such as a USB drive,
 <context>
     <name>PRIORITY_GUIDE</name>
     <message>
-        <location filename="../../util/common/translator.py" line="464"/>
+        <location filename="../../util/common/translator.py" line="466"/>
         <source>The program will attempt downloads in the order of your configured priority. The actual video quality, audio quality, or codec you can download still depends on what is available in the video itself—priority only determines which option is tried first among multiple available choices.
 
 For example, if you set the video quality priority to 720P &gt; 1080P &gt; 4K, the program will first try to download 720P; if 720P is unavailable, it will then try 1080P and then 4K in sequence.</source>
@@ -3648,7 +3648,7 @@ For example, if you set the video quality priority to 720P &gt; 1080P &gt; 4K, t
 <context>
     <name>PRIVACY_POLICY</name>
     <message>
-        <location filename="../../util/common/translator.py" line="454"/>
+        <location filename="../../util/common/translator.py" line="456"/>
         <source>&lt;html&gt;This software is a local desktop application. &lt;b&gt;It does not collect, analyze, or upload your browsing behavior, download history, or any other usage data to the developer or any third party.&lt;/b&gt;
 &lt;br&gt;&lt;br&gt;
 Login credentials (cookies) obtained through your own Bilibili account are &lt;b&gt;stored only on your local device&lt;/b&gt; and are used solely to access content you are authorized to view. Download tasks, application settings, and logs are likewise saved only in local files on your device and are never transmitted elsewhere.
@@ -4625,7 +4625,7 @@ ISP：{isp}</translation>
 <context>
     <name>SUBTITLE_TRACK_TITLE</name>
     <message>
-        <location filename="../../util/common/translator.py" line="399"/>
+        <location filename="../../util/common/translator.py" line="401"/>
         <source>{name} (AI Generated)</source>
         <translation>{name}（AI 生成）</translation>
     </message>
@@ -5019,7 +5019,7 @@ ISP：{isp}</translation>
 <context>
     <name>TERMS_OF_USE</name>
     <message>
-        <location filename="../../util/common/translator.py" line="442"/>
+        <location filename="../../util/common/translator.py" line="444"/>
         <source>&lt;html&gt;This software is intended solely for personal learning and research purposes. Any content downloaded through this project &lt;b&gt;is strictly limited to personal, non-commercial use and must not be used for any commercial purpose, public distribution, sharing, resale, or unlawful profit.&lt;/b&gt;
 &lt;br&gt;&lt;br&gt;
 This software operates exclusively based on the user&apos;s own legitimate account access rights and &lt;b&gt;does not bypass any paywalls, membership restrictions, or technical protection measures.&lt;/b&gt; You may only download content that you are authorized to access through your normal login on the target platform. If your account does not have permission to access certain content, this software must not be used to obtain it.
@@ -5167,17 +5167,22 @@ Under no circumstances shall the developer be liable for any direct, indirect, i
         <translation>此影片沒有 {requested} 編碼，將改為下載 {actual}</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="379"/>
+        <location filename="../../util/common/translator.py" line="380"/>
+        <source>Failed to fetch subtitles and chapters for some downloads (the request may have been blocked by Bilibili&apos;s risk control). They were skipped, and the videos are not affected</source>
+        <translation>部分任務的字幕與章節取得失敗（請求可能被 B 站風控攔截），已略過，影片本身不受影響</translation>
+    </message>
+    <message>
+        <location filename="../../util/common/translator.py" line="381"/>
         <source>Search: {keyword}</source>
         <translation>搜尋：{keyword}</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="380"/>
+        <location filename="../../util/common/translator.py" line="382"/>
         <source>{time} left</source>
         <translation>剩餘 {time}</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="381"/>
+        <location filename="../../util/common/translator.py" line="383"/>
         <source>Completed at {time}</source>
         <translation>完成於 {time}</translation>
     </message>
