@@ -113,6 +113,17 @@ class FFmpegCommand:
             .add_param("-metadata:s:t:0", f"filename=cover.{ext}")
         )
 
+    def tag_hevc_for_matroska(self):
+        # 杜比视界的 HEVC 流在 MP4 里的编码标签是 dvh1，而 matroska 封装器的标签表里没有它，
+        # 流拷贝时原样带过去会直接报 "Tag dvh1 incompatible with output codec id"，合并失败（#499）
+        #
+        # Matroska 本身按 CodecID 字符串（V_MPEGH/ISO/HEVC）标识编码，四字节标签根本不写进文件，
+        # 这里换成封装器认识的 hvc1 只是为了通过它的校验；杜比视界的配置记录由封装器从流的
+        # side data 写入 BlockAdditionMapping，与标签无关，不会因此丢失
+        #
+        # 只能用于 HEVC：标签与编码不匹配时同样会报错，H.264 带上 hvc1 一样合并失败
+        return self.add_param("-tag:v:0", "hvc1")
+
     def add_subtitles(self, subtitle_list: List[dict]):
         # 将 ASS 弹幕/字幕作为独立字幕轨嵌入，仅 MKV 容器支持
         #
@@ -161,7 +172,7 @@ class FFmpegCommand:
         return command
     
     @classmethod
-    def merge_video_audio(cls, video_path: str, audio_path: str, output_path: str, cover_path: str = None, chapter_path: str = None, subtitle_list: List[dict] = None):
+    def merge_video_audio(cls, video_path: str, audio_path: str, output_path: str, cover_path: str = None, chapter_path: str = None, subtitle_list: List[dict] = None, hevc: bool = False):
         matroska = is_matroska(output_path)
 
         command = (
@@ -172,6 +183,9 @@ class FFmpegCommand:
             .add_param("-c:a", "copy")
             .allow_unofficial()
         )
+
+        if matroska and hevc:
+            command.tag_hevc_for_matroska()
 
         if cover_path:
             command.add_cover(cover_path, "0:v:0", "1:a:0", matroska = matroska)

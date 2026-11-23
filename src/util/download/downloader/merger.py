@@ -5,6 +5,7 @@ from ...common.io.file import safe_remove, safe_rename
 from ...common.timestamp import get_timestamp
 from ...common.signal_bus import signal_bus
 from ...common.translator import Translator
+from ...common.data.media_info import video_codec_map
 from ..task.options import resolve
 
 from ...parse.additional.chapter import ChapterParser
@@ -169,7 +170,10 @@ class Merger(QObject):
                 output_path = self.temp_output_file_name,
                 cover_path = self.check_attach_cover(),
                 chapter_path = self.check_attach_chapter(),
-                subtitle_list = self.check_embed_subtitles()
+                subtitle_list = self.check_embed_subtitles(),
+                # 此时 video_codec_id 已被解析阶段改写为实际下载到的编码（见 video_info.parse_info），
+                # 不是用户选的偏好，"自动"之类的取值不会出现在这里
+                hevc = self.task_info.Download.video_codec_id == video_codec_map["HEVC/H.265"]
             )
 
             self._run_merge_command(merge_cmd, cwd)

@@ -155,3 +155,33 @@ class TestMergeCoverCommand:
         assert option_values(argv, "-attach") == ["c.png"]
         assert option_values(argv, "-map") == ["0:v:0", "0:a?"]
 
+
+class TestMatroskaHevcTag:
+    """
+    杜比视界的 HEVC 流在 MP4 里标签是 dvh1，matroska 封装器不认，流拷贝进 MKV 会直接合并失败（#499）。
+    换成 hvc1 才能通过校验；但这个标签只能给 HEVC，H.264 带上它同样会让合并失败。
+    """
+
+    def test_mkv_hevc_is_retagged(self, command):
+        argv = command.merge_video_audio("v.m4s", "a.m4s", "out.mkv", hevc = True).build()
+
+        assert option_values(argv, "-tag:v:0") == ["hvc1"]
+
+    @pytest.mark.parametrize("output, hevc", [
+        # MP4 必须保留 dvh1，否则播放器不再按杜比视界识别
+        ("out.mp4", True),
+        # H.264 带上 hvc1 会报 "Tag hvc1 incompatible with output codec id"
+        ("out.mkv", False),
+        ("out.mp4", False),
+    ])
+    def test_tag_is_untouched_otherwise(self, command, output, hevc):
+        argv = command.merge_video_audio("v.m4s", "a.m4s", output, hevc = hevc).build()
+
+        assert "-tag:v:0" not in argv
+
+    def test_mkv_hevc_with_cover(self, command):
+        # 附件是 t 类型的流，不影响 v:0 指向主视频
+        argv = command.merge_video_audio("v.m4s", "a.m4s", "out.mkv", cover_path = "c.jpg", hevc = True).build()
+
+        assert option_values(argv, "-tag:v:0") == ["hvc1"]
+        assert option_values(argv, "-attach") == ["c.jpg"]
