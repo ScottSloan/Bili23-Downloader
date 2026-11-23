@@ -754,8 +754,12 @@ class DownloadHandlingSettingCard(ExpandGroupSettingCard):
         duplicate_group.hyper_label.clicked.connect(lambda: duplicate_group.showGuideMessageBox(self.tr("Instructions"), Translator.DUPLICATE_DOWNLOAD_GUIDE()))
 
 class DownloadConcurrencySettingCard(ExpandGroupSettingCard):
-    def __init__(self, parent = None):
+    def __init__(self, parent_window, parent = None):
         super().__init__(ExtendedFluentIcon.FAST_DOWNLOAD, self.tr("Download Concurrency"), self.tr("Adjust per-task threads, concurrent downloads, and speed limits"), parent)
+
+        # 「并行合并数」带说明链接，弹窗以主窗口为父。必须赶在 addGroup 之前设置：
+        # addGroup 只在创建分组时把它抄给 GroupWidget，之后再设分组是拿不到的
+        self.parent_window = parent_window
 
         self.download_thread_slider = SettingSlider(config.download_thread, self)
         self.download_parallel_slider = SettingSlider(config.download_parallel, self)
