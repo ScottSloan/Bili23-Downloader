@@ -11,7 +11,14 @@ class EntryListModel(CoverQueryModelBase):
 
         self.setQueryCoverParam(
             {
-                "api_url": "https://api.bilibili.com/x/v3/fav/folder/info"
+                # 一次请求同时拿到收藏夹信息（data.info.cover）和第一个视频
+                # （data.medias[0].cover）。api_url 指向 resource/list，
+                # 额外参数（pn=1、ps=1 等）由 CoverQueryWorker.query_url() 合并
+                "api_url": "https://api.bilibili.com/x/v3/fav/resource/list",
+                # 显式开关：只有收藏夹列表才走"一次 resource/list 同时拿
+                # info + medias"的路径，并按 info.cover → medias[0].cover 顺序取。
+                # __query__ 是通用机制，未来复用到其他列表时默认不启用该路径
+                "fallback_first_media_cover": True
             }
         )
 

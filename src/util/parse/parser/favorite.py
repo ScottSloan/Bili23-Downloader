@@ -99,7 +99,7 @@ class FavoriteParser(ParserBase):
                 #
                 # fid 为 0 是 B 站接口不会返回的值，若真出现，cover = 0 在 _run
                 # 的 `if not self.cover_url` 判断里会走"无需请求"路径，界面显示
-                # 占位图。该边界由 test_favorite_list_fid_zero_skips_request 钉死
+                # 占位图。该边界由 test_favorite_list_fid_zero_produces_query_cover_id 钉死
                 "cover_id": f"__query__{fid}"
             })
 
