@@ -27,8 +27,19 @@ class MetadataParser(AdditionalParserBase):
             from httpx import HTTPError
 
             if episode.attribute & Attribute.COLLECTION_BIT:
-                # 合集条目不能复用入口稿件的简介。
-                self._get_video_description()
+                # 合集条目不能复用入口稿件的简介：合集里所有条目共用入口稿件的 episode_id，
+                # 任务里带的简介是入口稿件的那一份（#498），只能按当前 BV 重新查
+                try:
+                    self._get_video_description()
+
+                except (HTTPError, RuntimeError, ValueError):
+                    # 查不到就留空，宁缺也不能把别的稿件的简介写进去。
+                    # 也不能让异常冒出去：这一步排在音视频下载完成之后，下载大合集时每一集都要
+                    # 多发一次请求，被风控拦下就会让已下载完成的任务整个判为失败（同 #488）
+                    episode.description = ""
+
+                    logger.warning("无法获取合集条目 %s 的简介，已留空", episode.bvid, exc_info = True)
+
             elif not episode.description:
                 # 解析缓存失效时，按当前 BV 补查缺失的简介。
                 try:
