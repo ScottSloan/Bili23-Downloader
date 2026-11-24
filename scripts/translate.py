@@ -84,7 +84,6 @@ sources = [
     "src/gui/dialog/misc/multi_part_lists.py",
     "src/gui/dialog/misc/network_error.py",
     "src/gui/dialog/misc/parse_history.py",
-    "src/gui/dialog/misc/refresh_metadata.py",
     "src/gui/dialog/misc/search.py",
     "src/gui/dialog/misc/view_cover.py",
     "src/gui/dialog/setting/auto_select.py",
@@ -112,7 +111,6 @@ sources = [
     "src/gui/interface/setting.py",
     "src/util/common/translator.py",
     "src/util/download/downloader/downloader.py",
-    "src/util/parse/additional/metadata.py",
     "src/util/parse/worker.py"
 ]
 

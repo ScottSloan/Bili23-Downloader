@@ -48,7 +48,7 @@ def collection_tasks(tmp_path):
 
 @pytest.fixture
 def metadata_api(monkeypatch):
-    descriptions = {"BVentry": "入口视频的简介", "BVother": "另一个视频的简介"}
+    descriptions = {"BVentry": "入口视频的简介 <A & B>", "BVother": "另一个视频的简介"}
     requested = []
 
     class Request:

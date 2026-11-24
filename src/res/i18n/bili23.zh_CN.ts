@@ -1300,30 +1300,6 @@ Please note that download history is the sole basis for recognizing downloaded v
         <source>Selected task will be redownloaded</source>
         <translation>选定的任务开始重新下载</translation>
     </message>
-    <message>
-        <source>Refresh Metadata</source>
-        <translation>刷新元数据</translation>
-    </message>
-    <message>
-        <source>No completed videos to refresh</source>
-        <translation>没有可刷新元数据的已完成视频</translation>
-    </message>
-    <message>
-        <source>Refreshing video metadata…</source>
-        <translation>正在刷新视频元数据…</translation>
-    </message>
-    <message>
-        <source>Stop after current video</source>
-        <translation>处理完当前视频后停止</translation>
-    </message>
-    <message>
-        <source>Updated: {succeeded} · Failed: {failed} · Unprocessed: {pending}</source>
-        <translation>已更新：{succeeded} · 失败：{failed} · 未处理：{pending}</translation>
-    </message>
-    <message>
-        <source>Metadata Refresh</source>
-        <translation>元数据刷新</translation>
-    </message>
 </context>
 <context>
     <name>DownloadOptionsDialog</name>
@@ -5328,10 +5304,6 @@ Under no circumstances shall the developer be liable for any direct, indirect, i
         <source>Failed</source>
         <translation>失败</translation>
     </message>
-    <message>
-        <source>Refresh Metadata for Visible Videos</source>
-        <translation>刷新当前列表的视频元数据</translation>
-    </message>
 </context>
 <context>
     <name>UpdateDialog</name>
@@ -5875,41 +5847,6 @@ Under no circumstances shall the developer be liable for any direct, indirect, i
         <location filename="../../gui/component/setting/card.py" line="725"/>
         <source>Choose the action when closing the main window</source>
         <translation>选择关闭主窗口时的操作</translation>
-    </message>
-</context>
-<context>
-    <name>RefreshMetadataDialog</name>
-    <message>
-        <source>Refresh Metadata</source>
-        <translation>刷新元数据</translation>
-    </message>
-    <message>
-        <source>Refresh metadata for {count} video(s). Existing files in the chosen format will be replaced.</source>
-        <translation>刷新 {count} 个视频的元数据。所选格式的现有文件将被替换。</translation>
-    </message>
-    <message>
-        <source>Format</source>
-        <translation>格式</translation>
-    </message>
-    <message>
-        <source>Videos per batch</source>
-        <translation>每批视频数</translation>
-    </message>
-    <message>
-        <source>Seconds between batches</source>
-        <translation>批次间隔（秒）</translation>
-    </message>
-    <message>
-        <source>Refresh</source>
-        <translation>刷新</translation>
-    </message>
-    <message>
-        <source>Multiple metadata files match this task</source>
-        <translation>找到多个与此任务匹配的元数据文件</translation>
-    </message>
-    <message>
-        <source>Existing metadata belongs to a different or unknown video</source>
-        <translation>现有元数据属于其他视频或无法确认归属</translation>
     </message>
 </context>
 </TS>
