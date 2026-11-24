@@ -11,7 +11,10 @@ class EntryListModel(CoverQueryModelBase):
 
         self.setQueryCoverParam(
             {
-                "api_url": "https://api.bilibili.com/x/v3/fav/folder/info"
+                "api_url": "https://api.bilibili.com/x/v3/fav/folder/info",
+                # 没设封面的收藏夹改用其中第一个视频的封面，与 B 站页面一致。
+                # 显式开关而不是在 worker 里按 URL 判断：__query__ 是通用机制，换个接口就会误触发
+                "fallback_to_first_media": True
             }
         )
 

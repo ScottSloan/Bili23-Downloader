@@ -21,8 +21,11 @@ class CoverQueryWorker(QRunnable):
     
         self.model = model
 
-        # 缓存键，同时用作回报模型时的标识
+        # 回报模型时的标识，必须与模型侧登记等待集、写内存缓存时用的键一致，全程不能改
         self.cover_key = cover_key
+        # 封面缓存（数据库）的键。一般与 cover_key 相同；需要先查询封面 URL 的条目
+        # （收藏夹的 __query__）在拿到真实 URL 后改按 URL 计算，见 query_url
+        self.storage_key = cover_key
 
         self.cover_url = cover_url
         self.cover_size = cover_size
@@ -53,7 +56,8 @@ class CoverQueryWorker(QRunnable):
                 return
 
         if not self.cover_url:
-            # 会员购商城课程等条目的接口不返回封面，无需请求。
+            # 会员购商城课程等条目的接口不返回封面，无需请求；没设封面、里面也没有视频的
+            # 收藏夹同理（query_url 正常返回但 cover_url 为空）。
             # 刻意不回报失败：它本来就没有封面，回报会让模型释放等待集合，
             # 于是每次重绘都重新发起一次注定失败的请求
             return
@@ -69,7 +73,7 @@ class CoverQueryWorker(QRunnable):
         from ..cover.manager import cover_manager
 
         # 返回 None 表示缓存未命中或数据已损坏，需要重新下载
-        result = cover_manager.query(self.cover_key)
+        result = cover_manager.query(self.storage_key)
 
         if not result:
             return None
@@ -113,7 +117,7 @@ class CoverQueryWorker(QRunnable):
         from ..cover.manager import cover_manager
 
         try:
-            cover_manager.create(self.cover_key, cover_data)
+            cover_manager.create(self.storage_key, cover_data)
 
         except Exception:
             # 写缓存只是展示路径上的尽力而为：数据库故障不该让已经拿到手的封面显示不出来
@@ -184,22 +188,74 @@ class CoverQueryWorker(QRunnable):
         return image, bytes(buffer.data())
 
     def query_url(self):
+        """
+        先查询真实的封面 URL（收藏夹封面不在列表接口里，要按收藏夹 id 另查）
+
+        接口出错（data 缺失或为 null，多为风控或参数错误）时抛出，由 _run 回报失败，
+        下次重绘会重试；接口正常但确实没有封面时 cover_url 留空，由 _run 按"本来就没
+        封面"处理，不再重试
+        """
         from ..cover.manager import cover_manager
 
         api_url = self.query_param.get("api_url")
         params = self.query_param.get("params")
-        
+
         url = f"{api_url}?{urlencode(params)}"
 
         request = SyncNetWorkRequest(url)
         response = request.run()
 
-        cover_url = response.get("data", {}).get("cover", "")
+        data = response.get("data")
 
-        if not cover_url:
+        if not isinstance(data, dict):
             raise ValueError("获取封面 URL 失败")
 
-        # 换成真实封面 URL 对应的 cover_id，但尺寸后缀必须保留 —— 模型侧是按
-        # 「cover_id@宽x高」请求的，写回裸 md5 就永远对不上，缓存永不命中
-        self.cover_key = cover_manager.arrange_cover_key(cover_manager.arrange_cover_id(cover_url), self.cover_size)
+        cover_url = data.get("cover") or ""
+
+        if not cover_url and self.query_param.get("fallback_to_first_media"):
+            # 没设封面的收藏夹，folder/info 返回的 cover 是空的，而 B 站页面上显示的是
+            # 收藏夹里第一个视频的封面，这里照做
+            cover_url = self.query_first_media_cover(params)
+
         self.cover_url = cover_url
+
+        if not cover_url:
+            return
+
+        # 数据库缓存改按真实 URL 计算键，但回报模型仍用 cover_key（#485）。
+        #
+        # 二者曾经合成一个键：这里把 cover_key 改写成按 URL 计算之后，回报时带回去的就不再是
+        # 模型登记等待集用的 __query__ 键，模型找不到等待集，封面已进缓存，界面却一直停在
+        # 占位图；等待集也永不释放，重绘不会再请求。
+        #
+        # 缓存仍要按 URL 计算，而不是直接用 __query__ 键：用户换了收藏夹封面、或第一个视频
+        # 变了，URL 跟着变，缓存自然失效；按收藏夹 id 存的话就永远是旧图。反正每次都要先查
+        # 一次 URL，按 URL 存并不多发请求。尺寸后缀必须保留，理由见 arrange_cover_key
+        self.storage_key = cover_manager.arrange_cover_key(cover_manager.arrange_cover_id(cover_url), self.cover_size)
+
+    def query_first_media_cover(self, params: dict):
+        # 只取第一页的第一条，排序与收藏夹页面的默认顺序一致（按收藏时间倒序）。
+        # 第一条没有封面就算没有，不往后找：宁可显示占位图，也不显示一张对不上的封面
+        fallback_params = {
+            "media_id": params.get("media_id"),
+            "pn": 1,
+            "ps": 1,
+            "order": "mtime",
+            "platform": "web",
+        }
+
+        url = f"https://api.bilibili.com/x/v3/fav/resource/list?{urlencode(fallback_params)}"
+
+        request = SyncNetWorkRequest(url)
+        response = request.run()
+
+        data = response.get("data")
+
+        if not isinstance(data, dict):
+            # 与 folder/info 一样，接口出错要让 _run 回报失败、允许重试，不能当成"没有封面"
+            raise ValueError("获取收藏夹内视频封面失败")
+
+        medias = data.get("medias") or []
+        first = medias[0] if medias else None
+
+        return (first or {}).get("cover") or ""
