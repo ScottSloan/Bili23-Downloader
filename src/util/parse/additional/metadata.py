@@ -10,21 +10,39 @@ from ..episode.tree import Attribute
 from .file.metadata_nfo import MetadataNFO
 from .base import AdditionalParserBase
 
-
 from dataclasses import asdict
 from pathlib import Path
+import logging
+
+logger = logging.getLogger(__name__)
 
 class MetadataParser(AdditionalParserBase):
     def __init__(self, task_info: TaskInfo):
         super().__init__(task_info)
 
     def parse(self):
+        episode = self.task_info.Episode
+
+        if episode.attribute & Attribute.VIDEO_BIT and episode.bvid:
+            from httpx import HTTPError
+
+            if episode.attribute & Attribute.COLLECTION_BIT:
+                # 合集条目不能复用入口稿件的简介。
+                self._get_video_description()
+            elif not episode.description:
+                # 解析缓存失效时，按当前 BV 补查缺失的简介。
+                try:
+                    self._get_video_description()
+                except (HTTPError, RuntimeError, ValueError):
+                    logger.warning("无法补取视频 %s 的简介", episode.bvid, exc_info = True)
+
+            try:
+                self._get_video_tags()
+            except (HTTPError, RuntimeError, ValueError):
+                logger.warning("无法获取视频 %s 的标签", episode.bvid, exc_info = True)
+
         match resolve(self.task_info, "metadata_type"):
             case MetadataType.NFO:
-                if self.task_info.Episode.attribute & Attribute.VIDEO_BIT != 0:
-                    # 投稿视频需要额外获取 tag 和 category 信息
-                    self._get_video_tags()
-
                 self._to_nfo()
                 
             case MetadataType.JSON:
@@ -69,6 +87,24 @@ class MetadataParser(AdditionalParserBase):
         request = SyncNetWorkRequest(url)
         response = request.run()
 
-        tag_list = response.get("data", [])
-            
-        self.task_info.Episode.tags = [tag.get("tag_name") for tag in tag_list]
+        self.check_response(response)
+        tags = response.get("data")
+        if not isinstance(tags, list):
+            raise ValueError("Invalid video tag response")
+
+        names = (tag.get("tag_name") for tag in tags if isinstance(tag, dict))
+        self.task_info.Episode.tags = [name for name in names if isinstance(name, str) and name]
+
+    def _get_video_description(self):
+        params = {"bvid": self.task_info.Episode.bvid}
+        url = f"https://api.bilibili.com/x/web-interface/wbi/view?{self.enc_wbi(params)}"
+
+        request = SyncNetWorkRequest(url)
+        response = request.run()
+        self.check_response(response)
+
+        data = response.get("data")
+        if not isinstance(data, dict) or data.get("bvid") != self.task_info.Episode.bvid or not isinstance(data.get("desc"), str):
+            raise ValueError("Invalid video description response")
+
+        self.task_info.Episode.description = data["desc"]
