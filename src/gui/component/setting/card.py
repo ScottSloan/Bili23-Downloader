@@ -14,7 +14,7 @@ from ..widget.spinbox import SpinBox
 from ..widget.label import WarningLabel
 
 from util.common.enum import VideoContainer, ToastNotificationCategory, OriginalFileType
-from util.common.config import config, isWin11, APPConfig
+from util.common.config import config, isWin11
 from util.common.runtime import runtime
 from util.thread.pool import GlobalThreadPoolTask
 from util.common.icon import ExtendedFluentIcon
@@ -22,7 +22,6 @@ from util.common.io.directory import Directory
 from util.common.translator import Translator
 from util.common.signal_bus import signal_bus
 
-from pathlib import Path
 import logging
 
 logger = logging.getLogger(__name__)
@@ -828,13 +827,10 @@ class OtherAdvancedSettingCard(ExpandGroupSettingCard):
 
         if not file_path:
             return
-        
-        original_file = config.file
-        
-        config.load(file_path)
-        config.file = original_file  # 恢复原来的配置文件路径，避免误覆盖
-        
-        config.save()
+
+        # 登录凭据、访问令牌不随导入覆盖，见 APPConfig.import_from
+        if not config.import_from(file_path):
+            return
 
         config.appRestartSig.emit()
 
@@ -850,12 +846,10 @@ class OtherAdvancedSettingCard(ExpandGroupSettingCard):
 
         if not file_path:
             return
-        
-        temp_config = APPConfig()
-        temp_config.load(config.file)
-        temp_config.file = Path(file_path)
 
-        temp_config.save()
+        # 导出的文件不含登录凭据与访问令牌，见 APPConfig.export_to
+        if not config.export_to(file_path):
+            return
 
         logger.info("配置导出成功，路径：%s", file_path)
 

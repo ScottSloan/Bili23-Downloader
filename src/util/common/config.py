@@ -19,6 +19,7 @@ from typing import ClassVar
 from pathlib import Path
 from copy import deepcopy
 import logging
+import stat
 import sys
 import os
 
@@ -521,6 +522,130 @@ class APPConfig(QConfig):
                     # 临时文件清理失败不影响主流程，下次保存会覆盖它
                     pass
 
+    def export_to(self, path) -> bool:
+        """
+        导出配置到指定文件，返回是否成功
+
+        登录态（login_state_items）一律以默认值写出：导出的文件是拿去备份、换电脑、
+        附进 issue 排查问题的，带着凭据只有风险；Windows 上的 DPAPI 密文换台电脑
+        也解不开，留着同样没有用处。
+
+        直接从 toDict() 生成而不是另建一个 APPConfig 去 load —— 配置项是类属性，
+        两个实例共用同一批 ConfigItem，「临时实例」的 load 其实是把磁盘内容读回了
+        全局配置，save = False 写入的值（如 wbi 密钥）会被磁盘上的旧值覆盖。
+        """
+        # 与 save 互斥：toDict 会经 SecretSerializer 读写各字段的密文缓存
+        with self._save_lock:
+            data = self._cfg.toDict()
+
+        for item in login_state_items():
+            data[item.group][item.name] = item.serializer.serialize(item.defaultValue)
+
+        try:
+            with open(path, "w", encoding = "utf-8") as f:
+                f.write(dumps_std(data, indent = 4))
+
+        except OSError:
+            logger.exception("导出配置失败，路径：%s", path)
+
+            return False
+
+        return True
+
+    def import_from(self, path) -> bool:
+        """
+        从指定文件导入配置并保存，返回是否成功
+
+        登录态（login_state_items）保留本机当前值，不被导入文件覆盖：别的电脑导出的
+        DPAPI 密文在这里解不开，照搬只会把本机有效的登录清空；旧版导出文件里的明文
+        Cookie 也不再接收 —— 换电脑重新登录一次，好过让凭据随配置文件流转。
+
+        不用 qfluentwidgets 的 load()：它会把文件里的每一项都反序列化进来（解不开的
+        密文还会记一条误导性的告警），并改写 self.file，要事后再改回去。这里按与
+        load() 相同的「分组.名称」规则逐项写入，跳过登录态即可。
+        """
+        try:
+            with open(path, "r", encoding = "utf-8") as f:
+                data = loads(f.read())
+
+        except (OSError, ValueError):
+            logger.exception("读取导入的配置文件失败，路径：%s", path)
+
+            return False
+
+        if not isinstance(data, dict):
+            logger.error("导入的配置文件格式不正确，路径：%s", path)
+
+            return False
+
+        items = {
+            item.key: item
+            for item in (getattr(self._cfg.__class__, name) for name in dir(self._cfg.__class__))
+            if isinstance(item, ConfigItem)
+        }
+
+        skipped = {item.key for item in login_state_items()}
+
+        def apply(key: str, value):
+            item = items.get(key)
+
+            if item is not None and key not in skipped:
+                item.deserializeFrom(value)
+
+        for group, value in data.items():
+            if isinstance(value, dict):
+                for name, item_value in value.items():
+                    apply(f"{group}.{name}", item_value)
+
+            else:
+                apply(group, value)
+
+        self.save()
+
+        return True
+
+def login_state_items() -> list:
+    """
+    不随配置导入导出迁移的配置项：所有挂着 SecretSerializer 的敏感字段，加上 is_login
+
+    按 serializer 类型自动收集而不是写死名单，新增敏感字段时导入导出自动跟上。
+    is_login 必须与凭据同进退：凭据被剔除而它还是 True，界面会显示已登录，
+    请求却不带有效的 SESSDATA。
+    """
+    items = [
+        item for item in (getattr(APPConfig, name) for name in dir(APPConfig))
+        if isinstance(item, ConfigItem) and isinstance(item.serializer, SecretSerializer)
+    ]
+
+    items.append(APPConfig.is_login)
+
+    return items
+
+def restrict_permission(path: Path):
+    """
+    非 Windows 平台上把已有配置文件的权限收紧到仅当前用户可读写
+
+    save() 写出的文件本身就是 0600，但旧版留下的配置是按默认 umask 创建的（通常 0644），
+    要等到下次写盘才会被替换掉 —— 而启动时不一定有设置项改动，这期间凭据对同机其他用户可读。
+    只去掉组与其他用户的权限位，不重写文件
+    """
+    if sys.platform == "win32":
+        return
+
+    try:
+        mode = stat.S_IMODE(path.stat().st_mode)
+
+        if mode & 0o077:
+            os.chmod(path, mode & ~0o077)
+
+            logger.info("已收紧配置文件权限：%o → %o", mode, mode & ~0o077)
+
+    except FileNotFoundError:
+        pass
+
+    except OSError:
+        logger.warning("收紧配置文件权限失败：%s", path, exc_info = True)
+
 def _open_private(path: Path):
     """
     以仅当前用户可读写的权限打开文件用于写入
@@ -675,6 +800,7 @@ if not config_path.exists():
 
 qconfig.load(config_path, config)
 
+restrict_permission(config_path)
 settle_secrets()
 
 # 判断是否需要修补配置文件
