@@ -9,14 +9,17 @@ stdio 传输的服务器：它们的配置里只有 command / args，填 url 会
 本模块**只用标准库**，且不得导入任何 Qt 或 config 相关的东西 ——
 它由 main.py 在最早期调用，此时整个 GUI 栈都还没有加载，
 这也正是 stdio 模式的意义：不启动界面，只做一层转发。
-唯一的例外是下面的 util.common._json：它本身只包着 orjson 与标准库 json，
-拖不动任何 GUI 依赖，而"JSON 怎么写、怎么读"全项目只该有一份约定。
+例外是下面的 util.common._json 与 util.common.secret：前者只包着 orjson 与标准库 json，
+后者只用标准库（ctypes 调 DPAPI），都拖不动任何 GUI 依赖。前者是因为"JSON 怎么写、
+怎么读"全项目只该有一份约定；后者是因为配置文件里的 mcp_token 是加密存储的，
+解密方式同样只该有一份。
 
 注意导入写法：包根是 src（util 才是顶层包），common 是 util 下的子包，
 这里写 `from ..common._json import` 而不是 `from common._json import`——
 后者在本进程里根本不存在，会让 --mcp-stdio 在导入期就崩掉。
 """
 from ..common._json import dumps_bytes, dumps_std, loads, JSONDecodeError
+from ..common.secret import SecretError, unprotect
 
 import argparse
 import base64
@@ -142,7 +145,21 @@ def load_config():
 
         return None, None
 
-    return _dig(data, "mcp_port"), _dig(data, "mcp_token")
+    return _dig(data, "mcp_port"), _decrypt_token(_dig(data, "mcp_token"))
+
+def _decrypt_token(value):
+    """配置里的令牌由主程序加密存储（见 util/common/secret.py），解不开时按缺失处理"""
+    if not isinstance(value, str):
+        return None
+
+    try:
+        return unprotect(value)
+
+    except SecretError as e:
+        # 桥接与主程序必须以同一用户身份运行，DPAPI 才解得开
+        log(f"无法解密配置文件中的访问令牌：{e}。请通过 --token 传入，或在主程序中重新生成令牌")
+
+        return None
 
 def port_is_open(port, timeout = 0.5):
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:

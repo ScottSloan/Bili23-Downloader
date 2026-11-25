@@ -5,7 +5,7 @@ from qfluentwidgets import (
     ConfigItem, EnumSerializer, Theme, qconfig
 )
 
-from .serializer import LanguageSerializer, ScalingSerializer
+from .serializer import LanguageSerializer, ScalingSerializer, SecretSerializer
 from .enum import (
     Language, WhenClose, DanmakuType, SubtitleType, CoverType, MetadataType, ProxyMode, ProxyType, FFmpegSource,
     NumberingType, Scaling, FileConflictResolution, VideoContainer, AutoSelectMode, Area, DuplicateDownloadResolution,
@@ -444,7 +444,8 @@ class APPConfig(QConfig):
     # 必须由用户显式启用，且访问需要携带 mcp_token
     mcp_enabled = ConfigItem("MCP", "mcp_enabled", False, BoolValidator())
     mcp_port = RangeConfigItem("MCP", "mcp_port", 23330, RangeValidator(1024, 65535))
-    mcp_token = ConfigItem("MCP", "mcp_token", "")
+    # 令牌落盘加密，理由与下方登录 Cookie 相同；stdio 桥接读它时同样走 util.common.secret 解密
+    mcp_token = ConfigItem("MCP", "mcp_token", "", serializer = SecretSerializer())
 
     # Update
     include_prerelease = ConfigItem("Update", "include_prerelease", False, BoolValidator())
@@ -453,10 +454,16 @@ class APPConfig(QConfig):
     img_key = ConfigItem("Cookie", "img_key", "")
     sub_key = ConfigItem("Cookie", "sub_key", "")
 
-    bili_jct = ConfigItem("Cookie", "bili_jct", "")
-    DedeUserID = ConfigItem("Cookie", "DedeUserID", "")
-    DedeUserID__ckMd5 = ConfigItem("Cookie", "DedeUserID__ckMd5", "")
-    SESSDATA = ConfigItem("Cookie", "SESSDATA", "")
+    # 登录凭据落盘加密（Windows DPAPI，见 util/common/secret.py）。SESSDATA 足以完整
+    # 登录账号，bili_jct 可以代替用户发起操作，明文躺在配置文件里，用户把 config.json
+    # 附进 issue 或同步进网盘就等于交出了账号。
+    #
+    # 每项各自一个 SecretSerializer 实例，不能共用：实例上缓存着该字段的明文与密文。
+    # buvid、b_lsid 这类设备指纹不涉及账号，不加密
+    bili_jct = ConfigItem("Cookie", "bili_jct", "", serializer = SecretSerializer())
+    DedeUserID = ConfigItem("Cookie", "DedeUserID", "", serializer = SecretSerializer())
+    DedeUserID__ckMd5 = ConfigItem("Cookie", "DedeUserID__ckMd5", "", serializer = SecretSerializer())
+    SESSDATA = ConfigItem("Cookie", "SESSDATA", "", serializer = SecretSerializer())
 
     uuid = ConfigItem("Cookie", "uuid", "")
     b_lsid = ConfigItem("Cookie", "b_lsid", "")
@@ -499,7 +506,7 @@ class APPConfig(QConfig):
             temp_path = self._cfg.file.parent / f"{self._cfg.file.name}.tmp"
 
             try:
-                with open(temp_path, "w", encoding = "utf-8") as f:
+                with _open_private(temp_path) as f:
                     f.write(dumps_std(self._cfg.toDict(), indent = 4))
 
                 os.replace(temp_path, self._cfg.file)
@@ -513,6 +520,60 @@ class APPConfig(QConfig):
                 except OSError:
                     # 临时文件清理失败不影响主流程，下次保存会覆盖它
                     pass
+
+def _open_private(path: Path):
+    """
+    以仅当前用户可读写的权限打开文件用于写入
+
+    非 Windows 平台上敏感字段不加密（见 util/common/secret.py），文件权限是唯一的保护，
+    必须在创建时就给 0600：先按默认权限写完再 chmod，中间有一段其他用户可读的窗口。
+    fchmod 是为了收紧上次异常退出残留的临时文件 —— O_CREAT 遇到已有文件不会改它的权限。
+    写入后经 os.replace 换上去，配置文件本身随之继承这个权限。
+
+    Windows 上 %APPDATA% 本就只对当前用户开放，且敏感字段已由 DPAPI 加密，照常打开即可
+    """
+    if sys.platform == "win32":
+        return open(path, "w", encoding = "utf-8")
+
+    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+
+    try:
+        os.fchmod(fd, 0o600)
+
+    except OSError:
+        os.close(fd)
+
+        raise
+
+    return os.fdopen(fd, "w", encoding = "utf-8")
+
+def settle_secrets():
+    """
+    配置加载完成后，收拾敏感字段的两种遗留状态
+
+    * 登录凭据解不开（配置来自别的电脑或用户账户，SecretSerializer 已按空值处理），
+      而 is_login 仍为 True：不纠正的话界面显示已登录，请求却带着空的 SESSDATA 发出去，
+      用户只会看到一串莫名其妙的「未登录」错误，而不是一个干脆的「请重新登录」；
+    * 读到了旧版遗留的明文：立即保存一次转成密文，不等下一次碰巧有设置被改动。
+    """
+    need_save = False
+
+    if config.get(config.is_login) and not config.get(config.SESSDATA):
+        config.set(config.is_login, False, save = False)
+
+        need_save = True
+
+        logger.warning("登录凭据缺失或无法解密，已重置为未登录状态")
+
+    if SecretSerializer.legacy_plaintext_found:
+        SecretSerializer.legacy_plaintext_found = False
+
+        need_save = True
+
+        logger.info("已将明文保存的登录凭据与访问令牌转为加密存储")
+
+    if need_save:
+        config.save()
 
 def check_need_patch():
     # 检查是否需要修补配置文件
@@ -613,6 +674,8 @@ if not config_path.exists():
     logger.warning("配置文件不存在，将创建新配置文件")
 
 qconfig.load(config_path, config)
+
+settle_secrets()
 
 # 判断是否需要修补配置文件
 need_patch, config_version, data = check_need_patch()
