@@ -308,6 +308,18 @@ class DefaultValue:
         }
     ]
 
+class SecretConfigItem(ConfigItem):
+    """
+    落盘受保护的配置项（Windows DPAPI 加密 / Linux、macOS 存进系统密钥库，见 util/common/secret）
+
+    每项各自构造一个 SecretSerializer：实例上记着字段名（密钥库按它存取）并缓存着
+    该字段的明文与落盘值，共用一个实例会让字段之间互相串值。字段名由分组与名称拼出，
+    与 ConfigItem.key 一致，免得手写一份再与声明对不上
+    """
+
+    def __init__(self, group: str, name: str, default = ""):
+        super().__init__(group, name, default, serializer = SecretSerializer(f"{group}.{name}"))
+
 class APPConfig(QConfig):
     # APP
     app_name = "Bili23 Downloader"
@@ -445,8 +457,8 @@ class APPConfig(QConfig):
     # 必须由用户显式启用，且访问需要携带 mcp_token
     mcp_enabled = ConfigItem("MCP", "mcp_enabled", False, BoolValidator())
     mcp_port = RangeConfigItem("MCP", "mcp_port", 23330, RangeValidator(1024, 65535))
-    # 令牌落盘加密，理由与下方登录 Cookie 相同；stdio 桥接读它时同样走 util.common.secret 解密
-    mcp_token = ConfigItem("MCP", "mcp_token", "", serializer = SecretSerializer())
+    # 令牌落盘受保护，理由与下方登录 Cookie 相同；stdio 桥接读它时同样经 util.common.secret 取出
+    mcp_token = SecretConfigItem("MCP", "mcp_token")
 
     # Update
     include_prerelease = ConfigItem("Update", "include_prerelease", False, BoolValidator())
@@ -455,16 +467,13 @@ class APPConfig(QConfig):
     img_key = ConfigItem("Cookie", "img_key", "")
     sub_key = ConfigItem("Cookie", "sub_key", "")
 
-    # 登录凭据落盘加密（Windows DPAPI，见 util/common/secret.py）。SESSDATA 足以完整
-    # 登录账号，bili_jct 可以代替用户发起操作，明文躺在配置文件里，用户把 config.json
-    # 附进 issue 或同步进网盘就等于交出了账号。
-    #
-    # 每项各自一个 SecretSerializer 实例，不能共用：实例上缓存着该字段的明文与密文。
-    # buvid、b_lsid 这类设备指纹不涉及账号，不加密
-    bili_jct = ConfigItem("Cookie", "bili_jct", "", serializer = SecretSerializer())
-    DedeUserID = ConfigItem("Cookie", "DedeUserID", "", serializer = SecretSerializer())
-    DedeUserID__ckMd5 = ConfigItem("Cookie", "DedeUserID__ckMd5", "", serializer = SecretSerializer())
-    SESSDATA = ConfigItem("Cookie", "SESSDATA", "", serializer = SecretSerializer())
+    # 登录凭据落盘受保护（见 SecretConfigItem）。SESSDATA 足以完整登录账号，bili_jct
+    # 可以代替用户发起操作，明文躺在配置文件里，用户把 config.json 附进 issue 或同步进
+    # 网盘就等于交出了账号。buvid、b_lsid 这类设备指纹不涉及账号，不做保护
+    bili_jct = SecretConfigItem("Cookie", "bili_jct")
+    DedeUserID = SecretConfigItem("Cookie", "DedeUserID")
+    DedeUserID__ckMd5 = SecretConfigItem("Cookie", "DedeUserID__ckMd5")
+    SESSDATA = SecretConfigItem("Cookie", "SESSDATA")
 
     uuid = ConfigItem("Cookie", "uuid", "")
     b_lsid = ConfigItem("Cookie", "b_lsid", "")
@@ -534,7 +543,7 @@ class APPConfig(QConfig):
         两个实例共用同一批 ConfigItem，「临时实例」的 load 其实是把磁盘内容读回了
         全局配置，save = False 写入的值（如 wbi 密钥）会被磁盘上的旧值覆盖。
         """
-        # 与 save 互斥：toDict 会经 SecretSerializer 读写各字段的密文缓存
+        # 与 save 互斥：toDict 会经 SecretSerializer 读写各字段的缓存，必要时还会写密钥库
         with self._save_lock:
             data = self._cfg.toDict()
 
@@ -650,8 +659,9 @@ def _open_private(path: Path):
     """
     以仅当前用户可读写的权限打开文件用于写入
 
-    非 Windows 平台上敏感字段不加密（见 util/common/secret.py），文件权限是唯一的保护，
-    必须在创建时就给 0600：先按默认权限写完再 chmod，中间有一段其他用户可读的窗口。
+    Linux / macOS 拿不到系统密钥库时敏感字段以明文保存（见 util/common/secret），文件权限
+    是唯一的保护；拿得到时这也无害。必须在创建时就给 0600：先按默认权限写完再 chmod，
+    中间有一段其他用户可读的窗口。
     fchmod 是为了收紧上次异常退出残留的临时文件 —— O_CREAT 遇到已有文件不会改它的权限。
     写入后经 os.replace 换上去，配置文件本身随之继承这个权限。
 
@@ -674,28 +684,40 @@ def _open_private(path: Path):
 
 def settle_secrets():
     """
-    配置加载完成后，收拾敏感字段的两种遗留状态
+    配置加载完成后，收拾敏感字段的遗留状态
 
-    * 登录凭据解不开（配置来自别的电脑或用户账户，SecretSerializer 已按空值处理），
-      而 is_login 仍为 True：不纠正的话界面显示已登录，请求却带着空的 SESSDATA 发出去，
-      用户只会看到一串莫名其妙的「未登录」错误，而不是一个干脆的「请重新登录」；
-    * 读到了旧版遗留的明文：立即保存一次转成密文，不等下一次碰巧有设置被改动。
+    * 登录凭据取不出来，而 is_login 仍为 True：不纠正的话界面显示已登录，请求却带着
+      空的 SESSDATA 发出去，用户只会看到一串莫名其妙的「未登录」错误。按原因分两种处理：
+      - 凭据永远取不回了（配置来自别的电脑或用户账户、密钥库里的条目被删）：
+        重置为未登录并落盘；
+      - 密钥库只是这次读不到（被锁且用户没有解锁、在没有桌面会话的环境下启动）：
+        凭据多半还在，不改 is_login，只在本次运行中按「登录已失效」处理。
+        若是落盘成未登录，下次密钥库能读了用户也已经被登出，一次读不到就成了永久登出；
+    * 读到了旧版遗留的明文：立即保存一次转成受保护的形式，不等下一次碰巧有设置被改动。
     """
     need_save = False
 
     if config.get(config.is_login) and not config.get(config.SESSDATA):
-        config.set(config.is_login, False, save = False)
+        if SecretSerializer.unavailable_found:
+            runtime.auth.is_expired = True
 
-        need_save = True
+            logger.warning("系统密钥库暂时无法读取，本次运行按登录已失效处理")
 
-        logger.warning("登录凭据缺失或无法解密，已重置为未登录状态")
+        else:
+            config.set(config.is_login, False, save = False)
+
+            need_save = True
+
+            logger.warning("登录凭据缺失或无法读取，已重置为未登录状态")
+
+    SecretSerializer.unavailable_found = False
 
     if SecretSerializer.legacy_plaintext_found:
         SecretSerializer.legacy_plaintext_found = False
 
         need_save = True
 
-        logger.info("已将明文保存的登录凭据与访问令牌转为加密存储")
+        logger.info("已将明文保存的登录凭据与访问令牌转为受保护的存储")
 
     if need_save:
         config.save()

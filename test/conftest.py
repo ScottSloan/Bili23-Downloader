@@ -1,7 +1,7 @@
 """
 pytest 全局配置。
 
-本文件的两件事都必须发生在任何 `util.*` / `gui.*` 导入之前，因此全部写在模块层：
+本文件的三件事都必须发生在任何 `util.*` / `gui.*` 导入之前，因此全部写在模块层：
 
 1. 把 src 加入 sys.path —— 项目以 src 为包根运行（main.py 所在目录），
    而不是可安装的发行包，测试必须复现同样的导入路径。
@@ -14,6 +14,10 @@ pytest 全局配置。
 
    注意：Windows 上 Qt 走 SHGetKnownFolderPath，改写 APPDATA 环境变量无效，
    setTestModeEnabled 是唯一可靠的手段。
+
+3. 换掉系统密钥库的归属标识 —— Linux / macOS 上登录凭据存在系统密钥库里，
+   而密钥库是整个用户共用的，Qt 的测试模式管不到它。不换的话，在装有密钥库的
+   开发机上跑一次测试，就会改写甚至删掉开发者自己的登录凭据。
 """
 
 from PySide6.QtCore import QStandardPaths
@@ -41,6 +45,11 @@ assert "qttest" in _TEST_APPDATA.as_posix(), (
 # 每轮测试从干净状态开始：上一轮遗留的配置会让「首次启动」「版本迁移」这类
 # 用例的结果取决于执行顺序
 shutil.rmtree(_TEST_APPDATA / "Bili23 Downloader", ignore_errors = True)
+
+# 必须早于 util.common.config 的导入：配置在导入期就会从密钥库读取
+import util.common.secret as _secret
+
+_secret.SERVICE = "Bili23 Downloader (pytest)"
 
 
 # --------------------------------------------------------------------------
