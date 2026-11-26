@@ -166,6 +166,8 @@ class OptionsInfo(InfoBase):
     video_container: str = None
 
     danmaku_type: str = None
+    danmaku_suffix_mode: str = None
+    custom_danmaku_suffix: str = None
     embed_danmaku: bool = None
     delete_danmaku_after_embed: bool = None
 

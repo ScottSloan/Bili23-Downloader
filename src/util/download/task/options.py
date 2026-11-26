@@ -1,4 +1,4 @@
-from ...common.enum import DanmakuType, SubtitleType, CoverType, MetadataType, VideoContainer, OriginalFileType
+from ...common.enum import DanmakuType, SubtitleType, CoverType, MetadataType, VideoContainer, OriginalFileType, DanmakuSuffixMode
 from ...common.config import config
 
 from qfluentwidgets import ConfigItem
@@ -17,6 +17,8 @@ _OPTION_SPEC = {
     "video_container": VideoContainer,
 
     "danmaku_type": DanmakuType,
+    "danmaku_suffix_mode": DanmakuSuffixMode,
+    "custom_danmaku_suffix": None,
     "embed_danmaku": None,
     "delete_danmaku_after_embed": None,
 

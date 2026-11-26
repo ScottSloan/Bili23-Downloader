@@ -5,7 +5,7 @@ from PySide6.QtGui import QColor
 from qfluentwidgets import (
     PushButton, FluentIcon, PushSettingCard, qconfig, ColorDialog, PrimaryPushButton, setCustomStyleSheet,
     MessageBox, ExpandGroupSettingCard as _ExpandGroupSettingCard, HyperlinkLabel, DropDownPushButton,
-    RoundMenu, Action, SwitchButton, IndicatorPosition, ComboBox
+    RoundMenu, Action, SwitchButton, IndicatorPosition, ComboBox, LineEdit
 )
 from qfluentwidgets.components.settings.expand_setting_card import GroupWidget as _GroupWidget
 
@@ -13,7 +13,7 @@ from .widget import SettingSwitchButton, SettingComboBox, SettingSlider
 from ..widget.spinbox import SpinBox
 from ..widget.label import WarningLabel
 
-from util.common.enum import VideoContainer, ToastNotificationCategory, OriginalFileType
+from util.common.enum import VideoContainer, ToastNotificationCategory, OriginalFileType, DanmakuSuffixMode
 from util.common.config import config, isWin11
 from util.common.runtime import runtime
 from util.thread.pool import GlobalThreadPoolTask
@@ -266,6 +266,18 @@ class DanmakuSettingCard(ExpandGroupSettingCard):
 
         self.custom_style_btn = PushButton(self.tr("Customize…"), self)
 
+        self.suffix_mode_choice = SettingComboBox(
+            config.danmaku_suffix_mode,
+            [self.tr("Default (Danmaku)"), self.tr("None"), self.tr("Custom")],
+            parent = self
+        )
+
+        self.custom_suffix_edit = LineEdit(self)
+        self.custom_suffix_edit.setFixedWidth(180)
+        self.custom_suffix_edit.setClearButtonEnabled(True)
+        self.custom_suffix_edit.setPlaceholderText(self.tr("e.g. dm"))
+        self.custom_suffix_edit.setText(config.get(config.custom_danmaku_suffix))
+
         self.embed_switch = SettingSwitchButton(config.embed_danmaku, parent = self)
         self.delete_after_embed_switch = SettingSwitchButton(config.delete_danmaku_after_embed, parent = self)
 
@@ -275,17 +287,47 @@ class DanmakuSettingCard(ExpandGroupSettingCard):
         self.addGroup("", self.tr("Download Danmaku"), "", self.download_switch)
         self.addGroup("", self.tr("Danmaku Format"), "", self.type_choice)
         self.addGroup("", self.tr("Danmaku Style"), self.tr("Only effective for ASS format danmaku"), self.custom_style_btn)
+        self.suffix_mode_group = self.addGroup(
+            "",
+            self.tr("Danmaku File Suffix"),
+            self.tr("Suffix added before the file extension; choose None to match the video filename"),
+            self.suffix_mode_choice
+        )
+        self.custom_suffix_group = self.addGroup(
+            "",
+            self.tr("Custom Suffix"),
+            self.tr("Custom text before the file extension, without leading dot"),
+            self.custom_suffix_edit
+        )
         self.embed_group = self.addGroup("", self.tr("Embed Danmaku"), self.tr("Embed danmaku into the video file as a subtitle track, only available when the format is ASS and the output container is MKV"), self.embed_switch)
         self.delete_after_embed_group = self.addGroup("", self.tr("Delete Danmaku After Embedding"), self.tr("Delete the original danmaku file after embedding it into the video file"), self.delete_after_embed_switch)
 
+        self.update_suffix_option_states()
         self.update_embed_option_states()
 
+        self.download_switch.checkedChanged.connect(self.update_suffix_option_states)
+        self.suffix_mode_choice.currentIndexChanged.connect(self.update_suffix_option_states)
+        self.custom_suffix_edit.editingFinished.connect(self.on_custom_suffix_changed)
+        self.custom_suffix_edit.clearButton.clicked.connect(self.on_custom_suffix_changed)
         self.download_switch.checkedChanged.connect(self.update_embed_option_states)
         self.type_choice.currentIndexChanged.connect(self.update_embed_option_states)
         self.embed_switch.checkedChanged.connect(self.update_embed_option_states)
 
         # 输出容器格式在另一张卡片上，借 ConfigItem 自带的信号做跨卡片联动
         config.video_container.valueChanged.connect(self.update_embed_option_states)
+
+    def on_custom_suffix_changed(self):
+        text = self.custom_suffix_edit.text()
+
+        if text != config.get(config.custom_danmaku_suffix):
+            config.set(config.custom_danmaku_suffix, text)
+
+    def update_suffix_option_states(self, *_):
+        download_enabled = self.download_switch.isChecked()
+        is_custom = self.suffix_mode_choice.currentData() == DanmakuSuffixMode.CUSTOM
+
+        self.suffix_mode_group.setEnabled(download_enabled)
+        self.custom_suffix_group.setEnabled(download_enabled and is_custom)
 
     def update_embed_option_states(self, *_):
         # 切换到 MP4 或非 ASS 格式时只置灰、不重置开关：容器格式是会被临时来回切换的选项，

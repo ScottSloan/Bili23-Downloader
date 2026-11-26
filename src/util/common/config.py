@@ -9,7 +9,7 @@ from .serializer import LanguageSerializer, ScalingSerializer, SecretSerializer
 from .enum import (
     Language, WhenClose, DanmakuType, SubtitleType, CoverType, MetadataType, ProxyMode, ProxyType, FFmpegSource,
     NumberingType, Scaling, FileConflictResolution, VideoContainer, AutoSelectMode, Area, DuplicateDownloadResolution,
-    OriginalFileType
+    OriginalFileType, DanmakuSuffixMode
 )
 from ._json import loads, dumps_std
 from .runtime import runtime
@@ -410,6 +410,8 @@ class APPConfig(QConfig):
     download_danmaku = ConfigItem("Additional", "download_danmaku", False, BoolValidator())
     danmaku_type = OptionsConfigItem("Additional", "danmaku_type", DanmakuType.ASS, OptionsValidator(DanmakuType), EnumSerializer(DanmakuType))
     danmaku_style = ConfigItem("Additional", "danmaku_style", DefaultValue.danmaku_style)
+    danmaku_suffix_mode = OptionsConfigItem("Additional", "danmaku_suffix_mode", DanmakuSuffixMode.DEFAULT, OptionsValidator(DanmakuSuffixMode), EnumSerializer(DanmakuSuffixMode))
+    custom_danmaku_suffix = ConfigItem("Additional", "custom_danmaku_suffix", "")
     embed_danmaku = ConfigItem("Additional", "embed_danmaku", False, BoolValidator())
     delete_danmaku_after_embed = ConfigItem("Additional", "delete_danmaku_after_embed", False, BoolValidator())
 
