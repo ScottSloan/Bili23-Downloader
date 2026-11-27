@@ -36,6 +36,11 @@ class FileInfo(InfoBase):
 
     relative_files: list[str] = field(default_factory = list)
 
+    # 附加内容（弹幕、字幕、封面、元数据）写出的文件，相对 download_path/folder 的路径
+    # 不能并进 relative_files：那份列表在合并完成后、取消任务时都会被当作临时文件逐个删除，
+    # 而附加文件恰好在合并之前生成。这里只用于在没有音视频产物时定位文件（Issue #507）
+    additional_files: list[str] = field(default_factory = list)
+
     # 待嵌入的字幕轨（含弹幕轨），由附加内容解析阶段登记，Merger 据此拼接 FFmpeg 命令
     # 每项为 {"file": 相对文件名, "title": 轨道标题, "language": 语言码, "kind": "danmaku" | "subtitle"}
     # 文件名中带有随界面语言变化的限定词和语言后缀，Merger 无法自行反推，因此必须在此登记

@@ -22,6 +22,20 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+def locate_output_files(directory: Path, task_info: TaskInfo) -> list[str]:
+    """
+    「打开文件位置」要在资源管理器中选中的文件，均为仍然存在的那部分
+
+    有音视频产物时只选中它们，附加文件不跟着一起选，保持一贯的表现；
+    只下载了弹幕、字幕等附加内容的任务没有音视频产物，relative_files 是空的，
+    此时退回到附加文件，否则会误报找不到文件（Issue #507）
+    """
+    for files in (task_info.File.relative_files, task_info.File.additional_files):
+        if existing_files := [file for file in files if Path(directory, file).exists()]:
+            return existing_files
+
+    return []
+
 class DownloadItemDelegate(CoverQueryDelegateBase):
     def __init__(self, parent = None):
         super().__init__(parent)
@@ -200,13 +214,12 @@ class DownloadItemDelegate(CoverQueryDelegateBase):
     def openFileLocation(self, task_info: TaskInfo):
         directory = Path(task_info.File.download_path, task_info.File.folder)
 
-        # 检查 relative_files 是否存在，如果不存在则弹出错误提示
-        existing_files = [file for file in task_info.File.relative_files if Path(directory, file).exists()]
+        existing_files = locate_output_files(directory, task_info)
 
         if not existing_files:
             # 记录第一个文件位置
-            if task_info.File.relative_files:
-                _path = Path(directory, task_info.File.relative_files[0])
+            if candidates := task_info.File.relative_files or task_info.File.additional_files:
+                _path = Path(directory, candidates[0])
             else:
                 _path = directory
 
@@ -219,11 +232,12 @@ class DownloadItemDelegate(CoverQueryDelegateBase):
                     msg = Translator.ERROR_MESSAGES("FILE_NOT_FOUND_DETAIL"),
                     path = str(_path)
                 )
-                
+
             )
 
         else:
-            Directory.open_files_in_explorer(str(directory), task_info.File.relative_files)
+            # 只传仍然存在的文件：不存在的路径解析不出 PIDL，会让资源管理器选中失败
+            Directory.open_files_in_explorer(str(directory), existing_files)
 
     def isTaskCompleted(self, task_info: TaskInfo):
         return task_info.Download.status == DownloadStatus.COMPLETED

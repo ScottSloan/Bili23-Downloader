@@ -34,8 +34,16 @@ class AdditionalParserBase(ParserBase):
             f.write(contents)
 
         self._update_file_size(path)
+        self._register_additional_file(path)
 
         return path.name
+
+    def _register_additional_file(self, path: Path):
+        # 任务重试时附加内容会重新生成一遍，同名文件只记一次
+        relative_path = str(path.relative_to(self.__base_path))
+
+        if relative_path not in self.task_info.File.additional_files:
+            self.task_info.File.additional_files.append(relative_path)
 
     @staticmethod
     def is_embed_available(task_info: TaskInfo):
