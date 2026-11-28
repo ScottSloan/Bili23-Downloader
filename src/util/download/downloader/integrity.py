@@ -77,5 +77,6 @@ def file_md5(path: Path, stop_event: Event = None, block_size: int = 4 * 1024 * 
                 break
 
             digest.update(block)
+            del block
 
     return digest.hexdigest()

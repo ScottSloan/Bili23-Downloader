@@ -82,3 +82,106 @@ class TestRemuxAudioCommand:
 
         assert "copy" in argv
         assert "libmp3lame" not in argv
+
+
+def option_values(argv, option):
+    # 取出某个选项的全部取值，用于断言 -map 这类可重复出现的参数
+    return [argv[index + 1] for index, arg in enumerate(argv) if arg == option]
+
+
+class TestMergeCoverCommand:
+    """
+    封面在两种容器里走的是两套机制，不能共用一条命令（#493）。
+
+    MP4 认 attached_pic 视频流；matroska 封装器却会丢掉这个 disposition，同样的写法到了 MKV
+    里就成了一条普通的 PNG 视频轨，播放器会多出一条视频轨、资源管理器也不显示封面。MKV 必须
+    改用 Matroska 附件，而附件按 cover.<ext> 命名才会被识别为封面。
+    """
+
+    def test_mp4_cover_is_attached_pic_stream(self, command):
+        argv = command.merge_video_audio("v.m4s", "a.m4s", "out.mp4", cover_path = "c.jpg").build()
+
+        assert argv[argv.index("c.jpg") - 1] == "-i"
+        assert option_values(argv, "-map") == ["0:v:0", "1:a:0", "2:v:0"]
+        assert option_values(argv, "-disposition:v:1") == ["attached_pic"]
+        assert "-attach" not in argv
+
+    def test_mkv_cover_is_attachment(self, command):
+        argv = command.merge_video_audio("v.m4s", "a.m4s", "out.mkv", cover_path = "c.jpg").build()
+
+        # 附件不是输入，不能出现在 -i 之后，也不能占用视频流的位置
+        assert option_values(argv, "-i") == ["v.m4s", "a.m4s"]
+        assert option_values(argv, "-attach") == ["c.jpg"]
+        assert option_values(argv, "-map") == ["0:v:0", "1:a:0"]
+        assert option_values(argv, "-metadata:s:t:0") == ["mimetype=image/jpeg", "filename=cover.jpg"]
+        assert "-disposition:v:1" not in argv
+        assert "png" not in argv
+
+    @pytest.mark.parametrize("ext, mimetype", [
+        ("jpg", "image/jpeg"),
+        ("png", "image/png"),
+        ("webp", "image/webp"),
+        ("avif", "image/avif"),
+    ])
+    def test_every_cover_type_has_mimetype(self, command, ext, mimetype):
+        # Matroska 附件缺 mimetype 时 FFmpeg 会直接报错退出
+        from util.common.enum import CoverType
+        from util.ffmpeg.command import COVER_ATTACHMENT_MIMETYPES
+
+        assert {cover_type.value for cover_type in CoverType} <= set(COVER_ATTACHMENT_MIMETYPES)
+
+        argv = command.merge_video_audio("v.m4s", "a.m4s", "out.mkv", cover_path = f"c.{ext}").build()
+
+        assert option_values(argv, "-metadata:s:t:0") == [f"mimetype={mimetype}", f"filename=cover.{ext}"]
+
+    def test_mkv_cover_with_subtitles(self, command):
+        subtitle_list = [{"file": "s.ass", "kind": "subtitle", "default": True}]
+
+        argv = command.merge_video_audio("v.m4s", "a.m4s", "out.mkv", cover_path = "c.jpg", subtitle_list = subtitle_list).build()
+
+        # 封面不再占输入索引，字幕成了第三路输入
+        assert option_values(argv, "-i") == ["v.m4s", "a.m4s", "s.ass"]
+        assert option_values(argv, "-map") == ["0:v:0", "1:a:0", "2:s:0"]
+
+    def test_mp4_cover_index_follows_inputs(self, command):
+        # 封面的输入索引由 add_cover 现取，分片合并时封面是第二路输入
+        argv = command.merge_video_parts("lists.txt", "out.mp4", cover_path = "c.jpg").build()
+
+        assert option_values(argv, "-map") == ["0:v:0", "0:a?", "1:v:0"]
+
+    def test_parts_mkv_cover_is_attachment(self, command):
+        argv = command.merge_video_parts("lists.txt", "out.mkv", cover_path = "c.png").build()
+
+        assert option_values(argv, "-attach") == ["c.png"]
+        assert option_values(argv, "-map") == ["0:v:0", "0:a?"]
+
+
+class TestMatroskaHevcTag:
+    """
+    杜比视界的 HEVC 流在 MP4 里标签是 dvh1，matroska 封装器不认，流拷贝进 MKV 会直接合并失败（#499）。
+    换成 hvc1 才能通过校验；但这个标签只能给 HEVC，H.264 带上它同样会让合并失败。
+    """
+
+    def test_mkv_hevc_is_retagged(self, command):
+        argv = command.merge_video_audio("v.m4s", "a.m4s", "out.mkv", hevc = True).build()
+
+        assert option_values(argv, "-tag:v:0") == ["hvc1"]
+
+    @pytest.mark.parametrize("output, hevc", [
+        # MP4 必须保留 dvh1，否则播放器不再按杜比视界识别
+        ("out.mp4", True),
+        # H.264 带上 hvc1 会报 "Tag hvc1 incompatible with output codec id"
+        ("out.mkv", False),
+        ("out.mp4", False),
+    ])
+    def test_tag_is_untouched_otherwise(self, command, output, hevc):
+        argv = command.merge_video_audio("v.m4s", "a.m4s", output, hevc = hevc).build()
+
+        assert "-tag:v:0" not in argv
+
+    def test_mkv_hevc_with_cover(self, command):
+        # 附件是 t 类型的流，不影响 v:0 指向主视频
+        argv = command.merge_video_audio("v.m4s", "a.m4s", "out.mkv", cover_path = "c.jpg", hevc = True).build()
+
+        assert option_values(argv, "-tag:v:0") == ["hvc1"]
+        assert option_values(argv, "-attach") == ["c.jpg"]

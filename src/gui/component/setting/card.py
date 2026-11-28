@@ -5,7 +5,7 @@ from PySide6.QtGui import QColor
 from qfluentwidgets import (
     PushButton, FluentIcon, PushSettingCard, qconfig, ColorDialog, PrimaryPushButton, setCustomStyleSheet,
     MessageBox, ExpandGroupSettingCard as _ExpandGroupSettingCard, HyperlinkLabel, DropDownPushButton,
-    RoundMenu, Action, SwitchButton, IndicatorPosition, ComboBox
+    RoundMenu, Action, SwitchButton, IndicatorPosition, ComboBox, LineEdit
 )
 from qfluentwidgets.components.settings.expand_setting_card import GroupWidget as _GroupWidget
 
@@ -13,8 +13,8 @@ from .widget import SettingSwitchButton, SettingComboBox, SettingSlider
 from ..widget.spinbox import SpinBox
 from ..widget.label import WarningLabel
 
-from util.common.enum import VideoContainer, ToastNotificationCategory, OriginalFileType
-from util.common.config import config, isWin11, APPConfig
+from util.common.enum import VideoContainer, ToastNotificationCategory, OriginalFileType, DanmakuSuffixMode
+from util.common.config import config, isWin11
 from util.common.runtime import runtime
 from util.thread.pool import GlobalThreadPoolTask
 from util.common.icon import ExtendedFluentIcon
@@ -22,7 +22,6 @@ from util.common.io.directory import Directory
 from util.common.translator import Translator
 from util.common.signal_bus import signal_bus
 
-from pathlib import Path
 import logging
 
 logger = logging.getLogger(__name__)
@@ -267,6 +266,18 @@ class DanmakuSettingCard(ExpandGroupSettingCard):
 
         self.custom_style_btn = PushButton(self.tr("Customize…"), self)
 
+        self.suffix_mode_choice = SettingComboBox(
+            config.danmaku_suffix_mode,
+            [self.tr("Default (Danmaku)"), self.tr("None"), self.tr("Custom")],
+            parent = self
+        )
+
+        self.custom_suffix_edit = LineEdit(self)
+        self.custom_suffix_edit.setFixedWidth(180)
+        self.custom_suffix_edit.setClearButtonEnabled(True)
+        self.custom_suffix_edit.setPlaceholderText(self.tr("e.g. dm"))
+        self.custom_suffix_edit.setText(config.get(config.custom_danmaku_suffix))
+
         self.embed_switch = SettingSwitchButton(config.embed_danmaku, parent = self)
         self.delete_after_embed_switch = SettingSwitchButton(config.delete_danmaku_after_embed, parent = self)
 
@@ -276,17 +287,47 @@ class DanmakuSettingCard(ExpandGroupSettingCard):
         self.addGroup("", self.tr("Download Danmaku"), "", self.download_switch)
         self.addGroup("", self.tr("Danmaku Format"), "", self.type_choice)
         self.addGroup("", self.tr("Danmaku Style"), self.tr("Only effective for ASS format danmaku"), self.custom_style_btn)
+        self.suffix_mode_group = self.addGroup(
+            "",
+            self.tr("Danmaku File Suffix"),
+            self.tr("Suffix added before the file extension; choose None to match the video filename"),
+            self.suffix_mode_choice
+        )
+        self.custom_suffix_group = self.addGroup(
+            "",
+            self.tr("Custom Suffix"),
+            self.tr("Custom text before the file extension, without leading dot"),
+            self.custom_suffix_edit
+        )
         self.embed_group = self.addGroup("", self.tr("Embed Danmaku"), self.tr("Embed danmaku into the video file as a subtitle track, only available when the format is ASS and the output container is MKV"), self.embed_switch)
         self.delete_after_embed_group = self.addGroup("", self.tr("Delete Danmaku After Embedding"), self.tr("Delete the original danmaku file after embedding it into the video file"), self.delete_after_embed_switch)
 
+        self.update_suffix_option_states()
         self.update_embed_option_states()
 
+        self.download_switch.checkedChanged.connect(self.update_suffix_option_states)
+        self.suffix_mode_choice.currentIndexChanged.connect(self.update_suffix_option_states)
+        self.custom_suffix_edit.editingFinished.connect(self.on_custom_suffix_changed)
+        self.custom_suffix_edit.clearButton.clicked.connect(self.on_custom_suffix_changed)
         self.download_switch.checkedChanged.connect(self.update_embed_option_states)
         self.type_choice.currentIndexChanged.connect(self.update_embed_option_states)
         self.embed_switch.checkedChanged.connect(self.update_embed_option_states)
 
         # 输出容器格式在另一张卡片上，借 ConfigItem 自带的信号做跨卡片联动
         config.video_container.valueChanged.connect(self.update_embed_option_states)
+
+    def on_custom_suffix_changed(self):
+        text = self.custom_suffix_edit.text()
+
+        if text != config.get(config.custom_danmaku_suffix):
+            config.set(config.custom_danmaku_suffix, text)
+
+    def update_suffix_option_states(self, *_):
+        download_enabled = self.download_switch.isChecked()
+        is_custom = self.suffix_mode_choice.currentData() == DanmakuSuffixMode.CUSTOM
+
+        self.suffix_mode_group.setEnabled(download_enabled)
+        self.custom_suffix_group.setEnabled(download_enabled and is_custom)
 
     def update_embed_option_states(self, *_):
         # 切换到 MP4 或非 ASS 格式时只置灰、不重置开关：容器格式是会被临时来回切换的选项，
@@ -754,17 +795,27 @@ class DownloadHandlingSettingCard(ExpandGroupSettingCard):
         duplicate_group.hyper_label.clicked.connect(lambda: duplicate_group.showGuideMessageBox(self.tr("Instructions"), Translator.DUPLICATE_DOWNLOAD_GUIDE()))
 
 class DownloadConcurrencySettingCard(ExpandGroupSettingCard):
-    def __init__(self, parent = None):
+    def __init__(self, parent_window, parent = None):
         super().__init__(ExtendedFluentIcon.FAST_DOWNLOAD, self.tr("Download Concurrency"), self.tr("Adjust per-task threads, concurrent downloads, and speed limits"), parent)
+
+        # 「并行合并数」带说明链接，弹窗以主窗口为父。必须赶在 addGroup 之前设置：
+        # addGroup 只在创建分组时把它抄给 GroupWidget，之后再设分组是拿不到的
+        self.parent_window = parent_window
 
         self.download_thread_slider = SettingSlider(config.download_thread, self)
         self.download_parallel_slider = SettingSlider(config.download_parallel, self)
+        self.merge_parallel_slider = SettingSlider(config.merge_parallel, self)
 
         self.download_speed_limit_btn = PushButton(self.tr("Configure…"), self)
 
         self.addGroup("", self.tr("Number of Threads"), self.tr("Adjust the number of threads used per task (default: 4)"), self.download_thread_slider)
         self.addGroup("", self.tr("Number of Parallel Downloads"), self.tr("Adjust the number of tasks downloaded simultaneously (default: 1)"), self.download_parallel_slider)
+        # 并行合并曾把机器拖到卡死（Issue #490），说明里必须直接写出推荐值与风险，不能只写默认值
+        merge_parallel_group = self.addGroup("", self.tr("Number of Parallel Merges"), self.tr("Number of FFmpeg merges run at the same time. Recommended: 1 — higher values may make the system unresponsive"), self.merge_parallel_slider)
         self.addGroup("", self.tr("Speed Limit Settings"), self.tr("Configure speed limit settings for downloads"), self.download_speed_limit_btn)
+
+        merge_parallel_group.showHyperLinkLabel(self.tr("About Parallel Merges"))
+        merge_parallel_group.hyper_label.clicked.connect(lambda: merge_parallel_group.showGuideMessageBox(self.tr("Instructions"), Translator.MERGE_PARALLEL_GUIDE()))
 
 class CheckUpdateSettingCard(ExpandGroupSettingCard):
     def __init__(self, parent = None):
@@ -818,13 +869,10 @@ class OtherAdvancedSettingCard(ExpandGroupSettingCard):
 
         if not file_path:
             return
-        
-        original_file = config.file
-        
-        config.load(file_path)
-        config.file = original_file  # 恢复原来的配置文件路径，避免误覆盖
-        
-        config.save()
+
+        # 登录凭据、访问令牌不随导入覆盖，见 APPConfig.import_from
+        if not config.import_from(file_path):
+            return
 
         config.appRestartSig.emit()
 
@@ -840,12 +888,10 @@ class OtherAdvancedSettingCard(ExpandGroupSettingCard):
 
         if not file_path:
             return
-        
-        temp_config = APPConfig()
-        temp_config.load(config.file)
-        temp_config.file = Path(file_path)
 
-        temp_config.save()
+        # 导出的文件不含登录凭据与访问令牌，见 APPConfig.export_to
+        if not config.export_to(file_path):
+            return
 
         logger.info("配置导出成功，路径：%s", file_path)
 

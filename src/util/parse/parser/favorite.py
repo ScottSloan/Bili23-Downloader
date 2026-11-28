@@ -93,7 +93,9 @@ class FavoriteParser(ParserBase):
                 "url": "https://space.bilibili.com/{mid}/favlist?fid={fid}".format(mid = mid, fid = fid),
                 "count": count,
                 "cover": fid,
-                "cover_id": f"__query__{fid}" if count > 0 else None
+                # 封面是收藏夹自己的属性，与里面有没有视频无关：空收藏夹也可能设了封面。
+                # 确实没有封面时由 CoverQueryWorker 按"本来就没封面"处理，不会反复请求
+                "cover_id": f"__query__{fid}"
             })
 
         post_to_main_thread(self.success_callback, entry_list)

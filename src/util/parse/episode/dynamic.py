@@ -117,6 +117,24 @@ class DynamicEpisodeParser(EpisodeParserBase):
 
         return self.parser.episode_count
 
+    def update_link_node(self, info_data: dict):
+        """
+        批量解析：每条链接各自对应一个独立的稿件
+
+        链接指向的稿件属于某个合集时，VideoEpisodeParser 默认会把整个合集建成树。单链接解析时
+        这是有意为之 —— 列出整个合集再定位、勾选链接指向的那一项；而批量模式不做定位，开着
+        "自动加入下载列表"还会把整个合集原样送进下载队列，贴两个 BV 号下载了五十多个视频（#497）。
+        这里只保留链接指向的那个稿件（分P稿件保留其全部分P），与重新解析下载任务时的做法一致
+        """
+        self.parser.target_episode_info = info_data["data"]["bvid"]
+
+        # 同一个解析器实例被所有链接复用，而 episode_id 只在为空时才会新建（_init_episode_data）。
+        # 不清空的话所有链接共用同一份剧集数据，后一条链接的简介、UP 主、分区会覆盖前一条，
+        # 已经建好的任务导出元数据时就会拿到别的稿件的信息
+        self.parser.episode_id = ""
+
+        return self.update_page_node(info_data)
+
     def update(self, title: str, cid: int):
         node_data = {
             "episode_id": self.episode_id,

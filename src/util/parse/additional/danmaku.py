@@ -2,7 +2,7 @@ from ...network.request import ResponseType, SyncNetWorkRequest
 from ...download.task.info import TaskInfo
 from ...common.translator import Translator
 from ...common._json import dumps
-from ...common.enum import DanmakuType
+from ...common.enum import DanmakuType, DanmakuSuffixMode
 from ...download.task.options import resolve
 
 from .base import AdditionalParserBase
@@ -11,6 +11,7 @@ from .file.danmaku_xml import DanmakuXML
 
 import util.misc.dm_pb2 as dm_pb2
 
+import re
 from typing import List
 from math import ceil
 
@@ -33,9 +34,31 @@ class DanmakuParser(AdditionalParserBase):
             case DanmakuType.JSON:
                 contents, suffix = self._to_json(dict_list)
 
-        file_name = self._write(contents, suffix = suffix, name = self.task_info.File.name, qualifier = [Translator.ADDITIONAL_FILES_QUALIFIER("DANMAKU")])
+        suffix_mode = resolve(self.task_info, "danmaku_suffix_mode")
+        custom_suffix = resolve(self.task_info, "custom_danmaku_suffix")
+        qualifier = self.resolve_qualifier(suffix_mode, custom_suffix)
+
+        file_name = self._write(contents, suffix = suffix, name = self.task_info.File.name, qualifier = qualifier)
 
         self._check_embed_danmaku(danmaku_type, file_name)
+
+    @staticmethod
+    def resolve_qualifier(mode: DanmakuSuffixMode, custom_suffix: str = "") -> List[str]:
+        match mode:
+            case DanmakuSuffixMode.NONE:
+                return []
+
+            case DanmakuSuffixMode.CUSTOM:
+                # 路径非法字符替换为下划线，并去除首尾空格与点号
+                cleaned = re.sub(r'[<>:"/\\|?*\x00-\x1f]', "_", custom_suffix or "")
+                cleaned = cleaned.strip(" .")
+                # 合并连续的点 (e.g. "a..b" -> "a.b")
+                cleaned = re.sub(r"\.{2,}", ".", cleaned)
+
+                return [cleaned] if cleaned else []
+
+            case _:
+                return [Translator.ADDITIONAL_FILES_QUALIFIER("DANMAKU")]
 
     def _check_embed_danmaku(self, danmaku_type: DanmakuType, file_name: str):
         # 仅 ASS 格式能作为字幕轨嵌入，其余格式即便开着开关也静默跳过

@@ -14,6 +14,10 @@ dependencies = [
     "httpx==0.28.1",
     "psutil==7.2.2",
     "verhub-sdk==0.2.10",
+    # 敏感配置项存进系统密钥库（见 src/util/common/secret）。Windows 用 DPAPI，不需要第三方库。
+    # Linux 不用 keyring：它经 SecretStorage 拖进 cryptography 这个原生扩展，jeepney 是纯 Python
+    "jeepney==0.9.0; sys_platform == 'linux'",
+    "keyring==25.7.0; sys_platform == 'darwin'",
 ]
 authors = [
     {name = "ScottSloan", email = "world1019@sina.com"},

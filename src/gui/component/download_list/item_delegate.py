@@ -12,42 +12,29 @@ from util.common.icon import ExtendedFluentIcon
 from util.common.io.directory import Directory
 from util.common.signal_bus import signal_bus
 from util.common.translator import Translator
+from util.download.task.filter import get_media_type_key
 from util.download.task.info import TaskInfo
 from util.format.units import Units
 from util.format.time import Time
-from util.parse.episode.tree import Attribute
 
 from pathlib import Path
 import logging
 
 logger = logging.getLogger(__name__)
 
-def get_media_type_key(task_info: TaskInfo):
+def locate_output_files(directory: Path, task_info: TaskInfo) -> list[str]:
     """
-    任务的媒体类型，取值为 MEDIA_TYPE_BADGE 的 key，判断不出时返回空串
+    「打开文件位置」要在资源管理器中选中的文件，均为仍然存在的那部分
 
-    封面角标与列表的类型筛选共用这一份判断：两边各写一套的话，迟早会出现
-    角标写着「音频」、按音频筛选却筛不出来的情况
+    有音视频产物时只选中它们，附加文件不跟着一起选，保持一贯的表现；
+    只下载了弹幕、字幕等附加内容的任务没有音视频产物，relative_files 是空的，
+    此时退回到附加文件，否则会误报找不到文件（Issue #507）
     """
-    attribute = task_info.Episode.attribute
-    download_type = task_info.Download.type
+    for files in (task_info.File.relative_files, task_info.File.additional_files):
+        if existing_files := [file for file in files if Path(directory, file).exists()]:
+            return existing_files
 
-    # 仅下载音频时，产物就是音频文件，无论来源是投稿、番剧还是课程，都直接标「音频」
-    audio_only = download_type & DownloadType.AUDIO and not download_type & DownloadType.VIDEO
-
-    # 先判断更具体的类型：音频、课程、剧集条目也可能同时带着其他通用位
-    if audio_only or attribute & Attribute.AUDIO_BIT:
-        return "AUDIO"
-    elif attribute & (Attribute.CHEESE_BIT | Attribute.LESSON_BIT):
-        return "COURSE"
-    elif attribute & Attribute.BANGUMI_BIT:
-        return "BANGUMI"
-    elif attribute & Attribute.INTERACTIVE_BIT:
-        return "INTERACTIVE"
-    elif attribute & Attribute.VIDEO_BIT:
-        return "VIDEO"
-
-    return ""
+    return []
 
 class DownloadItemDelegate(CoverQueryDelegateBase):
     def __init__(self, parent = None):
@@ -227,13 +214,12 @@ class DownloadItemDelegate(CoverQueryDelegateBase):
     def openFileLocation(self, task_info: TaskInfo):
         directory = Path(task_info.File.download_path, task_info.File.folder)
 
-        # 检查 relative_files 是否存在，如果不存在则弹出错误提示
-        existing_files = [file for file in task_info.File.relative_files if Path(directory, file).exists()]
+        existing_files = locate_output_files(directory, task_info)
 
         if not existing_files:
             # 记录第一个文件位置
-            if task_info.File.relative_files:
-                _path = Path(directory, task_info.File.relative_files[0])
+            if candidates := task_info.File.relative_files or task_info.File.additional_files:
+                _path = Path(directory, candidates[0])
             else:
                 _path = directory
 
@@ -246,11 +232,12 @@ class DownloadItemDelegate(CoverQueryDelegateBase):
                     msg = Translator.ERROR_MESSAGES("FILE_NOT_FOUND_DETAIL"),
                     path = str(_path)
                 )
-                
+
             )
 
         else:
-            Directory.open_files_in_explorer(str(directory), task_info.File.relative_files)
+            # 只传仍然存在的文件：不存在的路径解析不出 PIDL，会让资源管理器选中失败
+            Directory.open_files_in_explorer(str(directory), existing_files)
 
     def isTaskCompleted(self, task_info: TaskInfo):
         return task_info.Download.status == DownloadStatus.COMPLETED

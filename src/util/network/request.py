@@ -105,10 +105,60 @@ def _load_system_certs(context: ssl.SSLContext):
         # 叠加失败不影响上面已经加载好的证书，保持原有行为继续可用即可，不必让整个上下文构建失败
         logger.warning("加载系统根证书失败，仅使用已加载的证书列表", exc_info = True)
 
+_tunnel_patch_lock = Lock()
+
+def ensure_tunnel_connection_patched():
+    """
+    修补 httpcore 代理隧道连接建立失败时不释放连接池槽位的问题（Issue #509）
+
+    经 HTTP 代理访问 https 时，httpcore 先向代理发 CONNECT，拿到 200 后再在隧道里做 TLS 握手。
+    httpcore 1.0.9 的 TunnelHTTPConnection 在「CONNECT 已成功、TLS 握手失败或超时」时不会关闭底层连接：
+    那条连接停在 ACTIVE 状态，is_closed / has_expired / is_idle 全是 False，连接池永远不会回收它。
+    每超时一次就永久少一个槽位，攒满上限后所有请求都只能排队排到 PoolTimeout，只有重启程序才能恢复 ——
+    批量下载经本地代理跑上几十分钟后整条队列停摆，正是这么来的。直连与 SOCKS 代理在失败时
+    都会把连接标记为失效，不受影响。
+
+    修法是在隧道尚未建成就抛异常时主动关掉底层连接，连接池随后按「已关闭」把它清理掉。
+    依赖 _connected / _connection 两个私有属性，httpcore 改了内部实现时只记日志、不打补丁，
+    test_proxy_tunnel_leak.py 会在那时失败，提醒重新确认上游是否已经修复。
+    """
+    from httpcore._sync.http_proxy import TunnelHTTPConnection
+
+    with _tunnel_patch_lock:
+        original = TunnelHTTPConnection.handle_request
+
+        if getattr(original, "_bili23_tunnel_patch", False):
+            return
+
+        # 补丁读的两个私有属性都在 __init__ 里赋值，名字会出现在它的 co_names 中
+        if not {"_connected", "_connection"} <= set(TunnelHTTPConnection.__init__.__code__.co_names):
+            logger.warning("httpcore 的代理隧道连接实现已变化，未应用连接泄漏补丁")
+            return
+
+        def handle_request(self, request):
+            try:
+                return original(self, request)
+
+            except BaseException:
+                # 隧道已建成后的失败由内层连接自己处理，与直连的行为一致，这里不插手
+                if not self._connected:
+                    try:
+                        self._connection.close()
+
+                    except Exception:
+                        logger.debug("关闭建立失败的代理隧道连接时出错", exc_info = True)
+
+                raise
+
+        handle_request._bili23_tunnel_patch = True
+        TunnelHTTPConnection.handle_request = handle_request
+
 def get_mounts(proxies = None):
     import httpx
 
     if proxies:
+        ensure_tunnel_connection_patched()
+
         proxy_url = proxies.get("http") or proxies.get("https")
 
         return {
@@ -146,6 +196,8 @@ def get_env_mounts():
             # NO_PROXY 命中的地址，None 表示改用 Client 的默认 transport，即直连
             mounts[pattern] = None
         else:
+            ensure_tunnel_connection_patched()
+
             try:
                 # httpx 对 http(s) 代理不使用 retries，此处与 get_mounts 一样只依赖代理本身的连接行为
                 mounts[pattern] = httpx.HTTPTransport(proxy = proxy_url, limits = get_limits(), verify = get_ssl_context())

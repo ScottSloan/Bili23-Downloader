@@ -254,6 +254,22 @@ class TestNamingRuleEditor:
         assert not valid
         assert "titel" in message
 
+    @pytest.mark.parametrize("rule", ["{pub_time}", "{pub_time:%H:%M}", "{pub_time:%Y/%m}"])
+    def test_edit_panel_rejects_illegal_time_format(self, parent, rule):
+        """格式串不是字面量，以前的非法字符检查看不见它，冒号一路漏到落盘才失败"""
+        from gui.dialog.setting.edit_rule import EditRuleDialog
+        from util.common.enum import ConventionType
+
+        panel = EditRuleDialog(parent)
+        panel.load({"id": "x", "name": "n", "type": ConventionType.NORMAL, "rule": "{leaf_title}", "default": False})
+
+        valid, message = panel.validate_rule(rule)
+
+        assert not valid
+        assert "pub_time" in message
+
+        assert panel.validate_rule("{pub_time:%Y-%m-%d_%H-%M-%S}")[0]
+
     def test_rule_builder_scrolls_when_levels_pile_up(self, parent):
         """层级堆多了要滚动，不能把预览和变量表一起压扁"""
         from gui.component.rule_builder import RuleBuilderWidget
@@ -427,6 +443,28 @@ class TestNamingRuleEditor:
         assert fragment.spec == "%Y-%m-%d"
         assert view.form_layout.rowCount() == rows
         assert view.format_choice.isEnabled()
+        assert not view.format_box.isEnabled()
+
+    def test_inserted_time_variable_gets_a_default_format(self, parent):
+        """以前插进来的时间变量不带格式，面板落到「自定义」却是个空输入框"""
+        from gui.component.rule_builder import FragmentEditView, RuleBuilderWidget
+        from util.common.enum import ConventionType
+
+        builder = RuleBuilderWidget(parent)
+        builder.set_type(ConventionType.NORMAL)
+
+        row = builder.rows[-1]
+
+        row._variable_action(builder.variables["pub_time"], row).trigger()
+
+        fragment = row.level.fragments[-1]
+
+        assert fragment.variable == "pub_time"
+        assert fragment.spec == "%Y-%m-%d"
+
+        view = FragmentEditView(fragment, builder.variables, parent)
+
+        assert view.format_choice.currentData() == "%Y-%m-%d"
         assert not view.format_box.isEnabled()
 
     def test_fragment_edit_view_variable_choice_only_offers_recommended_variables(self, parent):

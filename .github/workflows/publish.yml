@@ -635,9 +635,13 @@ jobs:
   macos-build:
     if: needs.get-version.outputs.BUILD_MACOS == 'true'
     needs: get-version
+    environment: apple_signing
     env:
       VERSION: ${{ needs.get-version.outputs.VERSION }}
       VERSION_NAME: ${{ needs.get-version.outputs.VERSION_NAME }}
+      # 没有配置证书（例如 fork 仓库）时跳过签名与公证，照常产出未签名的安装包
+      MACOS_SIGNING: ${{ secrets.MACOS_CERT_P12 != '' }}
+      MACOS_NOTARIZE: ${{ secrets.MACOS_CERT_P12 != '' && secrets.APPLE_API_KEY_P8 != '' }}
     outputs:
       VERSION: ${{ env.VERSION }}
       VERSION_NAME: ${{ env.VERSION_NAME }}
@@ -691,9 +695,46 @@ jobs:
 
           python -m compileall Bili23-Downloader
 
-      - name: Package macOS version
+      - name: Import signing certificate
+        if: env.MACOS_SIGNING == 'true'
+        env:
+          MACOS_CERT_P12: ${{ secrets.MACOS_CERT_P12 }}
+          MACOS_CERT_PASSWORD: ${{ secrets.MACOS_CERT_PASSWORD }}
+          MACOS_SIGN_IDENTITY: ${{ secrets.MACOS_SIGN_IDENTITY || vars.MACOS_SIGN_IDENTITY }}
         run: |
-          # 先打包为 .app
+          # 证书导入到一个临时钥匙串，用完即删，不碰 runner 的登录钥匙串
+          KEYCHAIN="$RUNNER_TEMP/signing.keychain-db"
+          KEYCHAIN_PASSWORD="$(openssl rand -hex 16)"
+
+          echo "$MACOS_CERT_P12" | base64 --decode > "$RUNNER_TEMP/cert.p12"
+
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          security import "$RUNNER_TEMP/cert.p12" -k "$KEYCHAIN" -f pkcs12 \
+            -P "$MACOS_CERT_PASSWORD" -T /usr/bin/codesign -T /usr/bin/security
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          security list-keychains -d user -s "$KEYCHAIN" $(security list-keychains -d user | tr -d '"')
+
+          rm -f "$RUNNER_TEMP/cert.p12"
+
+          # 没有单独配置签名身份时，直接从导入的证书里取 Developer ID Application 身份
+          if [ -z "$MACOS_SIGN_IDENTITY" ]; then
+            MACOS_SIGN_IDENTITY="$(security find-identity -v -p codesigning "$KEYCHAIN" \
+              | grep -o '"Developer ID Application: [^"]*"' | head -n 1 | tr -d '"')"
+          fi
+
+          if [ -z "$MACOS_SIGN_IDENTITY" ]; then
+            echo "::error::证书中没有找到 Developer ID Application 签名身份"
+            security find-identity -v -p codesigning "$KEYCHAIN"
+            exit 1
+          fi
+
+          echo "KEYCHAIN=$KEYCHAIN" >> "$GITHUB_ENV"
+          echo "SIGN_IDENTITY=$MACOS_SIGN_IDENTITY" >> "$GITHUB_ENV"
+
+      - name: Build macOS app bundle
+        run: |
           mkdir -p dmg_build/Bili23-Downloader.app/Contents/{MacOS,Resources}
 
           cp -r Bili23-Downloader/* dmg_build/Bili23-Downloader.app/Contents/Resources/
@@ -734,13 +775,61 @@ jobs:
           #!/bin/bash
           SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
           APP_RESOURCES="$SCRIPT_DIR/../Resources"
+          # 签名后 .app 内的任何改动都会破坏签名封印，禁止运行时往包里写 __pycache__
+          export PYTHONDONTWRITEBYTECODE=1
           cd "$APP_RESOURCES"
           exec ./bili23-downloader
           EOF
 
           chmod +x dmg_build/Bili23-Downloader.app/Contents/MacOS/main
 
-          # 再打包为 dmg
+      - name: Sign macOS app bundle
+        if: env.MACOS_SIGNING == 'true'
+        run: |
+          APP="dmg_build/Bili23-Downloader.app"
+          ENTITLEMENTS="assets/macos/entitlements.plist"
+
+          sign() {
+            codesign --force --options runtime --timestamp \
+              --entitlements "$ENTITLEMENTS" \
+              --keychain "$KEYCHAIN" --sign "$SIGN_IDENTITY" "$1"
+          }
+
+          # 公证要求包内每一个 Mach-O 都带 Developer ID 签名、Hardened Runtime 与时间戳，
+          # 必须由内到外签：先签所有单个二进制，再签 .framework / .app 子包，最后签整个 .app
+          python - "$APP/Contents/Resources" > "$RUNNER_TEMP/macho.txt" << 'EOF'
+          import os, sys
+          MAGICS = {b"\xcf\xfa\xed\xfe", b"\xce\xfa\xed\xfe", b"\xca\xfe\xba\xbe", b"\xfe\xed\xfa\xcf", b"\xfe\xed\xfa\xce"}
+          for root, dirs, files in os.walk(sys.argv[1]):
+              for name in files:
+                  path = os.path.join(root, name)
+                  if os.path.islink(path):
+                      continue
+                  with open(path, "rb") as f:
+                      if f.read(4) in MAGICS:
+                          print(path)
+          EOF
+
+          echo "待签名的 Mach-O 文件数：$(wc -l < "$RUNNER_TEMP/macho.txt")"
+
+          while IFS= read -r file; do
+            sign "$file"
+          done < "$RUNNER_TEMP/macho.txt"
+
+          # 嵌套的 .framework / .app 按路径深度从深到浅签
+          find "$APP/Contents/Resources" -type d \( -name "*.framework" -o -name "*.app" \) \
+            | awk -F/ '{ print NF "\t" $0 }' | sort -rn | cut -f2- \
+            | while IFS= read -r bundle; do
+                sign "$bundle"
+              done
+
+          sign "$APP"
+
+          codesign --verify --deep --strict --verbose=2 "$APP"
+          codesign --display --verbose=2 "$APP"
+
+      - name: Create DMG
+        run: |
           create-dmg \
             --volname "Bili23 Downloader Installer" \
             --window-pos 400 200 \
@@ -751,6 +840,59 @@ jobs:
             --app-drop-link 500 160 \
             "Bili23-Downloader_${{ env.VERSION_NAME }}_macos_${{ matrix.arch }}.dmg" \
             "dmg_build/Bili23-Downloader.app/"
+
+      - name: Sign DMG
+        if: env.MACOS_SIGNING == 'true'
+        run: |
+          DMG="Bili23-Downloader_${{ env.VERSION_NAME }}_macos_${{ matrix.arch }}.dmg"
+
+          codesign --force --timestamp --keychain "$KEYCHAIN" --sign "$SIGN_IDENTITY" "$DMG"
+          codesign --verify --verbose=2 "$DMG"
+
+      - name: Notarize DMG
+        if: env.MACOS_NOTARIZE == 'true'
+        env:
+          APPLE_API_KEY_P8: ${{ secrets.APPLE_API_KEY_P8 }}
+          APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
+          APPLE_API_ISSUER_ID: ${{ secrets.APPLE_API_ISSUER_ID }}
+        run: |
+          DMG="Bili23-Downloader_${{ env.VERSION_NAME }}_macos_${{ matrix.arch }}.dmg"
+          KEY_FILE="$RUNNER_TEMP/AuthKey_${APPLE_API_KEY_ID}.p8"
+          RESULT_FILE="$RUNNER_TEMP/notary.json"
+
+          echo "$APPLE_API_KEY_P8" | base64 --decode > "$KEY_FILE"
+
+          NOTARY_AUTH=(--key "$KEY_FILE" --key-id "$APPLE_API_KEY_ID" --issuer "$APPLE_API_ISSUER_ID")
+
+          # --wait 会阻塞到苹果给出结果；失败时退出码非零，但仍要先拿到提交 ID 去取日志
+          xcrun notarytool submit "$DMG" "${NOTARY_AUTH[@]}" \
+            --wait --timeout 30m --output-format json > "$RESULT_FILE" || true
+
+          cat "$RESULT_FILE"
+
+          SUBMISSION_ID="$(python -c 'import json,sys; print(json.load(open(sys.argv[1])).get("id", ""))' "$RESULT_FILE" 2>/dev/null || true)"
+          STATUS="$(python -c 'import json,sys; print(json.load(open(sys.argv[1])).get("status", ""))' "$RESULT_FILE" 2>/dev/null || true)"
+
+          if [ "$STATUS" != "Accepted" ]; then
+            echo "::error::公证未通过，状态：${STATUS:-未知}"
+            if [ -n "$SUBMISSION_ID" ]; then
+              xcrun notarytool log "$SUBMISSION_ID" "${NOTARY_AUTH[@]}"
+            fi
+            exit 1
+          fi
+
+          # 把公证票据装订进 dmg，用户离线打开也能通过 Gatekeeper
+          xcrun stapler staple "$DMG"
+          xcrun stapler validate "$DMG"
+          spctl --assess --type open --context context:primary-signature --verbose=2 "$DMG"
+
+      - name: Clean up signing materials
+        if: always() && env.MACOS_SIGNING == 'true'
+        run: |
+          if [ -n "$KEYCHAIN" ]; then
+            security delete-keychain "$KEYCHAIN" || true
+          fi
+          rm -f "$RUNNER_TEMP"/cert.p12 "$RUNNER_TEMP"/AuthKey_*.p8
 
       - name: Upload macOS artifact
         uses: actions/upload-artifact@v7

@@ -46,9 +46,16 @@ class Database:
             conn.execute("PRAGMA synchronous = NORMAL")
             conn.execute(f"PRAGMA busy_timeout = {int(self.timeout * 1000)}")
 
+            self._setup_connection(conn)
+
             storage.conn = conn
 
         return conn
+
+    def _setup_connection(self, conn: sqlite3.Connection):
+        # 子类在这里注册自定义 SQL 函数等。连接是按线程各建一个的，
+        # 只有放在建连这一步，才能保证任何线程上的查询都用得到
+        pass
 
     def close_connection(self):
         # 关闭当前线程持有的连接，仅在明确需要释放数据库文件时调用

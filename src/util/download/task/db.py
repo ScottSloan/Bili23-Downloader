@@ -3,13 +3,30 @@ from ...common.config import appdata_path
 from ...common.timestamp import get_timestamp
 from ...common.database import Database
 from .hash_id import calc_hash_id, HASH_ID_VERSION
+from .filter import SQL_MATCH_FUNCTION, SQL_MATCH_PATHS, sql_task_matches
 from .info import TaskInfo
 
 from pathlib import Path
 from typing import List
 import logging
+import sqlite3
 
 logger = logging.getLogger(__name__)
+
+# 已完成列表的排序键 → SQL 排序表达式，必须与 create_completed_sort_indexes 里的索引表达式逐字一致，
+# SQLite 才会走索引、直接按序取前若干条，而不是把整张表排一遍。
+#
+# 一律套上 IFNULL：分批读取用 (排序值, id) 作游标逐批比较，NULL 参与比较的结果是 NULL，
+# 这样的行永远落不进任何一批。文件大小不单独成列，用表达式索引，免得为加一列去迁移整张表
+_COMPLETED_ORDER_EXPRS = {
+    "completed_time": 'IFNULL("completed_time", 0)',
+    "show_title": 'IFNULL("title", \'\') COLLATE NOCASE',
+    "file_size": 'IFNULL(json_extract("data", \'$.Download.total_size\'), 0)',
+}
+
+_COMPLETED_MATCH_EXPR = '{}(json_extract("data", {}), ?, ?)'.format(
+    SQL_MATCH_FUNCTION, ", ".join(f"'{path}'" for path in SQL_MATCH_PATHS)
+)
 
 class TaskDatabase(Database):
     def __init__(self):
@@ -24,6 +41,10 @@ class TaskDatabase(Database):
 
         # 放在升级之后：旧版库升级时会重建两张表，先建的索引会随旧表一起消失
         self._create_bvid_index()
+
+    def _setup_connection(self, conn: sqlite3.Connection):
+        # 已完成列表的搜索与类型筛选在数据库里执行，判定逻辑与下载中列表共用（见 filter.py）
+        conn.create_function(SQL_MATCH_FUNCTION, 3, sql_task_matches, deterministic = True)
 
     def _check_should_upgrade(self):
         # 配置版本与任务数据库版本并不等价。始终检查实际表结构，
@@ -155,6 +176,69 @@ class TaskDatabase(Database):
             # 索引只影响查询速度。SQLite 缺少 JSON 函数时这里会失败，
             # 但绝不能因此让整个任务数据库初始化失败
             logger.exception("创建 bvid 索引失败")
+
+    def create_completed_sort_indexes(self):
+        # 已完成列表按需分批读取，每一种排序方式都要有对应的索引，否则每取一批都是全表扫加排序。
+        # 文件大小用表达式索引，首次建立时要把每行 JSON 解析一遍，4 万条约 0.8 秒，之后幂等跳过。
+        # 不在 __init__ 里同步建：本类在主窗口构造期间于 GUI 线程上初始化，由 TaskManager 投递到写线程执行
+        try:
+            self.execute_script(f"""
+                CREATE INDEX IF NOT EXISTS "idx_completed_task_order_completed_time" ON "completed_task" ({_COMPLETED_ORDER_EXPRS["completed_time"]});
+                CREATE INDEX IF NOT EXISTS "idx_completed_task_order_title" ON "completed_task" ({_COMPLETED_ORDER_EXPRS["show_title"]});
+                CREATE INDEX IF NOT EXISTS "idx_completed_task_order_file_size" ON "completed_task" ({_COMPLETED_ORDER_EXPRS["file_size"]});
+                """)
+
+        except Exception:
+            # 索引只影响查询速度，绝不能因此让整个任务数据库初始化失败
+            logger.exception("创建已完成列表排序索引失败")
+
+    def _completed_filter_clause(self, keywords, media_types):
+        if not keywords and not media_types:
+            return None, ()
+
+        return _COMPLETED_MATCH_EXPR, (" ".join(keywords), ",".join(sorted(media_types or ())))
+
+    def query_completed_batch(self, order_by: str, ascending: bool, limit: int, after: tuple = None, keywords = (), media_types = None):
+        """
+        按排序方式分批读取已完成任务，返回 [(排序值, id, data), ...]
+
+        after 为上一批最后一行的 (排序值, id)，本批从它之后接着取（键集分页）。不用 OFFSET：
+        浏览期间有任务完成或被删除，OFFSET 会整体错位，导致有的行出现两次、有的永远翻不到。
+        id 是自增主键，作为同值时的次级排序键，保证顺序唯一且稳定
+        """
+        order_expr = _COMPLETED_ORDER_EXPRS.get(order_by, _COMPLETED_ORDER_EXPRS["completed_time"])
+        direction, operator = ("ASC", ">") if ascending else ("DESC", "<")
+
+        clauses = []
+        params = []
+
+        if after is not None:
+            # 等价于行值比较 (排序值, id) < (?, ?)，但行值写法用不上索引的范围查找，
+            # 只能从索引开头一路扫到游标处，按标题翻到 4 万条附近要 160 毫秒；展开后可以直接定位
+            clauses.append(f'{order_expr} {operator}= ? AND ({order_expr} {operator} ? OR "id" {operator} ?)')
+            params.extend((after[0], after[0], after[1]))
+
+        filter_clause, filter_params = self._completed_filter_clause(keywords, media_types)
+
+        if filter_clause:
+            clauses.append(filter_clause)
+            params.extend(filter_params)
+
+        where = f" WHERE {' AND '.join(clauses)}" if clauses else ""
+
+        return self.query(
+            f'SELECT {order_expr}, "id", "data" FROM "completed_task"{where} ORDER BY {order_expr} {direction}, "id" {direction} LIMIT ?',
+            (*params, limit)
+        )
+
+    def delete_completed_matching(self, keywords = (), media_types = None):
+        # 已完成列表的「全部清除」：作用于数据库里所有满足当前筛选的记录，而不只是已经读进界面的那几批
+        filter_clause, filter_params = self._completed_filter_clause(keywords, media_types)
+
+        if filter_clause:
+            self.execute(f'DELETE FROM "completed_task" WHERE {filter_clause}', filter_params)
+        else:
+            self.execute('DELETE FROM "completed_task"')
 
     def query_tasks(self, completed: bool = False, limit: int = None):
         """

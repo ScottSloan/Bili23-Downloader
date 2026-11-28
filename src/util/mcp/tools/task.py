@@ -49,11 +49,15 @@ def _output_file_name(task_info) -> str:
     合并过就用容器扩展名，否则用视频或音频自身的扩展名 —— 视频优先，
     因为不合并而保留两个原始文件时，界面也是把视频排在前面的。
     都取不到才给基名，否则给出的路径连扩展名都没有，模型照着用必然出错。
+
+    只下载附加内容的任务没有音视频产物，relative_files 是空的，完成后改给
+    第一个附加文件，与界面"打开文件位置"的回退一致（Issue #507）。
     """
     from ...common.enum import DownloadStatus
 
-    if task_info.Download.status == DownloadStatus.COMPLETED and task_info.File.relative_files:
-        return task_info.File.relative_files[0]
+    if task_info.Download.status == DownloadStatus.COMPLETED:
+        if files := (task_info.File.relative_files or task_info.File.additional_files):
+            return files[0]
 
     if not task_info.File.name:
         return ""

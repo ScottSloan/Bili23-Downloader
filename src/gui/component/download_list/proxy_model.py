@@ -1,10 +1,10 @@
 from PySide6.QtCore import QModelIndex, Qt, QSortFilterProxyModel, QTimer
 from PySide6.QtWidgets import QAbstractItemView
 
+from util.download.task.filter import get_media_type_key, get_searchable_text, matches_keywords, split_keywords
 from util.download.task.info import TaskInfo
 from util.common.signal_bus import signal_bus
 
-from .item_delegate import get_media_type_key
 from .model import DownloadListModel
 
 
@@ -42,33 +42,17 @@ class DownloadListProxyModel(QSortFilterProxyModel):
         if self._media_type_filter and get_media_type_key(task_info) not in self._media_type_filter:
             return False
 
-        if self._filter_keywords:
-            searchable_text = self._getSearchableText(task_info)
-
-            # 多个关键词按空格分开、同时命中才算匹配：「UP主名 合集名」这种组合用起来最顺手
-            if not all(keyword in searchable_text for keyword in self._filter_keywords):
-                return False
+        if self._filter_keywords and not matches_keywords(get_searchable_text(task_info), self._filter_keywords):
+            return False
 
         return True
 
-    def _getSearchableText(self, task_info: TaskInfo):
-        # 只收建任务时就定下来、用户认得出的字段。task_id 是内部哈希，info_label / status_label
-        # 是随界面语言与下载进度变化的展示文案（「3 秒后重试」），搜得到反而让结果忽隐忽现
-        episode = task_info.Episode
-
-        return " ".join([
-            task_info.Basic.show_title or "",
-            task_info.File.name or "",
-            episode.uploader or "",
-            episode.bvid or "",
-            episode.parent_title or "",
-            episode.collection_title or "",
-            episode.series_title or "",
-            episode.season_title or "",
-            episode.favorites_name or "",
-        ]).casefold()
-
     def filterAcceptsRow(self, source_row: int, source_parent: QModelIndex):
+        # 源模型每次重排（layoutChanged）后，代理模型都会对每一行重新调一次这里。
+        # 没有任何筛选条件时直接放行，省掉逐行取 data() 的 Python 往返
+        if not self.isFiltering():
+            return True
+
         source = self._source()
 
         if not source:
@@ -101,36 +85,13 @@ class DownloadListProxyModel(QSortFilterProxyModel):
             self.beginFilterChange()
             self.endFilterChange(QSortFilterProxyModel.Direction.Rows)
 
-        # 过滤刷新后也要重排：dynamicSortFilter 关着，重新放出来的行会被接在末尾，
-        # 而不是插回排序后的位置（与 _applyCurrentSort 说的追加问题同源）
-        if (refresh_filter or refresh_sort) and self._sorting and self._sort_by_key:
-            order = Qt.SortOrder.AscendingOrder if self._ascending else Qt.SortOrder.DescendingOrder
-            self.sort(0, order)
+        # 排序由源模型负责（理由见 DownloadListModel.__init__），本代理从不调用 sort()，
+        # 排序列保持 -1，行序始终跟随源模型。被筛掉的行重新放出来时也就自然回到原位，不必再补排
+        if refresh_sort:
+            source = self._source()
 
-    def lessThan(self, left: QModelIndex, right: QModelIndex):
-        left_task: TaskInfo = left.data(Qt.ItemDataRole.UserRole)
-        right_task: TaskInfo = right.data(Qt.ItemDataRole.UserRole)
-
-        if not left_task or not right_task or not self._sort_by_key:
-            return super().lessThan(left, right)
-
-        match self._sort_by_key:
-            case "created_time":
-                return (left_task.Basic.created_time or 0) < (right_task.Basic.created_time or 0)
-
-            case "completed_time":
-                return (left_task.Basic.completed_time or 0) < (right_task.Basic.completed_time or 0)
-
-            case "show_title":
-                return (left_task.Basic.show_title or "").casefold() < (right_task.Basic.show_title or "").casefold()
-
-            case "file_size":
-                return (left_task.Download.total_size or 0) < (right_task.Download.total_size or 0)
-
-            case "progress":
-                return (left_task.Download.progress or 0) < (right_task.Download.progress or 0)
-
-        return super().lessThan(left, right)
+            if source:
+                source.resort()
 
     def rowCount(self, parent = QModelIndex()):
         return super().rowCount(parent)
@@ -186,34 +147,14 @@ class DownloadListProxyModel(QSortFilterProxyModel):
         source = self._source()
 
         if source:
+            # 源模型按当前排序方式把新任务直接插到该在的位置，不必事后重排
             source.appendRow(task_info)
-
-            self._applyCurrentSort()
 
     def appendRows(self, task_info_list: list[TaskInfo]):
         source = self._source()
 
         if source:
             source.appendRows(task_info_list)
-
-            self._applyCurrentSort()
-
-    def _applyCurrentSort(self):
-        """
-        追加之后按当前排序方式重排一次
-
-        dynamicSortFilter 关着（进度更新太频繁，靠 _scheduleRefresh 去抖），代价是新插入的
-        行不会被排进正确位置：Qt 只把这一批行在**批内**排好，整批接在末尾。启动时列表是空的、
-        任务一次性载入，所以看着正常；之后新建的任务、刚下载完移进"已完成"的任务都会停在最底下，
-        降序时尤其显眼，用户得手动再点一次排序才归位。
-
-        这里同步排而不走去抖：任务是成批追加的，一批排一次，代价不大；延后 50 毫秒反而会让
-        新任务先在末尾闪一下再跳走
-        """
-        if self._sorting and self._sort_by_key:
-            order = Qt.SortOrder.AscendingOrder if self._ascending else Qt.SortOrder.DescendingOrder
-
-            self.sort(0, order)
 
     def removeRow(self, row, parent = QModelIndex()):
         source = self._source()
@@ -366,9 +307,10 @@ class DownloadListProxyModel(QSortFilterProxyModel):
         self._sort_by_key = key
         self._ascending = ascending
 
-        order = Qt.SortOrder.AscendingOrder if ascending else Qt.SortOrder.DescendingOrder
+        source = self._source()
 
-        self.sort(0, order)
+        if source:
+            source.setSortOrder(key, ascending)
 
     def enableSorting(self, default_key: str, ascending: bool = True):
         self._sorting = True
@@ -379,7 +321,7 @@ class DownloadListProxyModel(QSortFilterProxyModel):
 
     def setFilterText(self, text: str):
         self._filter_text = text.strip()
-        self._filter_keywords = self._filter_text.casefold().split()
+        self._filter_keywords = split_keywords(self._filter_text)
         self._scheduleRefresh(refresh_filter = True)
 
     def setStatusFilter(self, statuses):

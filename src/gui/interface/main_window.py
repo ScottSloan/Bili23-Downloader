@@ -294,6 +294,26 @@ class MainWindow(MSFluentWindow):
 
         return super().moveEvent(e)
 
+    def _updateSystemButtonRect(self):
+        """
+        qframelesswindow 在 macOS 上把红绿灯挪到窗口右上角（见 MSFluentWindow.systemTitleBarRect），
+        而且在每次 paintEvent 里都重新摆一遍。
+
+        全屏时 AppKit 会把红绿灯连同系统标题栏一起抽出来，放进随菜单栏下滑的那条悬浮标题栏里，
+        并按系统惯例排在左上角。此时两边轮流改写同一组按钮的坐标：系统每次布局把它们放回左边，
+        窗口一重绘又被搬到右边，用户看到的就是红绿灯在悬浮标题栏两端来回跳。
+
+        那条悬浮标题栏完全归系统管，全屏期间不再插手。退出全屏时 WindowStateChange 会再走一遍
+        父类逻辑，把按钮放回右上角。
+
+        这里覆盖的是 qframelesswindow 的私有方法，只在 mac 分支存在，其他平台永远不会被调用。
+        上游哪天改了方法名，这个覆盖会静默失效、退回来回跳的老问题，但不会崩溃。
+        """
+        if self.isFullScreen():
+            return
+
+        super()._updateSystemButtonRect()
+
     def request_exit(self):
         """
         供托盘菜单、强制更新等入口调用，无条件退出程序

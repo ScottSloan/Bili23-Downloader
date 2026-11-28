@@ -83,7 +83,7 @@ class DynamicParser(ParserBase):
 
             parsed_data = self.parser.parse(url, get_info_data = True)
 
-            episode_count = self.episode_parser.update_page_node(parsed_data)
+            episode_count = self.episode_parser.update_link_node(parsed_data)
 
             self._update_link_ui_progress(episode_count)
 
