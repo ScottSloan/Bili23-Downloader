@@ -43,6 +43,11 @@ class DanmakuType(Enum):
     ASS = "ass"
     JSON = "json"
 
+class DanmakuSuffixMode(Enum):
+    DEFAULT = "default"
+    NONE = "none"
+    CUSTOM = "custom"
+
 class SubtitleType(Enum):
     SRT = "srt"
     LRC = "lrc"
